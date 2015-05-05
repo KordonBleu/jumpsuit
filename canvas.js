@@ -8,20 +8,21 @@ function init(){
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	var paths = {
-		background: "assets/background.png",
-		meteorBig: "assets/meteorBig.png",
-		meteorBig2: "assets/meteorBig2.png",
-		meteorMed: "assets/meteorMed.png",
-		meteorMed2: "assets/meteorMed2.png",
-		meteorSmall: "assets/meteorSmall.png",
-		meteorTiny: "assets/meteorTiny.png"
-	};
+	var paths = [
+		"background",
+		"meteorBig",
+		"meteorBig2",
+		"meteorMed",
+		"meteorMed2",
+		"meteorSmall",
+		"meteorTiny"
+	];
 
-	for (var r in paths){
-		resources[r] = new Image();
-		resources[r].src = paths[r];
-		resources[r].onload = loadProcess;	
+	for (var i = 0, lgt = paths.length; i != lgt; i++){
+		var r = new Image();
+		r.src = "assets/" + paths[i] + ".png";
+		r.onload = loadProcess;
+		resources[paths[i]] = r;
 	}
 }
 
