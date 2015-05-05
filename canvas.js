@@ -8,7 +8,7 @@ function init(){
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	var pathes = {
+	var paths = {
 		background: "assets/background.png",
 		meteorBig: "assets/meteorBig.png",
 		meteorBig2: "assets/meteorBig2.png",
@@ -18,9 +18,9 @@ function init(){
 		meteorTiny: "assets/meteorTiny.png"
 	};
 
-	for (var r in pathes){
+	for (var r in paths){
 		resources[r] = new Image();
-		resources[r].src = pathes[r];
+		resources[r].src = paths[r];
 		resources[r].onload = loadProcess;	
 	}
 }
@@ -35,37 +35,36 @@ function loadProcess(e){
 	if (progress == 7) loop();
 }
 
-function loop() {	
-	setTimeout(function(){
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		//draw bg
-		for (var i = 0; i < Math.floor(canvas.width / 256) + 1; i++){
-			for (var j = 0; j < Math.floor(canvas.height / 256) + 1; j++){
-				context.drawImage(resources["background"], i * 256, j * 256);
-			}
+function loop() {
+	context.clearRect(0, 0, canvas.width, canvas.height);
+	//draw bg
+	for (var i = 0; i < Math.floor(canvas.width / 256) + 1; i++){
+		for (var j = 0; j < Math.floor(canvas.height / 256) + 1; j++){
+			context.drawImage(resources["background"], i * 256, j * 256);
 		}
+	}
 
-		if (Math.random() < 0.01){
-			//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
-			var m_height = Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
-			m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
-			m_res = m_resources[Math.floor(Math.random() * 4)],
-			m_speed = Math.map(Math.random(), 0, 1, 2, 4),
-			m_ang = Math.map(Math.random(), 0, 1, 45, 135);
+	if (Math.random() < 0.01){
+		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
+		var m_height = Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
+		m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
+		m_res = m_resources[Math.floor(Math.random() * 4)],
+		m_speed = Math.map(Math.random(), 0, 1, 2, 4),
+		m_ang = Math.map(Math.random(), 0, 1, 45, 135);
 
-			meteors.splice(meteors.length,0,[0, m_height, m_res, m_speed, m_ang]);
-		}
+		meteors.splice(meteors.length,0,[0, m_height, m_res, m_speed, m_ang]);
+	}
 
-		meteors.forEach(function(m, i){
-			m[0] += Math.sin(m[4] * (Math.PI / 180)) * m[3];
-			m[1] += Math.cos(m[4] * (Math.PI / 180)) * m[3];			
-			if (m[0] > canvas.width + 10 || m[1] > canvas.height + 10) meteors.splice(i, 1);			
-			else context.drawImage(resources[m[2]], m[0], m[1]);
-		});		
+	meteors.forEach(function(m, i){
+		m[0] += Math.sin(m[4] * (Math.PI / 180)) * m[3];
+		m[1] += Math.cos(m[4] * (Math.PI / 180)) * m[3];			
+		if (m[0] > canvas.width + 10 || m[1] > canvas.height + 10) meteors.splice(i, 1);			
+		else context.drawImage(resources[m[2]], m[0], m[1]);
+	});	
 
-		loop();
-	}, 1000 / 60); //60FPS	
+	window.requestAnimationFrame(loop);
 }
+window.requestAnimationFrame(loop);
 
 function keyInput(e){
 	keys[e.keyCode] = (e.type == "keydown") | false;
