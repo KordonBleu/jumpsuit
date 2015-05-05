@@ -46,20 +46,25 @@ function loop() {
 
 	if (Math.random() < 0.01){
 		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
-		var m_height = Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
-		m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
-		m_res = m_resources[Math.floor(Math.random() * 4)],
-		m_speed = Math.map(Math.random(), 0, 1, 2, 4),
-		m_ang = Math.map(Math.random(), 0, 1, 45, 135);
+		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
+			lgt = meteors.length;
 
-		meteors.splice(meteors.length,0,[0, m_height, m_res, m_speed, m_ang]);
+		meteors[lgt] = {
+			x: -100,
+			y: Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
+			res: m_resources[Math.floor(Math.random() * 4)],
+			speed: Math.map(Math.random(), 0, 1, 2, 4),
+			ang: Math.map(Math.random(), 0, 1, 45, 135)
+		};
+
+//		meteors.splice(meteors.length,0,[0, m_height, m_res, m_speed, m_ang]);
 	}
 
 	meteors.forEach(function(m, i){
-		m[0] += Math.sin(m[4] * (Math.PI / 180)) * m[3];
-		m[1] += Math.cos(m[4] * (Math.PI / 180)) * m[3];			
-		if (m[0] > canvas.width + 10 || m[1] > canvas.height + 10) meteors.splice(i, 1);			
-		else context.drawImage(resources[m[2]], m[0], m[1]);
+		m.x += Math.sin(m.ang * (Math.PI / 180)) * m.speed;
+		m.y += Math.cos(m.speed * (Math.PI / 180)) * m.speed;
+		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
+		else context.drawImage(resources[m.res], m.x, m.y);
 	});	
 
 	window.requestAnimationFrame(loop);
