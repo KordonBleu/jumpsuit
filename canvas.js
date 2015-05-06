@@ -79,12 +79,13 @@ function loop() {
 
 	if (Math.random() < 0.01){
 		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
-		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"];
+		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
+			chosen_img = m_resources[Math.floor(Math.random() * 4)];
 
 		meteors[meteors.length] = {
-			x: -100,
+			x: - resources[chosen_img].width,
 			y: Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
-			res: m_resources[Math.floor(Math.random() * 4)],
+			res: chosen_img,
 			speed: Math.map(Math.random(), 0, 1, 2, 4),
 			ang: Math.map(Math.random(), 0, 1, 45, 135)
 		};
