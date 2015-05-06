@@ -3,7 +3,6 @@ var canvas = document.getElementById('canvas'),
 context = canvas.getContext("2d"),
 resources = {},
 keys = [],
-progress = 0,
 meteors = [],
 pause = 0,
 playerX = 0, playerY = 0,
@@ -19,7 +18,7 @@ function init(){
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
-	var paths = [
+	init.paths = [
 		"background",
 		"meteorBig",
 		"meteorBig2",
@@ -35,30 +34,31 @@ function init(){
   	context.textBaseline = "top";
   	context.textAlign = "center";
 
-	for (var i = 0, lgt = paths.length; i != lgt; i++){
+	for (var i = 0, lgt = init.paths.length; i != lgt; i++){
 		var r = new Image();
-		r.src = "assets/" + paths[i] + ".png";
+		r.src = "assets/" + init.paths[i] + ".png";
 		r.onload = loadProcess;
-		resources[paths[i]] = r;
+		resources[init.paths[i]] = r;
 	}	
 }
 
 function loadProcess(e){
-	progress++;
+	loadProcess.progress = loadProcess.progress === undefined ? 0 : ++loadProcess.progress;
+
 	context.fillStyle = "#121012";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
 
 	context.fillStyle = "#007d6c";
-	context.fillRect(0, 0, (progress / 7) * canvas.width, 15);
+	context.fillRect(0, 0, (loadProcess.progress / 7) * canvas.width, 15);
 
 	context.fillStyle = "#eee";
 	context.font = "60px Open Sans";
 	context.fillText("JumpSuit", canvas.width / 2, canvas.height * 0.35);
 	context.font = "28px Open Sans";
-	context.fillText("canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
+	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 
-	if (progress == 7) setTimeout(loop, 2000);
+	if (loadProcess.progress == init.paths.length - 1) loop();
 }
 
 function loop() {
