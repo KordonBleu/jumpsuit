@@ -1,9 +1,13 @@
 "use strict";
-var canvas = document.getElementById('canvas');
-var context = canvas.getContext("2d");
-
-var resources = {}, keys = [], progress = 0, meteors = [], paused = false;
-var controls = {
+var canvas = document.getElementById('canvas'),
+context = canvas.getContext("2d"),
+resources = {},
+keys = [],
+progress = 0,
+meteors = [],
+pause = 0,
+playerX = 0, playerY = 0,
+controls = {
 	spacebar: 32,
 	upArrow: 38,
 	downArrow: 40,
@@ -69,15 +73,15 @@ function loop() {
 		}
 	}
 
-	//check if paused
-	if (paused) {
-		context.fillStyle = "#eee";
-		context.font = "48px Open Sans";
-		context.fillText(".:paused:.", canvas.width / 2, canvas.height / 2);
-		window.requestAnimationFrame(loop);
-	}
+	if (keys[controls.rightArrow]) playerX += (playerX < canvas.width - 5) ? 1 : 0;
+	if (keys[controls.leftArrow]) playerX -= (playerX > 0) ? 1 : 0;
+	if (keys[controls.downArrow]) playerY += (playerY < canvas.height - 5) ? 1 : 0;
+	if (keys[controls.upArrow]) playerY -= (playerY > 0) ? 1 : 0;
 
-	if (Math.random() < 0.01){
+	context.fillStyle = "red";
+	context.fillRect(playerX, playerY, 5, 5);
+
+	if (Math.random() < 0.04){
 		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
 		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
 			chosen_img = m_resources[Math.floor(Math.random() * 4)];
