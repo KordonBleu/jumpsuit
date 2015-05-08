@@ -1,4 +1,32 @@
 body {
 	margin: 0;
 	overflow: hidden;
+	font-family: "Open Sans";
+}
+.info-box{
+	width: 250px;
+	position: fixed;
+	bottom: 20px;
+	left: 20px;
+	padding: 15px;
+	background: #ebedf4;
+	color: #333;
+	opacity: 1;
+	height: 144px;
+	transition: height .5s ease, opacity .5s linear;
+}
+.info-box.hidden{	
+	height: 20px;
+	opacity: 0;
+}
+.info-box h2 {
+	margin: 5px 0px;
+}
+.info-box a {
+	text-decoration: none;
+	color: #AD3726;
+	font-weight: bold;
+}
+.info-box.hidden *{
+	display: none;
 }

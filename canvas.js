@@ -7,6 +7,7 @@ meteors = [],
 pause = 0,
 playerX = 0, playerY = 0,
 controls = {
+	escape: 27,
 	spacebar: 32,
 	upArrow: 38,
 	downArrow: 40,
@@ -25,7 +26,9 @@ function init(){
 		"meteorMed",
 		"meteorMed2",
 		"meteorSmall",
-		"meteorTiny"
+		"meteorTiny",
+		"shield",
+		"pill_red"
 	];
 
 	context.canvas.fillStyle = "black";
@@ -43,14 +46,13 @@ function init(){
 }
 
 function loadProcess(e){
-	loadProcess.progress = loadProcess.progress === undefined ? 0 : ++loadProcess.progress;
+	loadProcess.progress = loadProcess.progress === undefined ? 1 : ++loadProcess.progress;
 
 	context.fillStyle = "#121012";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
-
 	context.fillStyle = "#007d6c";
-	context.fillRect(0, 0, (loadProcess.progress / 7) * canvas.width, 15);
+	context.fillRect(0, 0, (loadProcess.progress / init.paths.length) * canvas.width, 15);
 
 	context.fillStyle = "#eee";
 	context.font = "60px Open Sans";
@@ -58,7 +60,7 @@ function loadProcess(e){
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 
-	if (loadProcess.progress == init.paths.length - 1) loop();
+	if (loadProcess.progress == init.paths.length) setTimeout(loop, 1000);
 }
 
 function loop() {
@@ -100,20 +102,25 @@ function loop() {
 		m.y += Math.cos(m.ang * (Math.PI / 180)) * m.speed;
 		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
 		else context.drawImage(resources[m.res], m.x, m.y);
-	});	
-
+	});
 
 	window.requestAnimationFrame(loop);
 }
 
 function keyInput(e){
+	
+	if (e.type == "keydown") {
+		if (e.keyCode == controls.escape) {
+			var box = document.getElementById("info-box");
+			box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+		}		
+	}
 	keys[e.keyCode] = (e.type == "keydown") | false;
 }
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 
 init();
 window.addEventListener("keydown", keyInput);
