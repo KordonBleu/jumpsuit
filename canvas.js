@@ -1,5 +1,5 @@
 "use strict";
-var canvas = document.getElementById('canvas'),
+var canvas = document.getElementById("canvas"),
 context = canvas.getContext("2d"),
 resources = {},
 keys = [],
@@ -64,6 +64,14 @@ function loadProcess(e){
 }
 
 function loop() {
+	function drawRotatedImage(image, x, y, angle) {//courtesy of Seb Lee-Delisle
+		context.save();
+		context.translate(x, y);
+		context.rotate(angle);
+		context.drawImage(image, -(image.width/2), -(image.height/2));
+		context.restore();
+}
+
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	context.clearRect(0, 0, canvas.width, canvas.height);
@@ -93,15 +101,18 @@ function loop() {
 			y: Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
 			res: chosen_img,
 			speed: Math.map(Math.random(), 0, 1, 2, 4),
-			ang: Math.map(Math.random(), 0, 1, 45, 135)
+			ang: Math.map(Math.random(), 0, 1, 45, 135),
+			rotAng: Math.map(Math.random(), 0, 1, 0, 2 * Math.PI),
+			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05)
 		};
 	}
 
 	meteors.forEach(function(m, i){
 		m.x += Math.sin(m.ang * (Math.PI / 180)) * m.speed;
 		m.y += Math.cos(m.ang * (Math.PI / 180)) * m.speed;
+		m.rotAng += m.rotSpeed
 		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
-		else context.drawImage(resources[m.res], m.x, m.y);
+		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
 	});
 
 	window.requestAnimationFrame(loop);

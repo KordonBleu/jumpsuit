@@ -15,7 +15,7 @@ body {
 	height: 144px;
 	transition: height .5s ease, opacity .5s linear;
 }
-.info-box.hidden{	
+.info-box.hidden{
 	height: 20px;
 	opacity: 0;
 }
