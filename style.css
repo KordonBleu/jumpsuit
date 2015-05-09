@@ -12,10 +12,11 @@ body {
 	background: #ebedf4;
 	color: #333;
 	opacity: 1;
-	height: 144px;
+	height: 200px;	
 	transition: height .5s ease, opacity .5s linear;
 }
 .info-box.hidden{
+	transition: height .5s ease .2s, opacity .5s linear .2s;
 	height: 20px;
 	opacity: 0;
 }
@@ -27,6 +28,22 @@ body {
 	color: #AD3726;
 	font-weight: bold;
 }
+.info-box *{
+	transition: opacity .2s linear 0.5s;
+	opacity: 1;
+}
 .info-box.hidden *{
-	display: none;
+	transition: opacity .2s linear;
+	opacity: 0;
+}
+.info-box .gh-image{
+	position: absolute;
+	bottom: 15px;
+	left: 15px;
+	background: url("assets/github.png") top left no-repeat;
+	height: 30px;
+	padding-left: 38px;
+	display: block;
+	line-height: 2;
+	color: #333;
 }

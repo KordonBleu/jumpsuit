@@ -70,10 +70,11 @@ function loop() {
 		context.rotate(angle);
 		context.drawImage(image, -(image.width/2), -(image.height/2));
 		context.restore();
-}
+	}
 
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+	context.globalAlpha = 1;
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//draw bg
@@ -91,7 +92,7 @@ function loop() {
 	context.fillStyle = "red";
 	context.fillRect(playerX, playerY, 5, 5);
 
-	if (Math.random() < 0.04){
+	if (Math.random() < 0.02){
 		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
 		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
 			chosen_img = m_resources[Math.floor(Math.random() * 4)];
@@ -103,19 +104,19 @@ function loop() {
 			speed: Math.map(Math.random(), 0, 1, 2, 4),
 			ang: Math.map(Math.random(), 0, 1, 45, 135),
 			rotAng: Math.map(Math.random(), 0, 1, 0, 2 * Math.PI),
-			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05)
+			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05),
+			depth: Math.map(Math.random(), 0, 1, 0.2, 0.6)
 		};
 	}
-
-	meteors.forEach(function(m, i){
+	
+	meteors.forEach(function(m, i){		
 		m.x += Math.sin(m.ang * (Math.PI / 180)) * m.speed;
 		m.y += Math.cos(m.ang * (Math.PI / 180)) * m.speed;
-		m.rotAng += m.rotSpeed
+		context.globalAlpha = m.depth;
+		m.rotAng += m.rotSpeed;
 		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
 		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
-	});
-
-	
+	});	
 
 	window.requestAnimationFrame(loop);
 }
