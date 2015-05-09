@@ -115,11 +115,12 @@ function loop() {
 		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
 	});
 
+	
+
 	window.requestAnimationFrame(loop);
 }
 
-function keyInput(e){
-	
+function keyInput(e){	
 	if (e.type == "keydown") {
 		if (e.keyCode == controls.escape) {
 			var box = document.getElementById("info-box");
