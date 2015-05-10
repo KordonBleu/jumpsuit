@@ -5,7 +5,7 @@ resources = {},
 keys = [],
 meteors = [],
 pause = 0,
-playerX = 0, playerY = 0, playerHealth = 10,
+playerX = 0, playerY = 0, playerHealth = 10, playerLooksLeft = false,
 playerWalkFrame, playerWalkCounter = 0, playerWalkState = 0,
 playerName = "alienBlue",
 controls = {
@@ -91,20 +91,37 @@ function loadProcess(e){
 }
 
 function loop() {
-	function drawRotatedImage(image, x, y, angle) {
+	function drawRotatedImage(image, x, y, angle, mirror) {
 		//courtesy of Seb Lee-Delisle
 		context.save();
 		context.translate(x, y);
 		context.rotate(angle);
+		if (mirror === true) context.scale(-1, 1);
 		context.drawImage(image, -(image.width/2), -(image.height/2));
 		context.restore();
 	}
 
 	function fillCircle(cx, cy, r){
 		context.save();
+
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);	
+		context.closePath();
 		context.fill();
+
+		context.clip();
+
+		context.strokeStyle = "white";
+		context.lineWidth = 12;
+		context.shadowColor = "black";
+		context.shadowBlur = 30;
+		context.shadowOffsetX = -10;
+		context.shadowOffsetY = -10;
+
+		context.beginPath();
+		context.arc(cx, cy + 1, r + 7, -1/7 * Math.PI, 3/5 * Math.PI);
+		context.stroke();
+
 		context.restore();
 	}
 
@@ -169,12 +186,19 @@ function loop() {
 		if (element.cx <= 1) element.cx = element.cx * canvas.width;
 		if (element.cy <= 1) element.cy = element.cy * canvas.height;
 		fillCircle(element.cx, element.cy, element.radius);
+
 		if (attachedPlanet < 0) element.player = -1; 
 	});
 
 	if (attachedPlanet >= 0){
-		if (keys[controls.leftArrow]) planets[attachedPlanet].player += 1.4;
-		if (keys[controls.rightArrow]) planets[attachedPlanet].player -= 1.4;
+		if (keys[controls.leftArrow]) {
+			planets[attachedPlanet].player += 1.4;
+			playerLooksLeft = true;
+		}
+		if (keys[controls.rightArrow]) {
+			planets[attachedPlanet].player -= 1.4;
+			playerLooksLeft = false;
+		}
 		playerWalkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);		
 	}
 
@@ -187,7 +211,8 @@ function loop() {
 	drawRotatedImage(resources[playerName + playerWalkFrame],
 		planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2),
 		planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2),
-		Math.PI - planets[attachedPlanet].player / (180 / Math.PI));
+		Math.PI - planets[attachedPlanet].player / (180 / Math.PI),
+		playerLooksLeft);
 
 	window.requestAnimationFrame(loop);
 }
