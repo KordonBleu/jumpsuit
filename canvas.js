@@ -5,7 +5,9 @@ resources = {},
 keys = [],
 meteors = [],
 pause = 0,
-playerX = 0, playerY = 0,
+playerX = 0, playerY = 0, playerHealth = 10,
+playerWalkFrame, playerWalkCounter = 0, playerWalkState = 0,
+playerName = "alienBlue",
 controls = {
 	escape: 27,
 	spacebar: 32,
@@ -13,7 +15,25 @@ controls = {
 	downArrow: 40,
 	leftArrow: 37,
 	rightArrow: 39
-};
+}, attachedPlanet = 0,
+planets = [
+	{
+		cx: 0.15,
+		cy: 0.5,
+		radius: 150,
+		colour: "rgb(255,51,51)",
+		player: -1
+	},
+	{
+		cx: 0.8,
+		cy: 0.6,
+		radius: 220,
+		colour: "rgb(220,170,80)",
+		player: -1
+	}
+];
+
+
 
 function init(){
 	canvas.width = window.innerWidth;
@@ -28,7 +48,14 @@ function init(){
 		"meteorSmall",
 		"meteorTiny",
 		"shield",
-		"pill_red"
+		"pill_red",
+		"alienBlue_badge",
+		"alienBlue_duck",
+		"alienBlue_hurt",
+		"alienBlue_jump",
+		"alienBlue_stand",
+		"alienBlue_walk1",
+		"alienBlue_walk2"
 	];
 
 	context.canvas.fillStyle = "black";
@@ -64,11 +91,20 @@ function loadProcess(e){
 }
 
 function loop() {
-	function drawRotatedImage(image, x, y, angle) {//courtesy of Seb Lee-Delisle
+	function drawRotatedImage(image, x, y, angle) {
+		//courtesy of Seb Lee-Delisle
 		context.save();
 		context.translate(x, y);
 		context.rotate(angle);
 		context.drawImage(image, -(image.width/2), -(image.height/2));
+		context.restore();
+	}
+
+	function fillCircle(cx, cy, r){
+		context.save();
+		context.beginPath();
+		context.arc(cx, cy, r, 0, 2 * Math.PI, false);	
+		context.fill();
 		context.restore();
 	}
 
@@ -77,21 +113,15 @@ function loop() {
 	context.globalAlpha = 1;
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
-	//draw bg
+	//layer 0: background
 	for (var i = 0; i < Math.floor(canvas.width / 256) + 1; i++){
 		for (var j = 0; j < Math.floor(canvas.height / 256) + 1; j++){
 			context.drawImage(resources["background"], i * 256, j * 256);
 		}
 	}
 
-	if (keys[controls.rightArrow]) playerX += (playerX < canvas.width - 5) ? 1 : 0;
-	if (keys[controls.leftArrow]) playerX -= (playerX > 0) ? 1 : 0;
-	if (keys[controls.downArrow]) playerY += (playerY < canvas.height - 5) ? 1 : 0;
-	if (keys[controls.upArrow]) playerY -= (playerY > 0) ? 1 : 0;
 
-	context.fillStyle = "red";
-	context.fillRect(playerX, playerY, 5, 5);
-
+	//layer 1: meteors
 	if (Math.random() < 0.02){
 		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
 		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
@@ -116,7 +146,48 @@ function loop() {
 		m.rotAng += m.rotSpeed;
 		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
 		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
-	});	
+	});
+
+
+	//layer 2: HUD / GUI
+	context.globalAlpha = 1;
+
+	context.font = "20px Open Sans";
+	context.textAlign = "left";
+	context.textBaseline = "hanging";
+
+	context.fillStyle = "#eee";
+	context.fillText("Health: ", 8, 20);
+	for (var i = 0; i < playerHealth; i++){
+		context.drawImage(resources["shield"], 80 + i * 22, 20, 18, 18);
+	}
+
+
+	//layer 3: the game
+	planets.forEach(function (element, index){
+		context.fillStyle = element.colour;
+		if (element.cx <= 1) element.cx = element.cx * canvas.width;
+		if (element.cy <= 1) element.cy = element.cy * canvas.height;
+		fillCircle(element.cx, element.cy, element.radius);
+		if (attachedPlanet < 0) element.player = -1; 
+	});
+
+	if (attachedPlanet >= 0){
+		if (keys[controls.leftArrow]) planets[attachedPlanet].player += 1.4;
+		if (keys[controls.rightArrow]) planets[attachedPlanet].player -= 1.4;
+		playerWalkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);		
+	}
+
+	if (++playerWalkCounter == 8) {
+		playerWalkCounter = 0;
+		if (playerWalkState) playerWalkFrame = (playerWalkFrame === "_walk1") ? "_walk2" : "_walk1";
+		else playerWalkFrame = "_stand";
+	}	
+	playerWalkFrame = (playerWalkFrame !== undefined) ? playerWalkFrame : "_stand";
+	drawRotatedImage(resources[playerName + playerWalkFrame],
+		planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2),
+		planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2),
+		Math.PI - planets[attachedPlanet].player / (180 / Math.PI));
 
 	window.requestAnimationFrame(loop);
 }
