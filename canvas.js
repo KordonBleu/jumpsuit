@@ -6,15 +6,17 @@ keys = [],
 meteors = [],
 pause = 0,
 playerX = 0, playerY = 0, playerHealth = 10,
-playerWalkFrame, playerWalkCounter = 0, playerWalkState = 0,
-playerName = "alienBlue",
+playerWalkFrame = "_stand", playerWalkCounter = 0, playerWalkState = 0,
+playerName = "alienBeige", playerFacingDirection = "right",
+offsetX = 0, offsetY = 0,
 controls = {
 	escape: 27,
 	spacebar: 32,
 	upArrow: 38,
 	downArrow: 40,
 	leftArrow: 37,
-	rightArrow: 39
+	rightArrow: 39,
+	leftShift: 16
 }, attachedPlanet = 0,
 planets = [
 	{
@@ -29,6 +31,13 @@ planets = [
 		cy: 0.6,
 		radius: 220,
 		colour: "rgb(220,170,80)",
+		player: -1
+	},
+	{
+		cx: 1,
+		cy: 0.05,
+		radius: 80,
+		colour: "rgb(120,240,60)",
 		player: -1
 	}
 ];
@@ -55,7 +64,14 @@ function init(){
 		"alienBlue_jump",
 		"alienBlue_stand",
 		"alienBlue_walk1",
-		"alienBlue_walk2"
+		"alienBlue_walk2",
+		"alienBeige_badge",
+		"alienBeige_duck",
+		"alienBeige_hurt",
+		"alienBeige_jump",
+		"alienBeige_stand",
+		"alienBeige_walk1",
+		"alienBeige_walk2",
 	];
 
 	context.canvas.fillStyle = "black";
@@ -91,20 +107,34 @@ function loadProcess(e){
 }
 
 function loop() {
-	function drawRotatedImage(image, x, y, angle) {
+	function drawRotatedImage(image, x, y, angle, mirror) {
 		//courtesy of Seb Lee-Delisle
+		mirror = mirror | false;
 		context.save();
-		context.translate(x, y);
+		context.translate(x, y);		
 		context.rotate(angle);
+		context.scale((mirror == true) ? -1 : 1, 1);
 		context.drawImage(image, -(image.width/2), -(image.height/2));
 		context.restore();
 	}
 
-	function fillCircle(cx, cy, r){
+	function fillCircle(cx, cy, r, ws){
 		context.save();
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);	
 		context.fill();
+		context.restore();
+	}
+	function drawCircle(cx, cy, r, sw){
+		context.save();		
+		context.beginPath();
+		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
+		context.globalAlpha = 0.1;
+		context.fill();
+		context.globalAlpha = 1;
+		context.strokeStyle = context.fillStyle;
+		context.lineWidth = sw;
+		context.stroke();
 		context.restore();
 	}
 
@@ -122,13 +152,12 @@ function loop() {
 
 
 	//layer 1: meteors
-	if (Math.random() < 0.02){
-		//spawns a random meteor - why random? random y-position, random speed, random appearal, random angle
+	if (Math.random() < 0.02){		
 		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
 			chosen_img = m_resources[Math.floor(Math.random() * 4)];
 
 		meteors[meteors.length] = {
-			x: - resources[chosen_img].width,
+			x: -resources[chosen_img].width,
 			y: Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
 			res: chosen_img,
 			speed: Math.map(Math.random(), 0, 1, 2, 4),
@@ -164,30 +193,46 @@ function loop() {
 
 
 	//layer 3: the game
+	
+	offsetX = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20 : 0;
+	offsetY = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20 : 0;
 	planets.forEach(function (element, index){
 		context.fillStyle = element.colour;
 		if (element.cx <= 1) element.cx = element.cx * canvas.width;
 		if (element.cy <= 1) element.cy = element.cy * canvas.height;
-		fillCircle(element.cx, element.cy, element.radius);
+		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);		
+		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
 		if (attachedPlanet < 0) element.player = -1; 
 	});
 
 	if (attachedPlanet >= 0){
-		if (keys[controls.leftArrow]) planets[attachedPlanet].player += 1.4;
-		if (keys[controls.rightArrow]) planets[attachedPlanet].player -= 1.4;
-		playerWalkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);		
+		if (keys[controls.leftArrow]){
+			planets[attachedPlanet].player += (keys[controls.leftShift]) ? 2 : 1.4;
+			playerFacingDirection = "left";	
+		}
+		if (keys[controls.rightArrow]) {
+			planets[attachedPlanet].player -= (keys[controls.leftShift]) ? 2 : 1.4;
+			playerFacingDirection = "right";
+		}
+
+		playerWalkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);			
+		if (!playerWalkState) playerWalkFrame = (keys[controls.downArrow]) ? "_duck" : "_stand";
+
+		console.log(playerWalkCounter);
+		if (++playerWalkCounter > ((keys[controls.leftShift]) ? 5 : 8)) {
+			playerWalkCounter = 0;
+			if (playerWalkState) playerWalkFrame = (playerWalkFrame === "_walk1") ? "_walk2" : "_walk1";		
+		}	
 	}
 
-	if (++playerWalkCounter == 8) {
-		playerWalkCounter = 0;
-		if (playerWalkState) playerWalkFrame = (playerWalkFrame === "_walk1") ? "_walk2" : "_walk1";
-		else playerWalkFrame = "_stand";
-	}	
-	playerWalkFrame = (playerWalkFrame !== undefined) ? playerWalkFrame : "_stand";
+	
+
+
+
 	drawRotatedImage(resources[playerName + playerWalkFrame],
-		planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2),
-		planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2),
-		Math.PI - planets[attachedPlanet].player / (180 / Math.PI));
+		planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2) - offsetX,
+		planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[playerName + playerWalkFrame].height / 2) - offsetY,
+		Math.PI - planets[attachedPlanet].player / (180 / Math.PI), playerFacingDirection === "left");
 
 	window.requestAnimationFrame(loop);
 }
@@ -200,6 +245,7 @@ function keyInput(e){
 		}		
 	}
 	keys[e.keyCode] = (e.type == "keydown") | false;
+	console.log(e.keyCode);
 }
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
