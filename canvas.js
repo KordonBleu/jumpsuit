@@ -17,26 +17,27 @@ controls = {
 	downArrow: 40,
 	leftArrow: 37,
 	rightArrow: 39,
-	leftShift: 16
+	leftShift: 16,
+	tab: 9
 }, attachedPlanet = 0,
 planets = [
 	{
-		cx: 0.15,
-		cy: 0.5,
+		cx: function() { return 0.1 * canvas.width },
+		cy: function() { return 0.5 * canvas.height },
 		radius: 150,
 		colour: "rgb(255,51,51)",
 		player: -1
 	},
 	{
-		cx: 0.8,
-		cy: 0.6,
+		cx: function() { return 0.8 * canvas.width },
+		cy: function() { return 1.5 * canvas.height },
 		radius: 220,
 		colour: "rgb(220,170,80)",
 		player: -1
 	},
 	{
-		cx: 1,
-		cy: 0.05,
+		cx: function() { return 3 * canvas.width },
+		cy: function() { return -0.2 * canvas.height },
 		radius: 80,
 		colour: "rgb(120,240,60)",
 		player: -1
@@ -51,28 +52,11 @@ function init(){
 
 	init.paths = [
 		"background",
-		"meteorBig",
-		"meteorBig2",
-		"meteorMed",
-		"meteorMed2",
-		"meteorSmall",
-		"meteorTiny",
-		"shield",
-		"pill_red",
-		"alienBlue_badge",
-		"alienBlue_duck",
-		"alienBlue_hurt",
-		"alienBlue_jump",
-		"alienBlue_stand",
-		"alienBlue_walk1",
-		"alienBlue_walk2",
-		"alienBeige_badge",
-		"alienBeige_duck",
-		"alienBeige_hurt",
-		"alienBeige_jump",
-		"alienBeige_stand",
-		"alienBeige_walk1",
-		"alienBeige_walk2",
+		"meteorBig", "meteorBig2", "meteorMed",	"meteorMed2", "meteorSmall", "meteorTiny",
+		"shield", "pill_red",
+		"controlsUp", "controlsDown", "controlsLeft", "controlsRight",
+		"alienBlue_badge", "alienBlue_duck", "alienBlue_hurt", "alienBlue_jump", "alienBlue_stand", "alienBlue_walk1", "alienBlue_walk2",
+		"alienBeige_badge", "alienBeige_duck", "alienBeige_hurt", "alienBeige_jump", "alienBeige_stand", "alienBeige_walk1", "alienBeige_walk2"
 	];
 
 	context.canvas.fillStyle = "black";
@@ -137,9 +121,10 @@ function loop() {
 		context.beginPath();
 		context.arc(cx, cy + 1, r + 7, -1/7 * Math.PI, 3/5 * Math.PI);
 		context.stroke();
-
+		
 		context.restore();
 	}
+
 	function drawCircle(cx, cy, r, sw){
 		context.save();		
 		context.beginPath();
@@ -167,7 +152,7 @@ function loop() {
 
 
 	//layer 1: meteors
-	if (Math.random() < 0.02){		
+	if (Math.random() < 0.05){		
 		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
 			chosen_img = m_resources[Math.floor(Math.random() * 4)];
 
@@ -206,60 +191,67 @@ function loop() {
 		context.drawImage(resources["shield"], 80 + i * 22, 20, 18, 18);
 	}
 
+	if (isMobile.any() !== null){
+		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 70, 50, 50);
+		context.drawImage(resources["controlsDown"], 0, 0, resources["controlsDown"].width, resources["controlsDown"].height, 80, canvas.height - 70, 50, 50);
+	}
 
-	//layer 3: the game
-	
-	offsetX = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20 : 0;
-	offsetY = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20 : 0;
+
+	//layer 3: the game	
+	offsetX = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cx() + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20 : 0;
+	offsetY = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cy() + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20 : 0;
 	planets.forEach(function (element, index){
 		context.fillStyle = element.colour;
-		if (element.cx <= 1) element.cx = element.cx * canvas.width;
-		if (element.cy <= 1) element.cy = element.cy * canvas.height;
-
-		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
-		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
+		
+		fillCircle(element.cx() - offsetX, element.cy() - offsetY, element.radius, 5);
+		drawCircle(element.cx() - offsetX, element.cy() - offsetY, element.radius * 1.5);
 
 		if (attachedPlanet < 0) element.player = -1; 
 	});
 
 	if (attachedPlanet >= 0){
 		if (keys[controls.leftArrow]) {
-			planets[attachedPlanet].player += 1.4;
+			planets[attachedPlanet].player += (keys[controls.leftShift]) ? 1.4 : 0.8;
 			player.looksLeft = true;
 		}
 		if (keys[controls.rightArrow]) {
-			planets[attachedPlanet].player -= 1.4;
+			planets[attachedPlanet].player -= (keys[controls.leftShift]) ? 1.4 : 0.8;
 			player.looksLeft = false;
 		}
 		player.walkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);
 		
 		if (!player.walkState) player.walkFrame = (keys[controls.downArrow]) ? "_duck" : "_stand";
-		if (++player.walkCounter > ((keys[controls.leftShift]) ? 5 : 8)) {
+		if (++player.walkCounter > ((keys[controls.leftShift]) ? 5 : 9)) {
 			player.walkCounter = 0;
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
 	}
 
 	drawRotatedImage(resources[player.name + player.walkFrame],
-
-		planets[attachedPlanet].cx + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX,
-
-		planets[attachedPlanet].cy + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY,
-
+		planets[attachedPlanet].cx() + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX,
+		planets[attachedPlanet].cy() + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY,
 		Math.PI - planets[attachedPlanet].player / (180 / Math.PI),
 		player.looksLeft);
 
 	window.requestAnimationFrame(loop);
 }
 
-function keyInput(e){	
-	if (e.type == "keydown") {
-		if (e.keyCode == controls.escape) {
-			var box = document.getElementById("info-box");
-			box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
-		}		
+function handleInput(e){
+	if (isMobile.any() !== null){
+	
+
+	} else {
+		if (e.type == "keydown") {
+			if (e.keyCode == controls.escape) {
+				var box = document.getElementById("info-box");
+				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+			} else if (e.keyCode == controls.tab){
+				if (++attachedPlanet === planets.length) attachedPlanet = 0;
+			}
+		}
+		keys[e.keyCode] = (e.type == "keydown") | false;	
 	}
-	keys[e.keyCode] = (e.type == "keydown") | false;
+	
 	console.log(e.keyCode);
 }
 
@@ -267,6 +259,30 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+var isMobile = {
+	//code by Cory LaViska - http://www.abeautifulsite.net/detecting-mobile-devices-with-javascript/
+    Android: function() {
+        return navigator.userAgent.match(/Android/i);
+    },
+    BlackBerry: function() {
+        return navigator.userAgent.match(/BlackBerry/i);
+    },
+    iOS: function() {
+        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+    },
+    Opera: function() {
+        return navigator.userAgent.match(/Opera Mini/i);
+    },
+    Windows: function() {
+        return navigator.userAgent.match(/IEMobile/i) || navigator.userAgent.match(/WPDesktop/i);
+    },
+    any: function() {
+        return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
+    }
+};
+
 init();
-window.addEventListener("keydown", keyInput);
-window.addEventListener("keyup", keyInput);
+window.addEventListener("keydown", handleInput);
+window.addEventListener("keyup", handleInput);
+window.addEventListener("touchstart", handleInput);
+window.addEventListener("touchend", handleInput);
