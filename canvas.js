@@ -6,8 +6,9 @@ keys = [],
 meteors = [],
 pause = 0,
 player = {
-	x: 0, y: 0, health: 10, facesLeft: false, name: "alienBeige",
-	walkFrame: "_stand", walkCounter: 0, walkState: 0
+	x: 0.2 * canvas.width, y: 0.6 * canvas.height, health: 10, facesLeft: false, name: "alienBeige",
+	walkFrame: "_stand", walkCounter: 0, walkState: 0,
+	attachedPlanet: 0, leavePlanet: false
 },
 offsetX = 0, offsetY = 0,
 controls = {
@@ -19,25 +20,25 @@ controls = {
 	rightArrow: 39,
 	leftShift: 16,
 	tab: 9
-}, attachedPlanet = 0,
+},
 planets = [
 	{
-		cx: function() { return 0.1 * canvas.width },
-		cy: function() { return 0.5 * canvas.height },
+		get cx() { return 0.1 * canvas.width },
+		get cy() { return 0.5 * canvas.height },
 		radius: 150,
 		colour: "rgb(255,51,51)",
 		player: -1
 	},
 	{
-		cx: function() { return 0.8 * canvas.width },
-		cy: function() { return 1.5 * canvas.height },
+		get cx() { return 0.8 * canvas.width },
+		get cy() { return 1.5 * canvas.height },
 		radius: 220,
 		colour: "rgb(220,170,80)",
 		player: -1
 	},
 	{
-		cx: function() { return 3 * canvas.width },
-		cy: function() { return -0.2 * canvas.height },
+		get cx() { return 3 * canvas.width },
+		get cy() { return -0.2 * canvas.height },
 		radius: 80,
 		colour: "rgb(120,240,60)",
 		player: -1
@@ -121,7 +122,7 @@ function loop() {
 		context.beginPath();
 		context.arc(cx, cy + 1, r + 7, -1/7 * Math.PI, 3/5 * Math.PI);
 		context.stroke();
-		
+
 		context.restore();
 	}
 
@@ -198,24 +199,29 @@ function loop() {
 
 
 	//layer 3: the game	
-	offsetX = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cx() + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20 : 0;
-	offsetY = (attachedPlanet >= 0) ? ((planets[attachedPlanet].cy() + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20 : 0;
-	planets.forEach(function (element, index){
+	if(player.attachedPlanet >= 0) offsetX = ((planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20;
+	if(player.attachedPlanet >= 0) offsetY = ((planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20;
+	planets.forEach(function (element){
 		context.fillStyle = element.colour;
 		
-		fillCircle(element.cx() - offsetX, element.cy() - offsetY, element.radius, 5);
-		drawCircle(element.cx() - offsetX, element.cy() - offsetY, element.radius * 1.5);
+		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
+		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
 
-		if (attachedPlanet < 0) element.player = -1; 
+		if (player.attachedPlanet < 0) element.player = -1;
 	});
 
-	if (attachedPlanet >= 0){
+	if (keys[controls.spacebar] && !player.leavePlanet) {
+		player.leavePlanet = player.attachedPlanet;
+		player.attachedPlanet = -1;
+	}
+
+	if (player.attachedPlanet >= 0){
 		if (keys[controls.leftArrow]) {
-			planets[attachedPlanet].player += (keys[controls.leftShift]) ? 1.4 : 0.8;
+			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 1.4 : 0.8;
 			player.looksLeft = true;
 		}
 		if (keys[controls.rightArrow]) {
-			planets[attachedPlanet].player -= (keys[controls.leftShift]) ? 1.4 : 0.8;
+			planets[player.attachedPlanet].player -= (keys[controls.leftShift]) ? 1.4 : 0.8;
 			player.looksLeft = false;
 		}
 		player.walkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);
@@ -225,12 +231,25 @@ function loop() {
 			player.walkCounter = 0;
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
-	}
 
+		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX;
+		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY;
+		player.rot = Math.PI - planets[player.attachedPlanet].player / (180 / Math.PI)
+	} else {
+		planets.forEach(function (element, index){
+			if(Math.pow(element.cx - player.x - offsetX, 2) + Math.pow(element.cy - player.y - offsetY, 2) <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
+				player.attachedPlanet = index;
+				player.leavePlanet = false;
+				//TODO: place the player correctly
+			}
+		});
+		offsetX += Math.sin(player.rot) * 4;
+		offsetY -= Math.cos(player.rot) * 4;
+	}
 	drawRotatedImage(resources[player.name + player.walkFrame],
-		planets[attachedPlanet].cx() + Math.sin(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX,
-		planets[attachedPlanet].cy() + Math.cos(planets[attachedPlanet].player / (180 / Math.PI)) * (planets[attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY,
-		Math.PI - planets[attachedPlanet].player / (180 / Math.PI),
+		player.x,
+		player.y,
+		player.rot,
 		player.looksLeft);
 
 	window.requestAnimationFrame(loop);
@@ -246,7 +265,7 @@ function handleInput(e){
 				var box = document.getElementById("info-box");
 				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
 			} else if (e.keyCode == controls.tab){
-				if (++attachedPlanet === planets.length) attachedPlanet = 0;
+				if (++player.attachedPlanet === planets.length) player.attachedPlanet = 0;
 			}
 		}
 		keys[e.keyCode] = (e.type == "keydown") | false;	

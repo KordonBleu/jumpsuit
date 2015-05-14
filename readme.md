@@ -1,5 +1,6 @@
 # JumpSuit
-A sweet canvas game
+A sweet canvas game.
+With your awesome suit, you can jump from planet to planet to the exit!
 
 ## Why the name?
 ```
@@ -18,5 +19,4 @@ Flowi: :OOO
 Getkey: #OMG
 Flowi: #epic
 ```
-Another suggestion was "DontLookAtIt" - DLAI (pronounced Delay)
-but we thought this might be not the proper name for publishing it.
+Another suggestion was "DontLookAtIt" - DLAI (pronounced Delay), but we thought this might be not the proper name to publish it.

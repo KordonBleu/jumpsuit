@@ -34,7 +34,7 @@ html, body {
 	transition: opacity .2s linear 0.5s;
 	opacity: 1;
 }
-.info-box .gh-image{
+.info-box .gh-image {
 	position: absolute;
 	bottom: 15px;
 	left: 15px;
@@ -45,7 +45,7 @@ html, body {
 	line-height: 2;
 	color: #333;
 }
-.info-box.hidden *{
+.info-box.hidden * {
 	transition: opacity .2s linear;
 	opacity: 0;	
 }
