@@ -162,7 +162,7 @@ function loop() {
 			y: Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
 			res: chosen_img,
 			speed: Math.map(Math.random(), 0, 1, 2, 4),
-			ang: Math.map(Math.random(), 0, 1, 45, 135),
+			ang: Math.map(Math.random(), 0, 1, 0.25 * Math.PI, 0.75 * Math.PI),
 			rotAng: Math.map(Math.random(), 0, 1, 0, 2 * Math.PI),
 			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05),
 			depth: Math.map(Math.random(), 0, 1, 0.2, 0.6)
@@ -170,8 +170,8 @@ function loop() {
 	}
 	
 	meteors.forEach(function(m, i){		
-		m.x += Math.sin(m.ang * (Math.PI / 180)) * m.speed;
-		m.y += Math.cos(m.ang * (Math.PI / 180)) * m.speed;
+		m.x += Math.sin(m.ang) * m.speed;
+		m.y += Math.cos(m.ang) * m.speed;
 		context.globalAlpha = m.depth;
 		m.rotAng += m.rotSpeed;
 		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
@@ -199,29 +199,29 @@ function loop() {
 
 
 	//layer 3: the game	
-	if(player.attachedPlanet >= 0) offsetX = ((planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20;
-	if(player.attachedPlanet >= 0) offsetY = ((planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20;
+	if(player.attachedPlanet >= 0) offsetX = ((planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20;
+	if(player.attachedPlanet >= 0) offsetY = ((planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20;
 	planets.forEach(function (element){
 		context.fillStyle = element.colour;
 		
 		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
 		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
-
-		if (player.attachedPlanet < 0) element.player = -1;
 	});
 
-	if (keys[controls.spacebar] && !player.leavePlanet) {
+	if (keys[controls.spacebar] && player.leavePlanet === false) {
 		player.leavePlanet = player.attachedPlanet;
 		player.attachedPlanet = -1;
 	}
 
 	if (player.attachedPlanet >= 0){
 		if (keys[controls.leftArrow]) {
-			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 1.4 : 0.8;
+			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 0.01 * Math.PI : 0.012;
+			//TODO: make steps not dependant on planets's circumferences
 			player.looksLeft = true;
 		}
 		if (keys[controls.rightArrow]) {
-			planets[player.attachedPlanet].player -= (keys[controls.leftShift]) ? 1.4 : 0.8;
+			planets[player.attachedPlanet].player -= (keys[controls.leftShift]) ? 0.01 * Math.PI : 0.012;
+			//TODO: make steps not dependant on planets's circumferences
 			player.looksLeft = false;
 		}
 		player.walkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);
@@ -232,15 +232,17 @@ function loop() {
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
 
-		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX;
-		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player / (180 / Math.PI)) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY;
-		player.rot = Math.PI - planets[player.attachedPlanet].player / (180 / Math.PI)
+		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX;
+		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY;
+		player.rot = Math.PI - planets[player.attachedPlanet].player;
 	} else {
 		planets.forEach(function (element, index){
-			if(Math.pow(element.cx - player.x - offsetX, 2) + Math.pow(element.cy - player.y - offsetY, 2) <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
+			var deltaX = element.cx - player.x - offsetX,
+				deltaY = element.cy - player.y - offsetY;
+			if(Math.pow(deltaX, 2) + Math.pow(deltaY, 2) <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
 				player.leavePlanet = false;
-				//TODO: place the player correctly
+				element.player = Math.atan2(deltaX, deltaY) + Math.PI;
 			}
 		});
 		offsetX += Math.sin(player.rot) * 4;
@@ -251,6 +253,8 @@ function loop() {
 		player.y,
 		player.rot,
 		player.looksLeft);
+	context.fillStyle = "green";
+	context.fillRect(player.x - 5, player.y - 5, 10, 10);
 
 	window.requestAnimationFrame(loop);
 }
