@@ -7,8 +7,12 @@ meteors = [],
 pause = 0,
 player = {
 	x: 0.2 * canvas.width, y: 0.6 * canvas.height, health: 10, facesLeft: false, name: "alienBeige",
-	walkFrame: "_stand", walkCounter: 0, walkState: 0,
+	walkFrame: "_stand", walkCounter: 0, walkState: 0, vel: 0, fuel: 400,
 	attachedPlanet: 0, leavePlanet: false
+},
+game = {
+	paused: false,
+	muted: false
 },
 offsetX = 0, offsetY = 0,
 controls = {
@@ -39,13 +43,12 @@ planets = [
 	{
 		get cx() { return 3 * canvas.width },
 		get cy() { return -0.2 * canvas.height },
-		radius: 80,
+		radius: 500,
 		colour: "rgb(120,240,60)",
 		player: -1
 	}
-];
-
-
+],
+audioTest;
 
 function init(){
 	canvas.width = window.innerWidth;
@@ -71,7 +74,7 @@ function init(){
 		r.src = "assets/images/" + init.paths[i];
 		r.onload = loadProcess;
 		resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
-	}
+		}
 }
 
 function loadProcess(e){
@@ -167,8 +170,7 @@ function loop() {
 			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05),
 			depth: Math.map(Math.random(), 0, 1, 0.2, 0.6)
 		};
-	}
-	
+	}	
 	meteors.forEach(function(m, i){		
 		m.x += Math.sin(m.ang) * m.speed;
 		m.y += Math.cos(m.ang) * m.speed;
@@ -191,16 +193,21 @@ function loop() {
 	for (var i = 0; i < player.health; i++){
 		context.drawImage(resources["shield"], 80 + i * 22, 20, 18, 18);
 	}
+	context.fillText("Fuel: ", 8, 40);
+	context.fillStyle = "#f33";
+	context.fillRect(68, 46, player.fuel, 8);
 
 	if (isMobile.any() !== null){
-		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 70, 50, 50);
-		context.drawImage(resources["controlsDown"], 0, 0, resources["controlsDown"].width, resources["controlsDown"].height, 80, canvas.height - 70, 50, 50);
+		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 90, 70, 70);
+		context.drawImage(resources["controlsDown"], 0, 0, resources["controlsDown"].width, resources["controlsDown"].height, 110, canvas.height - 90, 70, 70);
+		context.drawImage(resources["controlsLeft"], 0, 0, resources["controlsLeft"].width, resources["controlsLeft"].height, canvas.width - 180, canvas.height - 90, 70, 70);
+		context.drawImage(resources["controlsRight"], 0, 0, resources["controlsRight"].width, resources["controlsRight"].height, canvas.width - 90, canvas.height - 90, 70, 70);
 	}
 
 
 	//layer 3: the game	
-	if(player.attachedPlanet >= 0) offsetX = ((planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.width / 2) + 19 * offsetX) / 20;
-	if(player.attachedPlanet >= 0) offsetY = ((planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - canvas.height / 2) + 19 * offsetY) / 20;
+	offsetX = ((player.x - canvas.width / 2) + 19 * offsetX) / 20;
+	offsetY = ((player.y - canvas.height / 2) + 19 * offsetY) / 20;
 	planets.forEach(function (element){
 		context.fillStyle = element.colour;
 		
@@ -214,14 +221,13 @@ function loop() {
 	}
 
 	if (player.attachedPlanet >= 0){
+		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
 		if (keys[controls.leftArrow]) {
-			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 0.01 * Math.PI : 0.012;
-			//TODO: make steps not dependant on planets's circumferences
+			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = true;
 		}
 		if (keys[controls.rightArrow]) {
-			planets[player.attachedPlanet].player -= (keys[controls.leftShift]) ? 0.01 * Math.PI : 0.012;
-			//TODO: make steps not dependant on planets's circumferences
+			planets[player.attachedPlanet].player -= (keys[controls.leftShift]) ? 1.7 * stepSize : 1 * stepSize;	
 			player.looksLeft = false;
 		}
 		player.walkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);
@@ -232,50 +238,46 @@ function loop() {
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
 
-		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetX;
-		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2) - offsetY;
+		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
+		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
 		player.rot = Math.PI - planets[player.attachedPlanet].player;
+		player.vel = 0;
+		player.fuel = 400;
 	} else {
 		planets.forEach(function (element, index){
-			var deltaX = element.cx - player.x - offsetX,
-				deltaY = element.cy - player.y - offsetY;
+			var deltaX = element.cx - player.x,
+				deltaY = element.cy - player.y;
 			if(Math.pow(deltaX, 2) + Math.pow(deltaY, 2) <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
 				player.leavePlanet = false;
 				element.player = Math.atan2(deltaX, deltaY) + Math.PI;
 			}
-		});
-		offsetX += Math.sin(player.rot) * 4;
-		offsetY -= Math.cos(player.rot) * 4;
+		});		
+		if (--player.fuel < 0) player.fuel = 0;
+		player.vel = (player.vel === 0) ? 4.5 : ((player.vel >= 10) ? 10 : player.vel * 1.005);
+		player.x += Math.sin(player.rot) * player.vel;
+		player.y -= Math.cos(player.rot) * player.vel;
 	}
+	context.fillText(player.vel, canvas.width - 50, 200);
 	drawRotatedImage(resources[player.name + player.walkFrame],
-		player.x,
-		player.y,
+		player.x - offsetX,
+		player.y - offsetY,
 		player.rot,
 		player.looksLeft);
-	context.fillStyle = "green";
-	context.fillRect(player.x - 5, player.y - 5, 10, 10);
 
 	window.requestAnimationFrame(loop);
 }
 
 function handleInput(e){
-	if (isMobile.any() !== null){
-	
-
-	} else {
-		if (e.type == "keydown") {
-			if (e.keyCode == controls.escape) {
-				var box = document.getElementById("info-box");
-				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
-			} else if (e.keyCode == controls.tab){
-				if (++player.attachedPlanet === planets.length) player.attachedPlanet = 0;
-			}
-		}
-		keys[e.keyCode] = (e.type == "keydown") | false;	
+	//TODO: better structure, more comfortability
+	if (e.type.indexOf("mouse") == 0 || e.type.indexOf("touch") == 0){	
+		
+	} else if (e.type.indexOf("key") == 0){
+		if (e.type == "keydown" && e.keyCode == controls.escape) {
+			var box = document.getElementById("info-box");
+			box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+		} else keys[e.keyCode | e.which] = (e.type == "keydown") | false;				
 	}
-	
-	console.log(e.keyCode);
 }
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
@@ -309,3 +311,5 @@ window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 window.addEventListener("touchstart", handleInput);
 window.addEventListener("touchend", handleInput);
+window.addEventListener("mousedown", handleInput);
+window.addEventListener("mouseup", handleInput);
