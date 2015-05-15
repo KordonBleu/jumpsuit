@@ -4,6 +4,7 @@ html, body {
 	overflow: hidden;
 	font-family: "Open Sans";
 }
+
 .info-box {
 	width: 250px;
 	position: fixed;
@@ -13,14 +14,8 @@ html, body {
 	background: #ebedf4;
 	color: #333;
 	opacity: 1;
-	height: 200px;	
+	height: 180px;
 	transition: height .5s ease, opacity .5s linear;
-}
-.info-box.hidden {
-	transition: height .5s ease .2s, opacity .5s linear .2s, bottom 0s linear .7s;
-	bottom: -100%;
-	height: 20px;
-	opacity: 0;
 }
 .info-box h2 {
 	margin: 5px 0px;
@@ -38,14 +33,27 @@ html, body {
 	position: absolute;
 	bottom: 15px;
 	left: 15px;
-	background: url("assets/github.png") top left no-repeat;
+	background: url("assets/images/github.png") top left no-repeat;
 	height: 30px;
 	padding-left: 38px;
 	display: block;
 	line-height: 2;
 	color: #333;
 }
+.info-box.hidden {
+	transition: height .5s ease .2s, opacity .5s linear .2s, bottom 0s linear .7s;
+	bottom: -100%;
+	height: 20px;
+	opacity: 0;
+}
 .info-box.hidden * {
 	transition: opacity .2s linear;
 	opacity: 0;	
+}
+
+#audio-icon {
+	position: fixed;
+	top: 20px;
+	right: 8px;
+	width: 24px;
 }

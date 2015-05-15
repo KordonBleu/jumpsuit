@@ -52,12 +52,12 @@ function init(){
 	canvas.height = window.innerHeight;
 
 	init.paths = [
-		"background",
-		"meteorBig", "meteorBig2", "meteorMed",	"meteorMed2", "meteorSmall", "meteorTiny",
-		"shield", "pill_red",
-		"controlsUp", "controlsDown", "controlsLeft", "controlsRight",
-		"alienBlue_badge", "alienBlue_duck", "alienBlue_hurt", "alienBlue_jump", "alienBlue_stand", "alienBlue_walk1", "alienBlue_walk2",
-		"alienBeige_badge", "alienBeige_duck", "alienBeige_hurt", "alienBeige_jump", "alienBeige_stand", "alienBeige_walk1", "alienBeige_walk2"
+		"background.png",
+		"meteorBig.png", "meteorBig2.png", "meteorMed.png",	"meteorMed2.png", "meteorSmall.png", "meteorTiny.png",
+		"shield.png", "pill_red.png",
+		"controlsUp.png", "controlsDown.png", "controlsLeft.png", "controlsRight.png",
+		"alienBlue_badge.png", "alienBlue_duck.png", "alienBlue_hurt.png", "alienBlue_jump.png", "alienBlue_stand.png", "alienBlue_walk1.png", "alienBlue_walk2.png",
+		"alienBeige_badge.png", "alienBeige_duck.png", "alienBeige_hurt.png", "alienBeige_jump.png", "alienBeige_stand.png", "alienBeige_walk1.png", "alienBeige_walk2.png"
 	];
 
 	context.canvas.fillStyle = "black";
@@ -68,10 +68,10 @@ function init(){
 
 	for (var i = 0, lgt = init.paths.length; i != lgt; i++){
 		var r = new Image();
-		r.src = "assets/" + init.paths[i] + ".png";
+		r.src = "assets/images/" + init.paths[i];
 		r.onload = loadProcess;
-		resources[init.paths[i]] = r;
-	}	
+		resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
+	}
 }
 
 function loadProcess(e){
