@@ -47,8 +47,7 @@ planets = [
 		colour: "rgb(120,240,60)",
 		player: -1
 	}
-],
-audioTest;
+];
 
 function init(){
 	canvas.width = window.innerWidth;
@@ -221,6 +220,7 @@ function loop() {
 	}
 
 	if (player.attachedPlanet >= 0){
+		fadeSound(true);
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
 		if (keys[controls.leftArrow]) {
 			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 1.7 * stepSize : 1 * stepSize;
@@ -244,6 +244,7 @@ function loop() {
 		player.vel = 0;
 		player.fuel = 400;
 	} else {
+		fadeSound(false);
 		planets.forEach(function (element, index){
 			var deltaX = element.cx - player.x,
 				deltaY = element.cy - player.y;
