@@ -7,7 +7,8 @@ meteors = [],
 pause = 0,
 player = {
 	x: 0.2 * canvas.width, y: 0.6 * canvas.height, health: 10, facesLeft: false, name: "alienBeige",
-	walkFrame: "_stand", walkCounter: 0, walkState: 0, vel: 0, fuel: 400,
+	velX: 0, velY: 0,
+	walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
 	attachedPlanet: 0, leavePlanet: false
 },
 game = {
@@ -24,32 +25,25 @@ controls = {
 	rightArrow: 39,
 	leftShift: 16,
 	tab: 9
-},
-planets = [
-	{
-		get cx() { return 0.1 * canvas.width },
-		get cy() { return 0.5 * canvas.height },
-		radius: 150,
-		colour: "rgb(255,51,51)",
-		player: -1
-	},
-	{
-		get cx() { return 0.8 * canvas.width },
-		get cy() { return 1.5 * canvas.height },
-		radius: 220,
-		colour: "rgb(220,170,80)",
-		player: -1
-	},
-	{
-		get cx() { return 3 * canvas.width },
-		get cy() { return -0.2 * canvas.height },
-		radius: 500,
-		colour: "rgb(120,240,60)",
-		player: -1
-	}
+};
+function Planet(cx, cy, radius, color) {
+	this._cx = cx;
+	this._cy = cy;
+	this.radius = radius;
+	this.color = color;
+	this.player = -1;
+}
+Planet.prototype = {
+	get cx() { return this._cx * canvas.width },
+	get cy() { return this._cy * canvas.height },
+}
+var planets = [
+	new Planet(0.1, 0.5, 150, "rgb(255,51,51)"),
+	new Planet(0.8, 1.5, 220, "rgb(220,170,80)"),
+	new Planet(3, -0.2, 500, "rgb(120,240,60)")
 ];
 
-function init(){
+function init() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
@@ -208,7 +202,7 @@ function loop() {
 	offsetX = ((player.x - canvas.width / 2) + 19 * offsetX) / 20;
 	offsetY = ((player.y - canvas.height / 2) + 19 * offsetY) / 20;
 	planets.forEach(function (element){
-		context.fillStyle = element.colour;
+		context.fillStyle = element.color;
 		
 		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
 		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
@@ -217,6 +211,10 @@ function loop() {
 	if (keys[controls.spacebar] && player.leavePlanet === false) {
 		player.leavePlanet = player.attachedPlanet;
 		player.attachedPlanet = -1;
+		player.walkFrame = "_jump";
+		player.velX = - Math.sin(player.rot + Math.PI);
+		player.velY = - Math.cos(player.rot);
+		console.log(player.rot, player.velX, player.velY);
 	}
 
 	if (player.attachedPlanet >= 0){
@@ -241,25 +239,34 @@ function loop() {
 		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
 		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
 		player.rot = Math.PI - planets[player.attachedPlanet].player;
-		player.vel = 0;
+		player.velX = 0;
+		player.velY = 0;
 		player.fuel = 400;
 	} else {
 		fadeSound(false);
 		planets.forEach(function (element, index){
-			var deltaX = element.cx - player.x,
-				deltaY = element.cy - player.y;
-			if(Math.pow(deltaX, 2) + Math.pow(deltaY, 2) <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
+			var deltaX = element.cx - player.x ,
+				deltaY = element.cy - player.y,
+				rootDist = Math.pow(deltaX, 2) + Math.pow(deltaY, 2),
+				dist = Math.sqrt(rootDist);
+
+			player.velX += element.radius * deltaX / Math.pow(dist, 3);
+			player.velY += element.radius * deltaY / Math.pow(dist, 3);
+
+			if(rootDist <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
 				player.leavePlanet = false;
 				element.player = Math.atan2(deltaX, deltaY) + Math.PI;
 			}
-		});		
+		});
+
 		if (--player.fuel < 0) player.fuel = 0;
-		player.vel = (player.vel === 0) ? 4.5 : ((player.vel >= 10) ? 10 : player.vel * 1.005);
-		player.x += Math.sin(player.rot) * player.vel;
-		player.y -= Math.cos(player.rot) * player.vel;
+		//player.vel = (player.vel === 0) ? 4.5 : ((player.vel >= 10) ? 10 : player.vel * 1.005);
+		player.x += Math.sin(player.rot) + player.velX;
+		player.y += - Math.cos(player.rot) + player.velY;
 	}
-	context.fillText(player.vel, canvas.width - 50, 200);
+	context.fillText("velX" + player.velX, 0, 200);
+	context.fillText("velY" + player.velY, 0, 250);
 	drawRotatedImage(resources[player.name + player.walkFrame],
 		player.x - offsetX,
 		player.y - offsetY,

@@ -13,7 +13,7 @@ function loadSound(url) {
 	request.onload = function() {
 		audioContext.decodeAudioData(request.response, function(buffer) {
 			audioBuffer = buffer;
-			initAudioSystem();						
+			initAudioSystem();
 		});
 	}
 	request.send();
@@ -36,7 +36,7 @@ function initAudioSystem(){
 	audioFilter.connect(audioContext.destination);
 
 	audioSource.loop = true;
-	audioSource.loopStart = 14.992;
+	audioSource.loopStart = 110.256;
 	audioSource.start(0);
 	audioLoaded = true;
 }
