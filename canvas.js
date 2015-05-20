@@ -144,6 +144,18 @@ function loop(){
 		context.restore();
 	}
 
+	function circleRectCollision(circleX, circleY, circleRadius, boxX, boxY, boxWidth, boxHeight, boxAng) {
+		//TODO: collision with a rotated box
+		var deltaX = Math.abs(circleX - boxX),
+			deltaY = Math.abs(circleY - boxY);
+
+		if(deltaX > boxWidth / 2 + circleRadius || deltaY > boxHeight / 2 + circleRadius) return false;
+
+		if(deltaX <= boxWidth / 2 || deltaY <= boxHeight / 2) return true;
+
+		return Math.pow(deltaX, 2) + Math.pow(deltaY, 2) <= Math.pow(circleRadius, 2);
+	}
+
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	context.globalAlpha = 1;
@@ -183,31 +195,10 @@ function loop(){
 	});
 
 
-	//layer 2: HUD / GUI
 	context.globalAlpha = 1;
 
-	context.font = "20px Open Sans";
-	context.textAlign = "left";
-	context.textBaseline = "hanging";
 
-	context.fillStyle = "#eee";
-	context.fillText("Health: ", 8, 20);
-	for (var i = 0; i < player.health; i++){
-		context.drawImage(resources["shield"], 80 + i * 22, 20, 18, 18);
-	}
-	context.fillText("Fuel: ", 8, 40);
-	context.fillStyle = "#f33";
-	context.fillRect(68, 46, player.fuel, 8);
-
-	if (isMobile.any() !== null){
-		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 90, 70, 70);
-		context.drawImage(resources["controlsDown"], 0, 0, resources["controlsDown"].width, resources["controlsDown"].height, 110, canvas.height - 90, 70, 70);
-		context.drawImage(resources["controlsLeft"], 0, 0, resources["controlsLeft"].width, resources["controlsLeft"].height, canvas.width - 180, canvas.height - 90, 70, 70);
-		context.drawImage(resources["controlsRight"], 0, 0, resources["controlsRight"].width, resources["controlsRight"].height, canvas.width - 90, canvas.height - 90, 70, 70);
-	}
-
-
-	//layer 3: the game	
+	//layer 2: the game	
 	offsetX = ((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 
@@ -218,7 +209,7 @@ function loop(){
 	});
 
 	if (controls["spacebar"] && player.leavePlanet === false) {
-		player.leavePlanet = player.attachedPlanet;
+		player.leavePlanet = true;
 		player.attachedPlanet = -1;
 		player.walkFrame = "_jump";
 		player.velX = -Math.sin(player.rot + Math.PI);
@@ -257,13 +248,15 @@ function loop(){
 		planets.forEach(function (element, index){
 			var deltaX = element.cx - player.x,
 				deltaY = element.cy - player.y,
-				rootDist = Math.pow(deltaX, 2) + Math.pow(deltaY, 2),
-				dist = Math.sqrt(rootDist);
+				dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+
+			player.velX += 3 * element.radius * deltaX / Math.pow(dist, 3);
+			player.velY += 3 * element.radius * deltaY / Math.pow(dist, 3);
 
 			player.velX += (element.radius / 200) * deltaX / dist;
 			player.velY += (element.radius / 200) * deltaY / dist;
 
-			if(rootDist <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
+			if(circleRectCollision(element.cx, element.cy, element.radius, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
 				player.leavePlanet = false;
 				element.player = Math.atan2(deltaX, deltaY) + Math.PI;
@@ -285,6 +278,31 @@ function loop(){
 		player.y - offsetY,
 		player.rot,
 		player.looksLeft);
+	context.fillRect(player.x - offsetX, player.y - offsetY, 10, 10);
+
+
+	//layer 3: HUD / GUI
+
+	context.font = "20px Open Sans";
+	context.textAlign = "left";
+	context.textBaseline = "hanging";
+
+	context.fillStyle = "#eee";
+	context.fillText("Health: ", 8, 20);
+	for (var i = 0; i < player.health; i++){
+		context.drawImage(resources["shield"], 80 + i * 22, 20, 18, 18);
+	}
+	context.fillText("Fuel: ", 8, 40);
+	context.fillStyle = "#f33";
+	context.fillRect(68, 46, player.fuel, 8);
+
+	if (isMobile.any() !== null){
+		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 90, 70, 70);
+		context.drawImage(resources["controlsDown"], 0, 0, resources["controlsDown"].width, resources["controlsDown"].height, 110, canvas.height - 90, 70, 70);
+		context.drawImage(resources["controlsLeft"], 0, 0, resources["controlsLeft"].width, resources["controlsLeft"].height, canvas.width - 180, canvas.height - 90, 70, 70);
+		context.drawImage(resources["controlsRight"], 0, 0, resources["controlsRight"].width, resources["controlsRight"].height, canvas.width - 90, canvas.height - 90, 70, 70);
+	}
+
 
 	window.requestAnimationFrame(loop);
 }
