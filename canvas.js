@@ -1,8 +1,16 @@
 "use strict";
+/*
+	escape: 27,
+	spacebar: 32,
+	upArrow: 38,
+	downArrow: 40,
+	leftArrow: 37,
+	rightArrow: 39,
+	leftShift: 16,
+*/
 var canvas = document.getElementById("canvas"),
 context = canvas.getContext("2d"),
 resources = {},
-keys = [],
 meteors = [],
 pause = 0,
 player = {
@@ -13,18 +21,19 @@ player = {
 },
 game = {
 	paused: false,
-	muted: false
+	muted: false,
+	dragStartX: 0,
+	dragStartY: 0,
+	dragX: 0,
+	dragY: 0,
 },
 offsetX = 0, offsetY = 0,
 controls = {
-	escape: 27,
-	spacebar: 32,
-	upArrow: 38,
-	downArrow: 40,
-	leftArrow: 37,
-	rightArrow: 39,
-	leftShift: 16,
-	tab: 9
+	upArrow: false,
+	downArrow: false,
+	leftArrow: false,
+	rightArrow: false,
+	leftShift: false,
 };
 function Planet(cx, cy, radius, color) {
 	this._cx = cx;
@@ -67,7 +76,7 @@ function init() {
 		r.src = "assets/images/" + init.paths[i];
 		r.onload = loadProcess;
 		resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
-		}
+	}
 }
 
 function loadProcess(e){
@@ -88,7 +97,7 @@ function loadProcess(e){
 	if (loadProcess.progress == init.paths.length) setTimeout(loop, 1000);
 }
 
-function loop() {
+function loop(){
 	function drawRotatedImage(image, x, y, angle, mirror) {
 		//courtesy of Seb Lee-Delisle
 		context.save();
@@ -199,43 +208,42 @@ function loop() {
 
 
 	//layer 3: the game	
-	offsetX = ((player.x - canvas.width / 2) + 19 * offsetX) / 20;
-	offsetY = ((player.y - canvas.height / 2) + 19 * offsetY) / 20;
+	offsetX = ((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
+	offsetY = ((player.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
+
 	planets.forEach(function (element){
-		context.fillStyle = element.color;
-		
+		context.fillStyle = element.color;		
 		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
 		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
 	});
 
-	if (keys[controls.spacebar] && player.leavePlanet === false) {
+	if (controls["spacebar"] && player.leavePlanet === false) {
 		player.leavePlanet = player.attachedPlanet;
 		player.attachedPlanet = -1;
 		player.walkFrame = "_jump";
-		player.velX = - Math.sin(player.rot + Math.PI);
-		player.velY = - Math.cos(player.rot);
+		player.velX = -Math.sin(player.rot + Math.PI);
+		player.velY = -Math.cos(player.rot);
 		console.log(player.rot, player.velX, player.velY);
 	}
 
 	if (player.attachedPlanet >= 0){
 		fadeSound(true);
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
-		if (keys[controls.leftArrow]) {
-			planets[player.attachedPlanet].player += (keys[controls.leftShift]) ? 1.7 * stepSize : 1 * stepSize;
+		if (controls["leftArrow"]) {
+			planets[player.attachedPlanet].player += (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = true;
 		}
-		if (keys[controls.rightArrow]) {
-			planets[player.attachedPlanet].player -= (keys[controls.leftShift]) ? 1.7 * stepSize : 1 * stepSize;	
+		if (controls["rightArrow"]) {
+			planets[player.attachedPlanet].player -= (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;	
 			player.looksLeft = false;
 		}
-		player.walkState = (keys[controls.leftArrow] || keys[controls.rightArrow]);
+		player.walkState = (controls["leftArrow"] || controls["rightArrow"]);
 		
-		if (!player.walkState) player.walkFrame = (keys[controls.downArrow]) ? "_duck" : "_stand";
-		if (++player.walkCounter > ((keys[controls.leftShift]) ? 5 : 9)) {
+		if (!player.walkState) player.walkFrame = (controls["downArrow"]) ? "_duck" : "_stand";
+		if (++player.walkCounter > ((controls["leftShift"]) ? 5 : 9)) {
 			player.walkCounter = 0;
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
-
 		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
 		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
 		player.rot = Math.PI - planets[player.attachedPlanet].player;
@@ -244,14 +252,16 @@ function loop() {
 		player.fuel = 400;
 	} else {
 		fadeSound(false);
+		player.velX = 0;
+		player.velY = 0;		
 		planets.forEach(function (element, index){
-			var deltaX = element.cx - player.x ,
+			var deltaX = element.cx - player.x,
 				deltaY = element.cy - player.y,
 				rootDist = Math.pow(deltaX, 2) + Math.pow(deltaY, 2),
 				dist = Math.sqrt(rootDist);
 
-			player.velX += element.radius * deltaX / Math.pow(dist, 3);
-			player.velY += element.radius * deltaY / Math.pow(dist, 3);
+			player.velX += (element.radius / 200) * deltaX / dist;
+			player.velY += (element.radius / 200) * deltaY / dist;
 
 			if(rootDist <= Math.pow(element.radius * 1.5, 2) && index !== player.leavePlanet) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
@@ -260,10 +270,13 @@ function loop() {
 			}
 		});
 
+		player.velX = Math.sin(player.rot) * 8 + player.velX;
+		player.velY = -Math.cos(player.rot) * 8 + player.velY;
+
 		if (--player.fuel < 0) player.fuel = 0;
 		//player.vel = (player.vel === 0) ? 4.5 : ((player.vel >= 10) ? 10 : player.vel * 1.005);
-		player.x += Math.sin(player.rot) + player.velX;
-		player.y += - Math.cos(player.rot) + player.velY;
+		player.x += player.velX;
+		player.y += player.velY;		
 	}
 	context.fillText("velX" + player.velX, 0, 200);
 	context.fillText("velY" + player.velY, 0, 250);
@@ -276,15 +289,72 @@ function loop() {
 	window.requestAnimationFrame(loop);
 }
 
+
 function handleInput(e){
 	//TODO: better structure, more comfortability
 	if (e.type.indexOf("mouse") == 0 || e.type.indexOf("touch") == 0){	
-		
+		var x = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageX : e.x; 
+		var y = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageY : e.y;
+
+		if (e.type.indexOf("touch") == 0) {
+			/*
+			20, canvas.height - 90
+			110, canvas.height - 90
+			canvas.width - 180, canvas.height - 90
+			canvas.width - 90, canvas.height - 90
+			*/
+			if (x > 20 && x < 90 && y > canvas.height - 90 && y < canvas.height - 20){
+				controls["upArrow"] = (e.type !== "touchend");
+			} else if (x > 110 && x < 180 && y > canvas.height - 90 && y < canvas.height - 20){
+				controls["downArrow"] = (e.type !== "touchend");				
+			} else if (x > canvas.width - 180 && x < canvas.width - 110 && y > canvas.height - 90 && y < canvas.height - 20){
+				controls["leftArrow"] = (e.type !== "touchend");
+			} else if (x > canvas.width - 90 && x < canvas.width - 20 && y > canvas.height - 90 && y < canvas.height - 20){
+				controls["rightArrow"] = (e.type !== "touchend");
+			}
+		}
+		if (e.type.indexOf("start") !== -1 || e.type.indexOf("down") !== -1){
+			game.dragStartX = x;
+			game.dragStartY = y;
+			game.dragX = x;
+			game.dragY = y;
+		} else if (e.type.indexOf("end") !== -1 || e.type.indexOf("up") !== -1){
+			game.dragStartX = 0;
+			game.dragStartY = 0;
+			game.dragX = 0;
+			game.dragY = 0;			
+		} else {
+			game.dragX = (game.dragStartX !== 0) ? x : 0;
+			game.dragY = (game.dragStartY !== 0) ? y : 0;
+		}
 	} else if (e.type.indexOf("key") == 0){
-		if (e.type == "keydown" && e.keyCode == controls.escape) {
-			var box = document.getElementById("info-box");
-			box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
-		} else keys[e.keyCode | e.which] = (e.type == "keydown") | false;				
+		e.keyState = (e.type == "keydown") | false;
+		switch (e.keyCode){
+			case 27:
+				var box = document.getElementById("info-box");
+				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+				break;
+			case 32:
+				controls["spacebar"] = e.keyState;
+				break;
+			case 16:
+				controls["leftShift"] = e.keyState;
+				break;
+			case 87:
+				controls["upArrow"] = e.keyState;
+				break;
+			case 83:
+				controls["downArrow"] = e.keyState;
+				break;
+			case 65:
+				controls["leftArrow"] = e.keyState;
+				break;
+			case 68:
+				controls["rightArrow"] = e.keyState;
+				break;
+
+		}
+
 	}
 }
 
@@ -318,6 +388,8 @@ init();
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 window.addEventListener("touchstart", handleInput);
+window.addEventListener("touchmove", handleInput);
 window.addEventListener("touchend", handleInput);
 window.addEventListener("mousedown", handleInput);
+window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);

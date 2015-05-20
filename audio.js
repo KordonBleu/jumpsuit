@@ -25,7 +25,7 @@ function initAudioSystem(){
 
 	audioFilter = audioContext.createBiquadFilter();
 	audioFilter.type = "lowpass";
-	audioFilter.Q.value = 5;
+	audioFilter.Q.value = 2;
 	audioFilter.frequency.value = 200;
 
 	audioGain = audioContext.createGain();
@@ -48,7 +48,7 @@ function fadeSound(filtered){
 	if (filtered){		
 		audioFilter.frequency.value = (fv <= 200) ? 200 : fv * 0.95;
 	} else {
-		audioFilter.frequency.value = (fv >= 7000) ? 7000 : fv * 1.05;
+		audioFilter.frequency.value = (fv >= 4000) ? 4000 : fv * 1.05;
 	}
 }
 loadSound("assets/audio/interstellar.ogg");
