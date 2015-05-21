@@ -1,40 +1,5 @@
 "use strict";
-/*
-	escape: 27,
-	spacebar: 32,
-	upArrow: 38,
-	downArrow: 40,
-	leftArrow: 37,
-	rightArrow: 39,
-	leftShift: 16,
-*/
-var canvas = document.getElementById("canvas"),
-context = canvas.getContext("2d"),
-resources = {},
-meteors = [],
-pause = 0,
-player = {
-	x: 0.2 * canvas.width, y: 0.6 * canvas.height, health: 10, facesLeft: false, name: "alienBeige",
-	velX: 0, velY: 0,
-	walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
-	attachedPlanet: 0, leavePlanet: false
-},
-game = {
-	paused: false,
-	muted: false,
-	dragStartX: 0,
-	dragStartY: 0,
-	dragX: 0,
-	dragY: 0,
-},
-offsetX = 0, offsetY = 0,
-controls = {
-	upArrow: false,
-	downArrow: false,
-	leftArrow: false,
-	rightArrow: false,
-	leftShift: false,
-};
+
 function Planet(cx, cy, radius, color) {
 	this._cx = cx;
 	this._cy = cy;
@@ -46,11 +11,38 @@ Planet.prototype = {
 	get cx() { return this._cx * canvas.width },
 	get cy() { return this._cy * canvas.height },
 }
-var planets = [
-	new Planet(0.1, 0.5, 150, "rgb(255,51,51)"),
-	new Planet(0.8, 1.5, 220, "rgb(220,170,80)"),
-	new Planet(3, -0.2, 500, "rgb(120,240,60)")
-];
+var canvas = document.getElementById("canvas"),
+	context = canvas.getContext("2d"),
+	resources = {},
+	meteors = [],
+	pause = 0,
+	player = {
+		x: 0.2 * canvas.width, y: 0.6 * canvas.height, health: 10, facesLeft: false, name: "alienBeige",
+		velX: 0, velY: 0,
+		walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
+		attachedPlanet: 0, leavePlanet: false
+	},
+	game = {
+		paused: false,
+		muted: false,
+		dragStartX: 0,
+		dragStartY: 0,
+		dragX: 0,
+		dragY: 0,
+	},
+	offsetX = 0, offsetY = 0,
+	controls = {
+		upArrow: false,
+		downArrow: false,
+		leftArrow: false,
+		rightArrow: false,
+		leftShift: false,
+	},
+	planets = [
+		new Planet(0.1, 0.5, 150, "rgb(255,51,51)"),
+		new Planet(0.8, 1.5, 220, "rgb(220,170,80)"),
+		new Planet(3, -0.2, 500, "rgb(120,240,60)")
+	];
 
 function init() {
 	canvas.width = window.innerWidth;
@@ -67,7 +59,7 @@ function init() {
 
 	context.canvas.fillStyle = "black";
 	context.fillRect(0,0, canvas.width, canvas.height);
-  	context.font = "16px Open Sans";  	
+  	context.font = "16px Open Sans";
   	context.textBaseline = "top";
   	context.textAlign = "center";
 
@@ -101,7 +93,7 @@ function loop(){
 	function drawRotatedImage(image, x, y, angle, mirror) {
 		//courtesy of Seb Lee-Delisle
 		context.save();
-		context.translate(x, y);		
+		context.translate(x, y);
 		context.rotate(angle);
 		if (mirror === true) context.scale(-1, 1);
 		context.drawImage(image, -(image.width/2), -(image.height/2));
@@ -112,7 +104,7 @@ function loop(){
 		context.save();
 
 		context.beginPath();
-		context.arc(cx, cy, r, 0, 2 * Math.PI, false);	
+		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.closePath();
 		context.fill();
 
@@ -132,7 +124,7 @@ function loop(){
 	}
 
 	function drawCircle(cx, cy, r, sw){
-		context.save();		
+		context.save();
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.globalAlpha = 0.1;
@@ -170,7 +162,7 @@ function loop(){
 
 
 	//layer 1: meteors
-	if (Math.random() < 0.05){		
+	if (Math.random() < 0.05){
 		var m_resources = ["meteorMed2", "meteorMed", "meteorSmall", "meteorTiny"],
 			chosen_img = m_resources[Math.floor(Math.random() * 4)];
 
@@ -184,13 +176,13 @@ function loop(){
 			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05),
 			depth: Math.map(Math.random(), 0, 1, 0.2, 0.6)
 		};
-	}	
-	meteors.forEach(function(m, i){		
+	}
+	meteors.forEach(function(m, i){
 		m.x += Math.sin(m.ang) * m.speed;
 		m.y += Math.cos(m.ang) * m.speed;
 		context.globalAlpha = m.depth;
 		m.rotAng += m.rotSpeed;
-		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);			
+		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);
 		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
 	});
 
@@ -198,12 +190,12 @@ function loop(){
 	context.globalAlpha = 1;
 
 
-	//layer 2: the game	
+	//layer 2: the game
 	offsetX = ((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 
 	planets.forEach(function (element){
-		context.fillStyle = element.color;		
+		context.fillStyle = element.color;
 		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
 		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
 	});
@@ -214,7 +206,6 @@ function loop(){
 		player.walkFrame = "_jump";
 		player.velX = -Math.sin(player.rot + Math.PI);
 		player.velY = -Math.cos(player.rot);
-		console.log(player.rot, player.velX, player.velY);
 	}
 
 	if (player.attachedPlanet >= 0){
@@ -225,11 +216,11 @@ function loop(){
 			player.looksLeft = true;
 		}
 		if (controls["rightArrow"]) {
-			planets[player.attachedPlanet].player -= (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;	
+			planets[player.attachedPlanet].player -= (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = false;
 		}
 		player.walkState = (controls["leftArrow"] || controls["rightArrow"]);
-		
+
 		if (!player.walkState) player.walkFrame = (controls["downArrow"]) ? "_duck" : "_stand";
 		if (++player.walkCounter > ((controls["leftShift"]) ? 5 : 9)) {
 			player.walkCounter = 0;
@@ -244,14 +235,11 @@ function loop(){
 	} else {
 		fadeSound(false);
 		player.velX = 0;
-		player.velY = 0;		
+		player.velY = 0;
 		planets.forEach(function (element, index){
 			var deltaX = element.cx - player.x,
 				deltaY = element.cy - player.y,
 				dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-
-			player.velX += 3 * element.radius * deltaX / Math.pow(dist, 3);
-			player.velY += 3 * element.radius * deltaY / Math.pow(dist, 3);
 
 			player.velX += (element.radius / 200) * deltaX / dist;
 			player.velY += (element.radius / 200) * deltaY / dist;
@@ -263,13 +251,15 @@ function loop(){
 			}
 		});
 
-		player.velX = Math.sin(player.rot) * 8 + player.velX;
-		player.velY = -Math.cos(player.rot) * 8 + player.velY;
+		player.x += Math.sin(player.rot) * 8 + player.velX;
+		player.y += -Math.cos(player.rot) * 8 + player.velY;
 
-		if (--player.fuel < 0) player.fuel = 0;
+		if(controls["upArrow"] && player.fuel > 0) {
+			player.fuel--;
 		//player.vel = (player.vel === 0) ? 4.5 : ((player.vel >= 10) ? 10 : player.vel * 1.005);
-		player.x += player.velX;
-		player.y += player.velY;		
+			player.x += Math.sin(player.rot);
+			player.y += -Math.cos(player.rot);
+		}
 	}
 	context.fillText("velX" + player.velX, 0, 200);
 	context.fillText("velY" + player.velY, 0, 250);
@@ -282,7 +272,6 @@ function loop(){
 
 
 	//layer 3: HUD / GUI
-
 	context.font = "20px Open Sans";
 	context.textAlign = "left";
 	context.textBaseline = "hanging";
@@ -296,7 +285,7 @@ function loop(){
 	context.fillStyle = "#f33";
 	context.fillRect(68, 46, player.fuel, 8);
 
-	if (isMobile.any() !== null){
+	if (navigator.maxTouchPoints > 0){
 		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 90, 70, 70);
 		context.drawImage(resources["controlsDown"], 0, 0, resources["controlsDown"].width, resources["controlsDown"].height, 110, canvas.height - 90, 70, 70);
 		context.drawImage(resources["controlsLeft"], 0, 0, resources["controlsLeft"].width, resources["controlsLeft"].height, canvas.width - 180, canvas.height - 90, 70, 70);
@@ -310,9 +299,9 @@ function loop(){
 
 function handleInput(e){
 	//TODO: better structure, more comfortability
-	if (e.type.indexOf("mouse") == 0 || e.type.indexOf("touch") == 0){	
-		var x = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageX : e.x; 
-		var y = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageY : e.y;
+	if (e.type.indexOf("mouse") == 0 || e.type.indexOf("touch") == 0){
+		var x = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageX : e.pageX;
+		var y = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageY : e.pageY;
 
 		if (e.type.indexOf("touch") == 0) {
 			/*
@@ -324,7 +313,7 @@ function handleInput(e){
 			if (x > 20 && x < 90 && y > canvas.height - 90 && y < canvas.height - 20){
 				controls["upArrow"] = (e.type !== "touchend");
 			} else if (x > 110 && x < 180 && y > canvas.height - 90 && y < canvas.height - 20){
-				controls["downArrow"] = (e.type !== "touchend");				
+				controls["downArrow"] = (e.type !== "touchend");
 			} else if (x > canvas.width - 180 && x < canvas.width - 110 && y > canvas.height - 90 && y < canvas.height - 20){
 				controls["leftArrow"] = (e.type !== "touchend");
 			} else if (x > canvas.width - 90 && x < canvas.width - 20 && y > canvas.height - 90 && y < canvas.height - 20){
@@ -340,17 +329,19 @@ function handleInput(e){
 			game.dragStartX = 0;
 			game.dragStartY = 0;
 			game.dragX = 0;
-			game.dragY = 0;			
+			game.dragY = 0;
 		} else {
 			game.dragX = (game.dragStartX !== 0) ? x : 0;
 			game.dragY = (game.dragStartY !== 0) ? y : 0;
 		}
 	} else if (e.type.indexOf("key") == 0){
-		e.keyState = (e.type == "keydown") | false;
+		e.keyState = (e.type === "keydown") || false;
 		switch (e.keyCode){
 			case 27:
-				var box = document.getElementById("info-box");
-				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+				if(e.keyState) {
+					var box = document.getElementById("info-box");
+					box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+				}
 				break;
 			case 32:
 				controls["spacebar"] = e.keyState;
@@ -358,49 +349,33 @@ function handleInput(e){
 			case 16:
 				controls["leftShift"] = e.keyState;
 				break;
+			case 38:
 			case 87:
 				controls["upArrow"] = e.keyState;
 				break;
+			case 40:
 			case 83:
 				controls["downArrow"] = e.keyState;
 				break;
+			case 37:
 			case 65:
 				controls["leftArrow"] = e.keyState;
 				break;
+			case 39:
 			case 68:
 				controls["rightArrow"] = e.keyState;
 				break;
 
 		}
 
+	} else if(e.type === "wheel") {
+		console.log(e.deltaY);
 	}
 }
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
-var isMobile = {
-	//code by Cory LaViska - http://www.abeautifulsite.net/detecting-mobile-devices-with-javascript/
-    Android: function() {
-        return navigator.userAgent.match(/Android/i);
-    },
-    BlackBerry: function() {
-        return navigator.userAgent.match(/BlackBerry/i);
-    },
-    iOS: function() {
-        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
-    },
-    Opera: function() {
-        return navigator.userAgent.match(/Opera Mini/i);
-    },
-    Windows: function() {
-        return navigator.userAgent.match(/IEMobile/i) || navigator.userAgent.match(/WPDesktop/i);
-    },
-    any: function() {
-        return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows());
-    }
-};
 
 init();
 window.addEventListener("keydown", handleInput);
@@ -411,3 +386,4 @@ window.addEventListener("touchend", handleInput);
 window.addEventListener("mousedown", handleInput);
 window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);
+window.addEventListener("wheel", handleInput);
