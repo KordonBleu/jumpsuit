@@ -204,8 +204,8 @@ function loop(){
 		player.leavePlanet = true;
 		player.attachedPlanet = -1;
 		player.walkFrame = "_jump";
-		player.velX = -Math.sin(player.rot + Math.PI);
-		player.velY = -Math.cos(player.rot);
+		player.velX = Math.sin(player.rot) * 6;
+		player.velY = -Math.cos(player.rot) * 6;
 	}
 
 	if (player.attachedPlanet >= 0){
@@ -231,18 +231,16 @@ function loop(){
 		player.rot = Math.PI - planets[player.attachedPlanet].player;
 		player.velX = 0;
 		player.velY = 0;
-		player.fuel = 400;
+		player.fuel = 300;
 	} else {
 		fadeSound(false);
-		player.velX = 0;
-		player.velY = 0;
 		planets.forEach(function (element, index){
 			var deltaX = element.cx - player.x,
 				deltaY = element.cy - player.y,
-				dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+				distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
-			player.velX += (element.radius / 200) * deltaX / dist;
-			player.velY += (element.radius / 200) * deltaY / dist;
+			player.velX += 9000 * element.radius * deltaX / distPowFour;
+			player.velY += 9000 * element.radius * deltaY / distPowFour;
 
 			if(circleRectCollision(element.cx, element.cy, element.radius, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
@@ -251,16 +249,16 @@ function loop(){
 			}
 		});
 
-		player.x += Math.sin(player.rot) * 8 + player.velX;
-		player.y += -Math.cos(player.rot) * 8 + player.velY;
-
 		if(controls["upArrow"] && player.fuel > 0) {
 			player.fuel--;
-		//player.vel = (player.vel === 0) ? 4.5 : ((player.vel >= 10) ? 10 : player.vel * 1.005);
-			player.x += Math.sin(player.rot);
-			player.y += -Math.cos(player.rot);
+			player.velX += Math.sin(player.rot) / 10;
+			player.velY += -Math.cos(player.rot) / 10;
 		}
+
+		player.x += player.velX;
+		player.y += player.velY;
 	}
+
 	context.fillText("velX" + player.velX, 0, 200);
 	context.fillText("velY" + player.velY, 0, 250);
 	drawRotatedImage(resources[player.name + player.walkFrame],

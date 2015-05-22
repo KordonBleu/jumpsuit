@@ -1,3 +1,6 @@
+@viewport {
+	user-zoom: fixed;
+}
 html, body {
 	margin: 0;
 	height: 100%;

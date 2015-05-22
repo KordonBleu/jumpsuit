@@ -55,11 +55,11 @@ loadSound("assets/audio/interstellar.ogg");
 
 audioIcon = document.getElementById("audio-icon");
 audioIcon.addEventListener("click", function() {
-	if(audioIcon.getAttribute('src') === "assets/images/Speaker_Icon.svg") {
-		audioIcon.src = "assets/images/Mute_Icon.svg";
+	if(audioIcon.getAttribute('src') === "assets/images/controlsMute.png") {
+		audioIcon.src = "assets/images/controlsUnmute.png";
 		audioGain.gain.value = 0;
 	} else {
-		audioIcon.src = "assets/images/Speaker_Icon.svg"; 
+		audioIcon.src = "assets/images/controlsMute.png"; 
 		audioGain.gain.value = 0.5;
 	}
 });
