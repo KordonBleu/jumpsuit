@@ -1,65 +1,78 @@
 var audioContext = new (window.AudioContext || window.webkitAudioContext)(),
-audioBuffer,
-audioSource,
-audioFilter,
-audioGain,
-audioLoaded = false;
+sounds = {},
+gain = audioContext.createGain();
+gain.gain.value = 0.5;
 
-function loadSound(url) {
+function loadSound(url, name){
 	var request = new XMLHttpRequest();
-	request.open('GET', url, true);
-	request.responseType = 'arraybuffer';
-
+	request.open("GET", url, true);
+	request.responseType = "arraybuffer";
 	request.onload = function() {
-		audioContext.decodeAudioData(request.response, function(buffer) {
-			audioBuffer = buffer;
-			initAudioSystem();
+		audioContext.decodeAudioData(request.response, function (buffer){
+			initSounds(buffer, name);
 		});
 	}
 	request.send();
 }
 
-function initAudioSystem(){
-	audioSource = audioContext.createBufferSource();
-	audioSource.buffer = audioBuffer;
+function initSounds(buffer, name){
+	sounds[name] = { source: null, filter: null, buffer: null };
+	sounds[name].buffer = buffer;
 
-	audioFilter = audioContext.createBiquadFilter();
-	audioFilter.type = "lowpass";
-	audioFilter.Q.value = 2;
-	audioFilter.frequency.value = 200;
+	if (name == "background"){
+		sounds[name].source = audioContext.createBufferSource();
+		sounds[name].source.buffer = sounds[name].buffer;
 
-	audioGain = audioContext.createGain();
-	audioGain.gain.value = 0.5;
+		var filter = audioContext.createBiquadFilter();
+		filter.type = "lowpass";
+		filter.Q.value = 2;
+		filter.frequency.value = 4000;
+		
+		sounds[name].filter = filter;
+		sounds[name].source.connect(sounds[name].filter);
+		sounds[name].filter.connect(gain);
+		gain.connect(audioContext.destination);
 
-	audioSource.connect(audioGain);
-	audioGain.connect(audioFilter);
-	audioFilter.connect(audioContext.destination);
-
-	audioSource.loop = true;
-	audioSource.loopStart = 110.256;
-	audioSource.start(0);
-	audioLoaded = true;
+		sounds[name].source.loop = true;
+		sounds[name].source.loopStart = 110.256;
+		sounds[name].source.start(0);
+	}
+	
 }
 
-function fadeSound(filtered){
-	if (!audioLoaded) return;
+function fadeBackground(filtered){
+	if (sounds["background"] == null) return;
 
-	var fv = audioFilter.frequency.value;
+	var fv = sounds["background"].filter.frequency.value;
 	if (filtered){		
-		audioFilter.frequency.value = (fv <= 200) ? 200 : fv * 0.95;
+		sounds["background"].filter.frequency.value = (fv <= 200) ? 200 : fv * 0.95;
 	} else {
-		audioFilter.frequency.value = (fv >= 4000) ? 4000 : fv * 1.05;
+		sounds["background"].filter.frequency.value = (fv >= 4000) ? 4000 : fv * 1.05;
 	}
 }
-loadSound("assets/audio/interstellar.ogg");
+
+function playSound(name, distance){
+	if (sounds[name] !== null) {
+		sounds[name].source = audioContext.createBufferSource();
+		sounds[name].source.buffer = sounds[name].buffer;
+
+		sounds[name].source.connect(gain);
+		gain.connect(audioContext.destination);
+
+		sounds[name].source.start(0);
+	} 	
+}
+
+loadSound("assets/audio/laserTest.ogg", "laser");
+loadSound("assets/audio/interstellar.ogg", "background");
 
 audioIcon = document.getElementById("audio-icon");
 audioIcon.addEventListener("click", function() {
 	if(audioIcon.getAttribute('src') === "assets/images/controlsMute.png") {
 		audioIcon.src = "assets/images/controlsUnmute.png";
-		audioGain.gain.value = 0;
+		gain.gain.value = 0.5;
 	} else {
 		audioIcon.src = "assets/images/controlsMute.png"; 
-		audioGain.gain.value = 0.5;
+		gain.gain.value = 0;
 	}
 });

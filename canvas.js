@@ -11,6 +11,14 @@ Planet.prototype = {
 	get cx() { return this._cx * canvas.width },
 	get cy() { return this._cy * canvas.height },
 }
+function Enemy(x, y, appereal){
+	this._x = x;
+	this._y = y;
+	this._appereal = appereal;
+	this.fireRate = 0;
+	this.angle = 0
+	this.shots = [];
+}
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
 	resources = {},
@@ -42,6 +50,10 @@ var canvas = document.getElementById("canvas"),
 		new Planet(0.1, 0.5, 150, "rgb(255,51,51)"),
 		new Planet(0.8, 1.5, 220, "rgb(220,170,80)"),
 		new Planet(3, -0.2, 500, "rgb(120,240,60)")
+	],
+	enemies = [
+		new Enemy(300, 700, "enemyBlack1"),
+		new Enemy(1500, 200, "enemyBlack3")
 	];
 
 function init() {
@@ -51,10 +63,13 @@ function init() {
 	init.paths = [
 		"background.png",
 		"meteorBig.png", "meteorBig2.png", "meteorMed.png",	"meteorMed2.png", "meteorSmall.png", "meteorTiny.png",
-		"shield.png", "pill_red.png",
+		"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
 		"controlsUp.png", "controlsDown.png", "controlsLeft.png", "controlsRight.png",
 		"alienBlue_badge.png", "alienBlue_duck.png", "alienBlue_hurt.png", "alienBlue_jump.png", "alienBlue_stand.png", "alienBlue_walk1.png", "alienBlue_walk2.png",
-		"alienBeige_badge.png", "alienBeige_duck.png", "alienBeige_hurt.png", "alienBeige_jump.png", "alienBeige_stand.png", "alienBeige_walk1.png", "alienBeige_walk2.png"
+		"alienBeige_badge.png", "alienBeige_duck.png", "alienBeige_hurt.png", "alienBeige_jump.png", "alienBeige_stand.png", "alienBeige_walk1.png", "alienBeige_walk2.png",
+		"alienGreen_badge.png", "alienGreen_duck.png", "alienGreen_hurt.png", "alienGreen_jump.png", "alienGreen_stand.png", "alienGreen_walk1.png", "alienGreen_walk2.png",
+		"enemyBlack1.png", "enemyBlack2.png", "enemyBlack3.png", "enemyBlue1.png", "enemyBlue2.png", "enemyBlue3.png",
+		"enemyGreen1.png", "enemyGreen2.png", "enemyRed1.png", "enemyRed2.png", "enemyRed3.png"
 	];
 
 	context.canvas.fillStyle = "black";
@@ -132,6 +147,7 @@ function loop(){
 		context.globalAlpha = 1;
 		context.strokeStyle = context.fillStyle;
 		context.lineWidth = sw;
+		context.setLineDash([5]);
 		context.stroke();
 		context.restore();
 	}
@@ -146,6 +162,19 @@ function loop(){
 		if(deltaX <= boxWidth / 2 || deltaY <= boxHeight / 2) return true;
 
 		return Math.pow(deltaX, 2) + Math.pow(deltaY, 2) <= Math.pow(circleRadius, 2);
+	}
+
+	function drawArrow(fromx, fromy, ang, dist, col){
+		var len = (dist > 200) ? 200 : (dist < 60) ? 60 : dist;
+
+		var tox = fromx + Math.sin(Math.PI - ang) * len,
+			toy = fromy - Math.cos(Math.PI - ang) * len;		
+		context.beginPath();
+		context.moveTo(fromx, fromy);
+		context.lineTo(tox, toy);
+		context.lineWidth = 2;
+		context.strokeStyle = col;
+		context.stroke();
 	}
 
 	canvas.width = window.innerWidth;
@@ -186,7 +215,6 @@ function loop(){
 		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
 	});
 
-
 	context.globalAlpha = 1;
 
 
@@ -196,8 +224,8 @@ function loop(){
 
 	planets.forEach(function (element){
 		context.fillStyle = element.color;
-		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius, 5);
-		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5);
+		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius);
+		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5, 2);
 	});
 
 	if (controls["spacebar"] && player.leavePlanet === false) {
@@ -209,7 +237,7 @@ function loop(){
 	}
 
 	if (player.attachedPlanet >= 0){
-		fadeSound(true);
+		fadeBackground(true);
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
 		if (controls["leftArrow"]) {
 			planets[player.attachedPlanet].player += (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
@@ -233,16 +261,19 @@ function loop(){
 		player.velY = 0;
 		player.fuel = 300;
 	} else {
-		fadeSound(false);
+		fadeBackground(false);
 		planets.forEach(function (element, index){
 			var deltaX = element.cx - player.x,
 				deltaY = element.cy - player.y,
 				distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
 			player.velX += 9000 * element.radius * deltaX / distPowFour;
-			player.velY += 9000 * element.radius * deltaY / distPowFour;
+			player.velY += 9000 * element.radius * deltaY / distPowFour;		
 
-			if(circleRectCollision(element.cx, element.cy, element.radius, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)) {//player is in a planet's attraction area
+			var a = player.x - offsetX,
+				b = player.y - offsetY;
+			if (Math.pow(distPowFour, 1 / 4) < 5000) drawArrow(a, b, Math.atan2(element.cx - offsetX - a,element.cy - offsetY - b), 400 / Math.pow(distPowFour, 1 / 4) * 150, element.color);
+			if (circleRectCollision(element.cx, element.cy, element.radius, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)) {//player is in a planet's attraction area
 				player.attachedPlanet = index;
 				player.leavePlanet = false;
 				element.player = Math.atan2(deltaX, deltaY) + Math.PI;
@@ -255,33 +286,69 @@ function loop(){
 			player.velY += -Math.cos(player.rot) / 10;
 		}
 
-		player.x += player.velX;
-		player.y += player.velY;
+		if (controls["leftArrow"]) player.rot -= Math.PI / 200;
+		if (controls["rightArrow"]) player.rot += Math.PI / 200;
+
+		player.x += Math.sin(player.rot) * 4 + player.velX;
+		player.y += -Math.cos(player.rot) * 4 + player.velY;
 	}
 
-	context.fillText("velX" + player.velX, 0, 200);
-	context.fillText("velY" + player.velY, 0, 250);
+	enemies.forEach(function (element){
+		var deltaX = element._x - player.x,
+			deltaY = element._y - player.y,
+			dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)),
+			aimAngle = Math.PI - Math.atan2(element._x - player.x, element._y - player.y);
+
+		if (dist > 400){
+			aimAngle = element.angle + Math.PI / 150;
+			element.fireRate = 0;
+		} else {
+			if (++element.fireRate >= 20) {
+				element.fireRate = 0;
+				element.shots[element.shots.length] = {x: element._x, y: element._y, a: aimAngle - Math.PI, lt: 80}; //lt = lifetime / timeout
+				playSound("laser");
+			}
+		}
+		element.angle = aimAngle;
+
+		element.shots.forEach(function (shot, index){
+			shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
+			shot.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
+			if (shot.x - offsetX < 0 || shot.x - offsetX > canvas.width || shot.y - offsetY < 0 || shot.y - offsetY > canvas.height || --shot.lt <= -20) element.shots.splice(index, 1);
+			drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);
+		});
+
+		context.fillStyle = "#aaa";
+		drawCircle(element._x - offsetX, element._y - offsetY, 350, 4);
+		drawRotatedImage(resources[element._appereal], element._x - offsetX, element._y - offsetY, aimAngle, false);
+	});
+
+	context.fillText("velX" + (Math.sin(player.rot) * 4 + player.velX), 0, 200);
+	context.fillText("velY" + (-Math.cos(player.rot) * 4 + player.velY), 0, 250);
 	drawRotatedImage(resources[player.name + player.walkFrame],
 		player.x - offsetX,
 		player.y - offsetY,
 		player.rot,
-		player.looksLeft);
-	context.fillRect(player.x - offsetX, player.y - offsetY, 10, 10);
+		player.looksLeft);	
 
 
 	//layer 3: HUD / GUI
-	context.font = "20px Open Sans";
+	context.font = "28px Open Sans";
 	context.textAlign = "left";
 	context.textBaseline = "hanging";
 
 	context.fillStyle = "#eee";
-	context.fillText("Health: ", 8, 20);
+	context.drawImage(resources[player.name + "_badge"], 8, 18, 32, 32);
+	context.fillText("PLAYER NAME", 55, 20); //always uppercase (looks better)
+
+	context.font = "20px Open Sans";
+	context.fillText("Health: ", 8, 90);
 	for (var i = 0; i < player.health; i++){
-		context.drawImage(resources["shield"], 80 + i * 22, 20, 18, 18);
+		context.drawImage(resources["shield"], 80 + i * 22, 90, 18, 18);
 	}
-	context.fillText("Fuel: ", 8, 40);
+	context.fillText("Fuel: ", 8, 120);
 	context.fillStyle = "#f33";
-	context.fillRect(68, 46, player.fuel, 8);
+	context.fillRect(80, 126, player.fuel, 8);
 
 	if (navigator.maxTouchPoints > 0){
 		context.drawImage(resources["controlsUp"], 0, 0, resources["controlsUp"].width, resources["controlsUp"].height, 20, canvas.height - 90, 70, 70);
@@ -289,7 +356,6 @@ function loop(){
 		context.drawImage(resources["controlsLeft"], 0, 0, resources["controlsLeft"].width, resources["controlsLeft"].height, canvas.width - 180, canvas.height - 90, 70, 70);
 		context.drawImage(resources["controlsRight"], 0, 0, resources["controlsRight"].width, resources["controlsRight"].height, canvas.width - 90, canvas.height - 90, 70, 70);
 	}
-
 
 	window.requestAnimationFrame(loop);
 }
@@ -302,12 +368,6 @@ function handleInput(e){
 		var y = (e.type.indexOf("touch") == 0) ? e.changedTouches[0].pageY : e.pageY;
 
 		if (e.type.indexOf("touch") == 0) {
-			/*
-			20, canvas.height - 90
-			110, canvas.height - 90
-			canvas.width - 180, canvas.height - 90
-			canvas.width - 90, canvas.height - 90
-			*/
 			if (x > 20 && x < 90 && y > canvas.height - 90 && y < canvas.height - 20){
 				controls["upArrow"] = (e.type !== "touchend");
 			} else if (x > 110 && x < 180 && y > canvas.height - 90 && y < canvas.height - 20){

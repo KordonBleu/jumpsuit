@@ -17,7 +17,7 @@ html, body {
 	background: #ebedf4;
 	color: #333;
 	opacity: 1;
-	height: 180px;
+	height: 300px;
 	transition: height .5s ease, opacity .5s linear;
 }
 .info-box h2 {
@@ -53,7 +53,20 @@ html, body {
 	transition: opacity .2s linear;
 	opacity: 0;	
 }
+.info-box .button{
+	float: left;
+	display: block;
+	padding: 8px;
+	text-transform: uppercase;
+	font-size: 11px;
+	color: #ebedf4;
+	background: #AD3726;
+	margin-right: 4px;
+	font-weight: normal;
+}
+.info-box .button:hover{
 
+}
 #audio-icon {
 	position: fixed;
 	top: 20px;
