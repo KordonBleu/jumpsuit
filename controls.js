@@ -8,21 +8,12 @@ function handleMobileInput(e) {
 	controls[triggered] = s;
 }
 
-var controls = document.createElement("ul");
-controls.id = "controls";
-document.body.appendChild(controls);
+var controlsChilds = document.getElementById("controls").children;
+for(var i = 0; i !== controlsChilds.length; i++) {
 
-resIcon.forEach(function(elem) {
-	var li = document.createElement("li"),
-		icon = new Image();
-	icon.src = "assets/images/controls/" + elem;
-
-	icon.addEventListener("mouseup", handleMobileInput);
-	icon.addEventListener("mousedown", handleMobileInput);
-
-	li.appendChild(icon);
-	controls.appendChild(li);
-});
+	controlsChilds[i].firstElementChild.addEventListener("mouseup", handleMobileInput);
+	controlsChilds[i].firstElementChild.addEventListener("mousedown", handleMobileInput);
+}
 
 
 function handleInput(e){
