@@ -17,11 +17,38 @@
 
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
-			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a><br/>
-			<p>Music by Arnaud Poyeton<br>Assets by <a href="http://kenney.nl">Kenney Vleugels</a></p>
+			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
+			<p>Music by Arnaud Poyeton<br/>Assets by <a href="http://kenney.nl">Kenney Vleugels</a></p>
+		
 			<a class="button" href="#share">Share</a><a class="button" href="#donate">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
+			<div class="container">
+				<div id="donate">
+					<h3>Donate</h3>
+					<p>	The game is concipated to be editible and forkable thus it is in public domain.<br/>
+						Despite that we would appreciate it if you'd donate to us by simply clicking the link below.<br/> <br/>
+						We also so hope you're enjoying the game right now, <br/>
+						Greetings, Getkey &amp; Fju (:
+					</p> 
+				</div>
+				<div id="share">
+					<h3>Share</h3>
+					<p>	If you dont want to donate or you just think the game is good enough to share it with your friends,
+						we would be glad if you'd recommed the game to your friends (:<br/>
+						bla.com
+					</p>
+				</div>
+			</div>	
 		</div>
+		<script type="text/javascript">
+			function hashChange() {
+				console.log(location.hash);
+				document.getElementById("donate").setAttribute("style", "display: " + ((location.hash == "#donate") ? "block" : "none"));
+				document.getElementById("share").setAttribute("style", "display: " + ((location.hash == "#donate") ? "none" : "block"));
+			}
+			window.addEventListener("hashchange", hashChange);
+			window.addEventListener("load", hashChange);
+		</script>
 		<script src="audio.js"></script>
 		<script src="canvas.js"></script>
 		<script src="touchscreen.js"></script>

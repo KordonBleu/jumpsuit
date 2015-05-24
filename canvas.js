@@ -166,7 +166,7 @@ function loop(){
 	}
 
 	function drawArrow(fromx, fromy, ang, dist, col){
-		var len = (dist > 200) ? 200 : (dist < 60) ? 60 : dist;
+		var len = (dist > 200) ? 200 : (dist < 70) ? 70 : dist;
 
 		var tox = fromx + Math.sin(Math.PI - ang) * len,
 			toy = fromy - Math.cos(Math.PI - ang) * len;		
@@ -363,9 +363,7 @@ function loop(){
 	window.requestAnimationFrame(loop);
 }
 
-
 function handleInput(e){
-	//TODO: better structure, more comfortability
 	if (e.target.id == "canvas"){
 		var x = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageX : e.pageX) | 0,
 			y = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageY : e.pageY) | 0;
@@ -386,13 +384,21 @@ function handleInput(e){
 	} else {
 		var t = e.target.id,
 			s = (t == "") ? e.type == "keydown" : (e.type == "touchstart" || e.type == "mousedown");
-			s = (s == true) ? 1 : 0;
+		s = (s == true) ? 1 : 0;
 
 		if (t == "up") controls["upArrow"] = s;
 		else if (t == "down") controls["downArrow"] = s;
 		else if (t == "left") controls["leftArrow"] = s;
 		else if (t == "right") controls["rightArrow"] = s;
-		else {
+		else if (t == "audio" && s == 1) {
+			if (e.target.getAttribute("src") === "assets/images/controlsMute.png") {
+				e.target.setAttribute("src", "assets/images/controlsUnmute.png");
+				gain.gain.value = 0.5;
+			} else {
+				e.target.setAttribute("src", "assets/images/controlsMute.png"); 
+				gain.gain.value = 0;
+			}
+		} else {
 			switch (e.keyCode){
 				case 27:
 					if (s) {
