@@ -64,7 +64,6 @@ function init() {
 		"background.png",
 		"meteorBig.png", "meteorBig2.png", "meteorMed.png",	"meteorMed2.png", "meteorSmall.png", "meteorTiny.png",
 		"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
-		"controlsUp.png", "controlsDown.png", "controlsLeft.png", "controlsRight.png",
 		"alienBlue_badge.png", "alienBlue_duck.png", "alienBlue_hurt.png", "alienBlue_jump.png", "alienBlue_stand.png", "alienBlue_walk1.png", "alienBlue_walk2.png",
 		"alienBeige_badge.png", "alienBeige_duck.png", "alienBeige_hurt.png", "alienBeige_jump.png", "alienBeige_stand.png", "alienBeige_walk1.png", "alienBeige_walk2.png",
 		"alienGreen_badge.png", "alienGreen_duck.png", "alienGreen_hurt.png", "alienGreen_jump.png", "alienGreen_stand.png", "alienGreen_walk1.png", "alienGreen_walk2.png",
@@ -229,7 +228,7 @@ function loop(){
 		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5, 2);
 	});
 
-	if (controls["spacebar"] && player.leavePlanet === false) {
+	if (controls["jump"] && player.leavePlanet === false) {
 		player.leavePlanet = true;
 		player.attachedPlanet = -1;
 		player.walkFrame = "_jump";
@@ -240,17 +239,17 @@ function loop(){
 	if (player.attachedPlanet >= 0){
 		fadeBackground(true);
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
-		if (controls["leftArrow"]) {
+		if (controls["moveLeft"]) {
 			planets[player.attachedPlanet].player += (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = true;
 		}
-		if (controls["rightArrow"]) {
+		if (controls["moveRight"]) {
 			planets[player.attachedPlanet].player -= (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = false;
 		}
-		player.walkState = (controls["leftArrow"] || controls["rightArrow"]);
+		player.walkState = (controls["moveLeft"] || controls["moveRight"]);
 
-		if (!player.walkState) player.walkFrame = (controls["downArrow"]) ? "_duck" : "_stand";
+		if (!player.walkState) player.walkFrame = (controls["crouch"]) ? "_duck" : "_stand";
 		if (++player.walkCounter > ((controls["leftShift"]) ? 5 : 9)) {
 			player.walkCounter = 0;
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
@@ -281,17 +280,17 @@ function loop(){
 			}
 		});
 
-		if(controls["upArrow"] && player.fuel > 0) {
+		if(controls["jetpack"] && player.fuel > 0) {
 			player.fuel--;
 			player.velX += Math.sin(player.rot) / 10;
 			player.velY += -Math.cos(player.rot) / 10;
 		}
 
-		if (controls["leftArrow"]) player.rot -= Math.PI / 140;
-		if (controls["rightArrow"]) player.rot += Math.PI / 140;
+		if (controls["moveLeft"]) player.rot -= Math.PI / 140;
+		if (controls["moveRight"]) player.rot += Math.PI / 140;
 
-		player.x += Math.sin(player.rot) * 4 + player.velX;
-		player.y += -Math.cos(player.rot) * 4 + player.velY;
+		player.x += player.velX;
+		player.y += player.velY;
 	}
 
 	enemies.forEach(function (element){
@@ -346,7 +345,7 @@ function loop(){
 
 	context.fillStyle = "#eee";
 	context.drawImage(resources[player.name + "_badge"], 8, 18, 32, 32);
-	context.fillText("PLAYER NAME", 55, 20); //always uppercase (looks better)
+	context.fillText("Player Name".toUpperCase(), 55, 20); //uppercase looks better
 
 	context.font = "20px Open Sans";
 	context.fillText("Health: ", 8, 90);
@@ -357,92 +356,12 @@ function loop(){
 	context.fillStyle = "#f33";
 	context.fillRect(80, 126, player.fuel, 8);	
 
-	[].forEach.call(document.getElementsByClassName("controls"), function (element){
-		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id + "Arrow"] * 0.7));
-	});
 	window.requestAnimationFrame(loop);
 }
 
-function handleInput(e){
-	if (e.target.id == "canvas"){
-		var x = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageX : e.pageX) | 0,
-			y = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageY : e.pageY) | 0;
-		if (e.type.indexOf("start") !== -1 || e.type.indexOf("down") !== -1){
-			game.dragStartX = x;
-			game.dragStartY = y;
-			game.dragX = x;
-			game.dragY = y;
-		} else if (e.type.indexOf("end") !== -1 || e.type.indexOf("up") !== -1){
-			game.dragStartX = 0;
-			game.dragStartY = 0;
-			game.dragX = 0;
-			game.dragY = 0;
-		} else if (e.type.indexOf("move") !== -1) {
-			game.dragX = (game.dragStartX !== 0) ? x : 0;
-			game.dragY = (game.dragStartY !== 0) ? y : 0;
-		}
-	} else {
-		var t = e.target.id,
-			s = (t == "") ? e.type == "keydown" : (e.type == "touchstart" || e.type == "mousedown");
-		s = (s == true) ? 1 : 0;
-
-		if (t == "up") controls["upArrow"] = s;
-		else if (t == "down") controls["downArrow"] = s;
-		else if (t == "left") controls["leftArrow"] = s;
-		else if (t == "right") controls["rightArrow"] = s;
-		else if (t == "audio" && s == 1) {
-			if (e.target.getAttribute("src") === "assets/images/controlsMute.png") {
-				e.target.setAttribute("src", "assets/images/controlsUnmute.png");
-				gain.gain.value = 0.5;
-			} else {
-				e.target.setAttribute("src", "assets/images/controlsMute.png"); 
-				gain.gain.value = 0;
-			}
-		} else {
-			switch (e.keyCode){
-				case 27:
-					if (s) {
-						var box = document.getElementById("info-box");
-						box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
-					}
-					break;
-				case 32:
-					controls["spacebar"] = s;
-					break;
-				case 16:
-					controls["leftShift"] = s;
-					break;
-				case 38:
-				case 87:
-					controls["upArrow"] = s;
-					break;
-				case 40:
-				case 83:
-					controls["downArrow"] = s;
-					break;
-				case 37:
-				case 65:
-					controls["leftArrow"] = s;
-					break;
-				case 39:
-				case 68:
-					controls["rightArrow"] = s;
-					break;
-			}
-		}
-	}
-}
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 init();
-window.addEventListener("keydown", handleInput);
-window.addEventListener("keyup", handleInput);
-window.addEventListener("touchstart", handleInput);
-window.addEventListener("touchmove", handleInput);
-window.addEventListener("touchend", handleInput);
-window.addEventListener("mousedown", handleInput);
-window.addEventListener("mousemove", handleInput);
-window.addEventListener("mouseup", handleInput);

@@ -70,7 +70,10 @@ function playSound(name, distance){
 loadSound("assets/audio/laserTest.ogg", "laser");
 loadSound("assets/audio/interstellar.ogg", "background");
 
-audioIcon = document.getElementById("audio-icon");
+var audioIcon = new Image();
+audioIcon.src = "assets/images/controlsMute.png";
+document.body.appendChild(audioIcon);
+audioIcon.alt = "audio icon";
 audioIcon.addEventListener("click", function() {
 	if(audioIcon.getAttribute('src') === "assets/images/controlsMute.png") {
 		audioIcon.src = "assets/images/controlsUnmute.png";
@@ -80,3 +83,5 @@ audioIcon.addEventListener("click", function() {
 		gain.gain.value = 0;
 	}
 });
+
+

@@ -1,6 +1,12 @@
 @viewport {
 	user-zoom: fixed;
 }
+html {
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
 html, body {
 	margin: 0;
 	height: 100%;
@@ -78,7 +84,23 @@ html, body {
 	background: transparent;
 	color: #AD3726;
 }
-.controls{
+
+#controls {
+	position: fixed;
+	bottom: 0;
+	padding: 0;
+	width: 100vw;
+	display: flex;
+	justify-content: space-around;
+}
+#controls li {
+	list-style-type: none;
+}
+#controls li img {
+	width: 80px;
+	height: 80px;
+}
+#audio-icon {
 	position: fixed;
 	width: 70px;
 	height: 70px;
@@ -89,7 +111,3 @@ html, body {
 	top: 8px;
 	right: 8px;
 }
-.controls#up{ bottom: 16px; left: 16px; }
-.controls#down{ bottom: 16px; left: 102px; }
-.controls#left{ bottom: 16px; right: 102px; }
-.controls#right{ bottom: 16px; right: 16px; }
