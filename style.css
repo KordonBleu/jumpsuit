@@ -67,9 +67,18 @@ html, body {
 .info-box .button:hover{
 
 }
-#audio-icon {
+.controls{
 	position: fixed;
-	top: 20px;
-	right: 8px;
-	width: 24px;
+	width: 70px;
+	height: 70px;
 }
+.controls#audio{
+	width: 24px;
+	height: 24px;
+	top: 8px;
+	right: 8px;
+}
+.controls#up{ bottom: 16px; left: 16px; }
+.controls#down{ bottom: 16px; left: 102px; }
+.controls#left{ bottom: 16px; right: 102px; }
+.controls#right{ bottom: 16px; right: 16px; }

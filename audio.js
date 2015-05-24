@@ -1,22 +1,27 @@
 var audioContext = new (window.AudioContext || window.webkitAudioContext)(),
 sounds = {},
-gain = audioContext.createGain();
+gain = audioContext.createGain(),
+canPlay = true;
 gain.gain.value = 0.5;
 
 function loadSound(url, name){
-	var request = new XMLHttpRequest();
-	request.open("GET", url, true);
-	request.responseType = "arraybuffer";
-	request.onload = function() {
-		audioContext.decodeAudioData(request.response, function (buffer){
-			initSounds(buffer, name);
-		});
+	try {
+		var request = new XMLHttpRequest();
+		request.open("GET", url, true);
+		request.responseType = "arraybuffer";
+		request.onload = function() {
+			audioContext.decodeAudioData(request.response, function (buffer){
+				initSounds(buffer, name);
+			});
+		}
+		request.send();
+	} catch (e) {
+		canPlay = false;
 	}
-	request.send();
 }
 
 function initSounds(buffer, name){
-	sounds[name] = { source: null, filter: null, buffer: null };
+	sounds[name] = { source: null, filter: null, buffer: null};
 	sounds[name].buffer = buffer;
 
 	if (name == "background"){
@@ -36,12 +41,11 @@ function initSounds(buffer, name){
 		sounds[name].source.loop = true;
 		sounds[name].source.loopStart = 110.256;
 		sounds[name].source.start(0);
-	}
-	
+	}	
 }
 
 function fadeBackground(filtered){
-	if (sounds["background"] == null) return;
+	if (!sounds["background"]) return;
 
 	var fv = sounds["background"].filter.frequency.value;
 	if (filtered){		
@@ -52,7 +56,7 @@ function fadeBackground(filtered){
 }
 
 function playSound(name, distance){
-	if (sounds[name] !== null) {
+	if (typeof(sounds[name]) !== "undefined" && canPlay) {
 		sounds[name].source = audioContext.createBufferSource();
 		sounds[name].source.buffer = sounds[name].buffer;
 
