@@ -1,4 +1,4 @@
-function hashChange() {	
+function hashChange() {
 	document.getElementById("donate").setAttribute("style", "display: " + ((location.hash == "#donate") ? "block" : "none"));
 	document.getElementById("share").setAttribute("style", "display: " + ((location.hash == "#donate") ? "none" : "block"));
 }
@@ -8,8 +8,8 @@ window.addEventListener("load", hashChange);
 
 function handleInput(e){
 	var t = e.target.id,
-		s = (t == "") ? e.type == "keydown" : (e.type == "touchstart" || e.type == "mousedown");
-	s = (s == true) ? 1 : 0;
+		s = (t == "") ? e.type === "keydown" : e.type === "touchstart";
+	s = (s == true || e.type === "mousedown") ? 1 : 0;
 
 	if (t == "canvas"){
 		var x = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageX : e.pageX) | 0,
@@ -28,55 +28,73 @@ function handleInput(e){
 			game.dragX = (game.dragStartX !== 0) ? x : 0;
 			game.dragY = (game.dragStartY !== 0) ? y : 0;
 		}
-	} else if (t == "audio") {
+	} else if (t == "audio-icon") {
 		if (s == 1){
-			if (e.target.getAttribute("src") === "assets/images/controls/mute.png") {
-				e.target.setAttribute("src", "assets/images/controls/unmute.png");
+			if (e.target.getAttribute("src") === "assets/images/controls/mute.svg") {
+				e.target.setAttribute("src", "assets/images/controls/unmute.svg");
 				gain.gain.value = 0.5;
 			} else {
-				e.target.setAttribute("src", "assets/images/controls/mute.png"); 
+				e.target.setAttribute("src", "assets/images/controls/mute.svg");
 				gain.gain.value = 0;
 			}
-		}		
-	} else if (t == ""){
-		switch (e.keyCode){
-			case 27:
-				if (s) {
-					var box = document.getElementById("info-box");
-					box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
-				}
-				break;
-			case 32:
-				controls["jump"] = s;
-				break;
-			case 16:
-				controls["leftShift"] = s;
-				break;
-			case 38:
-			case 87:
-				controls["jetpack"] = s;
-				break;
-			case 40:
-			case 83:
-				controls["crouch"] = s;
-				break;
-			case 37:
-			case 65:
-				controls["moveLeft"] = s;
-				break;
-			case 39:
-			case 68:
-				controls["moveRight"] = s;
-				break;
 		}
-	} else controls[t] = s;	
+	} else {
+		var triggered = null,
+			target;
+		if(e.type.substring(0, 3) === "key") {//keyboard
+			switch (e.keyCode){
+				case 27:
+					if (s) {
+						var box = document.getElementById("info-box");
+						box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+					}
+					break;
+				case 32:
+					triggered = "jump";
+					console.log(s);
+					break;
+				case 16:
+					triggered = "run";
+					break;
+				case 38:
+				case 87:
+					triggered = "jetpack";
+					break;
+				case 40:
+				case 83:
+					triggered = "crouch";
+					break;
+				case 37:
+				case 65:
+					triggered = "moveLeft";
+					break;
+				case 39:
+				case 68:
+					triggered = "moveRight";
+					break;
+			}
+		} else if(e.target.nodeName === "IMG") {//touchscreen
+			triggered = e.target.src.replace(window.location.href.replace("index.html" + window.location.hash, "") + "assets/images/controls/", "");//get filename
+			triggered = triggered.substring(0, triggered.length - 4);//get rid of the extension
+		}
+
+		if(triggered !== null) {
+			if(e.target === document.body) {
+				target = document.getElementById(triggered);
+			} else target = e.target;
+
+			controls[triggered] = s;
+			if(triggered !== "run") target.style.opacity = 0.3 + s * 0.7;
+		}
+
+	}
 }
 
 function handleGamepad(){
 	var gamepads = navigator.getGamepads(), g = gamepads[0];
 	if (typeof(g) !== "undefined"){
 		controls["jump"] = g.buttons[0].value;
-		controls["leftShift"] = g.buttons[1].value;
+		controls["run"] = g.buttons[1].value;
 		controls["crouch"] = g.buttons[4].value;
 		controls["jetpack"] = g.buttons[7].value;
 
@@ -86,7 +104,7 @@ function handleGamepad(){
 
 
 		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.dragX = -canvas.width / 2 * g.axes[2];
-		else game.dragX = 0; 
+		else game.dragX = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.dragY = -canvas.height / 2 * g.axes[3];
 		else game.dragY = 0;
 	}
@@ -100,5 +118,5 @@ window.addEventListener("touchstart", handleInput);
 window.addEventListener("touchmove", handleInput);
 window.addEventListener("touchend", handleInput);
 window.addEventListener("mousedown", handleInput);
-window.addEventListener("mousemove", handleInput);
-window.addEventListener("mouseup", handleInput);
+window.addEventListener("mousemove", handleInput, true);
+window.addEventListener("mouseup", handleInput, true);

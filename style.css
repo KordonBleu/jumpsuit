@@ -56,13 +56,13 @@ html, body {
 }
 .info-box.hidden {
 	transition: width .5s ease .2s, opacity .5s linear .2s, left 0s linear .6s;
-	width: 0px;	
+	width: 0px;
 	left: -100%;
 	opacity: 0;
 }
 .info-box.hidden * {
 	transition: opacity .2s linear;
-	opacity: 0;	
+	opacity: 0;
 }
 .info-box .button{
 	margin-top: 8px;
@@ -86,18 +86,33 @@ html, body {
 	color: #AD3726;
 }
 
-.controls{
-	position: absolute;
-	width: 70px;
-	height: 70px;
-	cursor: pointer;
+#controls {
+	position: fixed;
+	bottom: 0;
+	padding: 0;
+	margin: 0;
+	width: 100vw;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
 }
-.controls#jump{	bottom: 110px; left: 20px; }
-.controls#jetpack{ bottom: 20px; left: 20px; }
-.controls#crouch{ bottom: 20px; left: 110px;}
-.controls#moveLeft{ bottom: 20px; right: 110px; }
-.controls#moveRight{ bottom: 20px; right: 20px; }
-.controls#audio{
+#controls li {
+	list-style-type: none;
+	margin-bottom: 1vw;
+}
+#controls li:first-child {
+	margin-left: 1vw;
+}
+#controls li:last-child {
+	margin-right: 1vw;
+}
+#controls li img {
+	width: 80px;
+	height: 80px;
+	opacity: 0.3;
+}
+#audio-icon{
+	position: fixed;
 	width: 24px;
 	height: 24px;
 	top: 8px;

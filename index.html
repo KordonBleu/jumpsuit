@@ -9,27 +9,22 @@
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<ul id="controls">
-			<li><img src="assets/images/controls/jetpack.svg"></img></li>
-			<li><img src="assets/images/controls/jump.png"></img></li>
-			<li><img src="assets/images/controls/crouch.png"></img></li>
-			<li><img src="assets/images/controls/moveLeft.png"></img></li>
-			<li><img src="assets/images/controls/moveRight.png"></img></li>
-		</ul>
 
-		<img class="controls" id="jump" src="assets/images/controls/jump.png"></img>
-		<img class="controls" id="jetpack" src="assets/images/controls/jetpack.svg"></img>
-		<img class="controls" id="moveLeft" src="assets/images/controls/moveLeft.png"></img>
-		<img class="controls" id="moveRight" src="assets/images/controls/moveRight.png"></img>
-		<img class="controls" id="crouch" src="assets/images/controls/crouch.png"></img>
-		<img class="controls" id="audio" src="assets/images/controls/unmute.png"></img>
+		<img src="assets/images/controls/unmute.svg" id="audio-icon"/>
+		<ul id="controls">
+			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"></img><br/>
+				<img src="assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"></img>
+				<img src="assets/images/controls/crouch.svg" alt="crouch control" id="crouch"></img></li>
+			<li><img src="assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"></img>
+			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"></img></li>
+		</ul>
 
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
 			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>Music by Arnaud Poyeton<br/>
 			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
-		
+
 			<a class="button" href="#share">Share</a><a class="button" href="#donate">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
@@ -39,7 +34,7 @@
 						Despite that we would appreciate it if you'd donate to us by simply clicking the link below.<br/><br/>
 						We also so hope you're enjoying the game right now,<br/>
 						Greetings, Getkey &amp; Fju (:
-					</p> 
+					</p>
 				</div>
 				<div id="share">
 					<h3>Share</h3>

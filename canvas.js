@@ -169,7 +169,7 @@ function loop(){
 		var len = (dist > 200) ? 200 : (dist < 70) ? 70 : dist;
 
 		var tox = fromx + Math.sin(Math.PI - ang) * len,
-			toy = fromy - Math.cos(Math.PI - ang) * len;		
+			toy = fromy - Math.cos(Math.PI - ang) * len;
 		context.beginPath();
 		context.moveTo(fromx, fromy);
 		context.lineTo(tox, toy);
@@ -242,18 +242,18 @@ function loop(){
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
 		if (controls["moveLeft"] > 0) {
 			stepSize = stepSize * controls["moveLeft"];
-			planets[player.attachedPlanet].player += (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
+			planets[player.attachedPlanet].player += (controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = true;
 		}
 		if (controls["moveRight"] > 0) {
 			stepSize = stepSize * controls["moveRight"];
-			planets[player.attachedPlanet].player -= (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
+			planets[player.attachedPlanet].player -= (controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = false;
 		}
 		player.walkState = (controls["moveLeft"] || controls["moveRight"]);
 
 		if (!player.walkState) player.walkFrame = (controls["crouch"]) ? "_duck" : "_stand";
-		if (++player.walkCounter > ((controls["leftShift"]) ? 5 : 9)) {
+		if (++player.walkCounter > ((controls["run"]) ? 5 : 9)) {
 			player.walkCounter = 0;
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
@@ -271,7 +271,7 @@ function loop(){
 				distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
 			player.velX += 9000 * element.radius * deltaX / distPowFour;
-			player.velY += 9000 * element.radius * deltaY / distPowFour;		
+			player.velY += 9000 * element.radius * deltaY / distPowFour;
 
 			var a = player.x - offsetX,
 				b = player.y - offsetY;
@@ -324,7 +324,7 @@ function loop(){
 				element.shots.splice(index, 1);
 			}
 
-			drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);			
+			drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);
 		});
 
 		context.fillStyle = "#aaa";
@@ -338,7 +338,7 @@ function loop(){
 		player.x - offsetX,
 		player.y - offsetY,
 		player.rot,
-		player.looksLeft);	
+		player.looksLeft);
 
 
 	//layer 3: HUD / GUI
@@ -358,10 +358,6 @@ function loop(){
 	context.fillText("Fuel: ", 8, 120);
 	context.fillStyle = "#f33";
 	context.fillRect(80, 126, player.fuel, 8);
-
-	[].forEach.call(document.getElementsByClassName("controls"), function (element){
-		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id] * 0.7));
-	});
 
 	window.requestAnimationFrame(loop);
 }

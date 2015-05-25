@@ -32,7 +32,7 @@ function initSounds(buffer, name){
 		filter.type = "lowpass";
 		filter.Q.value = 2;
 		filter.frequency.value = 4000;
-		
+
 		sounds[name].filter = filter;
 		sounds[name].source.connect(sounds[name].filter);
 		sounds[name].filter.connect(gain);
@@ -41,14 +41,14 @@ function initSounds(buffer, name){
 		sounds[name].source.loop = true;
 		sounds[name].source.loopStart = 110.256;
 		sounds[name].source.start(0);
-	}	
+	}
 }
 
 function fadeBackground(filtered){
 	if (!sounds["background"]) return;
 
 	var fv = sounds["background"].filter.frequency.value;
-	if (filtered){		
+	if (filtered){
 		sounds["background"].filter.frequency.value = (fv <= 200) ? 200 : fv * 0.95;
 	} else {
 		sounds["background"].filter.frequency.value = (fv >= 4000) ? 4000 : fv * 1.05;
@@ -64,7 +64,7 @@ function playSound(name, distance){
 		gain.connect(audioContext.destination);
 
 		sounds[name].source.start(0);
-	} 	
+	}
 }
 
 loadSound("assets/audio/laserTest.ogg", "laser");
