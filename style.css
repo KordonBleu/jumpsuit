@@ -55,8 +55,9 @@ html, body {
 	color: #333;
 }
 .info-box.hidden {
-	transition: width .5s ease .2s, opacity .5s linear .2s;
+	transition: width .5s ease .2s, opacity .5s linear .2s, left 0s linear .6s;
 	width: 0px;	
+	left: -100%;
 	opacity: 0;
 }
 .info-box.hidden * {
@@ -85,26 +86,17 @@ html, body {
 	color: #AD3726;
 }
 
-#controls {
-	position: fixed;
-	bottom: 0;
-	padding: 0;
-	width: 100vw;
-	display: flex;
-	justify-content: space-around;
-}
-#controls li {
-	list-style-type: none;
-}
-#controls li img {
-	width: 80px;
-	height: 80px;
-}
-#audio-icon {
-	position: fixed;
+.controls{
+	position: absolute;
 	width: 70px;
 	height: 70px;
+	cursor: pointer;
 }
+.controls#jump{	bottom: 110px; left: 20px; }
+.controls#jetpack{ bottom: 20px; left: 20px; }
+.controls#crouch{ bottom: 20px; left: 110px;}
+.controls#moveLeft{ bottom: 20px; right: 110px; }
+.controls#moveRight{ bottom: 20px; right: 20px; }
 .controls#audio{
 	width: 24px;
 	height: 24px;

@@ -40,11 +40,11 @@ var canvas = document.getElementById("canvas"),
 	},
 	offsetX = 0, offsetY = 0,
 	controls = {
-		upArrow: false,
-		downArrow: false,
-		leftArrow: false,
-		rightArrow: false,
-		leftShift: false,
+		jump: 0,
+		crouch: 0,
+		jetpack: 0,
+		moveLeft: 0,
+		moveRight: 0
 	},
 	planets = [
 		new Planet(0.1, 0.5, 150, "rgb(255,51,51)"),
@@ -106,6 +106,7 @@ function loadProcess(e){
 }
 
 function loop(){
+	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror) {
 		//courtesy of Seb Lee-Delisle
 		context.save();
@@ -228,7 +229,7 @@ function loop(){
 		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5, 2);
 	});
 
-	if (controls["jump"] && player.leavePlanet === false) {
+	if (controls["jump"] > 0 && player.leavePlanet === false) {
 		player.leavePlanet = true;
 		player.attachedPlanet = -1;
 		player.walkFrame = "_jump";
@@ -239,11 +240,13 @@ function loop(){
 	if (player.attachedPlanet >= 0){
 		fadeBackground(true);
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
-		if (controls["moveLeft"]) {
+		if (controls["moveLeft"] > 0) {
+			stepSize = stepSize * controls["moveLeft"];
 			planets[player.attachedPlanet].player += (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = true;
 		}
-		if (controls["moveRight"]) {
+		if (controls["moveRight"] > 0) {
+			stepSize = stepSize * controls["moveRight"];
 			planets[player.attachedPlanet].player -= (controls["leftShift"]) ? 1.7 * stepSize : 1 * stepSize;
 			player.looksLeft = false;
 		}
@@ -280,14 +283,14 @@ function loop(){
 			}
 		});
 
-		if(controls["jetpack"] && player.fuel > 0) {
-			player.fuel--;
-			player.velX += Math.sin(player.rot) / 10;
-			player.velY += -Math.cos(player.rot) / 10;
+		if(controls["jetpack"] > 0 && player.fuel > 0) {
+			player.fuel-= controls["jetpack"];
+			player.velX += (Math.sin(player.rot) / 10) * controls["jetpack"];
+			player.velY += (-Math.cos(player.rot) / 10) * controls["jetpack"];
 		}
 
-		if (controls["moveLeft"]) player.rot -= Math.PI / 140;
-		if (controls["moveRight"]) player.rot += Math.PI / 140;
+		if (controls["moveLeft"] > 0) player.rot -= (Math.PI / 140) * controls["moveLeft"];
+		if (controls["moveRight"] > 0) player.rot += (Math.PI / 140) * controls["moveRight"];
 
 		player.x += player.velX;
 		player.y += player.velY;
@@ -354,14 +357,16 @@ function loop(){
 	}
 	context.fillText("Fuel: ", 8, 120);
 	context.fillStyle = "#f33";
-	context.fillRect(80, 126, player.fuel, 8);	
+	context.fillRect(80, 126, player.fuel, 8);
+
+	[].forEach.call(document.getElementsByClassName("controls"), function (element){
+		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id] * 0.7));
+	});
 
 	window.requestAnimationFrame(loop);
 }
 
-
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 init();
