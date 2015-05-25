@@ -5,6 +5,7 @@ function hashChange() {
 window.addEventListener("hashchange", hashChange);
 window.addEventListener("load", hashChange);
 
+
 function handleInput(e){
 	var t = e.target.id,
 		s = (t == "") ? e.type == "keydown" : (e.type == "touchstart" || e.type == "mousedown");
