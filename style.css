@@ -16,23 +16,23 @@ html, body {
 
 .info-box {
 	position: fixed;
+	top: 0;
 	bottom: 0;
 	left: 0;
 	padding: 15px;
 	background: #ebedf4;
 	color: #333;
 	opacity: 1;
-	top: 0;
-	width: 280px;
+	min-width: 240px;
+	width: 15%;
 	transition: width .5s ease, opacity .5s;
 }
 .info-box .container{
 	float: left;
-	border-top: 2px solid #AD3726;
-	width: 280px;
+/*	border-top: 2px solid #AD3726;*/
 }
 .info-box h2 {
-	margin: 5px 0px;
+	margin: 0.2em 0;
 }
 .info-box a {
 	text-decoration: none;
@@ -47,8 +47,7 @@ html, body {
 	position: absolute;
 	bottom: 15px;
 	left: 15px;
-	background: url("assets/images/github.png") top left no-repeat;
-	height: 30px;
+	background: url("assets/images/github.svg") top left no-repeat;
 	padding-left: 38px;
 	display: block;
 	line-height: 2;
@@ -65,18 +64,18 @@ html, body {
 	opacity: 0;
 }
 .info-box .button{
-	margin-top: 8px;
 	box-sizing: border-box;
 	float: left;
 	display: block;
-	padding: 8px 18px;
+	margin-top: 0.6em;
+	padding: 0.6em 18px;
 	text-transform: uppercase;
-	font-size: 11px;
+	font-size: 0.75em;
 	color: #ebedf4;
 	background: #AD3726;
 	font-weight: normal;
 	border: 2px solid transparent;
-	width: 140px;
+	width: 50%;
 	text-align: center;
 }
 .info-box .button:hover{
@@ -90,7 +89,7 @@ html, body {
 	position: fixed;
 	bottom: 0;
 	padding: 0;
-	margin: 0;
+	margin: 0 1vw 1vw 1vw;
 	width: 100vw;
 	display: flex;
 	justify-content: space-between;
@@ -98,13 +97,6 @@ html, body {
 }
 #controls li {
 	list-style-type: none;
-	margin-bottom: 1vw;
-}
-#controls li:first-child {
-	margin-left: 1vw;
-}
-#controls li:last-child {
-	margin-right: 1vw;
 }
 #controls li img {
 	width: 80px;

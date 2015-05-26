@@ -64,11 +64,11 @@ function init() {
 		"background.png",
 		"meteorBig.png", "meteorBig2.png", "meteorMed.png",	"meteorMed2.png", "meteorSmall.png", "meteorTiny.png",
 		"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
-		"alienBlue_badge.png", "alienBlue_duck.png", "alienBlue_hurt.png", "alienBlue_jump.png", "alienBlue_stand.png", "alienBlue_walk1.png", "alienBlue_walk2.png",
-		"alienBeige_badge.png", "alienBeige_duck.png", "alienBeige_hurt.png", "alienBeige_jump.png", "alienBeige_stand.png", "alienBeige_walk1.png", "alienBeige_walk2.png",
-		"alienGreen_badge.png", "alienGreen_duck.png", "alienGreen_hurt.png", "alienGreen_jump.png", "alienGreen_stand.png", "alienGreen_walk1.png", "alienGreen_walk2.png",
-		"alienPink_badge.png", "alienPink_duck.png", "alienPink_hurt.png", "alienPink_jump.png", "alienPink_stand.png", "alienPink_walk1.png", "alienPink_walk2.png",
-		"alienYellow_badge.png", "alienYellow_duck.png", "alienYellow_hurt.png", "alienYellow_jump.png", "alienYellow_stand.png", "alienYellow_walk1.png", "alienYellow_walk2.png",
+		"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
+		"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
+		"alienGreen_badge.svg", "alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
+		"alienPink_badge.svg", "alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
+		"alienYellow_badge.svg", "alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
 		"enemyBlack1.png", "enemyBlack2.png", "enemyBlack3.png", "enemyBlue1.png", "enemyBlue2.png", "enemyBlue3.png",
 		"enemyGreen1.png", "enemyGreen2.png", "enemyRed1.png", "enemyRed2.png", "enemyRed3.png"
 	];
