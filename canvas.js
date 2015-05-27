@@ -11,13 +11,18 @@ Planet.prototype = {
 	get cx() { return this._cx * canvas.width },
 	get cy() { return this._cy * canvas.height },
 }
-function Enemy(x, y, appereal){
+function Enemy(atp, x, y, appereal){
+	this._attachedPlanet = atp;
 	this._x = x;
 	this._y = y;
 	this._appereal = appereal;
 	this.fireRate = 0;
 	this.angle = 0
 	this.shots = [];
+}
+Enemy.prototype = {
+	get x() { return this._x + planets[this._attachedPlanet].cx },
+	get y() { return this._y + planets[this._attachedPlanet].cy }
 }
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
@@ -47,14 +52,67 @@ var canvas = document.getElementById("canvas"),
 		moveRight: 0
 	},
 	planets = [
-		new Planet(0.1, 0.5, 150, "rgb(255,51,51)"),
-		new Planet(0.8, 1.5, 220, "rgb(220,170,80)"),
-		new Planet(3, -0.2, 500, "rgb(120,240,60)")
+		new Planet(0.1, 0.5, 150, "rgb(255,51,51)") //start planet
+	],
+	planetColours = [
+		"rgb(255,51,51)",
+		"rgb(220,170,80)",
+		"rgb(120, 240,60)",
+		"rgb(12,135,242)",
+		"rgb(162,191,57)",
+		"rgb(221,86,41)",
+		"rgb(54,38,127)"
 	],
 	enemies = [
-		new Enemy(300, 700, "enemyBlack1"),
-		new Enemy(1500, 200, "enemyBlack3")
-	];
+		//
+	],
+	chunks = [
+		//
+	],
+	chunkSize = 4000;
+
+
+chunks.chunkExist = function(x, y){
+	var result = false;
+	this.forEach(function (element){
+		if (element.x == x && element.y == y){
+			result = true;
+			return;
+		}
+	});
+	return result;
+}
+chunks.removeChunk = function (x, y){
+	planets.forEach(function (planet, pi){
+		if (planet.cx >= x * chunkSize && planet.cx <= (x + 1) * chunkSize && planet.cy >= y * chunkSize && planet.cy <= (y + 1) * chunkSize){
+			planets.splice(pi, 1);
+			enemies.forEach(function (enemy, ei){
+				if (enemy._attachedPlanet == index) enemies.splice(ei, 1);
+			});
+		}
+	});	
+}
+chunks.addChunk = function (x, y){
+	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6)),
+		vertical = 0;
+
+	for (var i = 0; i < planetsAmount; i++){
+		var planetRadius = Math.map(Math.random(), 0, 1, 150, 480),
+			planetColour = planetColours[Math.floor(Math.random() * planetColours.length)],
+			enemyAmount = Math.floor(Math.map(Math.random(), 0, 1, 0, (planetRadius < 200) ? 2 : 4)),
+			planetIndex = planets.length,
+			planetPosition = {px: ++vertical / (planetsAmount) * (chunkSize / canvas.width), py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize) / canvas.height}; 
+
+			planets[planetIndex] = new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour);
+
+		console.log(planets[planetIndex]);
+		for (var j = 0; j < enemyAmount; j++){
+			var enemyAng = Math.map(Math.random(), 0, 1, 0, 2 * Math.PI),
+				enemyDistance = Math.map(Math.random(), 0, 1, planetRadius * 1.6, planetRadius * 4);
+			enemies[enemies.length] = new Enemy(planetIndex, Math.sin(enemyAng) * enemyDistance, -Math.cos(enemyAng) * enemyDistance, "enemyGreen1");
+		}
+	}
+}
 
 function init() {
 	canvas.width = window.innerWidth;
@@ -220,6 +278,12 @@ function loop(){
 
 
 	//layer 2: the game
+	var chunkX = Math.floor(player.x / chunkSize),
+		chunkY = Math.floor(player.y / chunkSize);
+
+
+
+
 	offsetX = ((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 
@@ -297,10 +361,10 @@ function loop(){
 	}
 
 	enemies.forEach(function (element){
-		var deltaX = element._x - player.x,
-			deltaY = element._y - player.y,
+		var deltaX = element.x - player.x,
+			deltaY = element.y - player.y,
 			dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)),
-			aimAngle = Math.PI - Math.atan2(element._x - player.x, element._y - player.y);
+			aimAngle = Math.PI - Math.atan2(element.x - player.x, element.y - player.y);
 
 		if (dist > 400){
 			aimAngle = element.angle + Math.PI / 150;
@@ -308,7 +372,7 @@ function loop(){
 		} else {
 			if (++element.fireRate >= 20) {
 				element.fireRate = 0;
-				element.shots[element.shots.length] = {x: element._x, y: element._y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime / timeout
+				element.shots[element.shots.length] = {x: element.x, y: element.y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime / timeout
 				playSound("laser");
 			}
 		}
@@ -328,12 +392,12 @@ function loop(){
 		});
 
 		context.fillStyle = "#aaa";
-		drawCircle(element._x - offsetX, element._y - offsetY, 350, 4);
-		drawRotatedImage(resources[element._appereal], element._x - offsetX, element._y - offsetY, aimAngle, false);
+		drawCircle(element.x - offsetX, element.y - offsetY, 350, 4);
+		drawRotatedImage(resources[element._appereal], element.x - offsetX, element.y - offsetY, aimAngle, false);
 	});
 
-	context.fillText("velX" + (Math.sin(player.rot) * 4 + player.velX), 0, 200);
-	context.fillText("velY" + (-Math.cos(player.rot) * 4 + player.velY), 0, 250);
+	context.fillText("player.x: " + player.x, 0, 200);
+	context.fillText("player.y: " + player.y, 0, 250);
 	drawRotatedImage(resources[player.name + player.walkFrame],
 		player.x - offsetX,
 		player.y - offsetY,
