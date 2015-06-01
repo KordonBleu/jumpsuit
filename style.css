@@ -23,9 +23,9 @@ html, body {
 	background: #ebedf4;
 	color: #333;
 	opacity: 1;
+	width: 20%;
 	min-width: 240px;
-	width: 15%;
-	transition: width .5s ease, opacity .5s;
+	transition: width .5s ease, min-width .5s ease, opacity .5s;
 }
 .info-box .container{
 	float: left;
@@ -54,8 +54,9 @@ html, body {
 	color: #333;
 }
 .info-box.hidden {
-	transition: width .5s ease .2s, opacity .5s linear .2s, left 0s linear .6s;
-	width: 0px;
+	transition: width .5s ease .2s, min-width .5s ease .2s, opacity .5s linear .2s, left 0s linear .6s;
+	min-width: 0;
+	width: 0;
 	left: -100%;
 	opacity: 0;
 }
@@ -90,7 +91,7 @@ html, body {
 	bottom: 0;
 	padding: 0;
 	margin: 0 1vw 1vw 1vw;
-	width: 100vw;
+	width: 98vw;
 	display: flex;
 	justify-content: space-between;
 	align-items: flex-end;
@@ -102,6 +103,7 @@ html, body {
 	width: 80px;
 	height: 80px;
 	opacity: 0.3;
+	transition: opacity .15s;
 }
 #audio-icon{
 	position: fixed;

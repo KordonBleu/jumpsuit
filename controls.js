@@ -50,8 +50,7 @@ function handleInput(e){
 					}
 					break;
 				case 32:
-					triggered = "jump";
-					console.log(s);
+					triggered = "jump";					
 					break;
 				case 16:
 					triggered = "run";
@@ -83,10 +82,8 @@ function handleInput(e){
 				target = document.getElementById(triggered);
 			} else target = e.target;
 
-			controls[triggered] = s;
-			if(triggered !== "run") target.style.opacity = 0.3 + s * 0.7;
+			controls[triggered] = s;			
 		}
-
 	}
 }
 
