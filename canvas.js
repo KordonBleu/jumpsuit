@@ -1,24 +1,20 @@
 "use strict";
 
-function Planet(cx, cy, radius, color) {
+function Planet(cx, cy, radius, color, enemies) {
 	this.cx = cx;
 	this.cy = cy;
 	this.radius = radius;
 	this.color = color;
 	this.player = -1;
+	this.enemies = enemies;
 }
-function Enemy(atp, x, y, appereal){
-	this._attachedPlanet = atp;
-	this._x = x;
-	this._y = y;
-	this._appereal = appereal;
+function Enemy(x, y, appereal){	
+	this.x = x;
+	this.y = y;
+	this.appereal = appereal;
 	this.fireRate = 0;
 	this.angle = 0
 	this.shots = [];
-}
-Enemy.prototype = {
-	get x() { return planets[this._attachedPlanet].cx + this._x },
-	get y() { return planets[this._attachedPlanet].cy + this._y }
 }
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
@@ -49,7 +45,7 @@ var canvas = document.getElementById("canvas"),
 		moveRight: 0
 	},
 	planets = [
-		new Planet(0, 0, 150, "rgb(200,200,200)") //start planet
+		new Planet(0.5, 0.5, 150, "rgb(200,200,200)", []) //start planet
 	],
 	planetColours = [
 		"rgb(255,51,51)",
@@ -61,9 +57,6 @@ var canvas = document.getElementById("canvas"),
 		"rgb(54,38,127)",
 		"rgb(118,33,129)"
 	],
-	enemies = [
-		//
-	],
 	chunks = [
 		//
 	],
@@ -71,29 +64,27 @@ var canvas = document.getElementById("canvas"),
 
 
 chunks.chunkExist = function(x, y){
-	var result = false;
-	this.forEach(function (element){
+	var result = -1;
+	this.forEach(function (element, index){
 		if (element.x == x && element.y == y){
-			result = true;
+			result = index;
 			return;
 		}
 	});
 	return result;
 }
 chunks.removeChunk = function (x, y){
-	if (!this.chunkExist(x, y)) return;
-	console.log("removing chunk... " + x + ";" + y);
+	var c = this.chunkExist(x, y);
+	if (c < 0) return;
 	planets.forEach(function (planet, pi){
 		if (planet.cx >= x * chunkSize && planet.cx <= (x + 1) * chunkSize && planet.cy >= y * chunkSize && planet.cy <= (y + 1) * chunkSize){
 			planets.splice(pi, 1);
-			enemies.forEach(function (enemy, ei){
-				if (enemy._attachedPlanet == index) enemies.splice(ei, 1);
-			});
 		}
-	});	
+	});
+	chunks.splice(c, 1);
 }
 chunks.addChunk = function (x, y){
-	if (this.chunkExist(x, y)) return;
+	if (this.chunkExist(x, y) >= 0) return;
 	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6)),
 		vertical = 0;
 
@@ -102,18 +93,17 @@ chunks.addChunk = function (x, y){
 			planetColour = planetColours[Math.floor(Math.random() * planetColours.length)],
 			enemyAmount = Math.floor(Math.map(Math.random(), 0, 1, 0, (planetRadius < 200) ? 2 : 4)),
 			planetIndex = planets.length,
-			planetPosition = {px: ((++vertical / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)}; 
+			planetPosition = {px: ((++vertical / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)}; 		
 
-		planets[planetIndex] = new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour);
-
-		var lastEnemyAng = 0;
+		var lastEnemyAng = 0, enemies = [];
 		for (var j = 0; j < enemyAmount; j++){
-			var enemyAng = Math.map(Math.random(), 0, 1, lastEnemyAng + Math.PI / 8, lastEnemyAng + Math.PI * 1.875),
+			var enemyAng = Math.map(Math.random(), 0, 1, lastEnemyAng + Math.PI / 4, lastEnemyAng + Math.PI * 1.875),
 				enemyDistance = Math.floor(Math.map(Math.random(), 0, 1, planetRadius * 1.5, planetRadius * 4)),
 				enemyResources = ["Black1", "Black2", "Black3", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
-			enemies[enemies.length] = new Enemy(planetIndex, Math.sin(enemyAng) * enemyDistance, -Math.cos(enemyAng) * enemyDistance, "enemy" + enemyResources[Math.floor(Math.random() * enemyResources.length)]);
+			enemies[j] = new Enemy(Math.sin(enemyAng) * enemyDistance, -Math.cos(enemyAng) * enemyDistance, "enemy" + enemyResources[Math.floor(Math.random() * enemyResources.length)]);
 			lastEnemyAng = enemyAng;
-		}		
+		}
+		planets[planetIndex] = new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour, enemies);	
 	}
 	chunks[chunks.length] = {x: x, y: y};
 }
@@ -287,10 +277,42 @@ function loop(){
 	offsetX = ((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 
-	planets.forEach(function (element){
-		context.fillStyle = element.color;
-		fillCircle(element.cx - offsetX, element.cy - offsetY, element.radius);
-		drawCircle(element.cx - offsetX, element.cy - offsetY, element.radius * 1.5, 2);
+	planets.forEach(function (planet){	
+		context.fillStyle = planet.color;
+		fillCircle(planet.cx - offsetX, planet.cy - offsetY, planet.radius);
+		drawCircle(planet.cx - offsetX, planet.cy - offsetY, planet.radius * 1.5, 2);
+
+		planet.enemies.forEach(function (enemy, ei){
+			var deltaX = planet.cx + enemy.x - player.x,
+				deltaY = planet.cy + enemy.y - player.y,
+				dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)),
+				aimAngle = Math.PI - Math.atan2(planet.cx + enemy.x - player.x, planet.cy + enemy.y - player.y);
+			if (dist > 400){
+				aimAngle = enemy.angle + Math.PI / 150;
+				enemy.fireRate = 0;
+			} else {
+				if (++enemy.fireRate >= 20) {
+					enemy.fireRate = 0;
+					enemy.shots[enemy.shots.length] = {x: planet.cx + enemy.x, y: planet.cy + enemy.y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime
+					playSound("laser");
+				}
+			}
+			enemy.angle = aimAngle;
+
+			enemy.shots.forEach(function (shot, si){
+				shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
+				shot.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
+				if (shot.x - offsetX < 0 || shot.x - offsetX > canvas.width || shot.y - offsetY < 0 || shot.y - offsetY > canvas.height || --shot.lt <= -20) enemy.shots.splice(si, 1);
+				else if (circleRectCollision(shot.x, shot.y, resources["laserBeam"].width / 2, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)){
+					player.health -= (player.health = 0) ? 0 : 1;
+					enemy.shots.splice(si, 1);
+				}
+				drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);
+			});
+			context.fillStyle = "#aaa";
+			drawCircle(planet.cx + enemy.x - offsetX, planet.cy + enemy.y - offsetY, 350, 4);
+			drawRotatedImage(resources[enemy.appereal], planet.cx + enemy.x - offsetX, planet.cy + enemy.y - offsetY, aimAngle, false);
+		});
 	});
 
 	if (controls["jump"] > 0 && player.leavePlanet === false){
@@ -328,32 +350,38 @@ function loop(){
 		player.velY = 0;
 		player.fuel = 300;
 	} else {
-		fadeBackground(false);
-		
-		var chunkX = Math.floor((player.x + chunkSize / 2) / chunkSize),
-			chunkY = Math.floor((player.y + chunkSize / 2) / chunkSize);
-		
+		fadeBackground(false);		
+		var chunkX = Math.floor(player.x / chunkSize),
+			chunkY = Math.floor(player.y / chunkSize);		
+
+		if (chunkX !== player.oldChunkX || chunkY !== player.oldChunkY){
+			for (var y = -3; y < 3; y++){
+				for (var x = -3; x < 3; x++){
+					if (y >= -1 && y <= 1 && x >= -1 && x <= 1) chunks.addChunk(chunkX + x, chunkY + y);
+					else chunks.removeChunk(chunkX + x, chunkY + y);
+				}
+			}
+		}
+
 		player.oldChunkX = chunkX;
 		player.oldChunkY = chunkY;
-
-		chunks.addChunk(chunkX, chunkY);
 		
-		planets.forEach(function (element, index){
-			var deltaX = element.cx - player.x,
-				deltaY = element.cy - player.y,
+		planets.forEach(function (planet, pi){
+			var deltaX = planet.cx - player.x,
+				deltaY = planet.cy - player.y,
 				distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
-			player.velX += 9000 * element.radius * deltaX / distPowFour;
-			player.velY += 9000 * element.radius * deltaY / distPowFour;
+			player.velX += 9000 * planet.radius * deltaX / distPowFour;
+			player.velY += 9000 * planet.radius * deltaY / distPowFour;
 
 			var a = player.x - offsetX,
 				b = player.y - offsetY;
-			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(a, b, Math.atan2(element.cx - offsetX - a,element.cy - offsetY - b), 400 / Math.pow(distPowFour, 1 / 4) * element.radius, element.color);
-			if (circleRectCollision(element.cx, element.cy, element.radius, player.x, player.y, resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height, player.rot)) {//player is in a planet's attraction area
-				player.attachedPlanet = index;
+			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(a, b, Math.atan2(planet.cx - offsetX - a,planet.cy - offsetY - b), 400 / Math.pow(distPowFour, 1 / 4) * planet.radius, planet.color);
+			if (circleRectCollision(planet.cx, planet.cy, planet.radius, player.x, player.y, resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height, player.rot)) {//player is in a planet's attraction area
+				player.attachedPlanet = pi;
 				player.leavePlanet = false;
-				element.player = Math.atan2(deltaX, deltaY) + Math.PI;
-			}
+				planet.player = Math.atan2(deltaX, deltaY) + Math.PI;
+			}		
 		});
 
 		if(controls["jetpack"] > 0 && player.fuel > 0 && controls["crouch"] < 1){
@@ -362,8 +390,8 @@ function loop(){
 			player.velY += (-Math.cos(player.rot) / 10) * controls["jetpack"];
 		} else if (controls["crouch"] > 0){
 			//((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
-			player.velX = player.velX * 0.98;
-			player.velY = player.velY * 0.98;
+			player.velX = player.velX * 0.987;
+			player.velY = player.velY * 0.987;
 		}
 
 		if (controls["moveLeft"] > 0) player.rot -= (Math.PI / 140) * controls["moveLeft"];
@@ -372,43 +400,7 @@ function loop(){
 		player.x += player.velX;
 		player.y += player.velY;
 	}
-
-	enemies.forEach(function (element){
-		var deltaX = element.x - player.x,
-			deltaY = element.y - player.y,
-			dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)),
-			aimAngle = Math.PI - Math.atan2(element.x - player.x, element.y - player.y);
-
-		if (dist > 400){
-			aimAngle = element.angle + Math.PI / 150;
-			element.fireRate = 0;
-		} else {
-			if (++element.fireRate >= 20) {
-				element.fireRate = 0;
-				element.shots[element.shots.length] = {x: element.x, y: element.y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime
-				playSound("laser");
-			}
-		}
-		element.angle = aimAngle;
-
-		element.shots.forEach(function (shot, index){
-			shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
-			shot.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
-
-			if (shot.x - offsetX < 0 || shot.x - offsetX > canvas.width || shot.y - offsetY < 0 || shot.y - offsetY > canvas.height || --shot.lt <= -20) element.shots.splice(index, 1);
-			else if (circleRectCollision(shot.x, shot.y, resources["laserBeam"].width / 2, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)){
-				player.health -= (player.health = 0) ? 0 : 1;
-				element.shots.splice(index, 1);
-			}
-
-			drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);
-		});
-
-		context.fillStyle = "#aaa";
-		drawCircle(element.x - offsetX, element.y - offsetY, 350, 4);
-		drawRotatedImage(resources[element._appereal], element.x - offsetX, element.y - offsetY, aimAngle, false);
-	});
-
+	
 	context.fillText("player.oldChunkX: " + player.oldChunkX, 0, 200);
 	context.fillText("player.oldChunkY: " + player.oldChunkY, 0, 250);
 	context.fillText("planets.length: " + planets.length, 0,  300);
