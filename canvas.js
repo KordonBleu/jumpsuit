@@ -205,18 +205,6 @@ function loop(){
 		context.restore();
 	}
 
-	function circleRectCollision(circleX, circleY, circleRadius, boxX, boxY, boxWidth, boxHeight, boxAng){
-		//TODO: collision with a rotated box
-		var deltaX = Math.abs(circleX - boxX),
-			deltaY = Math.abs(circleY - boxY);
-
-		if(deltaX > boxWidth / 2 + circleRadius || deltaY > boxHeight / 2 + circleRadius) return false;
-
-		if(deltaX <= boxWidth / 2 || deltaY <= boxHeight / 2) return true;
-
-		return Math.pow(deltaX, 2) + Math.pow(deltaY, 2) <= Math.pow(circleRadius, 2);
-	}
-
 	function drawArrow(fromx, fromy, ang, dist, col){
 		var len = (dist > 200) ? 200 : (dist < 70) ? 70 : dist;
 
@@ -365,7 +353,7 @@ function loop(){
 
 		player.oldChunkX = chunkX;
 		player.oldChunkY = chunkY;
-		
+
 		planets.forEach(function (planet, pi){
 			var deltaX = planet.cx - player.x,
 				deltaY = planet.cy - player.y,
@@ -374,14 +362,15 @@ function loop(){
 			player.velX += 9000 * planet.radius * deltaX / distPowFour;
 			player.velY += 9000 * planet.radius * deltaY / distPowFour;
 
-			var a = player.x - offsetX,
-				b = player.y - offsetY;
-			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(a, b, Math.atan2(planet.cx - offsetX - a,planet.cy - offsetY - b), 400 / Math.pow(distPowFour, 1 / 4) * planet.radius, planet.color);
-			if (circleRectCollision(planet.cx, planet.cy, planet.radius, player.x, player.y, resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height, player.rot)) {//player is in a planet's attraction area
+			var origX = player.x - offsetX,
+				origY = player.y - offsetY;
+			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(origX, origY, Math.atan2(planet.cx - offsetX - origX, planet.cy - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.radius, planet.color);
+
+			if (Collib.circleAabb(planet.cx, planet.cy, planet.radius, player.x, player.y, resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height, player.rot)) {//player is in a planet's attraction area
 				player.attachedPlanet = pi;
 				player.leavePlanet = false;
 				planet.player = Math.atan2(deltaX, deltaY) + Math.PI;
-			}		
+			}
 		});
 
 		if(controls["jetpack"] > 0 && player.fuel > 0 && controls["crouch"] < 1){
@@ -394,13 +383,14 @@ function loop(){
 			player.velY = player.velY * 0.987;
 		}
 
-		if (controls["moveLeft"] > 0) player.rot -= (Math.PI / 140) * controls["moveLeft"];
-		if (controls["moveRight"] > 0) player.rot += (Math.PI / 140) * controls["moveRight"];
+		var runMultiplicator = controls["run"] ? 1.7 : 1;
+		if (controls["moveLeft"] > 0) player.rot -= (Math.PI / 140) * controls["moveLeft"] * runMultiplicator;
+		if (controls["moveRight"] > 0) player.rot += (Math.PI / 140) * controls["moveRight"] * runMultiplicator;
 
 		player.x += player.velX;
 		player.y += player.velY;
 	}
-	
+
 	context.fillText("player.oldChunkX: " + player.oldChunkX, 0, 200);
 	context.fillText("player.oldChunkY: " + player.oldChunkY, 0, 250);
 	context.fillText("planets.length: " + planets.length, 0,  300);

@@ -2,10 +2,10 @@
 	user-zoom: fixed;
 }
 html {
-	user-select: none;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
+	user-select: text;
+	-moz-user-select: text;
+	-webkit-user-select: text;
+	-ms-user-select: text;
 }
 html, body {
 	margin: 0;
