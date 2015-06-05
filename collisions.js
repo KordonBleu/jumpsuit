@@ -1,55 +1,94 @@
+function Point(x, y){
+	this.x = x;
+	this.y = y;
+}
+
+function Vector(argOne, argTwo){
+	if(typeof argOne === "number" && typeof argTwo === "number", typeof x){//assume they are coordinates
+		this.x = x;
+		this.y = y;
+	} else {//assume they are points
+		this.x = argTwo.x - argOne.x;
+		this.y = argTwo.y - argOne.y;
+	}
+}
+Vector.prototype = {
+	get orthogonalVector(){//TODO: cache stuff
+		return new Vector(-this.y, this.x);
+	}
+};
+
+function Rectangle(centerPoint, width, height, angle){
+	this.center = centerPoint;
+	this.width = width;
+	this.height = height;
+
+	this.angle = angle === undefined ? 0 : angle;
+
+	this._unrotatedVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
+}
+Rectangle.prototype = {
+	get vertices(){
+		if(this.angle !== this._angleCache){//TODO: also update when other parameters are modified
+			this._angleCache = this.angle;
+
+			this._verticesCache = [];
+			this._unrotatedVertices.forEach(function(vertex, index){
+				var newVertex = new Point(
+					vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
+					vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
+				);
+				this._verticesCache[index] = newVertex;
+			}, this);
+		}
+		return this._verticesCache;
+	}
+};
+
+
 var Collib = new function(){
-	this.circleAabb = function(circleX, circleY, circleRadius, boxX, boxY, boxWidth, boxHeight, boxAng) {
-		var rot = boxAng > 0 ? -boxAng : -boxAng + Math.PI,
-			tCircleX = Math.cos(rot) * (circleX - boxX) - Math.sin(rot) * (circleY - boxY) + boxX,//rotate the circle around the center of the OOB
-			tCircleY = Math.sin(rot) * (circleX - boxX) + Math.cos(rot) * (circleY - boxY) + boxY,//so that the OBB can be treated as an AABB
-			deltaX = Math.abs(tCircleX - boxX),
-			deltaY = Math.abs(tCircleY - boxY);
+	this.circleObb = function(circleX, circleY, circleRadius, rect) {
+		var rot = rect.angle > 0 ? -rect.angle : -rect.angle + Math.PI,
+			deltaX = circleX - rect.center.x,
+			deltaY = circleY - rect.center.y,
+			tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rect.x,//rotate the circle around the center of the OOB
+			tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rect.y;//so that the OBB can be treated as an AABB
+		deltaX = Math.abs(tCircleX - rect.center.x);
+		deltaY = Math.abs(tCircleY - rect.center.y);
 
-		if(deltaX > boxWidth / 2 + circleRadius || deltaY > boxHeight / 2 + circleRadius) return false;
+		if(deltaX > rect.width / 2 + circleRadius || deltaY > rect.height / 2 + circleRadius) return false;
 
-		if(deltaX <= boxWidth / 2 || deltaY <= boxHeight / 2) return true;
+		if(deltaX <= rect.width / 2 || deltaY <= rect.height / 2) return true;
 
-		return Math.pow(deltaX - boxHeight/2, 2) + Math.pow(deltaY - boxWidth/2, 2) <= Math.pow(circleRadius, 2);
+		return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circleRadius, 2);
 	}
 
-	this.obbObbCollision = function(rect1X, rect1Y, rect1Width, rect1Height, rect1Ang, rect2X, rect2Y, rect2Width, rect2Height, rect2Ang) {
+	this.obbObb = function(rectOne, rectTwo) {
 		//rotate the first OOB to transform it in AABB to simplify calculations
-		var rect2Rot = rect2Ang - rect1Ang;
+		var rectTwoRot = rectTwo.angle - rectOne.angle;
 
 		//we can't check against the diagonal because it is too CPU intensive
-		var sideSum = rect2Width + rect2Height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
-		if (!aabbAabbCollision(rect1X, rect1Y, rect1Width, rect1Height, rect2X, rect2Y, sideSum, sideSum)) return false;//eliminates most non-collisions
+		var sideSum = rectTwo.width + rectTwo.height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
+		if (!this.aabbAabb(rectOne, new Rectangle(new Point(rectTwo.center.x, rectTwo.center.y), sideSum, sideSum))) return false;//eliminates most non-collisions
 
-		var axes1 =  [{x: 1, y: 0}, {x:0, y:1}],
-			axes2 = [],//these are vectors
-			vertices = [{x: rect2X - Rect2Width, y: rect2Y - rect2Height}, {x: rect2X + Rect2Width, y: rect1Y + rect2Height}, {x: rect2X - Rect2Width, y: rect2Y + rect2Height}, {x: rect2X + Rect2Width, y: rect2Y - rect2Height}];
-		vertices.forEach(function(vertex, index, array){
-			var newVertex = {
-				x: vertex.x*Math.cos(rect2Rot) - vertex.y*Math.sin(rect2Rot),
-				y: vertex.x*Math.sin(rect2Rot) - vertex.y*cos(rect2Rot)
-			}
+		var axesVectOne =  [{x: 1, y: 0}, {x:0, y:1}],//rectOne is an AABB
+			axesVectTwo = [];
+			rectTwo.vertices.forEach(function(vertex, index, array) {
+				var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
+				vector = new Vector(vertex - prevVertex).orthogonalVector;
 
-			array[index] = newVertex;
-		});
-		vertices.forEach(function(vertex, index, array) {
-			var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
-			vector = {
-				y: -(vertex.x - prevVertex.x),//y = -x and x = y
-				x: vertex.y - prevVertex.y//to get the normal vector
-			}
-			axes2.push(vector);
+				axesVectTwo.push(vector);
 		});
 	}
 
-	this.aabbAabbCollision = function(rect1X, rect1Y, rect1Width, rect1Height, rect2X, rect2Y, rect2Width, rect2Height) {
-		if(rect2X - rect2Width/2 >= rect1X + rect1Width/2
-		|| rect2X + rect2Width/2 <= rect1X - rect1Width/2
-		|| rect2Y - rect2Height/2 >= rect1Y + rect1Height/2
-		|| rect2Y + rect2Height/2 <= rect1Y - rect1Height/2)
+	this.aabbAabb = function(rectOne, rectTwo){
+		//if(rectOne.angle !== 0 || rectTwo.angle !== 0) throw new TypeError("At least one of the submitted rectangle is not an AABB");
+		if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
+		|| rectTwo.center.x + rectTwo.width/2 <= rectOne.center.x - rectOne.width/2
+		|| rectTwo.y - rectTwo.height/2 >= rectOne.center.y + rectOne.height/2
+		|| rectTwo.y + rectTwo.height/2 <= rectOne.center.y - rectOne.height/2)
 			return false;
 		else
 			return true;
 	}
 }
-console.log(Collib);
