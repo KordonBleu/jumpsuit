@@ -1,13 +1,29 @@
+/*function Test(lel){
+	var handler = {
+		set: function(a, b, c){
+			console.log(this, a, b, c);
+		}
+	}
+	this.lel = lel;
+	//this.proxy = new Proxy(this, handler);
+	console.log(Proxy, typeof Proxy);
+	Proxy.create.call(this, handler);
+	//return "hi";
+}
+var a = new Test(12);
+//a.proxy.lel = 25;
+console.log(a, Proxy);
+*/
 function Point(x, y){
 	this.x = x;
 	this.y = y;
 }
 
 function Vector(argOne, argTwo){
-	if(typeof argOne === "number" && typeof argTwo === "number", typeof x){//assume they are coordinates
+	if(typeof argOne === "number" && typeof argTwo === "number", typeof x){//they are coordinates
 		this.x = x;
 		this.y = y;
-	} else {//assume they are points
+	} else if(argOne instanceof Point && argoTwo instanceof Point){
 		this.x = argTwo.x - argOne.x;
 		this.y = argTwo.y - argOne.y;
 	}
@@ -51,8 +67,8 @@ var Collib = new function(){
 		var rot = rect.angle > 0 ? -rect.angle : -rect.angle + Math.PI,
 			deltaX = circleX - rect.center.x,
 			deltaY = circleY - rect.center.y,
-			tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rect.x,//rotate the circle around the center of the OOB
-			tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rect.y;//so that the OBB can be treated as an AABB
+			tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rect.center.x,//rotate the circle around the center of the OOB
+			tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rect.center.y;//so that the OBB can be treated as an AABB
 		deltaX = Math.abs(tCircleX - rect.center.x);
 		deltaY = Math.abs(tCircleY - rect.center.y);
 

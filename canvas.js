@@ -291,7 +291,7 @@ function loop(){
 				shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
 				shot.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
 				if (shot.x - offsetX < 0 || shot.x - offsetX > canvas.width || shot.y - offsetY < 0 || shot.y - offsetY > canvas.height || --shot.lt <= -20) enemy.shots.splice(si, 1);
-				else if (Collib.circleObb(shot.x, shot.y, resources["laserBeam"].width / 2, player.x, player.y, resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot)){//to be replaced with `Collib.aabbAabb()`
+				else if (Collib.circleObb(shot.x, shot.y, resources["laserBeam"].width / 2, new Rectangle(new Point(player.x, player.y), resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot))){//to be replaced with `Collib.obbObb()`
 					player.health -= (player.health = 0) ? 0 : 1;
 					enemy.shots.splice(si, 1);
 				}
