@@ -1,36 +1,49 @@
-/*function Test(lel){
+function CachedObject(){
+	//call `return CachedObject.call(this);` at the end of any constructor
+	//to make it inherit from `CachedObject`
 	var handler = {
-		set: function(a, b, c){
-			console.log(this, a, b, c);
+		set: function(target, name, value){
+			if(target.hasOwnProperty(name)){
+				target._cache.needsUpdate = true;
+				target[name] = value;
+			} else {
+				throw new ReferenceError("This object doesn't allow properties to be added");
+			}
 		}
 	}
-	this.lel = lel;
-	//this.proxy = new Proxy(this, handler);
-	console.log(Proxy, typeof Proxy);
-	Proxy.create.call(this, handler);
-	//return "hi";
+	this._cache = {
+		needsUpdate: true
+	};
+	if(typeof Proxy !== "undefined"){
+		var proxy = new Proxy(this, handler);
+		return proxy;
+	}
 }
-var a = new Test(12);
-//a.proxy.lel = 25;
-console.log(a, Proxy);
-*/
+
+
 function Point(x, y){
 	this.x = x;
 	this.y = y;
+	return CachedObject.call(this);
 }
 
 function Vector(argOne, argTwo){
 	if(typeof argOne === "number" && typeof argTwo === "number", typeof x){//they are coordinates
-		this.x = x;
-		this.y = y;
+		this.x = argOne;
+		this.y = argTwo;
 	} else if(argOne instanceof Point && argoTwo instanceof Point){
 		this.x = argTwo.x - argOne.x;
 		this.y = argTwo.y - argOne.y;
 	}
+	return CachedObject.call(this);
 }
 Vector.prototype = {
 	get orthogonalVector(){//TODO: cache stuff
-		return new Vector(-this.y, this.x);
+		if(this._cache.needsUpdate){
+			this._cache.needsUpdate = false;
+			this._cache.orthogonalVector = new Vector(-this.y, this.x);
+		}
+		return this._cache.orthogonalVector;
 	}
 };
 
@@ -42,24 +55,28 @@ function Rectangle(centerPoint, width, height, angle){
 	this.angle = angle === undefined ? 0 : angle;
 
 	this._unrotatedVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
+	return CachedObject.call(this);
 }
 Rectangle.prototype = {
 	get vertices(){
-		if(this.angle !== this._angleCache){//TODO: also update when other parameters are modified
-			this._angleCache = this.angle;
+		if(this._cache.needsUpdate || this.center._cache.needsUpdate){
+			console.log("let's update this shit");
+			this._cache.needsUpdate = false;
+			this.center._cache.needsUpdate = false;
 
-			this._verticesCache = [];
+			this._cache.vertices = [];
 			this._unrotatedVertices.forEach(function(vertex, index){
 				var newVertex = new Point(
 					vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
 					vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
 				);
-				this._verticesCache[index] = newVertex;
+				this._cache.vertices[index] = newVertex;
 			}, this);
 		}
-		return this._verticesCache;
+		return this._cache.vertices;
 	}
 };
+
 
 
 var Collib = new function(){
