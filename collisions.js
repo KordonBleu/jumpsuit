@@ -20,7 +20,9 @@ function CachedObject(){
 	}
 }
 
-
+/* Do NOT inherit from the following classes!
+   Why? Because the cache will be set to be refreshed if you modify
+   any property of the instance of the inheriting class. */
 function Point(x, y){
 	this.x = x;
 	this.y = y;
@@ -38,7 +40,7 @@ function Vector(argOne, argTwo){
 	return CachedObject.call(this);
 }
 Vector.prototype = {
-	get orthogonalVector(){//TODO: cache stuff
+	get orthogonalVector(){
 		if(this._cache.needsUpdate){
 			this._cache.needsUpdate = false;
 			this._cache.orthogonalVector = new Vector(-this.y, this.x);
@@ -77,23 +79,28 @@ Rectangle.prototype = {
 	}
 };
 
+function Circle(centerPoint, radius) {
+	this.center = centerPoint;
+	this.radius = radius;
+}
+
 
 
 var Collib = new function(){
-	this.circleObb = function(circleX, circleY, circleRadius, rect) {
+	this.circleObb = function(circle, rect) {
 		var rot = rect.angle > 0 ? -rect.angle : -rect.angle + Math.PI,
-			deltaX = circleX - rect.center.x,
-			deltaY = circleY - rect.center.y,
+			deltaX = circle.center.x - rect.center.x,
+			deltaY = circle.center.y - rect.center.y,
 			tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rect.center.x,//rotate the circle around the center of the OOB
 			tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rect.center.y;//so that the OBB can be treated as an AABB
 		deltaX = Math.abs(tCircleX - rect.center.x);
 		deltaY = Math.abs(tCircleY - rect.center.y);
 
-		if(deltaX > rect.width / 2 + circleRadius || deltaY > rect.height / 2 + circleRadius) return false;
+		if(deltaX > rect.width / 2 + circle.radius || deltaY > rect.height / 2 + circle.radius) return false;
 
 		if(deltaX <= rect.width / 2 || deltaY <= rect.height / 2) return true;
 
-		return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circleRadius, 2);
+		return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circle.radius, 2);
 	}
 
 	this.obbObb = function(rectOne, rectTwo) {
