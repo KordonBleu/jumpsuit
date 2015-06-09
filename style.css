@@ -1,19 +1,12 @@
 @viewport {
 	user-zoom: fixed;
 }
-html {
-	user-select: text;
-	-moz-user-select: text;
-	-webkit-user-select: text;
-	-ms-user-select: text;
-}
 html, body {
 	margin: 0;
 	height: 100%;
 	overflow: hidden;
 	font-family: "Open Sans";
 }
-
 .info-box {
 	position: fixed;
 	top: 0;
@@ -97,6 +90,7 @@ html, body {
 	align-items: flex-end;
 }
 #controls li {
+
 	list-style-type: none;
 }
 #controls li img {

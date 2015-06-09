@@ -76,24 +76,25 @@ chunks.chunkExist = function(x, y){
 chunks.removeChunk = function (x, y){
 	var c = this.chunkExist(x, y);
 	if (c < 0) return;
-	planets.forEach(function (planet, pi){
-		if (planet.cx >= x * chunkSize && planet.cx <= (x + 1) * chunkSize && planet.cy >= y * chunkSize && planet.cy <= (y + 1) * chunkSize){
-			planets.splice(pi, 1);
-		}
-	});
+
+	for (var i = 0; i < planets.length; i++){
+		if (planets[i].cx >= x * chunkSize && planets[i].cx <= (x + 1) * chunkSize && planets[i].cy >= y * chunkSize && planets[i].cy <= (y + 1) * chunkSize){
+			planets.splice(i,1);
+			i--;			
+		}		
+	}		
+
 	chunks.splice(c, 1);
 }
 chunks.addChunk = function (x, y){
 	if (this.chunkExist(x, y) >= 0) return;
-	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6)),
-		vertical = 0;
-
+	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6));
+		
 	for (var i = 0; i < planetsAmount; i++){
 		var planetRadius = Math.map(Math.random(), 0, 1, 150, (chunkSize - 150) / (3 * planetsAmount)),
 			planetColour = planetColours[Math.floor(Math.random() * planetColours.length)],
 			enemyAmount = Math.floor(Math.map(Math.random(), 0, 1, 0, (planetRadius < 200) ? 2 : 4)),
-			planetIndex = planets.length,
-			planetPosition = {px: ((++vertical / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)}; 		
+			planetPosition = {px: (((i + 1) / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)}; 		
 
 		var lastEnemyAng = 0, enemies = [];
 		for (var j = 0; j < enemyAmount; j++){
@@ -103,9 +104,9 @@ chunks.addChunk = function (x, y){
 			enemies[j] = new Enemy(Math.sin(enemyAng) * enemyDistance, -Math.cos(enemyAng) * enemyDistance, "enemy" + enemyResources[Math.floor(Math.random() * enemyResources.length)]);
 			lastEnemyAng = enemyAng;
 		}
-		planets[planetIndex] = new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour, enemies);	
+		planets.push(new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour, enemies));
 	}
-	chunks[chunks.length] = {x: x, y: y};
+	chunks.push({x: x, y: y});
 }
 
 function init(){
@@ -338,9 +339,10 @@ function loop(){
 		player.velY = 0;
 		player.fuel = 300;
 	} else {
-		fadeBackground(false);		
+		fadeBackground(false);
+
 		var chunkX = Math.floor(player.x / chunkSize),
-			chunkY = Math.floor(player.y / chunkSize);		
+			chunkY = Math.floor(player.y / chunkSize);
 
 		if (chunkX !== player.oldChunkX || chunkY !== player.oldChunkY){
 			for (var y = -3; y < 3; y++){

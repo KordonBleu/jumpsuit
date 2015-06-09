@@ -7,13 +7,14 @@ window.addEventListener("load", hashChange);
 
 
 function handleInput(e){
+	e.preventDefault();
 	var t = e.target.id,
-		s = (t == "") ? e.type === "keydown" : e.type === "touchstart";
-	s = (s == true || e.type === "mousedown") ? 1 : 0;
+		s = (t == "") ? e.type === "keydown" : e.type === ("touchstart" || "touchmove");
+	s = (s == true || e.type === ("mousedown" || "mousemove")) ? 1 : 0;
 
 	if (t == "canvas"){
-		var x = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageX : e.pageX) | 0,
-			y = (e.type.indexOf("touch") == 0 ? e.changedTouches[0].pageY : e.pageY) | 0;
+		var x = (e.type.indexOf("touch") == 0 ? e.touches[0].pageX : e.pageX) | 0,
+			y = (e.type.indexOf("touch") == 0 ? e.touches[0].pageY : e.pageY) | 0;
 		if (e.type.indexOf("start") !== -1 || e.type.indexOf("down") !== -1){
 			game.dragStartX = x;
 			game.dragStartY = y;
@@ -72,17 +73,13 @@ function handleInput(e){
 					triggered = "moveRight";
 					break;
 			}
-		} else if(e.target.nodeName === "IMG") {//touchscreen
+		} else if (e.target.nodeName === "IMG") {//touchscreen
+			console.log(e.type + " " + e.target);
 			triggered = e.target.src.replace(window.location.href.replace("index.html" + window.location.hash, "") + "assets/images/controls/", "");//get filename
 			triggered = triggered.substring(0, triggered.length - 4);//get rid of the extension
 		}
-
-		if(triggered !== null) {
-			if(e.target === document.body) {
-				target = document.getElementById(triggered);
-			} else target = e.target;
-
-			controls[triggered] = s;			
+		if (triggered !== null && e.type.indexOf("move") === -1) {
+			controls[triggered] = s;
 		}
 	}
 }
@@ -106,8 +103,6 @@ function handleGamepad(){
 		else game.dragY = 0;
 	}
 }
-
-
 
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
