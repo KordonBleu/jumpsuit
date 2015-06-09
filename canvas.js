@@ -1,9 +1,7 @@
 "use strict";
 
-function Planet(cx, cy, radius, color, enemies) {
-	this.cx = cx;
-	this.cy = cy;
-	this.radius = radius;
+function Planet(x, y, radius, color, enemies) {
+	this.box = new Circle(new Point(x, y), radius);
 	this.color = color;
 	this.player = -1;
 	this.enemies = enemies;
@@ -22,9 +20,17 @@ var canvas = document.getElementById("canvas"),
 	meteors = [],
 	pause = 0,
 	player = {
-		x: 0, y: 0, health: 10, facesLeft: false, name: "alienGreen",
+		health: 10, facesLeft: false, name: "alienGreen",
 		velX: 0, velY: 0,
-		walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
+		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
+		set walkFrame(v){
+			this._walkFrame = v;
+			this.box.width = resources[this.name + this.walkFrame].width;
+			this.box.height = resources[this.name + this.walkFrame].height;
+		},
+		get walkFrame(){
+			return this._walkFrame;
+		},
 		attachedPlanet: 0, leavePlanet: false,
 		oldChunkX: 0, oldChunkY: 0
 	},
@@ -155,7 +161,10 @@ function loadProcess(e){
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 
-	if (loadProcess.progress == init.paths.length) setTimeout(loop, 1000);
+	if (loadProcess.progress == init.paths.length) {
+		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
+		setTimeout(loop, 1000);
+	}
 }
 
 function loop(){
@@ -263,26 +272,26 @@ function loop(){
 
 
 	//layer 2: the game
-	offsetX = ((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
-	offsetY = ((player.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
+	offsetX = ((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
+	offsetY = ((player.box.center.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 
 	planets.forEach(function (planet){	
 		context.fillStyle = planet.color;
-		fillCircle(planet.cx - offsetX, planet.cy - offsetY, planet.radius);
-		drawCircle(planet.cx - offsetX, planet.cy - offsetY, planet.radius * 1.5, 2);
+		fillCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius);
+		drawCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius * 1.5, 2);
 
 		planet.enemies.forEach(function (enemy, ei){
-			var deltaX = planet.cx + enemy.x - player.x,
-				deltaY = planet.cy + enemy.y - player.y,
+			var deltaX = planet.box.center.x + enemy.x - player.box.center.x,
+				deltaY = planet.box.center.y + enemy.y - player.box.center.y,
 				dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)),
-				aimAngle = Math.PI - Math.atan2(planet.cx + enemy.x - player.x, planet.cy + enemy.y - player.y);
+				aimAngle = Math.PI - Math.atan2(planet.box.center.x + enemy.x - player.box.center.x, planet.box.center.y + enemy.y - player.box.center.y);
 			if (dist > 400){
 				aimAngle = enemy.angle + Math.PI / 150;
 				enemy.fireRate = 0;
 			} else {
 				if (++enemy.fireRate >= 20) {
 					enemy.fireRate = 0;
-					enemy.shots[enemy.shots.length] = {x: planet.cx + enemy.x, y: planet.cy + enemy.y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime
+					enemy.shots[enemy.shots.length] = {x: planet.box.center.x + enemy.x, y: planet.box.center.y + enemy.y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime
 					playSound("laser");
 				}
 			}
@@ -292,15 +301,15 @@ function loop(){
 				shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
 				shot.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
 				if (shot.x - offsetX < 0 || shot.x - offsetX > canvas.width || shot.y - offsetY < 0 || shot.y - offsetY > canvas.height || --shot.lt <= -20) enemy.shots.splice(si, 1);
-				else if (Collib.circleObb(shot.x, shot.y, resources["laserBeam"].width / 2, new Rectangle(new Point(player.x, player.y), resources[player.name + player.walkFrame].height, resources[player.name + player.walkFrame].width, player.rot))){//to be replaced with `Collib.obbObb()`
+				else if (Collib.circleObb(new Circle(new Point(shot.x, shot.y), resources["laserBeam"].width / 2), player.box)){//to be replaced with `Collib.obbObb()`
 					player.health -= (player.health = 0) ? 0 : 1;
 					enemy.shots.splice(si, 1);
 				}
 				drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);
 			});
 			context.fillStyle = "#aaa";
-			drawCircle(planet.cx + enemy.x - offsetX, planet.cy + enemy.y - offsetY, 350, 4);
-			drawRotatedImage(resources[enemy.appereal], planet.cx + enemy.x - offsetX, planet.cy + enemy.y - offsetY, aimAngle, false);
+			drawCircle(planet.box.center.x + enemy.x - offsetX, planet.box.center.y + enemy.y - offsetY, 350, 4);
+			drawRotatedImage(resources[enemy.appereal], planet.box.center.x + enemy.x - offsetX, planet.box.center.y + enemy.y - offsetY, aimAngle, false);
 		});
 	});
 
@@ -308,13 +317,13 @@ function loop(){
 		player.leavePlanet = true;
 		player.attachedPlanet = -1;
 		player.walkFrame = "_jump";
-		player.velX = Math.sin(player.rot) * 6;
-		player.velY = -Math.cos(player.rot) * 6;
+		player.velX = Math.sin(player.box.angle) * 6;
+		player.velY = -Math.cos(player.box.angle) * 6;
 	}
 
 	if (player.attachedPlanet >= 0){
 		fadeBackground(true);
-		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].radius);
+		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].box.radius);
 		if (controls["moveLeft"] > 0){
 			stepSize = stepSize * controls["moveLeft"];
 			planets[player.attachedPlanet].player += (controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
@@ -332,17 +341,16 @@ function loop(){
 			player.walkCounter = 0;
 			if (player.walkState) player.walkFrame = (player.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 		}
-		player.x = planets[player.attachedPlanet].cx + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
-		player.y = planets[player.attachedPlanet].cy + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].radius + resources[player.name + player.walkFrame].height / 2);
-		player.rot = Math.PI - planets[player.attachedPlanet].player;
+		player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].box.radius + resources[player.name + player.walkFrame].height / 2);
+		player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].box.radius + resources[player.name + player.walkFrame].height / 2);
+		player.box.angle = Math.PI - planets[player.attachedPlanet].player;
 		player.velX = 0;
 		player.velY = 0;
 		player.fuel = 300;
 	} else {
-		fadeBackground(false);
-
-		var chunkX = Math.floor(player.x / chunkSize),
-			chunkY = Math.floor(player.y / chunkSize);
+		fadeBackground(false);		
+		var chunkX = Math.floor(player.box.center.x / chunkSize),
+			chunkY = Math.floor(player.box.center.y / chunkSize);
 
 		if (chunkX !== player.oldChunkX || chunkY !== player.oldChunkY){
 			for (var y = -3; y < 3; y++){
@@ -357,18 +365,18 @@ function loop(){
 		player.oldChunkY = chunkY;
 
 		planets.forEach(function (planet, pi){
-			var deltaX = planet.cx - player.x,
-				deltaY = planet.cy - player.y,
+			var deltaX = planet.box.center.x - player.box.center.x,
+				deltaY = planet.box.center.y - player.box.center.y,
 				distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
-			player.velX += 9000 * planet.radius * deltaX / distPowFour;
-			player.velY += 9000 * planet.radius * deltaY / distPowFour;
+			player.velX += 9000 * planet.box.radius * deltaX / distPowFour;
+			player.velY += 9000 * planet.box.radius * deltaY / distPowFour;
 
-			var origX = player.x - offsetX,
-				origY = player.y - offsetY;
-			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(origX, origY, Math.atan2(planet.cx - offsetX - origX, planet.cy - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.radius, planet.color);
+			var origX = player.box.center.x - offsetX,
+				origY = player.box.center.y - offsetY;
+			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(origX, origY, Math.atan2(planet.box.center.x - offsetX - origX, planet.box.center.y - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
 
-			if (Collib.circleObb(planet.cx, planet.cy, planet.radius, new Rectangle(new Point(player.x, player.y), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height, player.rot))) {//TODO: use a Rectangle object for the character instead of recreating a Rectangle object every time
+			if (Collib.circleObb(planet.box, player.box)) {
 				//player is in a planet's attraction area
 				player.attachedPlanet = pi;
 				player.leavePlanet = false;
@@ -378,29 +386,29 @@ function loop(){
 
 		if(controls["jetpack"] > 0 && player.fuel > 0 && controls["crouch"] < 1){
 			player.fuel-= controls["jetpack"];
-			player.velX += (Math.sin(player.rot) / 10) * controls["jetpack"];
-			player.velY += (-Math.cos(player.rot) / 10) * controls["jetpack"];
+			player.velX += (Math.sin(player.box.angle) / 10) * controls["jetpack"];
+			player.velY += (-Math.cos(player.box.angle) / 10) * controls["jetpack"];
 		} else if (controls["crouch"] > 0){
-			//((player.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
+			//((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 			player.velX = player.velX * 0.987;
 			player.velY = player.velY * 0.987;
 		}
 
 		var runMultiplicator = controls["run"] ? 1.7 : 1;
-		if (controls["moveLeft"] > 0) player.rot -= (Math.PI / 140) * controls["moveLeft"] * runMultiplicator;
-		if (controls["moveRight"] > 0) player.rot += (Math.PI / 140) * controls["moveRight"] * runMultiplicator;
+		if (controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 140) * controls["moveLeft"] * runMultiplicator;
+		if (controls["moveRight"] > 0) player.box.angle += (Math.PI / 140) * controls["moveRight"] * runMultiplicator;
 
-		player.x += player.velX;
-		player.y += player.velY;
+		player.box.center.x += player.velX;
+		player.box.center.y += player.velY;
 	}
 
 	context.fillText("player.oldChunkX: " + player.oldChunkX, 0, 200);
 	context.fillText("player.oldChunkY: " + player.oldChunkY, 0, 250);
 	context.fillText("planets.length: " + planets.length, 0,  300);
 	drawRotatedImage(resources[player.name + player.walkFrame],
-		player.x - offsetX,
-		player.y - offsetY,
-		player.rot,
+		player.box.center.x - offsetX,
+		player.box.center.y - offsetY,
+		player.box.angle,
 		player.looksLeft);
 
 
