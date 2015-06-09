@@ -84,7 +84,7 @@ chunks.removeChunk = function (x, y){
 	if (c < 0) return;
 
 	for (var i = 0; i < planets.length; i++){
-		if (planets[i].cx >= x * chunkSize && planets[i].cx <= (x + 1) * chunkSize && planets[i].cy >= y * chunkSize && planets[i].cy <= (y + 1) * chunkSize){
+		if (planets[i].box.center.x >= x * chunkSize && planets[i].box.center.x <= (x + 1) * chunkSize && planets[i].box.center.y >= y * chunkSize && planets[i].box.center.y <= (y + 1) * chunkSize){
 			planets.splice(i,1);
 			i--;			
 		}		
