@@ -1,3 +1,4 @@
+"use strict";
 function CachedObject(){
 	//call `return CachedObject.call(this);` at the end of any constructor
 	//to make it inherit from `CachedObject`
@@ -39,15 +40,15 @@ function Vector(argOne, argTwo){
 	}
 	return CachedObject.call(this);
 }
-Vector.prototype = {
-	get orthogonalVector(){
+Object.defineProperty(Vector.prototype, "orthogonalVector", {
+	get: function(){
 		if(this._cache.needsUpdate){
 			this._cache.needsUpdate = false;
 			this._cache.orthogonalVector = new Vector(-this.y, this.x);
 		}
 		return this._cache.orthogonalVector;
 	}
-};
+});
 
 function Rectangle(centerPoint, width, height, angle){
 	this.center = centerPoint;
@@ -59,30 +60,57 @@ function Rectangle(centerPoint, width, height, angle){
 	this._unrotatedVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
 	return CachedObject.call(this);
 }
-Rectangle.prototype = {
-	get vertices(){
-		if(this._cache.needsUpdate || this.center._cache.needsUpdate){
-			console.log("let's update this shit");
-			this._cache.needsUpdate = false;
-			this.center._cache.needsUpdate = false;
+Object.defineProperties(Rectangle.prototype, {
+	"vertices": {
+		get: function(){
+			if(this._cache.needsUpdate || this.center._cache.needsUpdate){
+				console.log("let's update this shit");
+				this._cache.needsUpdate = false;
+				this.center._cache.needsUpdate = false;
 
-			this._cache.vertices = [];
-			this._unrotatedVertices.forEach(function(vertex, index){
-				var newVertex = new Point(
-					vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
-					vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
-				);
-				this._cache.vertices[index] = newVertex;
-			}, this);
+				this._cache.vertices = [];
+				this._unrotatedVertices.forEach(function(vertex, index){
+					var newVertex = new Point(
+						vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
+						vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
+					);
+					this._cache.vertices[index] = newVertex;
+				}, this);
+			}
+			return this._cache.vertices;
 		}
-		return this._cache.vertices;
+	},
+	"collision": {
+		value: function(geomObj){
+			if(geomObj instanceof Rectangle) {
+				console.log(this);
+				if(this.angle === 0 && geomObj.angle === 0) {
+					return Collib.aabbAabb(this, geomObj);
+				} else {
+					return Collib.obbObb(this, geomObj);
+				}
+			} else if(geomObj instanceof Circle) {
+					return Collib.circleObb(geomObj, this);
+			} else {
+				throw new TypeError("Not a valid geometric object");
+			}
+		}
 	}
-};
+});
 
 function Circle(centerPoint, radius) {
 	this.center = centerPoint;
 	this.radius = radius;
 }
+Object.defineProperty(Circle.prototype, "collision", {
+	value: function(geomObj){
+		if(geomObj instanceof Rectangle) {
+			return Collib.circleObb(this, geomObj);
+		} else {
+			throw new TypeError("Not a valid geometric object");
+		}
+	}
+});
 
 
 

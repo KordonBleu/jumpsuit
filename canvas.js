@@ -106,7 +106,7 @@ chunks.addChunk = function (x, y){
 		for (var j = 0; j < enemyAmount; j++){
 			var enemyAng = Math.map(Math.random(), 0, 1, lastEnemyAng + Math.PI / 4, lastEnemyAng + Math.PI * 1.875),
 				enemyDistance = Math.floor(Math.map(Math.random(), 0, 1, planetRadius * 1.5, planetRadius * 4)),
-				enemyResources = ["Black1", "Black2", "Black3", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
+				enemyResources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 			enemies[j] = new Enemy(Math.sin(enemyAng) * enemyDistance, -Math.cos(enemyAng) * enemyDistance, "enemy" + enemyResources[Math.floor(Math.random() * enemyResources.length)]);
 			lastEnemyAng = enemyAng;
 		}
@@ -121,15 +121,17 @@ function init(){
 
 	init.paths = [
 		"background.png",
-		"meteorBig.png", "meteorBig2.png", "meteorMed.png",	"meteorMed2.png", "meteorSmall.png", "meteorTiny.png",
+		"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg",	"meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
 		"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
 		"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
 		"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
 		"alienGreen_badge.svg", "alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
 		"alienPink_badge.svg", "alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
 		"alienYellow_badge.svg", "alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
-		"enemyBlack1.png", "enemyBlack2.png", "enemyBlack3.png", "enemyBlue1.png", "enemyBlue2.png", "enemyBlue3.png",
-		"enemyGreen1.png", "enemyGreen2.png", "enemyRed1.png", "enemyRed2.png", "enemyRed3.png"
+		"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
+		"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
+		"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
+		"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg"
 	];
 
 	context.canvas.fillStyle = "black";
@@ -244,7 +246,7 @@ function loop(){
 
 	//layer 1: meteors
 	if (Math.random() < 0.05){
-		var m_resources = ["meteorTiny", "meteorSmall", "meteorMed", "meteorBig", "meteorBig2", "meteorMed2"],
+		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1",	"meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
 			m_rand = Math.floor(1 / Math.random()) - 1,
 			chosen_img = m_resources[(m_rand > m_resources.length - 1) ? m_resources.length - 1 : m_rand];
 
@@ -301,7 +303,7 @@ function loop(){
 				shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
 				shot.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
 				if (shot.x - offsetX < 0 || shot.x - offsetX > canvas.width || shot.y - offsetY < 0 || shot.y - offsetY > canvas.height || --shot.lt <= -20) enemy.shots.splice(si, 1);
-				else if (Collib.circleObb(new Circle(new Point(shot.x, shot.y), resources["laserBeam"].width / 2), player.box)){//to be replaced with `Collib.obbObb()`
+				else if ((new Circle(new Point(shot.x, shot.y), resources["laserBeam"].width / 2)).collision(player.box)){//to be replaced with `shot.box.collision()`
 					player.health -= (player.health = 0) ? 0 : 1;
 					enemy.shots.splice(si, 1);
 				}
@@ -376,7 +378,7 @@ function loop(){
 				origY = player.box.center.y - offsetY;
 			if (Math.pow(distPowFour, 1 / 4) < chunkSize) drawArrow(origX, origY, Math.atan2(planet.box.center.x - offsetX - origX, planet.box.center.y - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
 
-			if (Collib.circleObb(planet.box, player.box)) {
+			if (planet.box.collision(player.box)) {
 				//player is in a planet's attraction area
 				player.attachedPlanet = pi;
 				player.leavePlanet = false;
