@@ -121,7 +121,7 @@ function init(){
 
 	init.paths = [
 		"background.png",
-		"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg",	"meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
+		"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
 		"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
 		"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
 		"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
@@ -165,15 +165,19 @@ function loadProcess(){
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 
-
+	console.log("loaded");
 	if (loadProcess.progress == init.paths.length) {
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
 		setTimeout(loop, 1000);
-	} else {
-		var r = new Image();
-		r.src = "assets/images/" + init.paths[loadProcess.progress];
-		r.onload = loadProcess;
-		resources[init.paths[loadProcess.progress].slice(0, init.paths[loadProcess.progress].lastIndexOf("."))] = r;
+	} else if (Math.floor(loadProcess.progress / 5) > Math.floor((loadProcess.progress - 1) / 5)){
+		console.log((loadProcess.progress + 4 > init.paths.length) ? init.paths.length - loadProcess.progress : 5);
+		for (var i = 0; i < 5; i++){
+			if (loadProcess.progress + i > init.paths.length - 1) break;
+			var r = new Image();
+			r.onload = loadProcess;
+			r.src = "assets/images/" + init.paths[loadProcess.progress + i];
+			resources[init.paths[loadProcess.progress + i].slice(0, init.paths[loadProcess.progress + i].lastIndexOf("."))] = r;
+		}		
 	}	
 }
 
