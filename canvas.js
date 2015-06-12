@@ -140,30 +140,30 @@ function init(){
   	context.textBaseline = "top";
   	context.textAlign = "center";
 
-	for (var i = 0, lgt = init.paths.length; i != lgt; i++){
-		var r = new Image();
-		r.src = "assets/images/" + init.paths[i];
-		r.onload = loadProcess;
-		resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
-	}
+	loadProcess();
 }
 
-function loadProcess(e){
-	loadProcess.progress = loadProcess.progress === undefined ? 1 : ++loadProcess.progress;
+function loadProcess(){
+	loadProcess.progress = loadProcess.progress === undefined ? 0 : ++loadProcess.progress;
 
 	context.fillStyle = "#121012";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
 	context.fillStyle = "#007d6c";
-	context.fillRect(0, 0, (loadProcess.progress / init.paths.length) * canvas.width, 15);
+	context.fillRect(0, 0, ((this.progress + 1) / init.paths.length) * canvas.width, 15);
 
 	context.fillStyle = "#eee";
 	context.font = "60px Open Sans";
 	context.fillText("JumpSuit", canvas.width / 2, canvas.height * 0.35);
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
-
-	if (loadProcess.progress == init.paths.length) {
+	
+	var r = new Image();
+	r.src = "assets/images/" + init.paths[loadProcess.progress];
+	r.onload = loadProcess;
+	resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
+	
+	if (loadProcess.progress + 1 == init.paths.length) {
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
 		setTimeout(loop, 1000);
 	}
