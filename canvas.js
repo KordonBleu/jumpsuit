@@ -138,11 +138,11 @@ function init(){
   	context.textBaseline = "top";
   	context.textAlign = "center";
 
-	loadProgress();
+	loadProcess();
 }
 
 function loadProcess(){
-	this.progress = this.progress === undefined ? 0 : ++this.progress;
+	loadProcess.progress = loadProcess.progress === undefined ? 0 : ++loadProcess.progress;
 
 	context.fillStyle = "#121012";
 	context.fillRect(0, 0, canvas.width, canvas.height);
@@ -157,11 +157,11 @@ function loadProcess(){
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 	
 	var r = new Image();
-	r.src = "assets/images/" + init.paths[this.progress];
+	r.src = "assets/images/" + init.paths[loadProcess.progress];
 	r.onload = loadProcess;
 	resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
 	
-	if (this.progress == init.paths.length) {
+	if (loadProcess.progress + 1 == init.paths.length) {
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
 		setTimeout(loop, 1000);
 	}
