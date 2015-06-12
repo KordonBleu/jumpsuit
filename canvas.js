@@ -51,7 +51,7 @@ var canvas = document.getElementById("canvas"),
 		moveRight: 0
 	},
 	planets = [
-		new Planet(0.5, 0.5, 150, "rgb(200,200,200)", []) //start planet
+		//emptiness
 	],
 	planetColours = [
 		"rgb(255,51,51)",
@@ -64,7 +64,7 @@ var canvas = document.getElementById("canvas"),
 		"rgb(118,33,129)"
 	],
 	chunks = [
-		//
+		//emptiness
 	],
 	chunkSize = 4000;
 
@@ -140,6 +140,13 @@ function init(){
   	context.textBaseline = "top";
   	context.textAlign = "center";
 
+  	for (var y = -1; y <= 1; y++){
+  		for (var x = -1; x <= 1; x++){
+  			chunks.addChunk(x, y);
+  			if (x == 0 && y == 0) player.attachedPlanet = planets.length - 1;
+  		}
+  	}
+
 	loadProcess();
 }
 
@@ -150,23 +157,24 @@ function loadProcess(){
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
 	context.fillStyle = "#007d6c";
-	context.fillRect(0, 0, ((this.progress + 1) / init.paths.length) * canvas.width, 15);
+	context.fillRect(0, 0, ((loadProcess.progress + 1) / init.paths.length) * canvas.width, 15);
 
 	context.fillStyle = "#eee";
 	context.font = "60px Open Sans";
 	context.fillText("JumpSuit", canvas.width / 2, canvas.height * 0.35);
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
-	
-	var r = new Image();
-	r.src = "assets/images/" + init.paths[loadProcess.progress];
-	r.onload = loadProcess;
-	resources[init.paths[i].slice(0, init.paths[i].lastIndexOf("."))] = r;
-	
-	if (loadProcess.progress + 1 == init.paths.length) {
+
+
+	if (loadProcess.progress == init.paths.length) {
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
 		setTimeout(loop, 1000);
-	}
+	} else {
+		var r = new Image();
+		r.src = "assets/images/" + init.paths[loadProcess.progress];
+		r.onload = loadProcess;
+		resources[init.paths[loadProcess.progress].slice(0, init.paths[loadProcess.progress].lastIndexOf("."))] = r;
+	}	
 }
 
 function loop(){
@@ -355,8 +363,8 @@ function loop(){
 			chunkY = Math.floor(player.box.center.y / chunkSize);
 
 		if (chunkX !== player.oldChunkX || chunkY !== player.oldChunkY){
-			for (var y = -3; y < 3; y++){
-				for (var x = -3; x < 3; x++){
+			for (var y = -3; y <= 3; y++){
+				for (var x = -3; x <= 3; x++){
 					if (y >= -1 && y <= 1 && x >= -1 && x <= 1) chunks.addChunk(chunkX + x, chunkY + y);
 					else chunks.removeChunk(chunkX + x, chunkY + y);
 				}

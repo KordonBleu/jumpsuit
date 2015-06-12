@@ -6,82 +6,74 @@ window.addEventListener("hashchange", hashChange);
 window.addEventListener("load", hashChange);
 
 
-function handleInput(e){
-	e.preventDefault();
-	var t = e.target.id,
-		s = (t == "") ? e.type === "keydown" : e.type === ("touchstart" || "touchmove");
-	s = (s == true || e.type === ("mousedown" || "mousemove")) ? 1 : 0;
-
-	if (t == "canvas"){
-		var x = (e.type.indexOf("touch") == 0 ? e.touches[0].pageX : e.pageX) | 0,
-			y = (e.type.indexOf("touch") == 0 ? e.touches[0].pageY : e.pageY) | 0;
-		if (e.type.indexOf("start") !== -1 || e.type.indexOf("down") !== -1){
-			game.dragStartX = x;
-			game.dragStartY = y;
-			game.dragX = x;
-			game.dragY = y;
-		} else if (e.type.indexOf("end") !== -1 || e.type.indexOf("up") !== -1){
-			game.dragStartX = 0;
-			game.dragStartY = 0;
-			game.dragX = 0;
-			game.dragY = 0;
-		} else if (e.type.indexOf("move") !== -1) {
-			game.dragX = (game.dragStartX !== 0) ? x : 0;
-			game.dragY = (game.dragStartY !== 0) ? y : 0;
-		}
-	} else if (t == "audio-icon") {
-		if (s == 1){
-			if (e.target.getAttribute("src") === "assets/images/controls/mute.svg") {
-				e.target.setAttribute("src", "assets/images/controls/unmute.svg");
-				gain.gain.value = 0.5;
-			} else {
-				e.target.setAttribute("src", "assets/images/controls/mute.svg");
-				gain.gain.value = 0;
-			}
-		}
-	} else {
-		var triggered = null,
-			target;
-		if(e.type.substring(0, 3) === "key") {//keyboard
-			switch (e.keyCode){
-				case 27:
-					if (s) {
-						var box = document.getElementById("info-box");
-						box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
-					}
-					break;
-				case 32:
-					triggered = "jump";					
-					break;
-				case 16:
-					triggered = "run";
-					break;
-				case 38:
-				case 87:
-					triggered = "jetpack";
-					break;
-				case 40:
-				case 83:
-					triggered = "crouch";
-					break;
-				case 37:
-				case 65:
-					triggered = "moveLeft";
-					break;
-				case 39:
-				case 68:
-					triggered = "moveRight";
-					break;
-			}
-		} else if (e.target.nodeName === "IMG") {//touchscreen
-			console.log(e.type + " " + e.target);
-			triggered = e.target.src.replace(window.location.href.replace("index.html" + window.location.hash, "") + "assets/images/controls/", "");//get filename
-			triggered = triggered.substring(0, triggered.length - 4);//get rid of the extension
-		}
-		if (triggered !== null && e.type.indexOf("move") === -1) {
-			controls[triggered] = s;
+function handleInputMobile(e){
+	for (var t = 0; t < e.changedTouches.length; t++){
+		var touch = e.changedTouches.item(t);
+		if (touch.target.id == "canvas"){
+			dragging(e.type, touch.pageX, touch.pageY);
+		} else if (touch.target.id == "audio-icon"){
+			toggleAudio(e.type);
+		} else {
+			e.preventDefault();
+			if (e.type.indexOf("move") !== -1) return;
+			var s = (e.type.indexOf("start") > -1 && e.type.indexOf("end") == -1);
+			if (controls[touch.target.id] !== undefined) controls[touch.target.id] = s;
 		}
 	}
+}
+
+function handleInput(e){	
+	var s = e.type === "keydown";
+
+	if (e.target.id == "canvas"){
+		dragging(e.type, e.pageX, e.pageY);
+	} else if (e.target.id == "audio-icon"){
+		toggleAudio(e.type);
+	} else {
+		var triggered, keyMap = {27: "menu", 16: "run", 32: "jump", 37: "moveLeft", 38: "jetpack", 39: "moveRight", 40: "crouch", 65: "moveLeft", 68: "moveRight", 83: "crouch", 87: "jetpack"};
+		if(e.type.substring(0, 3) === "key"){
+			triggered = keyMap[e.keyCode];
+		} else if (controls[e.target.id] !== undefined){
+			e.preventDefault();		
+			triggered = e.target.id;
+		}
+		if (triggered == "menu"){
+			if (s == 1){
+				var box = document.getElementById("info-box");
+				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+			}
+		} else if (triggered != null && e.type.indexOf("mouse") !== 0) controls[triggered] = s;
+	}
+}
+
+function dragging(ev, x, y){
+	console.log(ev);
+	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
+		game.dragX = x;
+		game.dragY = y;
+		game.dragStartX = x;
+		game.dragStartY = y;
+	} else if (ev.indexOf("end") !== -1 || ev.indexOf("up") !== -1){
+		game.dragX = 0;
+		game.dragY = 0;
+		game.dragStartX = 0;
+		game.dragStartY = 0;
+	} else if (ev.indexOf("move") !== -1){
+		game.dragX = game.dragStartX !== 0 ? x : 0;
+		game.dragY = game.dragStartY !== 0 ? y : 0;
+	}	
+}
+
+function toggleAudio(ev){
+	var audioObj = document.getElementById("audio-icon");
+	if (ev.indexOf("start") == -1 && ev.indexOf("down") == -1) return;
+	if (audio.Obj.getAttribute("src") === "assets/images/controls/mute.svg") {
+		audioObj.setAttribute("src", "assets/images/controls/unmute.svg");
+		gain.gain.value = 0.5;
+	} else {
+		audioObj.setAttribute("src", "assets/images/controls/mute.svg");
+		gain.gain.value = 0;
+	}	
 }
 
 function handleGamepad(){
@@ -106,9 +98,9 @@ function handleGamepad(){
 
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
-window.addEventListener("touchstart", handleInput);
-window.addEventListener("touchmove", handleInput);
-window.addEventListener("touchend", handleInput);
+window.addEventListener("touchstart", handleInputMobile);
+window.addEventListener("touchmove", handleInputMobile);
+window.addEventListener("touchend", handleInputMobile);
 window.addEventListener("mousedown", handleInput);
-window.addEventListener("mousemove", handleInput, true);
-window.addEventListener("mouseup", handleInput, true);
+window.addEventListener("mousemove", handleInput);
+window.addEventListener("mouseup", handleInput);
