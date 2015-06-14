@@ -257,7 +257,7 @@ function loop(){
 
 
 	//layer 1: meteors
-	if (Math.random() < 0.05){
+	if (Math.random() < 0.01){
 		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1",	"meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
 			m_rand = Math.floor(1 / Math.random()) - 1,
 			chosen_img = m_resources[(m_rand > m_resources.length - 1) ? m_resources.length - 1 : m_rand];
@@ -289,11 +289,12 @@ function loop(){
 	offsetX = ((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.box.center.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 
-	planets.forEach(function (planet){	
+	planets.forEach(function (planet){
 		context.fillStyle = planet.color;
 		fillCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius);
 		drawCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius * 1.5, 2);
-
+	});
+	planets.forEach(function (planet){	
 		planet.enemies.forEach(function (enemy, ei){
 			var deltaX = planet.box.center.x + enemy.x - player.box.center.x,
 				deltaY = planet.box.center.y + enemy.y - player.box.center.y,

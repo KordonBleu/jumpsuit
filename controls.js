@@ -30,7 +30,7 @@ function handleInput(e){
 	} else if (e.target.id == "audio-icon"){
 		toggleAudio(e.type);
 	} else {
-		var triggered, keyMap = {27: "menu", 16: "run", 32: "jump", 37: "moveLeft", 38: "jetpack", 39: "moveRight", 40: "crouch", 65: "moveLeft", 68: "moveRight", 83: "crouch", 87: "jetpack"};
+		var triggered, keyMap = {9: "lobby", 27: "menu", 16: "run", 32: "jump", 37: "moveLeft", 38: "jetpack", 39: "moveRight", 40: "crouch", 65: "moveLeft", 68: "moveRight", 83: "crouch", 87: "jetpack"};
 		if(e.type.substring(0, 3) === "key"){
 			triggered = keyMap[e.keyCode];
 		} else if (controls[e.target.id] !== undefined){
@@ -41,6 +41,11 @@ function handleInput(e){
 			if (s == 1){
 				var box = document.getElementById("info-box");
 				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+			}
+		} else if (triggered == "lobby"){
+			if (s == 1){
+				var box = document.getElementById("multiplayer-box");
+				box.className = (box.className == "multiplayer-box hidden") ?  "multiplayer-box" : "multiplayer-box hidden";
 			}
 		} else if (triggered != null && e.type.indexOf("mouse") !== 0) controls[triggered] = s;
 	}
