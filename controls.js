@@ -101,6 +101,10 @@ function handleGamepad(){
 	}
 }
 
+function multiplayer(){
+	
+}
+
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 window.addEventListener("touchstart", handleInputMobile);
