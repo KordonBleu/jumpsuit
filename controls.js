@@ -11,8 +11,6 @@ function handleInputMobile(e){
 		var touch = e.changedTouches.item(t);
 		if (touch.target.id == "canvas"){
 			dragging(e.type, touch.pageX, touch.pageY);
-		} else if (touch.target.id == "audio-icon"){
-			toggleAudio(e.type);
 		} else {
 			e.preventDefault();
 			if (e.type.indexOf("move") !== -1) return;
@@ -25,10 +23,8 @@ function handleInputMobile(e){
 function handleInput(e){	
 	var s = e.type === "keydown";
 
-	if (e.target.id == "canvas"){
+	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
-	} else if (e.target.id == "audio-icon"){
-		toggleAudio(e.type);
 	} else {
 		var triggered, keyMap = {9: "lobby", 27: "menu", 16: "run", 32: "jump", 37: "moveLeft", 38: "jetpack", 39: "moveRight", 40: "crouch", 65: "moveLeft", 68: "moveRight", 83: "crouch", 87: "jetpack"};
 		if(e.type.substring(0, 3) === "key"){
@@ -69,17 +65,15 @@ function dragging(ev, x, y){
 	}	
 }
 
-function toggleAudio(ev){
-	var audioObj = document.getElementById("audio-icon");
-	if (ev.indexOf("start") == -1 && ev.indexOf("down") == -1) return;
-	if (audio.Obj.getAttribute("src") === "assets/images/controls/mute.svg") {
-		audioObj.setAttribute("src", "assets/images/controls/unmute.svg");
+document.getElementById("audio-icon").addEventListener("click", function(ev){
+	if (ev.target.getAttribute("src") === "assets/images/controls/mute.svg") {
+		ev.target.setAttribute("src", "assets/images/controls/unmute.svg");
 		gain.gain.value = 0.5;
 	} else {
-		audioObj.setAttribute("src", "assets/images/controls/mute.svg");
+		ev.target.setAttribute("src", "assets/images/controls/mute.svg");
 		gain.gain.value = 0;
 	}	
-}
+});
 
 function handleGamepad(){
 	var gamepads = navigator.getGamepads(), g = gamepads[0];
