@@ -45,8 +45,8 @@
 			</div>
 		</div>
 		<div id="multiplayer-box" class="multiplayer-box">
-			<div class="button" id="ready" style="float: right;">Disconnect</div>
-			<div class="button" id="ready" style="float: right;">Create New Lobby</div>
+			<div class="button" id="disconnect" style="float: right;">Disconnect</div>
+			<div class="button" id="new-lobby" style="float: right;">Create New Lobby</div>
 			<h2>Multiplayer Lobby</h2>
 			<h4 id="status">Waiting for other players...</h4>			
 			<ul id="player-list">
@@ -64,7 +64,7 @@
 			<h4>My Player</h4>
 			<form>
 				<label>Name: </label>
-				<input type="text" placeholder="Enter your name" maxlength="30"/><div class="placeholder"></div>
+				<input id="name" type="text" placeholder="Enter your name" maxlength="30"/><div class="placeholder"></div>
 				<label>Appereal: </label>
 				<div id="playerBlue" class="playerSelect"></div>
 				<div id="playerBeige" class="playerSelect"></div>
@@ -81,5 +81,6 @@
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
 		<script src="controls.js"></script>
+		<script src="websocket_client.js"></script>
 	<body>
 </html>
