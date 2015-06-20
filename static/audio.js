@@ -69,5 +69,3 @@ function playSound(name, distance){
 
 loadSound("assets/audio/laserTest.ogg", "laser");
 loadSound("assets/audio/interstellar.ogg", "background");
-
-

@@ -1,14 +1,14 @@
 {
-	"name": "jumpsuit",
-	"version": "0.0.0",
-	"description": "A sweet canvas game",
-	"dependencies": {
-		"ws": "0.7.x"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Getkey/jumpsuit"
-	},
-	"readme": "readme.md",
-	"license": "MPL-2.0"
+  "name": "jumpsuit",
+  "version": "0.0.0",
+  "description": "A sweet canvas game",
+  "dependencies": {
+    "ws": "^0.7.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Getkey/jumpsuit"
+  },
+  "readme": "readme.md",
+  "license": "MPL-2.0"
 }

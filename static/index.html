@@ -25,7 +25,7 @@
 			<p>Music by Arnaud Poyeton<br/>
 			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
 
-			<a class="button" href="#share">Share</a><a class="button" href="#donate">Donate</a>
+			<a class="button" href="switchInformation()">Share</a><a class="button" href="switchInformation()">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
 				<div id="donate">
@@ -44,11 +44,12 @@
 				</div>
 			</div>
 		</div>
-		<div id="multiplayer-box" class="multiplayer-box">
-			<div class="button" id="disconnect" style="float: right;">Disconnect</div>
-			<div class="button" id="new-lobby" style="float: right;">Create New Lobby</div>
+		<div id="multiplayer-box" class="multiplayer-box hidden">
+			<button class="button" id="button-1" style="float: right;">Disconnect</button>
+			<button class="button" id="button-2" style="float: right;" disabled>Refresh</button>
+			<button class="button" id="button-3" style="float: right;" disabled>Create New Lobby</button>
 			<h2>Multiplayer Lobby</h2>
-			<h4 id="status">Waiting for other players...</h4>			
+			<h4 id="status">Waiting for other players...</h4>
 			<ul id="player-list">
 				<li>Fju</li>
 				<li>Getkey</li>
@@ -56,31 +57,26 @@
 				<li>Arnaud Poyeton</li>
 				<li>Kenney Vleugels</li>
 				<li>Piotr Gawiński</li>
-				<li>Fju</li>
-				<li>Fju</li>
-
 			</ul>
 			<hr>
-			<h4>My Player</h4>
-			<form>
+			<h4>Settings</h4>
+			<div class="form">
 				<label>Name: </label>
 				<input id="name" type="text" placeholder="Enter your name" maxlength="30"/><div class="placeholder"></div>
-				<label>Appereal: </label>
+				<label>Appearance: </label>
 				<div id="playerBlue" class="playerSelect"></div>
 				<div id="playerBeige" class="playerSelect"></div>
 				<div id="playerGreen" class="playerSelect"></div>
 				<div id="playerPink" class="playerSelect"></div>
 				<div id="playerYellow" class="playerSelect"></div>
-
 				<div class="placeholder"></div>
-			</form>
-			<div class="button" id="ready">I'm ready</div>
+			</div>
+			<button class="button" id="ready">I'm ready</button>
 		</div>
-
 		<script src="audio.js"></script>
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
-		<script src="controls.js"></script>
 		<script src="websocket_client.js"></script>
+		<script src="controls.js"></script>		
 	<body>
 </html>

@@ -2,6 +2,7 @@
 	user-zoom: fixed;
 }
 html, body {
+	background: #121012;
 	margin: 0;
 	height: 100%;
 	overflow: hidden;
@@ -10,6 +11,13 @@ html, body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;   
+}
+canvas.blurred{
+	-webkit-filter: blur(5px);
+	-moz-filter: blur(5px);
+	-o-filter: blur(5px);
+	-ms-filter: blur(5px);
+	filter: blur(5px);	
 }
 .info-box {
 	position: fixed;
@@ -82,7 +90,6 @@ html, body {
 	background: transparent;
 	color: #AD3726;
 }
-
 #controls {
 	position: fixed;
 	bottom: 0;
@@ -120,7 +127,7 @@ html, body {
 	right: 0;
 	width: 60%;
 	height: 60%;
-	min-width: 600px;
+	min-width: 640px;
 	min-height: 480px;
 	margin: auto;
 	padding: 15px;
@@ -143,8 +150,7 @@ html, body {
 }
 .multiplayer-box h2, h4{
 	display: inline-block;
-	margin: 5px 0;
-	width: 50%;
+	margin: 5px 2px;
 }
 .multiplayer-box .button{
 	box-sizing: border-box;
@@ -160,27 +166,34 @@ html, body {
 	border: 2px solid transparent;
 	text-align: center;
 }
+.multiplayer-box .button:disabled{
+	background: #666;
+}
 .multiplayer-box #player-list{
 	font-size: 24px;
 	list-style-type: none;
 	width: 100%;
 }
-
-.multiplayer-box form label{
-	float: left;
-	width: 100px;
+.multiplayer-box #player-list a{
+	color: #f33;
+	text-decoration: none;
 }
-.multiplayer-box form input[type=text]{
-	width: 300px;
+
+.multiplayer-box .form label{
+	float: left;
+	width: 130px;
+}
+.multiplayer-box .form input[type=text]{
+	width: 315px;
 	padding: 4px;
 }
-.multiplayer-box form .placeholder{
+.multiplayer-box .form .placeholder{
 	float: left;
 	width: 100%;
 	height: 20px;
 	display: block;
 }
-.multiplayer-box form .playerSelect {
+.multiplayer-box .form .playerSelect {
 	width: 47px;
 	height: 47px;
 	margin: 8px 8px;
@@ -191,11 +204,11 @@ html, body {
 	border-radius: 5px;
 	transition: background-size .1s;
 }
-.multiplayer-box form .playerSelect:hover {
+.multiplayer-box .form .playerSelect:hover {
 	background-size: 85px 85px;
 }
-.multiplayer-box form #playerBlue {background-image: url("assets/images/alienBlue_badge.svg");}
-.multiplayer-box form #playerBeige {background-image: url("assets/images/alienBeige_badge.svg");}
-.multiplayer-box form #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
-.multiplayer-box form #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
-.multiplayer-bsox form #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
+.multiplayer-box .form #playerBlue {background-image: url("assets/images/alienBlue_badge.svg");}
+.multiplayer-box .form #playerBeige {background-image: url("assets/images/alienBeige_badge.svg");}
+.multiplayer-box .form #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
+.multiplayer-box .form #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
+.multiplayer-box .form #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}

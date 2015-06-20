@@ -1,10 +1,4 @@
-function hashChange() {
-	document.getElementById("donate").setAttribute("style", "display: " + ((location.hash == "#donate") ? "block" : "none"));
-	document.getElementById("share").setAttribute("style", "display: " + ((location.hash == "#donate") ? "none" : "block"));
-}
-window.addEventListener("hashchange", hashChange);
-window.addEventListener("load", hashChange);
-
+var gameBlurred = "";
 
 function handleInputMobile(e){
 	for (var t = 0; t < e.changedTouches.length; t++){
@@ -21,34 +15,34 @@ function handleInputMobile(e){
 }
 
 function handleInput(e){	
-	var s = e.type === "keydown";
-
-	if (e.target.id === "canvas"){
+	if (e.target.id === "canvas" && gameBlurred === ""){
 		dragging(e.type, e.pageX, e.pageY);
 	} else {
 		var triggered, keyMap = {9: "lobby", 27: "menu", 16: "run", 32: "jump", 37: "moveLeft", 38: "jetpack", 39: "moveRight", 40: "crouch", 65: "moveLeft", 68: "moveRight", 83: "crouch", 87: "jetpack"};
-		if(e.type.substring(0, 3) === "key"){
+		if (e.type.substring(0, 3) === "key"){
 			triggered = keyMap[e.keyCode];
 		} else if (controls[e.target.id] !== undefined){
 			e.preventDefault();		
 			triggered = e.target.id;
 		}
-		if (triggered == "menu"){
-			if (s == 1){
+		if (triggered == "menu" && gameBlurred !== "m"){
+			if (e.type === "keydown"){
 				var box = document.getElementById("info-box");
 				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
 			}
-		} else if (triggered == "lobby"){
-			if (s == 1){
+		} else if (triggered == "lobby" && gameBlurred !== "i"){
+			if (e.type === "keydown"){
 				var box = document.getElementById("multiplayer-box");
 				box.className = (box.className == "multiplayer-box hidden") ?  "multiplayer-box" : "multiplayer-box hidden";
+				if (box.className === "multiplayer-box hidden") settingsChanged();
 			}
-		} else if (triggered != null && e.type.indexOf("mouse") !== 0) controls[triggered] = s;
+		} else if (triggered != null && e.type.indexOf("mouse") !== 0 && gameBlurred === "") controls[triggered] = e.type === "keydown";
 	}
+	gameBlurred = document.getElementById("info-box").className === "info-box" ? "i" : document.getElementById("multiplayer-box").className === "multiplayer-box" ? "m" : "";	
+	canvas.className = (gameBlurred === "") ? "" : "blurred";
 }
 
 function dragging(ev, x, y){
-	console.log(ev);
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.dragX = x;
 		game.dragY = y;
@@ -83,8 +77,10 @@ function handleGamepad(){
 		controls["crouch"] = g.buttons[4].value;
 		controls["jetpack"] = g.buttons[7].value;
 
-		controls["moveLeft"] = 0;
+		controls["moveLeft"] = 0;		
 		controls["moveRight"] = 0;
+
+		
 		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
 
 
@@ -95,10 +91,6 @@ function handleGamepad(){
 	}
 }
 
-function multiplayer(){
-	
-}
-
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 window.addEventListener("touchstart", handleInputMobile);
@@ -107,3 +99,31 @@ window.addEventListener("touchend", handleInputMobile);
 window.addEventListener("mousedown", handleInput);
 window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);
+
+function switchInformation(){
+	document.getElementById("donate").setAttribute("style", "display: " + ((this.textContent === "Donate") ? "block" : "none"));
+	document.getElementById("share").setAttribute("style", "display: " + ((this.textContent === "Donate") ? "none" : "block"));
+}
+
+[].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
+	element.addEventListener("mousedown", function(){
+		player.name = this.id.replace("player", "alien");
+	});
+});
+document.getElementById("name").addEventListener("change", function(){
+	player.playerName = this.value;
+});
+document.getElementById("button-1").addEventListener("click", function(){
+	if (this.textContent == "Disconnect"){
+		this.textContent = "Connect";
+		closeSocket();
+	} else {
+		this.textContent = "Disconnect";
+		openSocket();		
+	}
+});
+document.getElementById("button-2").addEventListener("click", function(){
+	if (this.textContent === "Leave Lobby")	leaveLobby();
+	else refreshLobbies();
+});
+document.getElementById("button-3").addEventListener("click", newLobby);

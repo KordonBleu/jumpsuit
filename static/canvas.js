@@ -20,7 +20,7 @@ var canvas = document.getElementById("canvas"),
 	meteors = [],
 	pause = 0,
 	player = {
-		health: 10, facesLeft: false, name: "alienGreen",
+		health: 10, facesLeft: false, name: "alienGreen", playerName: "Unnamed Player",
 		velX: 0, velY: 0,
 		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
 		set walkFrame(v){
@@ -86,10 +86,9 @@ chunks.removeChunk = function (x, y){
 	for (var i = 0; i < planets.length; i++){
 		if (planets[i].box.center.x >= x * chunkSize && planets[i].box.center.x <= (x + 1) * chunkSize && planets[i].box.center.y >= y * chunkSize && planets[i].box.center.y <= (y + 1) * chunkSize){
 			planets.splice(i,1);
-			i--;			
-		}		
-	}		
-
+			i--;
+		}
+	}
 	chunks.splice(c, 1);
 }
 chunks.addChunk = function (x, y){
@@ -119,6 +118,12 @@ function init(){
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 
+	location.hash = "";
+
+	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
+		element.setAttribute("style", "display: none;");
+	});	
+
 	init.paths = [
 		"background.png",
 		"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
@@ -136,9 +141,9 @@ function init(){
 
 	context.canvas.fillStyle = "black";
 	context.fillRect(0,0, canvas.width, canvas.height);
-  	context.font = "16px Open Sans";
-  	context.textBaseline = "top";
-  	context.textAlign = "center";
+	context.font = "16px Open Sans";
+	context.textBaseline = "top";
+	context.textAlign = "center";
 
   	for (var y = -1; y <= 1; y++){
   		for (var x = -1; x <= 1; x++){
@@ -167,8 +172,11 @@ function loadProcess(){
 
 	console.log("loaded");
 	if (loadProcess.progress == init.paths.length) {
-		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
-		setTimeout(loop, 1000);
+		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);		
+		setTimeout(function(){
+			document.getElementById("multiplayer-box").className = "multiplayer-box";
+			loop();
+		}, 500);
 	} else if (Math.floor(loadProcess.progress / 5) > Math.floor((loadProcess.progress - 1) / 5)){
 		console.log((loadProcess.progress + 4 > init.paths.length) ? init.paths.length - loadProcess.progress : 5);
 		for (var i = 0; i < 5; i++){
@@ -434,7 +442,7 @@ function loop(){
 
 	context.fillStyle = "#eee";
 	context.drawImage(resources[player.name + "_badge"], 8, 18, 32, 32);
-	context.fillText("Player Name".toUpperCase(), 55, 20); //uppercase looks better
+	context.fillText(player.playerName, 55, 20); //uppercase looks better
 
 	context.font = "20px Open Sans";
 	context.fillText("Health: ", 8, 90);
