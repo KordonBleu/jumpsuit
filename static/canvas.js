@@ -22,7 +22,7 @@ var canvas = document.getElementById("canvas"),
 	player = {
 		health: 10, facesLeft: false, name: "alienGreen", playerName: "Unnamed Player",
 		velX: 0, velY: 0,
-		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
+		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 0,
 		set walkFrame(v){
 			this._walkFrame = v;
 			this.box.width = resources[this.name + this.walkFrame].width;
@@ -31,7 +31,7 @@ var canvas = document.getElementById("canvas"),
 		get walkFrame(){
 			return this._walkFrame;
 		},
-		attachedPlanet: 0, leavePlanet: false,
+		attachedPlanet: -1, leavePlanet: false,
 		oldChunkX: 0, oldChunkY: 0
 	},
 	game = {
@@ -42,6 +42,9 @@ var canvas = document.getElementById("canvas"),
 		dragX: 0,
 		dragY: 0
 	},
+	chunks = [],
+	chunkSize = 4000,
+	planets = [],
 	offsetX = 0, offsetY = 0,
 	controls = {
 		jump: 0,
@@ -49,70 +52,8 @@ var canvas = document.getElementById("canvas"),
 		jetpack: 0,
 		moveLeft: 0,
 		moveRight: 0
-	},
-	planets = [
-		//emptiness
-	],
-	planetColours = [
-		"rgb(255,51,51)",
-		"rgb(220,170,80)",
-		"rgb(120, 240,60)",
-		"rgb(12,135,242)",
-		"rgb(162,191,57)",
-		"rgb(221,86,41)",
-		"rgb(54,38,127)",
-		"rgb(118,33,129)"
-	],
-	chunks = [
-		//emptiness
-	],
-	chunkSize = 4000;
+	};
 
-
-chunks.chunkExist = function(x, y){
-	var result = -1;
-	this.forEach(function (element, index){
-		if (element.x == x && element.y == y){
-			result = index;
-			return;
-		}
-	});
-	return result;
-}
-chunks.removeChunk = function (x, y){
-	var c = this.chunkExist(x, y);
-	if (c < 0) return;
-
-	for (var i = 0; i < planets.length; i++){
-		if (planets[i].box.center.x >= x * chunkSize && planets[i].box.center.x <= (x + 1) * chunkSize && planets[i].box.center.y >= y * chunkSize && planets[i].box.center.y <= (y + 1) * chunkSize){
-			planets.splice(i,1);
-			i--;
-		}
-	}
-	chunks.splice(c, 1);
-}
-chunks.addChunk = function (x, y){
-	if (this.chunkExist(x, y) >= 0) return;
-	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6));
-		
-	for (var i = 0; i < planetsAmount; i++){
-		var planetRadius = Math.map(Math.random(), 0, 1, 150, (chunkSize - 150) / (3 * planetsAmount)),
-			planetColour = planetColours[Math.floor(Math.random() * planetColours.length)],
-			enemyAmount = Math.floor(Math.map(Math.random(), 0, 1, 0, (planetRadius < 200) ? 2 : 4)),
-			planetPosition = {px: (((i + 1) / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)}; 		
-
-		var lastEnemyAng = 0, enemies = [];
-		for (var j = 0; j < enemyAmount; j++){
-			var enemyAng = Math.map(Math.random(), 0, 1, lastEnemyAng + Math.PI / 4, lastEnemyAng + Math.PI * 1.875),
-				enemyDistance = Math.floor(Math.map(Math.random(), 0, 1, planetRadius * 1.5, planetRadius * 4)),
-				enemyResources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
-			enemies[j] = new Enemy(Math.sin(enemyAng) * enemyDistance, -Math.cos(enemyAng) * enemyDistance, "enemy" + enemyResources[Math.floor(Math.random() * enemyResources.length)]);
-			lastEnemyAng = enemyAng;
-		}
-		planets.push(new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour, enemies));
-	}
-	chunks.push({x: x, y: y});
-}
 
 function init(){
 	canvas.width = window.innerWidth;
@@ -144,15 +85,9 @@ function init(){
 	context.font = "16px Open Sans";
 	context.textBaseline = "top";
 	context.textAlign = "center";
-
-  	for (var y = -1; y <= 1; y++){
-  		for (var x = -1; x <= 1; x++){
-  			chunks.addChunk(x, y);
-  			if (x == 0 && y == 0) player.attachedPlanet = planets.length - 1;
-  		}
-  	}
-
+  	
 	loadProcess();
+
 }
 
 function loadProcess(){
@@ -372,21 +307,7 @@ function loop(){
 		player.fuel = 300;
 	} else {
 		fadeBackground(false);		
-		var chunkX = Math.floor(player.box.center.x / chunkSize),
-			chunkY = Math.floor(player.box.center.y / chunkSize);
-
-		if (chunkX !== player.oldChunkX || chunkY !== player.oldChunkY){
-			for (var y = -3; y <= 3; y++){
-				for (var x = -3; x <= 3; x++){
-					if (y >= -1 && y <= 1 && x >= -1 && x <= 1) chunks.addChunk(chunkX + x, chunkY + y);
-					else chunks.removeChunk(chunkX + x, chunkY + y);
-				}
-			}
-		}
-
-		player.oldChunkX = chunkX;
-		player.oldChunkY = chunkY;
-
+		
 		planets.forEach(function (planet, pi){
 			var deltaX = planet.box.center.x - player.box.center.x,
 				deltaY = planet.box.center.y - player.box.center.y,

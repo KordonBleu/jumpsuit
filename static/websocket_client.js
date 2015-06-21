@@ -12,7 +12,8 @@ var MESSAGE_ERROR = 0,
 	MESSAGE_CHECK_ALIVE = 11,
 	MESSAGE_DISCONNECT = 12,
 	MESSAGE_LEAVE_LOBBY = 13,
-	MESSAGE_PLAYER_CONTROLS = 14;
+	MESSAGE_PLAYER_CONTROLS = 14,
+	MESSAGE_GAME_PLANETS = 15;
 
 function connection(){
 	var socket = new WebSocket("ws://localhost:8080"), pid = -1;
@@ -34,46 +35,53 @@ function connection(){
 	socket.onmessage = function(message){	
 		try{
 			msg = JSON.parse(message.data);
-			switch(msg.msgType){
-				case MESSAGE_SENT_LOBBIES:
-					var i, list = document.getElementById("player-list"), el, li;
-					while (list.firstChild) {
-   						list.removeChild(list.firstChild);
-					}
-					for (i = 0; i != msg.data.length; i++){
-						li = document.createElement("li");
-						el = document.createElement("a");
-						el.href = "#c:" + msg.data[i].uid;
-						el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxplayers + ")";
-						li.appendChild(el);
-						list.appendChild(li);
-					}
-					break;
-				case MESSAGE_CONNECT_SUCCESSFUL:					
-					pid = msg.data.pid;
-					document.getElementById("button-2").textContent = "Leave Lobby";
-					break;
-				case MESSAGE_PLAYER_DATA:
-					var i, list = document.getElementById("player-list"), li;
-					while (list.firstChild) {
-						list.removeChild(list.firstChild);
-					}
-					for (i = 0; i != msg.data.length; i++){
-						li = document.createElement("li");
-						li.textContent = msg.data[i].name;
-						if (i === pid) li.style.color = "#f33";
-						list.appendChild(li);
-					}
-					break;				
-				case MESSAGE_PLAYER_POSITIONS:
-					break;
-				case MESSAGE_ERROR:
-					alert("Error", msg.data.content);
-					break;
-			}
 		} catch(err) {
 			console.log("Badly formated JSON message received:", err);
 		}
+		switch(msg.msgType){
+			case MESSAGE_SENT_LOBBIES:
+				var i, list = document.getElementById("player-list"), el, li;
+				while (list.firstChild) {
+   					list.removeChild(list.firstChild);
+				}
+				for (i = 0; i != msg.data.length; i++){
+					li = document.createElement("li");
+					el = document.createElement("a");
+					el.href = "#c:" + msg.data[i].uid;
+					el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxplayers + ")";
+					li.appendChild(el);
+					list.appendChild(li);
+				}
+				break;
+			case MESSAGE_CONNECT_SUCCESSFUL:					
+				pid = msg.data.pid;
+				document.getElementById("button-2").textContent = "Leave Lobby";
+				break;
+			case MESSAGE_PLAYER_DATA:
+				var i, list = document.getElementById("player-list"), li;
+				while (list.firstChild) {
+					list.removeChild(list.firstChild);
+				}
+				for (i = 0; i != msg.data.length; i++){
+					li = document.createElement("li");
+					li.textContent = msg.data[i].name;
+					if (i === pid) li.style.color = "#f33";
+					list.appendChild(li);
+				}
+				break;
+			case MESSAGE_GAME_PLANETS:
+				var i;
+				planets = [];
+				for (i = 0; i != msg.data.length; i++){
+					planets[i] = msg.data[i];
+				}
+				break;
+			case MESSAGE_PLAYER_POSITIONS:
+				break;
+			case MESSAGE_ERROR:
+				alert("Error", msg.data.content);
+				break;
+		}	
 	};
 	this.close = function(){
 		socket.send(JSON.stringify({
@@ -128,13 +136,12 @@ function openSocket(){
 function newLobby(){
 	if (!currentConnection.alive()) return;
 	var lobbyName = swal({
-			title: "An input!",
-			text: "Write something interesting:",
+			title: "Type in your prefered Lobby name!",
 			type: "input",
 			showCancelButton: true,
 			closeOnConfirm: true,
 			animation: "slide-from-top",
-			inputPlaceholder: "Write something"
+			inputPlaceholder: "Lobby name"
 		}, function(inputValue){
 			if (inputValue === false) return false;
 			if (inputValue === "") {
@@ -142,7 +149,6 @@ function newLobby(){
 				return false
 			}
 			currentConnection.createLobby(inputValue);
-			return true;
 		});
 }
 
