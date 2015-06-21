@@ -34,7 +34,6 @@ function handleInput(e){
 			if (e.type === "keydown"){
 				var box = document.getElementById("multiplayer-box");
 				box.className = (box.className == "multiplayer-box hidden") ?  "multiplayer-box" : "multiplayer-box hidden";
-				if (box.className === "multiplayer-box hidden") settingsChanged();
 			}
 		} else if (triggered != null && e.type.indexOf("mouse") !== 0 && gameBlurred === "") controls[triggered] = e.type === "keydown";
 	}
@@ -100,19 +99,18 @@ window.addEventListener("mousedown", handleInput);
 window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);
 
-function switchInformation(){
-	document.getElementById("donate").setAttribute("style", "display: " + ((this.textContent === "Donate") ? "block" : "none"));
-	document.getElementById("share").setAttribute("style", "display: " + ((this.textContent === "Donate") ? "none" : "block"));
+function switchInformation(obj){
+	document.getElementById("donate").setAttribute("style", "display: " + ((obj.textContent === "Donate") ? "block" : "none"));
+	document.getElementById("share").setAttribute("style", "display: " + ((obj.textContent === "Donate") ? "none" : "block"));
 }
 
+var chosenAppearance = "alienBlue";
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
-		player.name = this.id.replace("player", "alien");
+		chosenAppearance = this.id.replace("player", "alien");
 	});
 });
-document.getElementById("name").addEventListener("change", function(){
-	player.playerName = this.value;
-});
+
 document.getElementById("button-1").addEventListener("click", function(){
 	if (this.textContent == "Disconnect"){
 		this.textContent = "Connect";
@@ -127,3 +125,8 @@ document.getElementById("button-2").addEventListener("click", function(){
 	else refreshLobbies();
 });
 document.getElementById("button-3").addEventListener("click", newLobby);
+document.getElementById("button-4").addEventListener("click", function(){
+	player.name = chosenAppearance;
+	player.playerName = document.getElementById("name").value;
+	settingsChanged();
+});

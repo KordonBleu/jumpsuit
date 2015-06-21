@@ -11,26 +11,27 @@ var MESSAGE_ERROR = 0,
 	MESSAGE_CHUNKS = 10,
 	MESSAGE_CHECK_ALIVE = 11,
 	MESSAGE_DISCONNECT = 12,
-	MESSAGE_LEAVE_LOBBY = 13;
+	MESSAGE_LEAVE_LOBBY = 13,
+	MESSAGE_PLAYER_CONTROLS = 14;
 
 function connection(){
-	this.socket = new WebSocket("ws://localhost:8080");
-	this.alive = function (){ return this.socket.readyState === 1; }
-	var pid = -1;
+	var socket = new WebSocket("ws://localhost:8080"), pid = -1;
+	this.alive = function (){ return socket.readyState === 1; }
+	
 
-	this.socket.onopen = function(e){
+	socket.onopen = function(e){
 		// this.socket.send(JSON.stringify({ msgType: MESSAGE_CONNECT, data: {name: player.playerName, appearance: player.name, lobby: 0}})); use if lobby is selected
 		this.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
 		document.getElementById("button-3").disabled = false;
 		document.getElementById("button-2").textContent = "Refresh";
 		document.getElementById("button-2").disabled = false;
 	};
-	this.socket.onerror = function(e){
+	socket.onerror = function(e){
 		document.getElementById("button-3").disabled = true;
 		document.getElementById("button-2").disabled = true;
 		this.close();		
 	};
-	this.socket.onmessage = function(message){	
+	socket.onmessage = function(message){	
 		try{
 			msg = JSON.parse(message.data);
 			switch(msg.msgType){
@@ -53,10 +54,21 @@ function connection(){
 					document.getElementById("button-2").textContent = "Leave Lobby";
 					break;
 				case MESSAGE_PLAYER_DATA:
-					msg.data.player;
+					var i, list = document.getElementById("player-list"), li;
+					while (list.firstChild) {
+						list.removeChild(list.firstChild);
+					}
+					for (i = 0; i != msg.data.length; i++){
+						li = document.createElement("li");
+						li.textContent = msg.data[i].name;
+						if (i === pid) li.style.color = "#f33";
+						list.appendChild(li);
+					}
+					break;				
+				case MESSAGE_PLAYER_POSITIONS:
 					break;
 				case MESSAGE_ERROR:
-					alert(msg.data.content);
+					alert("Error", msg.data.content);
 					break;
 			}
 		} catch(err) {
@@ -64,32 +76,38 @@ function connection(){
 		}
 	};
 	this.close = function(){
-		this.socket.send(JSON.stringify({
+		socket.send(JSON.stringify({
 			msgType: MESSAGE_DISCONNECT,
 			data: {uid: location.hash.substr(3), pid: pid}
 		}));
 		location.hash = "";
-		this.alive = false;
-		this.socket.close();		
+		socket.close();		
 	};
 	this.connectLobby = function (){
-		this.socket.send(JSON.stringify({
+		socket.send(JSON.stringify({
 			msgType: MESSAGE_CONNECT,
 			data: {uid: location.hash.substr(3), name: player.playerName, appearance: player.name}
 		}));
 	};
+	this.createLobby = function (n){
+		socket.send(JSON.stringify({
+			msgType: MESSAGE_CREATE_LOBBY,
+			data: {name: n, privateLobby: false}
+		}));
+		this.refreshLobbies();
+	};
 	this.refreshLobbies = function(){
-		this.socket.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
-	}
+		socket.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
+	};
 	this.leaveLobby = function(){
-		this.socket.send(JSON.stringify({
+		socket.send(JSON.stringify({
 			msgType: MESSAGE_LEAVE_LOBBY,
 			data: {pid: pid, uid: location.hash.substr(3)}
 		}));
 		location.hash = "";
-	}
+	};
 	this.sendSettings = function (){
-		this.socket.send(JSON.stringify({
+		socket.send(JSON.stringify({
 			msgType: MESSAGE_PLAYER_DATA,
 			data: {pid: pid, uid: location.hash.substr(3), name: player.playerName, appearance: player.name}
 		}));
@@ -109,11 +127,23 @@ function openSocket(){
 }
 function newLobby(){
 	if (!currentConnection.alive()) return;
-
-	currentConnection.socket.send(JSON.stringify({
-		msgType: MESSAGE_CREATE_LOBBY,//TODO: replace string value with some kind of enum
-		data: {name: prompt("Give your lobby a name!"), privateLobby: confirm("Private?") }
-	}));
+	var lobbyName = swal({
+			title: "An input!",
+			text: "Write something interesting:",
+			type: "input",
+			showCancelButton: true,
+			closeOnConfirm: true,
+			animation: "slide-from-top",
+			inputPlaceholder: "Write something"
+		}, function(inputValue){
+			if (inputValue === false) return false;
+			if (inputValue === "") {
+				swal.showInputError("You need to write something!");
+				return false
+			}
+			currentConnection.createLobby(inputValue);
+			return true;
+		});
 }
 
 function refreshLobbies(){
@@ -123,6 +153,7 @@ function refreshLobbies(){
 function leaveLobby(){
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
+	currentConnection.refreshLobbies();
 	document.getElementById("button-2").textContent = "Refresh";
 }
 
@@ -138,4 +169,3 @@ function settingsChanged(){
 	if (!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return; 
 	currentConnection.sendSettings();
 }
-

@@ -6,10 +6,11 @@
 		<meta name="viewport" content="user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"/>
+		<link href="assets/sweetalert/sweetalert.css" rel="stylesheet"/>
+		<script src="assets/sweetalert/sweetalert.min.js"></script>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-
 		<img src="assets/images/controls/unmute.svg" id="audio-icon"/>
 		<ul id="controls">
 			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"></img><br/>
@@ -25,7 +26,7 @@
 			<p>Music by Arnaud Poyeton<br/>
 			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
 
-			<a class="button" href="switchInformation()">Share</a><a class="button" href="switchInformation()">Donate</a>
+			<a class="button" onclick="switchInformation(this)">Share</a><a class="button" onclick="switchInformation(this)">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
 				<div id="donate">
@@ -71,7 +72,7 @@
 				<div id="playerYellow" class="playerSelect"></div>
 				<div class="placeholder"></div>
 			</div>
-			<button class="button" id="ready">I'm ready</button>
+			<button class="button" id="button-4">Save</button>
 		</div>
 		<script src="audio.js"></script>
 		<script src="collisions.js"></script>

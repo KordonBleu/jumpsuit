@@ -70,6 +70,7 @@ canvas.blurred{
 	opacity: 0;
 }
 .info-box .button{
+	cursor: pointer;
 	box-sizing: border-box;
 	float: left;
 	display: block;
