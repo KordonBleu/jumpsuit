@@ -6,7 +6,7 @@ function Planet(x, y, radius, color, enemies) {
 	this.player = -1;
 	this.enemies = enemies;
 }
-function Enemy(x, y, appereal){	
+function Enemy(x, y, appereal){
 	this.x = x;
 	this.y = y;
 	this.appereal = appereal;
@@ -86,21 +86,21 @@ chunks.removeChunk = function (x, y){
 	for (var i = 0; i < planets.length; i++){
 		if (planets[i].box.center.x >= x * chunkSize && planets[i].box.center.x <= (x + 1) * chunkSize && planets[i].box.center.y >= y * chunkSize && planets[i].box.center.y <= (y + 1) * chunkSize){
 			planets.splice(i,1);
-			i--;			
-		}		
-	}		
+			i--;
+		}
+	}
 
 	chunks.splice(c, 1);
 }
 chunks.addChunk = function (x, y){
 	if (this.chunkExist(x, y) >= 0) return;
 	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6));
-		
+
 	for (var i = 0; i < planetsAmount; i++){
 		var planetRadius = Math.map(Math.random(), 0, 1, 150, (chunkSize - 150) / (3 * planetsAmount)),
 			planetColour = planetColours[Math.floor(Math.random() * planetColours.length)],
 			enemyAmount = Math.floor(Math.map(Math.random(), 0, 1, 0, (planetRadius < 200) ? 2 : 4)),
-			planetPosition = {px: (((i + 1) / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)}; 		
+			planetPosition = {px: (((i + 1) / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)};
 
 		var lastEnemyAng = 0, enemies = [];
 		for (var j = 0; j < enemyAmount; j++){
@@ -165,20 +165,18 @@ function loadProcess(){
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 
-	console.log("loaded");
 	if (loadProcess.progress == init.paths.length) {
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
 		setTimeout(loop, 1000);
 	} else if (Math.floor(loadProcess.progress / 5) > Math.floor((loadProcess.progress - 1) / 5)){
-		console.log((loadProcess.progress + 4 > init.paths.length) ? init.paths.length - loadProcess.progress : 5);
 		for (var i = 0; i < 5; i++){
 			if (loadProcess.progress + i > init.paths.length - 1) break;
 			var r = new Image();
 			r.onload = loadProcess;
 			r.src = "assets/images/" + init.paths[loadProcess.progress + i];
 			resources[init.paths[loadProcess.progress + i].slice(0, init.paths[loadProcess.progress + i].lastIndexOf("."))] = r;
-		}		
-	}	
+		}
+	}
 }
 
 function loop(){
@@ -294,7 +292,7 @@ function loop(){
 		fillCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius);
 		drawCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius * 1.5, 2);
 	});
-	planets.forEach(function (planet){	
+	planets.forEach(function (planet){
 		planet.enemies.forEach(function (enemy, ei){
 			var deltaX = planet.box.center.x + enemy.x - player.box.center.x,
 				deltaY = planet.box.center.y + enemy.y - player.box.center.y,
@@ -363,7 +361,7 @@ function loop(){
 		player.velY = 0;
 		player.fuel = 300;
 	} else {
-		fadeBackground(false);		
+		fadeBackground(false);
 		var chunkX = Math.floor(player.box.center.x / chunkSize),
 			chunkY = Math.floor(player.box.center.y / chunkSize);
 
@@ -444,10 +442,10 @@ function loop(){
 	context.fillText("Fuel: ", 8, 120);
 	context.fillStyle = "#f33";
 	context.fillRect(80, 126, player.fuel, 8);
-	
+
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
 		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id] * 0.7));
-	});	
+	});
 
 	window.requestAnimationFrame(loop);
 }

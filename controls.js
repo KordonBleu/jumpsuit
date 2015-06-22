@@ -20,7 +20,7 @@ function handleInputMobile(e){
 	}
 }
 
-function handleInput(e){	
+function handleInput(e){
 	var s = e.type === "keydown";
 
 	if (e.target.id === "canvas"){
@@ -30,7 +30,7 @@ function handleInput(e){
 		if(e.type.substring(0, 3) === "key"){
 			triggered = keyMap[e.keyCode];
 		} else if (controls[e.target.id] !== undefined){
-			e.preventDefault();		
+			e.preventDefault();
 			triggered = e.target.id;
 		}
 		if (triggered == "menu"){
@@ -48,7 +48,6 @@ function handleInput(e){
 }
 
 function dragging(ev, x, y){
-	console.log(ev);
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.dragX = x;
 		game.dragY = y;
@@ -62,7 +61,7 @@ function dragging(ev, x, y){
 	} else if (ev.indexOf("move") !== -1){
 		game.dragX = game.dragStartX !== 0 ? x : 0;
 		game.dragY = game.dragStartY !== 0 ? y : 0;
-	}	
+	}
 }
 
 document.getElementById("audio-icon").addEventListener("click", function(ev){
@@ -72,7 +71,7 @@ document.getElementById("audio-icon").addEventListener("click", function(ev){
 	} else {
 		ev.target.setAttribute("src", "assets/images/controls/mute.svg");
 		gain.gain.value = 0;
-	}	
+	}
 });
 
 function handleGamepad(){
@@ -96,7 +95,7 @@ function handleGamepad(){
 }
 
 function multiplayer(){
-	
+
 }
 
 window.addEventListener("keydown", handleInput);
