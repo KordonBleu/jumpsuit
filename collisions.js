@@ -21,6 +21,7 @@ function GeometricObject() {
 	}
 }
 var nestedProto = Object.getPrototypeOf(Object.getPrototypeOf(GeometricObject));
+
 nestedProto.circleObb = function(circle, rect) {
 	var rot = rect.angle > 0 ? -rect.angle : -rect.angle + Math.PI,
 		deltaX = circle.center.x - rect.center.x,
@@ -53,10 +54,11 @@ nestedProto.obbObb = function(rectOne, rectTwo) {
 
 		axesVectTwo.push(vector);
 	});
+
+	return true;//TODO: complete this function!
 }
 
 nestedProto.aabbAabb = function(rectOne, rectTwo) {
-	//if(rectOne.angle !== 0 || rectTwo.angle !== 0) throw new TypeError("At least one of the submitted rectangle is not an AABB");
 	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
 	|| rectTwo.center.x + rectTwo.width/2 <= rectOne.center.x - rectOne.width/2
 	|| rectTwo.y - rectTwo.height/2 >= rectOne.center.y + rectOne.height/2
