@@ -153,7 +153,7 @@ canvas.blurred{
 	display: inline-block;
 	margin: 5px 2px;
 }
-.multiplayer-box .button{
+.multiplayer-box .button, button{
 	box-sizing: border-box;
 	cursor: pointer;
 	float: left;
@@ -213,3 +213,11 @@ canvas.blurred{
 .multiplayer-box .form #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
 .multiplayer-box .form #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
 .multiplayer-box .form #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
+
+/* TODO: better dialog CSS */
+dialog {
+	border: none !important;
+}
+dialog input {
+	padding: 4px;
+}

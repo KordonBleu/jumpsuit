@@ -135,21 +135,8 @@ function openSocket(){
 }
 function newLobby(){
 	if (!currentConnection.alive()) return;
-	var lobbyName = swal({
-			title: "Type in your prefered Lobby name!",
-			type: "input",
-			showCancelButton: true,
-			closeOnConfirm: true,
-			animation: "slide-from-top",
-			inputPlaceholder: "Lobby name"
-		}, function(inputValue){
-			if (inputValue === false) return false;
-			if (inputValue === "") {
-				swal.showInputError("You need to write something!");
-				return false
-			}
-			currentConnection.createLobby(inputValue);
-		});
+	var dialog = document.getElementById("lobby-name-dialog");
+	dialog.showModal();
 }
 
 function refreshLobbies(){

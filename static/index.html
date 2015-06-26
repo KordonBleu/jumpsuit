@@ -6,6 +6,8 @@
 		<meta name="viewport" content="user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"/>
+		<script src="assets/dialog-polyfill/dialog-polyfill.js"></script>
+		<link href="assets/dialog-polyfill/dialog-polyfill.css" rel="stylesheet"/>
 		<link href="assets/sweetalert/sweetalert.css" rel="stylesheet"/>
 		<script src="assets/sweetalert/sweetalert.min.js"></script>
 	</head>
@@ -69,6 +71,12 @@
 			</div>
 			<button class="button" id="button-4">Save</button>
 		</div>
+		<dialog id="lobby-name-dialog">
+			Type in your prefered Lobby name!<br/>
+			<input type="text" placeholder="Lobby name" id="lobby-input"/><br/>
+			<button type="button" class="cancel-button">Cancel</button><button type="button" class="okay-button" id="lobby-okay">Okay</button>
+		</dialog>
+		<script src="dialogs.js"></script>
 		<script src="audio.js"></script>
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
