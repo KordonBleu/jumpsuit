@@ -6,6 +6,30 @@ window.addEventListener("hashchange", hashChange);
 window.addEventListener("load", hashChange);
 
 
+function convertToKey(keyCode) {
+	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
+	else if (keyCode > 95 && keyCode < 106) return keyCode - 96;//numpad
+	else if (keyCode > 64 && keyCode < 91) return convertToKey.keyMap.charAt(keyCode - 65);//charcters
+	else if (keyCode > 111 && keyCode < 124) return "F" + (keyCode - 111);//F-keys
+	else return convertToKey.keyMapMisc[keyCode];//misc
+}
+convertToKey.keyMapChar = "abcdefghijklmnopqrstuvwxyz";
+convertToKey.keyMapMisc = {//there are more but those are the most common
+	8: "Backspace",
+	9: "Tab",
+	13: "Enter",
+	16: "Shift",
+	17: "Control",
+	18: "Alt",
+	19: "Pause",
+	20: "CapsLock",
+	27: "Escape",
+	37: "ArrowLeft",
+	38: "ArrowUp",
+	39: "ArrowRight",
+	40: "ArrowDown"
+}
+
 function handleInputMobile(e){
 	for (var t = 0; t < e.changedTouches.length; t++){
 		var touch = e.changedTouches.item(t);
@@ -27,7 +51,7 @@ function handleInput(e){
 		dragging(e.type, e.pageX, e.pageY);
 	} else if (!changingKeys) {
 		if(e.type.substring(0, 3) === "key"){
-			var triggered = handleInput.keyMap[e.key];
+			var triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
 		} else if (controls[e.target.id] !== undefined){
 			e.preventDefault();
 			var triggered = e.target.id;
@@ -131,14 +155,13 @@ keyCol.colSpan = rowSize;
 
 settingsEl.addEventListener("click", function(e) {
 	function handleChangeKey(e, target) {
-		console.log(e, target.parentElement.firstElementChild.firstChild.data);
 		delete handleInput.keyMap[target.firstChild.data];
-		handleInput.keyMap[e.key] = target.parentElement.firstElementChild.firstChild.data;
-		target.firstChild.data = e.key;
+		var keyName = e.key || convertToKey(e.keyCode);
+		handleInput.keyMap[keyName] = target.parentElement.firstElementChild.firstChild.data;
+		target.firstChild.data = keyName;
 	}
 	if(e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
 		var box = document.getElementById("info-box");
-		console.log(e, box.className);
 		document.addEventListener("keydown", function wrap(nE) {
 			switch(nE.type) {
 				case "keydown":
