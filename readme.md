@@ -2,7 +2,7 @@
 A sweet canvas game.
 With your awesome suit, you can jump from planet to planet to the exit!
 
-Try it (here)[https://getkey.eu/jumpsuit]!
+Try it [here](https://getkey.eu/jumpsuit)!
 
 ## Why the name?
 ```

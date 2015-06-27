@@ -14,16 +14,17 @@ function handleInputMobile(e){
 	}
 }
 
-function handleInput(e){	
-	if (e.target.id === "canvas" && gameBlurred === ""){
+function handleInput(e){
+	var s = e.type === "keydown";
+
+	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
-	} else {
-		var triggered, keyMap = {9: "lobby", 27: "menu", 16: "run", 32: "jump", 37: "moveLeft", 38: "jetpack", 39: "moveRight", 40: "crouch", 65: "moveLeft", 68: "moveRight", 83: "crouch", 87: "jetpack"};
-		if (e.type.substring(0, 3) === "key"){
-			triggered = keyMap[e.keyCode];
+	} else if (!changingKeys) {
+		if(e.type.substring(0, 3) === "key"){
+			var triggered = handleInput.keyMap[e.key];
 		} else if (controls[e.target.id] !== undefined){
-			e.preventDefault();		
-			triggered = e.target.id;
+			e.preventDefault();
+			var triggered = e.target.id;
 		}
 		if (triggered == "menu" && gameBlurred !== "m"){
 			if (e.type === "keydown"){
@@ -40,6 +41,8 @@ function handleInput(e){
 	gameBlurred = document.getElementById("info-box").className === "info-box" ? "i" : document.getElementById("multiplayer-box").className === "multiplayer-box" ? "m" : "";	
 	canvas.className = (gameBlurred === "") ? "" : "blurred";
 }
+handleInput.keyMap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
+
 
 function dragging(ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
@@ -55,7 +58,7 @@ function dragging(ev, x, y){
 	} else if (ev.indexOf("move") !== -1){
 		game.dragX = game.dragStartX !== 0 ? x : 0;
 		game.dragY = game.dragStartY !== 0 ? y : 0;
-	}	
+	}
 }
 
 document.getElementById("audio-icon").addEventListener("click", function(ev){
@@ -65,7 +68,7 @@ document.getElementById("audio-icon").addEventListener("click", function(ev){
 	} else {
 		ev.target.setAttribute("src", "assets/images/controls/mute.svg");
 		gain.gain.value = 0;
-	}	
+	}
 });
 
 function handleGamepad(){
@@ -89,6 +92,67 @@ function handleGamepad(){
 		else game.dragY = 0;
 	}
 }
+
+var reverseKeyMap = {};
+for (key in handleInput.keyMap) {
+	var action = handleInput.keyMap[key];
+	if(reverseKeyMap[action] === undefined) reverseKeyMap[action] = [];
+	reverseKeyMap[action].push(key);
+}
+
+var settingsEl = document.getElementById("key-settings");
+for (action in reverseKeyMap) {
+var rowSize = 1;
+	var rowEl = document.createElement("tr"),
+		actionEl = document.createElement("td"),
+		actionTxtEl = document.createTextNode(action),
+		keyEl = document.createElement("td"),
+		keyTxtEl = document.createTextNode(reverseKeyMap[action]);
+
+	actionEl.appendChild(actionTxtEl);
+	rowEl.appendChild(actionEl);
+
+	var slice = reverseKeyMap[action];
+	for (key in slice) {
+		if (slice.length > rowSize) rowSize = slice.length;
+		var keyEl = document.createElement("td"),
+			keyTxtEl = document.createTextNode(slice[key]);
+		keyEl.appendChild(keyTxtEl);
+		rowEl.appendChild(keyEl);
+	}
+
+	settingsEl.appendChild(rowEl);
+}
+var keyCol = document.getElementById("key-col"),
+	changingKeys = false;
+keyCol.colSpan = rowSize;
+
+settingsEl.addEventListener("click", function(e) {
+	function handleChangeKey(e, target) {
+		console.log(e, target.parentElement.firstElementChild.firstChild.data);
+		delete handleInput.keyMap[target.firstChild.data];
+		handleInput.keyMap[e.key] = target.parentElement.firstElementChild.firstChild.data;
+		target.firstChild.data = e.key;
+	}
+	if(e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
+		var box = document.getElementById("info-box");
+		console.log(e, box.className);
+		document.addEventListener("keydown", function wrap(nE) {
+			switch(nE.type) {
+				case "keydown":
+					changingKeys = true;
+					document.removeEventListener("keydown", wrap);
+					document.addEventListener("keyup", wrap);
+					break;
+
+				case "keyup":
+					handleChangeKey(nE, e.target);
+					document.removeEventListener("keyup", wrap);
+					changingKeys = false;
+			}
+		});
+	}
+});
 
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);

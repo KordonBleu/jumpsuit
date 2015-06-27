@@ -10,7 +10,7 @@ html, body {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
-	user-select: none;   
+	user-select: none;
 }
 canvas.blurred{
 	-webkit-filter: blur(5px);

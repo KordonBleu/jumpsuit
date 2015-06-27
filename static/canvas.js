@@ -1,19 +1,32 @@
 "use strict";
 
-function Planet(x, y, radius, color, enemies) {
+function Planet(x, y, radius, color, enemyAmount) {
 	this.box = new Circle(new Point(x, y), radius);
+	this.atmosBox = new Circle(this.box.center, radius * (1.5 + Math.random()/2));
 	this.color = color;
 	this.player = -1;
-	this.enemies = enemies;
+
+	this.enemies = [];
+	var lastEnemyAng = 0;
+	for (var j = 0; j < enemyAmount; j++){
+		var enemyAng = Math.map(Math.random(), 0, 1, lastEnemyAng + Math.PI / 4, lastEnemyAng + Math.PI * 1.875),
+			enemyDistance = Math.floor(Math.map(Math.random(), 0, 1, this.atmosBox.radius, this.atmosBox.radius * 4));
+		this.enemies[j] = new Enemy(Math.sin(enemyAng) * enemyDistance + this.box.center.x, -Math.cos(enemyAng) * enemyDistance + this.box.center.y);
+		lastEnemyAng = enemyAng;
+	}
 }
-function Enemy(x, y, appereal){	
+function Enemy(x, y, appearance){
 	this.x = x;
 	this.y = y;
-	this.appereal = appereal;
+	this.appearance = appearance !== undefined ? appearance : "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
+	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
+	this.aggroBox = new Circle(new Point(x, y), 350);
 	this.fireRate = 0;
 	this.angle = 0
 	this.shots = [];
 }
+Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
+
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
 	resources = {},
@@ -85,13 +98,24 @@ function init(){
 	context.font = "16px Open Sans";
 	context.textBaseline = "top";
 	context.textAlign = "center";
-  	
-	loadProcess();
-
+	
+	loadProcess(function(){//gets called once every resource is loaded
+		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
+		document.getElementById("multiplayer-box").className = "multiplayer-box";		
+		loop();
+	});
 }
 
-function loadProcess(){
-	loadProcess.progress = loadProcess.progress === undefined ? 0 : ++loadProcess.progress;
+function loadProcess(callback){
+	if (loadProcess.progress === undefined) loadProcess.progress = 0;
+	function eHandler() {
+		loadProcess.progress++;
+		if (loadProcess.progress !== init.paths.length) {
+			loadProcess(callback);
+		} else {
+			callback();
+		}
+	}
 
 	context.fillStyle = "#121012";
 	context.fillRect(0, 0, canvas.width, canvas.height);
@@ -105,23 +129,10 @@ function loadProcess(){
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 
-	console.log("loaded");
-	if (loadProcess.progress == init.paths.length) {
-		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);		
-		setTimeout(function(){
-			document.getElementById("multiplayer-box").className = "multiplayer-box";
-			loop();
-		}, 500);
-	} else if (Math.floor(loadProcess.progress / 5) > Math.floor((loadProcess.progress - 1) / 5)){
-		console.log((loadProcess.progress + 4 > init.paths.length) ? init.paths.length - loadProcess.progress : 5);
-		for (var i = 0; i < 5; i++){
-			if (loadProcess.progress + i > init.paths.length - 1) break;
-			var r = new Image();
-			r.onload = loadProcess;
-			r.src = "assets/images/" + init.paths[loadProcess.progress + i];
-			resources[init.paths[loadProcess.progress + i].slice(0, init.paths[loadProcess.progress + i].lastIndexOf("."))] = r;
-		}		
-	}	
+	var r = new Image();
+	r.addEventListener("load", eHandler);
+	r.src = "assets/images/" + init.paths[loadProcess.progress];
+	resources[init.paths[loadProcess.progress].slice(0, init.paths[loadProcess.progress].lastIndexOf("."))] = r;
 }
 
 function loop(){
@@ -159,7 +170,7 @@ function loop(){
 		context.restore();
 	}
 
-	function drawCircle(cx, cy, r, sw){
+	function strokeCircle(cx, cy, r, sw){
 		context.save();
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
@@ -206,8 +217,8 @@ function loop(){
 			chosen_img = m_resources[(m_rand > m_resources.length - 1) ? m_resources.length - 1 : m_rand];
 
 		meteors[meteors.length] = {
-			x: -resources[chosen_img].width,
-			y: Math.map(Math.random(), 0, 1, 50, canvas.height - 50),
+			x: -resources[chosen_img].width/2,
+			y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
 			res: chosen_img,
 			speed: Math.map(Math.random(), 0, 1, 2, 4),
 			ang: Math.map(Math.random(), 0, 1, 0.25 * Math.PI, 0.75 * Math.PI),
@@ -221,7 +232,7 @@ function loop(){
 		m.y += Math.cos(m.ang) * m.speed;
 		context.globalAlpha = m.depth;
 		m.rotAng += m.rotSpeed;
-		if (m.x > canvas.width + 10 || m.y > canvas.height + 10) meteors.splice(i, 1);
+		if (m.x - resources[m.res].width/2 > canvas.width || m.y - resources[m.res].height/2 > canvas.height || m.y + resources[m.res].height/2 < 0) meteors.splice(i, 1);
 		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
 	});
 
@@ -231,29 +242,25 @@ function loop(){
 	//layer 2: the game
 	offsetX = ((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.box.center.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
+		var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + offsetX, canvas.clientHeight/2 + offsetY), canvas.clientWidth, canvas.clientWidth);
 
 	planets.forEach(function (planet){
 		context.fillStyle = planet.color;
-		fillCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius);
-		drawCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius * 1.5, 2);
-	});
-	planets.forEach(function (planet){	
+		if (windowBox.collision(planet.atmosBox)) strokeCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.atmosBox.radius, 2);
+		if (windowBox.collision(planet.box)) fillCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius);
+
 		planet.enemies.forEach(function (enemy, ei){
-			var deltaX = planet.box.center.x + enemy.x - player.box.center.x,
-				deltaY = planet.box.center.y + enemy.y - player.box.center.y,
-				dist = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2)),
-				aimAngle = Math.PI - Math.atan2(planet.box.center.x + enemy.x - player.box.center.x, planet.box.center.y + enemy.y - player.box.center.y);
-			if (dist > 400){
-				aimAngle = enemy.angle + Math.PI / 150;
+			if (!(enemy.aggroBox.collision(player.box))){
+				enemy.box.angle = enemy.box.angle + Math.PI / 150;
 				enemy.fireRate = 0;
 			} else {
+				enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - player.box.center.x, enemy.box.center.y - player.box.center.y);
 				if (++enemy.fireRate >= 20) {
 					enemy.fireRate = 0;
-					enemy.shots[enemy.shots.length] = {x: planet.box.center.x + enemy.x, y: planet.box.center.y + enemy.y, a: aimAngle - Math.PI, lt: 200}; //lt = lifetime
+					enemy.shots[enemy.shots.length] = {x: enemy.box.center.x, y: enemy.box.center.y, a: enemy.box.angle - Math.PI, lt: 200}; //lt = lifetime
 					playSound("laser");
 				}
 			}
-			enemy.angle = aimAngle;
 
 			enemy.shots.forEach(function (shot, si){
 				shot.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
@@ -266,8 +273,8 @@ function loop(){
 				drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.x - offsetX, shot.y - offsetY, shot.a, false);
 			});
 			context.fillStyle = "#aaa";
-			drawCircle(planet.box.center.x + enemy.x - offsetX, planet.box.center.y + enemy.y - offsetY, 350, 4);
-			drawRotatedImage(resources[enemy.appereal], planet.box.center.x + enemy.x - offsetX, planet.box.center.y + enemy.y - offsetY, aimAngle, false);
+			if (windowBox.collision(enemy.aggroBox)) strokeCircle(enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, 350, 4);
+			if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, enemy.box.angle, false);
 		});
 	});
 
@@ -373,10 +380,10 @@ function loop(){
 	context.fillText("Fuel: ", 8, 120);
 	context.fillStyle = "#f33";
 	context.fillRect(80, 126, player.fuel, 8);
-	
+
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
 		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id] * 0.7));
-	});	
+	});
 
 	window.requestAnimationFrame(loop);
 }
