@@ -1,7 +1,8 @@
 "use strict";
 function GeometricObject() {
+	//to inherit from `GeometricObject`:
 	//call `return GeometricObject.call(this);` at the end of any constructor
-	//to make it inherit from `GeometricObject`
+	//create a new prototype for your object, whose prototype is `GeometricObject.prototype`. Example: `YourConstructor.prototype = Object.create(GeometricObject.prototype);`.
 	var handler = {
 		set: function(target, name, value) {
 			if(target.hasOwnProperty(name)) {
@@ -20,9 +21,7 @@ function GeometricObject() {
 		return proxy;
 	}
 }
-var nestedProto = Object.getPrototypeOf(Object.getPrototypeOf(GeometricObject));
-
-nestedProto.circleObb = function(circle, rect) {
+GeometricObject.prototype.circleObb = function(circle, rect) {
 	var rot = rect.angle > 0 ? -rect.angle : -rect.angle + Math.PI,
 		deltaX = circle.center.x - rect.center.x,
 		deltaY = circle.center.y - rect.center.y,
@@ -37,8 +36,7 @@ nestedProto.circleObb = function(circle, rect) {
 
 	return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circle.radius, 2);
 }
-
-nestedProto.obbObb = function(rectOne, rectTwo) {
+GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 	//rotate the first OOB to transform it in AABB to simplify calculations
 	var rectTwoRot = rectTwo.angle - rectOne.angle;
 
@@ -57,8 +55,7 @@ nestedProto.obbObb = function(rectOne, rectTwo) {
 
 	return true;//TODO: complete this function!
 }
-
-nestedProto.aabbAabb = function(rectOne, rectTwo) {
+GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
 	|| rectTwo.center.x + rectTwo.width/2 <= rectOne.center.x - rectOne.width/2
 	|| rectTwo.y - rectTwo.height/2 >= rectOne.center.y + rectOne.height/2
@@ -108,24 +105,25 @@ function Rectangle(centerPoint, width, height, angle) {
 	this._unrotatedVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
 	return GeometricObject.call(this);
 }
+Rectangle.prototype = Object.create(GeometricObject.prototype);
 Object.defineProperty(Rectangle.prototype, "vertices", {
-		get: function() {
-			if(this._cache.needsUpdate || this.center._cache.needsUpdate) {
-				this._cache.needsUpdate = false;
-				this.center._cache.needsUpdate = false;
+	get: function() {
+		if(this._cache.needsUpdate || this.center._cache.needsUpdate) {
+			this._cache.needsUpdate = false;
+			this.center._cache.needsUpdate = false;
 
-				this._cache.vertices = [];
-				this._unrotatedVertices.forEach(function(vertex, index) {
-					var newVertex = new Point(
-						vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
-						vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
-					);
-					this._cache.vertices[index] = newVertex;
-				}, this);
-			}
-			return this._cache.vertices;
+			this._cache.vertices = [];
+			this._unrotatedVertices.forEach(function(vertex, index) {
+				var newVertex = new Point(
+					vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
+					vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
+				);
+				this._cache.vertices[index] = newVertex;
+			}, this);
 		}
-	});
+		return this._cache.vertices;
+	}
+});
 Rectangle.prototype.collision = function(geomObj) {
 	if(geomObj instanceof Rectangle) {
 		if(this.angle === 0 && geomObj.angle === 0) {
@@ -144,6 +142,7 @@ function Circle(centerPoint, radius) {
 	this.center = centerPoint;
 	this.radius = radius;
 }
+Circle.prototype = Object.create(GeometricObject.prototype);
 Object.defineProperty(Circle.prototype, "collision", {
 	value: function(geomObj) {
 		if(geomObj instanceof Rectangle) {
