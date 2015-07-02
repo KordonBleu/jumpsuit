@@ -24,6 +24,7 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	19: "Pause",
 	20: "CapsLock",
 	27: "Escape",
+	32: " ",
 	37: "ArrowLeft",
 	38: "ArrowUp",
 	39: "ArrowRight",
@@ -110,8 +111,6 @@ function handleGamepad(){
 		controls["moveLeft"] = 0;
 		controls["moveRight"] = 0;
 		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
-
-
 		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.dragX = -canvas.width / 2 * g.axes[2];
 		else game.dragX = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.dragY = -canvas.height / 2 * g.axes[3];

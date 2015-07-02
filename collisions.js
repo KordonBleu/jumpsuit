@@ -8,6 +8,7 @@ function GeometricObject() {
 			if(target.hasOwnProperty(name)) {
 				target._cache.needsUpdate = true;
 				target[name] = value;
+				return true;
 			} else {
 				throw new ReferenceError("This object doesn't allow properties to be added");
 			}
