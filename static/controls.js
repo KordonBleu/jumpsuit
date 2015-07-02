@@ -104,12 +104,8 @@ function handleGamepad(){
 		controls["jetpack"] = g.buttons[7].value;
 
 		controls["moveLeft"] = 0;		
-		controls["moveRight"] = 0;
-
-		
+		controls["moveRight"] = 0;		
 		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
-
-
 		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.dragX = -canvas.width / 2 * g.axes[2];
 		else game.dragX = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.dragY = -canvas.height / 2 * g.axes[3];

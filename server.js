@@ -87,7 +87,6 @@ lobbies.createLobby = function(_name, _maxPlayers){
 	chunks.removeChunk = function (x, y){
 		var c = this.chunkExist(x, y);
 		if (c < 0) return;
-
 		for (var i = 0; i < planets.length; i++){
 			if (planets[i].box.center.x >= x * chunkSize && planets[i].box.center.x <= (x + 1) * chunkSize && planets[i].box.center.y >= y * chunkSize && planets[i].box.center.y <= (y + 1) * chunkSize){
 				planets.splice(i,1);
