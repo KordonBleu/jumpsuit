@@ -37,7 +37,7 @@ GeometricObject.prototype.circleObb = function(circle, rect) {
 
 	return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circle.radius, 2);
 }
-GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
+/*GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 	//rotate the first OOB to transform it in AABB to simplify calculations
 	var rectTwoRot = rectTwo.angle - rectOne.angle;
 
@@ -55,6 +55,24 @@ GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 	});
 
 	return true;//TODO: complete this function!
+}*/
+GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
+	var radiusRectOne = Math.sqrt(Math.pow(rectOne.width, 2) + Math.pow(rectOne.height, 2)) / 2,
+		radiusRectTwo = Math.sqrt(Math.pow(rectTwo.width, 2) + Math.pow(rectTwo.height, 2)) / 2; 
+
+	//test if circumcirle (circle that goes through all points of the rectangle) touch / overlap each other
+	//this avoids unnecessary calculations *yay*
+	if (Math.pow(rectOne.center.x - rectOne.center.x, 2) + Math.pow(rectTwo.center.y - rectTwo.center.y) >= Math.pow(radiusRectOne + radiusRectTwo, 2)){
+		//I dont quite know how to call the variables  ._.
+		var _a = rectOne.angle % (Math.PI * 0.5) + Math.sin(rectOne.height / rectOne.width),
+			_b = rectTwo.angle % (Math.PI * 0.5) + Math.sin(rectTwo.height / rectTwo.width),
+			_c = new Point(Math.sin(_a) * radiusRectOne, -Math.cos(_a) * radiusRectOne),
+			_d = new Point(Math.sin(_b) * radiusRectTwo, -Math.cos(_b) * radiusRectTwo),
+			_e = new Point((rectOne.center.x - rectTwo.center.x < 0) ? -1 : 1, (rectOne.center.y - rectTwo.center.y < 0) ? -1 : 1);
+			
+		if (rectOne.center.x + _e.x * _c.x > rectTwo.center.x + -_e.x * _d.x && rectOne.center.y + _e.y * _c.y > rectTwo.center.y + -_e.y * _d.x) return true;
+	}
+	return false;
 }
 GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
