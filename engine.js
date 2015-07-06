@@ -102,13 +102,13 @@ function doPhysics() {
 					enemy.fireRate = 0;
 					//SHOT.BOX SHOULD NOT BE A CIRCLE BUT A RECTANGLE
 					//TODO: replace this once obbObb collisions are supported
-					enemy.shots[enemy.shots.length] = {box: new Circle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width/2), a: enemy.box.angle - Math.PI, lt: 200}; //lt = lifetime
+					enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});//lt = lifetime
 					playSound("laser");//TODO: the server must tell the client to play this sound
 				}
 			}
 			enemy.shots.forEach(function (shot, si) {
-				shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.a) * 11;
-				shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.a) * 11;
+				shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 11;
+				shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 11;
 				if (--shot.lt <= -20) enemy.shots.splice(si, 1);
 				else if (shot.box.collision(player.box)){
 					player.health -= (player.health = 0) ? 0 : 1;

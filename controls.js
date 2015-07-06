@@ -9,7 +9,7 @@ window.addEventListener("load", hashChange);
 function convertToKey(keyCode) {
 	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
 	else if (keyCode > 95 && keyCode < 106) return keyCode - 96;//numpad
-	else if (keyCode > 64 && keyCode < 91) return convertToKey.keyMap.charAt(keyCode - 65);//charcters
+	else if (keyCode > 64 && keyCode < 91) return convertToKey.keyMapChar.charAt(keyCode - 65);//characters
 	else if (keyCode > 111 && keyCode < 124) return "F" + (keyCode - 111);//F-keys
 	else return convertToKey.keyMapMisc[keyCode];//misc
 }

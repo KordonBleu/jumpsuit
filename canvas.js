@@ -234,7 +234,7 @@ function loop(){
 
 		planet.enemies.forEach(function (enemy, ei) {
 			enemy.shots.forEach(function (shot){
-				if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - offsetX, shot.box.center.y - offsetY, shot.a, false);
+				if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - offsetX, shot.box.center.y - offsetY, shot.box.angle, false);
 			});
 			context.fillStyle = "#aaa";
 			if (windowBox.collision(enemy.aggroBox)) strokeCircle(enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, 350, 4);

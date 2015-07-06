@@ -37,42 +37,32 @@ GeometricObject.prototype.circleObb = function(circle, rect) {
 
 	return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circle.radius, 2);
 }
-/*GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
+GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 	//rotate the first OOB to transform it in AABB to simplify calculations
-	var rectTwoRot = rectTwo.angle - rectOne.angle;
+	var rectTwoRot = rectTwo.angle - rectOne.angle,
+		rectOne = new Rectangle(rectOne.center, rectOne.width, rectOne.height),
+		rectTwo = new Rectangle(rectTwo.center, rectTwo.width, rectTwo.height, rectTwoRot);
 
 	//we can't check against the diagonal because it is too CPU intensive
 	var sideSum = rectTwo.width + rectTwo.height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
 	if (!this.aabbAabb(rectOne, new Rectangle(new Point(rectTwo.center.x, rectTwo.center.y), sideSum, sideSum))) return false;//eliminates most non-collisions
 
-	var axesVectOne =  [{x: 1, y: 0}, {x:0, y:1}],//rectOne is an AABB
+	var axesVectOne =  [new Vector(1, 0), new Vector(0, 1)],//rectOne is an AABB
 		axesVectTwo = [];
-		rectTwo.vertices.forEach(function(vertex, index, array) {
-			var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
-			vector = new Vector(vertex - prevVertex).orthogonalVector;
+	rectTwo.vertices.forEach(function(vertex, index, array) {
+		var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
+		vector = new Vector(vertex, prevVertex).orthogonalVector;//this is stupid for a rectangle, not for a polygon
 
 		axesVectTwo.push(vector);
 	});
+	var axesVect = axesVectOne.concat(axesVectTwo);
 
-	return true;//TODO: complete this function!
-}*/
-GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
-	var radiusRectOne = Math.sqrt(Math.pow(rectOne.width, 2) + Math.pow(rectOne.height, 2)) / 2,
-		radiusRectTwo = Math.sqrt(Math.pow(rectTwo.width, 2) + Math.pow(rectTwo.height, 2)) / 2; 
+	return !axesVect.some(function(axis) {
+		var projOne = rectOne.project(axis),
+			projTwo = rectTwo.project(axis);
 
-	//test if circumcirle (circle that goes through all points of the rectangle) touch / overlap each other
-	//this avoids unnecessary calculations *yay*
-	if (Math.pow(rectOne.center.x - rectOne.center.x, 2) + Math.pow(rectTwo.center.y - rectTwo.center.y) >= Math.pow(radiusRectOne + radiusRectTwo, 2)){
-		//I dont quite know how to call the variables  ._.
-		var _a = rectOne.angle % (Math.PI * 0.5) + Math.sin(rectOne.height / rectOne.width),
-			_b = rectTwo.angle % (Math.PI * 0.5) + Math.sin(rectTwo.height / rectTwo.width),
-			_c = new Point(Math.sin(_a) * radiusRectOne, -Math.cos(_a) * radiusRectOne),
-			_d = new Point(Math.sin(_b) * radiusRectTwo, -Math.cos(_b) * radiusRectTwo),
-			_e = new Point((rectOne.center.x - rectTwo.center.x < 0) ? -1 : 1, (rectOne.center.y - rectTwo.center.y < 0) ? -1 : 1);
-			
-		if (rectOne.center.x + _e.x * _c.x > rectTwo.center.x + -_e.x * _d.x && rectOne.center.y + _e.y * _c.y > rectTwo.center.y + -_e.y * _d.x) return true;
-	}
-	return false;
+		return projOne.max < projTwo.min || projTwo.max < projOne.min;//overlapp or not
+	});
 }
 GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
@@ -95,10 +85,10 @@ function Point(x, y) {
 }
 
 function Vector(argOne, argTwo) {
-	if(typeof argOne === "number" && typeof argTwo === "number", typeof x) {//they are coordinates
+	if(typeof argOne === "number" && typeof argTwo === "number") {//they are coordinates
 		this.x = argOne;
 		this.y = argTwo;
-	} else if(argOne instanceof Point && argoTwo instanceof Point) {
+	} else if(argOne instanceof Point && argTwo instanceof Point) {
 		this.x = argTwo.x - argOne.x;
 		this.y = argTwo.y - argOne.y;
 	}
@@ -113,6 +103,9 @@ Object.defineProperty(Vector.prototype, "orthogonalVector", {
 		return this._cache.orthogonalVector;
 	}
 });
+Vector.prototype.dotProduct = function(vector) {
+	return this.x*vector.x + this.y*vector.y;
+}
 
 function Rectangle(centerPoint, width, height, angle) {
 	this.center = centerPoint;
@@ -121,31 +114,39 @@ function Rectangle(centerPoint, width, height, angle) {
 
 	this.angle = angle === undefined ? 0 : angle;
 
-	this._unrotatedVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
 	return GeometricObject.call(this);
 }
 Rectangle.prototype = Object.create(GeometricObject.prototype);
-Object.defineProperty(Rectangle.prototype, "vertices", {
-	get: function() {
-		if(this._cache.needsUpdate || this.center._cache.needsUpdate) {
-			this._cache.needsUpdate = false;
-			this.center._cache.needsUpdate = false;
+Object.defineProperties(Rectangle.prototype, {
+	"vertices": {
+		get: function() {
+			if(this._cache.needsUpdate || this.center._cache.needsUpdate) {
+				this._cache.needsUpdate = false;
+				this.center._cache.needsUpdate = false;
 
-			this._cache.vertices = [];
-			this._unrotatedVertices.forEach(function(vertex, index) {
-				var newVertex = new Point(
-					vertex.x*Math.cos(this.angle) - vertex.y*Math.sin(this.angle),
-					vertex.x*Math.sin(this.angle) - vertex.y*Math.cos(this.angle)
-				);
-				this._cache.vertices[index] = newVertex;
-			}, this);
+				this._cache.vertices = [];
+				this.unrotatedVertices.forEach(function(vertex) {
+					var x = vertex.x - this.center.x,
+						y = vertex.y - this.center.y,
+						newVertex = new Point(
+							x*Math.cos(this.angle) - y*Math.sin(this.angle) + this.center.x,
+							x*Math.sin(this.angle) + y*Math.cos(this.angle) + this.center.y
+					);
+					this._cache.vertices.push(newVertex);
+				}, this);
+			}
+			return this._cache.vertices;
 		}
-		return this._cache.vertices;
+	},
+	"unrotatedVertices": {
+		get: function() {
+			return [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
+		}
 	}
 });
 Rectangle.prototype.collision = function(geomObj) {
 	if(geomObj instanceof Rectangle) {
-		if(this.angle === 0 && geomObj.angle === 0) {
+		if(this.angle === geomObj.angle) {
 			return this.aabbAabb(this, geomObj);
 		} else {
 			return this.obbObb(this, geomObj);
@@ -155,6 +156,16 @@ Rectangle.prototype.collision = function(geomObj) {
 	} else {
 		throw new TypeError("Not a valid geometric object");
 	}
+}
+Rectangle.prototype.project = function(axis) {
+	var min = axis.dotProduct(this.vertices[0]),
+		max = min;
+	for(var i = 1; i !== this.vertices.length - 1; i++) {
+		var proj = axis.dotProduct(this.vertices[i]);
+		if(proj < min) min = proj;
+		else if(proj > max) max = proj;
+	}
+	return {min: min, max: max};
 }
 
 function Circle(centerPoint, radius) {
