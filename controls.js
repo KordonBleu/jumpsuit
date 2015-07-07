@@ -1,11 +1,8 @@
-function hashChange() {
-	document.getElementById("donate").setAttribute("style", "display: " + ((location.hash == "#donate") ? "block" : "none"));
-	document.getElementById("share").setAttribute("style", "display: " + ((location.hash == "#donate") ? "none" : "block"));
+function changeTab (obj){
+	var tab = obj.textContent;
+	document.getElementById("donate").setAttribute("style", "display: " + ((tab == "Donate") ? "block" : "none"));
+	document.getElementById("share").setAttribute("style", "display: " + ((tab == "Donate") ? "none" : "block"));	
 }
-window.addEventListener("hashchange", hashChange);
-window.addEventListener("load", hashChange);
-
-
 function convertToKey(keyCode) {
 	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
 	else if (keyCode > 95 && keyCode < 106) return keyCode - 96;//numpad
@@ -44,34 +41,32 @@ function handleInputMobile(e){
 		}
 	}
 }
-
 function handleInput(e){
-	var s = e.type === "keydown";
+	var s = e.type === "keydown",
+		triggered;
 
 	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
 	} else if (!changingKeys) {
 		if(e.type.substring(0, 3) === "key"){
-			var triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
+			triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
 		} else if (controls[e.target.id] !== undefined){
 			e.preventDefault();
-			var triggered = e.target.id;
+			triggered = e.target.id;
 		}
-		if (triggered == "menu"){
+		if (triggered == "menu" || triggered == "lobby"){
+			e.preventDefault();
 			if (s == 1){
-				var box = document.getElementById("info-box");
-				box.className = (box.className == "info-box hidden") ?  "info-box" : "info-box hidden";
+				var box = document.getElementById((triggered == "menu") ? "info-box" : "multiplayer-box");
+				box.className = (box.className.indexOf("hidden") !== -1) ? box.className.substring(0, box.className.length - 7) : box.className + " hidden";		
 			}
-		} else if (triggered == "lobby"){
-			if (s == 1){
-				var box = document.getElementById("multiplayer-box");
-				box.className = (box.className == "multiplayer-box hidden") ?  "multiplayer-box" : "multiplayer-box hidden";
-			}
-		} else if (triggered != null && e.type.indexOf("mouse") !== 0) controls[triggered] = s;
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0) {
+			e.preventDefault();
+			controls[triggered] = s;
+		}
 	}
 }
 handleInput.keyMap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
-
 
 function dragging(ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
@@ -127,62 +122,73 @@ for (key in handleInput.keyMap) {
 
 var settingsEl = document.getElementById("key-settings");
 for (action in reverseKeyMap) {
-var rowSize = 1;
 	var rowEl = document.createElement("tr"),
 		actionEl = document.createElement("td"),
-		actionTxtEl = document.createTextNode(action),
-		keyEl = document.createElement("td"),
-		keyTxtEl = document.createTextNode(reverseKeyMap[action]);
+		keyEl;		
 
-	actionEl.appendChild(actionTxtEl);
+	actionEl.textContent = action	
 	rowEl.appendChild(actionEl);
 
 	var slice = reverseKeyMap[action];
-	for (key in slice) {
-		if (slice.length > rowSize) rowSize = slice.length;
-		var keyEl = document.createElement("td"),
-			keyTxtEl = document.createTextNode(slice[key]);
-		keyEl.appendChild(keyTxtEl);
+	for (var i = 0; i != 2; i++){
+		keyEl = document.createElement("td");
+		if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
+		else keyEl.textContent = slice[i].replace(" ", "Space");
 		rowEl.appendChild(keyEl);
 	}
-
 	settingsEl.appendChild(rowEl);
 }
 var keyCol = document.getElementById("key-col"),
-	changingKeys = false;
-keyCol.colSpan = rowSize;
+	changingKeys = false,
+	selectedRow = -1;
 
 settingsEl.addEventListener("click", function(e) {
-	function handleChangeKey(e, target) {
-		delete handleInput.keyMap[target.firstChild.data];
-		var keyName = e.key || convertToKey(e.keyCode);
-		handleInput.keyMap[keyName] = target.parentElement.firstElementChild.firstChild.data;
-		target.firstChild.data = keyName;
+	reselect(e.target.parentNode);
+	function reselect(obj){		
+		for (row in e.target.parentNode.parentNode.childNodes){
+			e.target.parentNode.parentNode.childNodes[row].className = "";
+			document.removeEventListener("keydown", wrap);
+		}
+		if (typeof obj !== "undefined") {
+			obj.className = "selected";
+			selectedRow = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
+		} 
+	}		
+	function handleChangeKey(e) {
+		var keyName = e.key || convertToKey(e.keyCode),
+			target = document.getElementById("key-settings").childNodes[selectedRow],
+			firstKey = target.childNodes[1],
+			altKey = target.childNodes[2];		
+		delete handleInput.keyMap[altKey.textContent];		
+		handleInput.keyMap[keyName] = target.firstChild.textContent;
+		altKey.textContent = firstKey.textContent;
+		firstKey.textContent = keyName.replace(" ", "Space");		
 	}
-	if(e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
-		var box = document.getElementById("info-box");
-		document.addEventListener("keydown", function wrap(nE) {
-			switch(nE.type) {
-				case "keydown":
-					changingKeys = true;
-					document.removeEventListener("keydown", wrap);
-					document.addEventListener("keyup", wrap);
-					break;
-
-				case "keyup":
-					handleChangeKey(nE, e.target);
-					document.removeEventListener("keyup", wrap);
-					changingKeys = false;
-			}
-		});
+	function wrap(nE) {
+		nE.preventDefault();
+		switch(nE.type) {
+			case "keydown":
+				changingKeys = true;
+				document.removeEventListener("keydown", wrap);
+				document.addEventListener("keyup", wrap);
+				break;
+			case "keyup":
+				handleChangeKey(nE);
+				reselect();
+				document.removeEventListener("keyup", wrap);
+				changingKeys = false;
+		}
+	}
+	if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
+		document.addEventListener("keydown", wrap);
 	}
 });
 
-window.addEventListener("keydown", handleInput);
-window.addEventListener("keyup", handleInput);
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
 window.addEventListener("touchend", handleInputMobile);
 window.addEventListener("mousedown", handleInput);
 window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);
+window.addEventListener("keydown", handleInput);
+window.addEventListener("keyup", handleInput);

@@ -25,10 +25,10 @@
 			<p>Music by Arnaud Poyeton<br/>
 			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
 
-			<a class="button" href="#share">Share</a><a class="button" href="#donate">Donate</a>
+			<a class="button" onclick="changeTab(this);">Share</a><a class="button" onclick="changeTab(this);">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
-				<div id="donate">
+				<div id="donate" style="display: none;">
 					<h3>Donate</h3>
 					<p>This game is free software: you can fork it and edit it.<br/>
 						Despite that we would appreciate it if you'd donate to us by simply clicking the link below.<br/><br/>
@@ -41,13 +41,7 @@
 					<p>Maybe you don't want to donate? That's totally fine, I understand!<br/>
 					But if you like it, could you recommend it to your friends?</p>
 				</div>
-			</div>
-			<table id="key-settings">
-				<tr>
-					<th>Action</th>
-					<th id="key-col">Key</th>
-				</tr>
-			</table>
+			</div>			
 		</div>
 		<div id="multiplayer-box" class="multiplayer-box">
 			<div class="button" id="ready" style="float: right;">Disconnect</div>
@@ -63,10 +57,9 @@
 				<li>Piotr Gawiński</li>
 				<li>Fju</li>
 				<li>Fju</li>
-
 			</ul>
 			<hr>
-			<h4>My Player</h4>
+			<h4>Settings</h4>
 			<form>
 				<label>Name: </label>
 				<input type="text" placeholder="Enter your name" maxlength="30"/><div class="placeholder"></div>
@@ -79,11 +72,17 @@
 
 				<div class="placeholder"></div>
 			</form>
+			<table id="key-settings">
+				<tr id="key-header">
+					<th id="key-action">Actions</th>
+					<th id="key-col">Primary Keys</th>
+					<th id="key-col-alt">Alternate Keys</th>
+				</tr>
+			</table>
 			<div class="button" id="ready">I'm ready</div>
 		</div>
 
 		<script src="audio.js"></script>
-
 		<script src="engine.js"></script>
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
