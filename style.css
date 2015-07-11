@@ -1,3 +1,7 @@
+::selection{
+	background: #AD3726;
+	color: #c9c9c9;
+}
 @viewport {
 	user-zoom: fixed;
 }
@@ -10,6 +14,46 @@ html, body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+}
+#controls {
+	position: fixed;
+	bottom: 0;
+	padding: 0;
+	margin: 0 1vw 1vw 1vw;
+	width: 98vw;
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+}
+#controls li {
+	list-style-type: none;
+}
+#controls li img {
+	width: 80px;
+	height: 80px;
+	opacity: 0.3;
+	transition: opacity .15s;
+}
+#audio-icon{
+	position: fixed;
+	width: 24px;
+	height: 24px;
+	top: 8px;
+	right: 8px;
+}
+.chat-input{
+	position: fixed;
+	bottom: 20px;
+	left: 20%;
+	font-size: 22px;
+	background: none;
+	padding: 10px;
+	border: none;
+	border-bottom: solid 2px #c9c9c9;
+	color: #c9c9c9;
+	outline: none;
+	font-family: inherit;
+	width: 60%;
 }
 .info-box {
 	position: fixed;
@@ -82,35 +126,6 @@ html, body {
 	border: 2px solid #AD3726;
 	background: transparent;
 	color: #AD3726;
-}
-
-
-#controls {
-	position: fixed;
-	bottom: 0;
-	padding: 0;
-	margin: 0 1vw 1vw 1vw;
-	width: 98vw;
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-end;
-}
-#controls li {
-
-	list-style-type: none;
-}
-#controls li img {
-	width: 80px;
-	height: 80px;
-	opacity: 0.3;
-	transition: opacity .15s;
-}
-#audio-icon{
-	position: fixed;
-	width: 24px;
-	height: 24px;
-	top: 8px;
-	right: 8px;
 }
 .multiplayer-box{
 	transition: left .4s;
@@ -202,6 +217,12 @@ html, body {
 .multiplayer-box form #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
 .multiplayer-box form #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
 
+.multiplayer-box #key-info {
+	width: 100%;
+	margin-top: 15px;
+	margin-bottom: 8px;
+	float: left;
+}
 .multiplayer-box #key-settings {
 	width: 650px;
 	text-align: left;

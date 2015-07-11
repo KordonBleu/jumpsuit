@@ -26,7 +26,11 @@ var canvas = document.getElementById("canvas"),
 		dragStartX: 0,
 		dragStartY: 0,
 		dragX: 0,
-		dragY: 0
+		dragY: 0	
+	},
+	chat = {
+		history: [],
+		hidden: false
 	},
 	offsetX = 0, offsetY = 0,
 	controls = {
@@ -37,7 +41,7 @@ var canvas = document.getElementById("canvas"),
 		moveRight: 0
 	};
 
-function init() {//init is done diferently in the server
+function init() {//init is done differently in the server
 	function loadProcess(callback) {
 		function resizeHandler() {
 			canvas.width = window.innerWidth;
@@ -58,8 +62,8 @@ function init() {//init is done diferently in the server
 		}
 		function drawBar() {
 			context.fillStyle = "#007d6c";
-			context.fillRect(0, 0, ((loadProcess.progress + 1) / init.paths.length) * canvas.width, 15);			}
-
+			context.fillRect(0, 0, ((loadProcess.progress + 1) / init.paths.length) * canvas.width, 15);
+		}
 
 		if (loadProcess.progress === undefined) {
 			resizeHandler();
@@ -70,7 +74,7 @@ function init() {//init is done diferently in the server
 		function eHandler() {
 			loadProcess.progress++;
 			if (loadProcess.progress !== init.paths.length) {
-			loadProcess(callback);
+				loadProcess(callback);
 			} else {
 				window.removeEventListener("resize", resizeHandler);
 				callback();
@@ -78,7 +82,6 @@ function init() {//init is done diferently in the server
 		}
 
 		drawBar();
-
 		var r = new Image();
 		r.addEventListener("load", eHandler);
 		r.src = "assets/images/" + init.paths[loadProcess.progress];
@@ -94,6 +97,7 @@ function init() {//init is done diferently in the server
   				if (x === 0 && y === 0) player.attachedPlanet = planets.length - 1;
   			}
   		}
+  		document.getElementById("multiplayer-box").className = "multiplayer-box";
 		loop();
 	});
 }
@@ -124,7 +128,51 @@ function loop(){
 		context.drawImage(image, -(image.width / 2), -(image.height / 2));
 		context.restore();
 	}
-
+	function wrapText(text, maxWidth) {
+		var words = text.split(' '),
+			lines = [],
+			line = "";
+		if (context.measureText(text).width < maxWidth) {
+			return [text];
+		}
+		while (words.length > 0) {
+			var split = false;
+			while (context.measureText(words[0]).width >= maxWidth) {
+				var tmp = words[0];
+				words[0] = tmp.slice(0, -1);
+				if (!split) {
+					split = true;
+					words.splice(1, 0, tmp.slice(-1));
+				} else {
+					words[1] = tmp.slice(-1) + words[1];
+				}
+			}
+			if (context.measureText(line + words[0]).width < maxWidth) {
+				line += words.shift() + " ";
+			} else {
+				lines.push(line);
+				line = "";
+			}
+			if (words.length === 0) {
+				lines.push(line);
+			}
+		}
+		return lines;
+	}
+	function drawChat(){
+		context.fillStyle = "#eee";
+		context.font = "14px Open Sans";
+		var y = 0;
+		for (var i = 0; i < chat.history.length; i++){
+			var text = wrapText(chat.history[i], 300);
+			if (y + text.length * 14 > canvas.height - 380) {
+				if (chat.history.length > 48) chat.length = 48;
+				return;
+			}
+			for (var j = 0; j < text.length; j++) context.fillText(text[j], 18, 150 + y + j * 17);
+			y += text.length * 17 + 3;
+		}
+	}
 	function fillCircle(cx, cy, r){
 		context.save();
 
@@ -252,9 +300,6 @@ function loop(){
 
 	fadeBackground(fadeMusic);
 
-	context.fillText("player.oldChunkX: " + player.oldChunkX, 0, 200);
-	context.fillText("player.oldChunkY: " + player.oldChunkY, 0, 250);
-	context.fillText("planets.length: " + planets.length, 0,  300);
 	drawRotatedImage(resources[player.name + player.walkFrame],
 		player.box.center.x - offsetX,
 		player.box.center.y - offsetY,
@@ -284,6 +329,7 @@ function loop(){
 		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id] * 0.7));
 	});
 
+	drawChat();
 	window.requestAnimationFrame(loop);
 }
 

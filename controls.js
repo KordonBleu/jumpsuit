@@ -43,7 +43,8 @@ function handleInputMobile(e){
 }
 function handleInput(e){
 	var s = e.type === "keydown",
-		triggered;
+		triggered,
+		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1);
 
 	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
@@ -54,13 +55,16 @@ function handleInput(e){
 			e.preventDefault();
 			triggered = e.target.id;
 		}
-		if (triggered == "menu" || triggered == "lobby"){
+		if (triggered == "menu" || triggered == "lobby" && !chat.enabled){
 			e.preventDefault();
 			if (s == 1){
 				var box = document.getElementById((triggered == "menu") ? "info-box" : "multiplayer-box");
 				box.className = (box.className.indexOf("hidden") !== -1) ? box.className.substring(0, box.className.length - 7) : box.className + " hidden";		
 			}
-		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0) {
+		} else if (triggered == "chat"){
+			e.preventDefault();
+			if (s == 1) chat.enabled = !chat.enabled;
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chat.enabled && framesClosed) {
 			e.preventDefault();
 			controls[triggered] = s;
 		}
@@ -133,7 +137,7 @@ for (action in reverseKeyMap) {
 	for (var i = 0; i != 2; i++){
 		keyEl = document.createElement("td");
 		if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
-		else keyEl.textContent = slice[i].replace(" ", "Space");
+		else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
 		rowEl.appendChild(keyEl);
 	}
 	settingsEl.appendChild(rowEl);
@@ -142,18 +146,24 @@ var keyCol = document.getElementById("key-col"),
 	changingKeys = false,
 	selectedRow = -1;
 
-settingsEl.addEventListener("click", function(e) {
-	reselect(e.target.parentNode);
-	function reselect(obj){		
+settingsEl.addEventListener("click", function(e) {	
+	function reselect(obj){	
 		for (row in e.target.parentNode.parentNode.childNodes){
 			e.target.parentNode.parentNode.childNodes[row].className = "";
 			document.removeEventListener("keydown", wrap);
 		}
+		console.log(typeof obj !== "undefined");
 		if (typeof obj !== "undefined") {
 			obj.className = "selected";
-			selectedRow = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
-		} 
-	}		
+			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
+			if (nsr === selectedRow) reselect();
+			else selectedRow = nsr;
+		} else {
+			selectedRow = -1;
+			document.removeEventListener("keyup", wrap);
+			changingKeys = false;
+		}
+	}
 	function handleChangeKey(e) {
 		var keyName = e.key || convertToKey(e.keyCode),
 			target = document.getElementById("key-settings").childNodes[selectedRow],
@@ -162,7 +172,7 @@ settingsEl.addEventListener("click", function(e) {
 		delete handleInput.keyMap[altKey.textContent];		
 		handleInput.keyMap[keyName] = target.firstChild.textContent;
 		altKey.textContent = firstKey.textContent;
-		firstKey.textContent = keyName.replace(" ", "Space");		
+		firstKey.textContent = keyName.replace(" ", "Space").ucFirst();		
 	}
 	function wrap(nE) {
 		nE.preventDefault();
@@ -175,11 +185,11 @@ settingsEl.addEventListener("click", function(e) {
 			case "keyup":
 				handleChangeKey(nE);
 				reselect();
-				document.removeEventListener("keyup", wrap);
-				changingKeys = false;
+				break;				
 		}
 	}
 	if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
+		reselect(e.target.parentNode);
 		document.addEventListener("keydown", wrap);
 	}
 });
@@ -192,3 +202,18 @@ window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
+
+document.getElementById("chat-input").addEventListener("focus", function(){
+	document.getElementById("info-box").className = "info-box hidden";
+	document.getElementById("multiplayer-box").className = "multiplayer-box hidden";
+	chat.enabled = true;
+});
+document.getElementById("chat-input").addEventListener("blur", function(){
+	chat.enabled = false;
+});
+document.getElementById("chat-input").addEventListener("keydown", function(e){
+	if (e.keyCode == 13){
+		chat.history.splice(0, 0, this.value);
+		this.value = "";
+	}
+});

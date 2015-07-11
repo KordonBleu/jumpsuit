@@ -2,7 +2,12 @@
 "use strict";
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
+	//mapping a value x from a range to another range to allow scaling or moving values easily
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+String.prototype.ucFirst = function (){
+	//uppercasing the first letter
+	return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
 function Planet(x, y, radius, color, enemyAmount) {

@@ -18,7 +18,7 @@
 			<li><img src="assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"></img>
 			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"></img></li>
 		</ul>
-
+		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150></input>
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
 			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
@@ -41,9 +41,9 @@
 					<p>Maybe you don't want to donate? That's totally fine, I understand!<br/>
 					But if you like it, could you recommend it to your friends?</p>
 				</div>
-			</div>			
+			</div>
 		</div>
-		<div id="multiplayer-box" class="multiplayer-box">
+		<div id="multiplayer-box" class="multiplayer-box hidden">
 			<div class="button" id="ready" style="float: right;">Disconnect</div>
 			<div class="button" id="ready" style="float: right;">Create New Lobby</div>
 			<h2>Multiplayer Lobby</h2>
@@ -62,16 +62,16 @@
 			<h4>Settings</h4>
 			<form>
 				<label>Name: </label>
-				<input type="text" placeholder="Enter your name" maxlength="30"/><div class="placeholder"></div>
+				<input type="text" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'"/><div class="placeholder"></div>
 				<label>Appereal: </label>
 				<div id="playerBlue" class="playerSelect"></div>
 				<div id="playerBeige" class="playerSelect"></div>
 				<div id="playerGreen" class="playerSelect"></div>
 				<div id="playerPink" class="playerSelect"></div>
 				<div id="playerYellow" class="playerSelect"></div>
-
 				<div class="placeholder"></div>
 			</form>
+			<div class="key-info" id="key-info">Note that all F-Keys (F1 to F12) won't do their default job once they are listed here. <br> Also you can't assign Mouse keys to the key settings! <br> <br>You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.</div>
 			<table id="key-settings">
 				<tr id="key-header">
 					<th id="key-action">Actions</th>
@@ -79,9 +79,8 @@
 					<th id="key-col-alt">Alternate Keys</th>
 				</tr>
 			</table>
-			<div class="button" id="ready">I'm ready</div>
+			<div class="button" id="ready">Save</div> <div class="button" id="ready">Reset</div>
 		</div>
-
 		<script src="audio.js"></script>
 		<script src="engine.js"></script>
 		<script src="collisions.js"></script>
