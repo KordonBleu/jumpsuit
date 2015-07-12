@@ -29,7 +29,7 @@ function Enemy(x, y, appearance) {
 	this.x = x;
 	this.y = y;
 	this.appearance = appearance !== undefined ? appearance : "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
-	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
+	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height, 3.7);
 	this.aggroBox = new Circle(new Point(x, y), 350);
 	this.fireRate = 0;
 	this.angle = 0
@@ -105,8 +105,6 @@ function doPhysics() {
 				enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - player.box.center.x, enemy.box.center.y - player.box.center.y);
 				if (++enemy.fireRate >= 20) {
 					enemy.fireRate = 0;
-					//SHOT.BOX SHOULD NOT BE A CIRCLE BUT A RECTANGLE
-					//TODO: replace this once obbObb collisions are supported
 					enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});//lt = lifetime
 					playSound("laser");//TODO: the server must tell the client to play this sound
 				}
@@ -145,18 +143,17 @@ function doPhysics() {
 		player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].box.radius + resources[player.name + player.walkFrame].height / 2);
 		player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(planets[player.attachedPlanet].player) * (planets[player.attachedPlanet].box.radius + resources[player.name + player.walkFrame].height / 2);
 		player.box.angle = Math.PI - planets[player.attachedPlanet].player;
-		player.velX = 0;
-		player.velY = 0;
+		player.vel.x = 0;
+		player.vel.y = 0;
 		player.fuel = 300;
 
 		if (controls["jump"] > 0) {
 			player.attachedPlanet = -1;
 			player.walkFrame = "_jump";
-			player.velX = Math.sin(player.box.angle) * 6;
-			player.velY = -Math.cos(player.box.angle) * 6;
+			player.vel.x = Math.sin(player.box.angle) * 6;
+			player.vel.y = -Math.cos(player.box.angle) * 6;
 
-			player.box.center.x += player.velX;
-			player.box.center.y += player.velY;
+			player.vel.apply(player.box.center);
 		}
 	} else {
 		var chunkX = Math.floor(player.box.center.x / chunkSize),
@@ -179,8 +176,8 @@ function doPhysics() {
 				deltaY = planet.box.center.y - player.box.center.y,
 				distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
-			player.velX += 9000 * planet.box.radius * deltaX / distPowFour;
-			player.velY += 9000 * planet.box.radius * deltaY / distPowFour;
+			player.vel.x += 9000 * planet.box.radius * deltaX / distPowFour;
+			player.vel.y += 9000 * planet.box.radius * deltaY / distPowFour;
 
 			if (planet.box.collision(player.box)) {
 				player.attachedPlanet = pi;
@@ -190,18 +187,17 @@ function doPhysics() {
 
 		if(controls["jetpack"] > 0 && player.fuel > 0 && controls["crouch"] < 1){
 			player.fuel-= controls["jetpack"];
-			player.velX += (Math.sin(player.box.angle) / 10) * controls["jetpack"];
-			player.velY += (-Math.cos(player.box.angle) / 10) * controls["jetpack"];
+			player.vel.x += (Math.sin(player.box.angle) / 10) * controls["jetpack"];
+			player.vel.y += (-Math.cos(player.box.angle) / 10) * controls["jetpack"];
 		} else if (controls["crouch"] > 0){
-			player.velX = player.velX * 0.987;
-			player.velY = player.velY * 0.987;
+			player.vel.x = player.vel.x * 0.987;
+			player.vel.y = player.vel.y * 0.987;
 		}
 
 		var runMultiplicator = controls["run"] ? 1.7 : 1;
 		if (controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 140) * controls["moveLeft"] * runMultiplicator;
 		if (controls["moveRight"] > 0) player.box.angle += (Math.PI / 140) * controls["moveRight"] * runMultiplicator;
 
-		player.box.center.x += player.velX;
-		player.box.center.y += player.velY;
+		player.vel.apply(player.box.center);
 	}
 }

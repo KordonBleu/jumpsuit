@@ -3,23 +3,22 @@ function GeometricObject() {
 	//to inherit from `GeometricObject`:
 	//call `return GeometricObject.call(this);` at the end of any constructor
 	//create a new prototype for your object, whose prototype is `GeometricObject.prototype`. Example: `YourConstructor.prototype = Object.create(GeometricObject.prototype);`.
-	var handler = {
-		set: function(target, name, value) {
-			if(target.hasOwnProperty(name)) {
-				target._cache.needsUpdate = true;
-				target[name] = value;
-				return true;
-			} else {
-				throw new ReferenceError("This object doesn't allow properties to be added");
-			}
-		}
-	}
 	this._cache = {
 		needsUpdate: true
 	};
 	if(typeof Proxy !== "undefined"){
-		var proxy = new Proxy(this, handler);
+		var proxy = new Proxy(this, GeometricObject._proxyHandler);
 		return proxy;
+	}
+}
+GeometricObject._proxyHandler = {
+	set: function(target, name, value) {
+		if(target.hasOwnProperty(name)) {
+			target._cache.needsUpdate = true;
+			target[name] = value;
+			return true;
+		}
+		return false;
 	}
 }
 GeometricObject.prototype.circleObb = function(circle, rect) {
@@ -52,6 +51,7 @@ GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 	rectTwo.vertices.forEach(function(vertex, index, array) {
 		var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
 		vector = new Vector(vertex, prevVertex).orthogonalVector;//this is stupid for a rectangle, not for a polygon
+		//vector.normalize();
 
 		axesVectTwo.push(vector);
 	});
@@ -94,17 +94,36 @@ function Vector(argOne, argTwo) {
 	}
 	return GeometricObject.call(this);
 }
-Object.defineProperty(Vector.prototype, "orthogonalVector", {
-	get: function() {
-		if(this._cache.needsUpdate) {
-			this._cache.needsUpdate = false;
-			this._cache.orthogonalVector = new Vector(-this.y, this.x);
+Object.defineProperties(Vector.prototype, {
+	"orthogonalVector": {
+		get: function() {
+			if(this._cache.needsUpdate) {
+				this._cache.needsUpdate = false;
+				this._cache.orthogonalVector = new Vector(-this.y, this.x);
+			}
+			return this._cache.orthogonalVector;
 		}
-		return this._cache.orthogonalVector;
+	},
+	"length": {
+		get: function() {
+			if(this._cache.needsUpdate) {
+				this._cache.needsUpdate = false;
+				this._cache.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+			}
+			return this._cache.length;
+		}
 	}
 });
 Vector.prototype.dotProduct = function(vector) {
 	return this.x*vector.x + this.y*vector.y;
+}
+Vector.prototype.normalize = function() {
+	this.x /= this.length;
+	this.y /= this.length;
+}
+Vector.prototype.apply = function(point) {
+	point.x += this.x;
+	point.y += this.y;
 }
 
 function Rectangle(centerPoint, width, height, angle) {
@@ -117,6 +136,8 @@ function Rectangle(centerPoint, width, height, angle) {
 	return GeometricObject.call(this);
 }
 Rectangle.prototype = Object.create(GeometricObject.prototype);
+//Rectangle.prototype._map = {
+//	x: ["
 Object.defineProperties(Rectangle.prototype, {
 	"vertices": {
 		get: function() {
@@ -125,7 +146,7 @@ Object.defineProperties(Rectangle.prototype, {
 				this.center._cache.needsUpdate = false;
 
 				this._cache.vertices = [];
-				this.unrotatedVertices.forEach(function(vertex) {
+				this._unrotatedVertices.forEach(function(vertex) {
 					var x = vertex.x - this.center.x,
 						y = vertex.y - this.center.y,
 						newVertex = new Point(
@@ -136,11 +157,12 @@ Object.defineProperties(Rectangle.prototype, {
 				}, this);
 			}
 			return this._cache.vertices;
-		}
+		},
+		enumerable: true
 	},
-	"unrotatedVertices": {
+	"_unrotatedVertices": {
 		get: function() {
-			return [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
+			return [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2)];
 		}
 	}
 });

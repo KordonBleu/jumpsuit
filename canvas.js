@@ -7,7 +7,7 @@ var canvas = document.getElementById("canvas"),
 	pause = 0,
 	player = {
 		health: 10, facesLeft: false, name: "alienGreen",
-		velX: 0, velY: 0,
+		vel: new Vector(0, 0),
 		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
 		set walkFrame(v){
 			this._walkFrame = v;
@@ -71,7 +71,8 @@ function init() {//init is done differently in the server
 			window.addEventListener("resize", resizeHandler);
 		}
 
-		function eHandler() {
+		function eHandler(e) {
+			e.target.removeEventListener("load", eHandler);
 			loadProcess.progress++;
 			if (loadProcess.progress !== init.paths.length) {
 				loadProcess(callback);
@@ -270,7 +271,7 @@ function loop(){
 
 	offsetX = ((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
 	offsetY = ((player.box.center.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
-	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + offsetX, canvas.clientHeight/2 + offsetY), canvas.clientWidth, canvas.clientWidth),
+	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + offsetX, canvas.clientHeight/2 + offsetY), canvas.clientWidth, canvas.clientHeight),
 		fadeMusic = false;
 
 	planets.forEach(function (planet){
