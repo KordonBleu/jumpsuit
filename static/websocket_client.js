@@ -20,8 +20,7 @@ function connection(){
 	this.alive = function (){ return socket.readyState === 1; }
 	
 
-	socket.onopen = function(e){
-		// this.socket.send(JSON.stringify({ msgType: MESSAGE_CONNECT, data: {name: player.playerName, appearance: player.name, lobby: 0}})); use if lobby is selected
+	socket.onopen = function(e){		
 		this.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
 		document.getElementById("button-3").disabled = false;
 		document.getElementById("button-2").textContent = "Refresh";

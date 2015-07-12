@@ -19,14 +19,14 @@
 			<li><img src="assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"></img>
 			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"></img></li>
 		</ul>
-
+		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150 />
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
 			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>Music by Arnaud Poyeton<br/>
 			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
 
-			<a class="button" onclick="switchInformation(this)">Share</a><a class="button" onclick="switchInformation(this)">Donate</a>
+			<a class="button" onclick="changeTab(this)">Share</a><a class="button" onclick="changeTab(this)">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
 				<div id="donate">
@@ -42,13 +42,7 @@
 					<p>Maybe you don't want to donate? That's totally fine, I understand!<br/>
 					But if you like it, could you recommend it to your friends?</p>
 				</div>
-			</div>
-			<table id="key-settings">
-				<tr>
-					<th>Action</th>
-					<th id="key-col">Key</th>
-				</tr>
-			</table>
+			</div>			
 		</div>
 		<div id="multiplayer-box" class="multiplayer-box hidden">
 			<button class="button" id="button-1" style="float: right;">Disconnect</button>
@@ -61,9 +55,10 @@
 			</ul>
 			<hr>
 			<h4>Settings</h4>
-			<div class="form">
+			<form>
 				<label>Name: </label>
-				<input id="name" type="text" placeholder="Enter your name" maxlength="30" value="Unnamed Player"/><div class="placeholder"></div>
+				<input type="text" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'"/>
+				<div class="placeholder"></div>
 				<label>Appearance: </label>
 				<div id="playerBlue" class="playerSelect"></div>
 				<div id="playerBeige" class="playerSelect"></div>
@@ -71,18 +66,27 @@
 				<div id="playerPink" class="playerSelect"></div>
 				<div id="playerYellow" class="playerSelect"></div>
 				<div class="placeholder"></div>
-			</div>
-			<button class="button" id="button-4">Save</button>
+			</form>
+			<div class="key-info" id="key-info">Note that all F-Keys (F1 to F12) won't do their default job once they are listed here. <br/> Also you can't assign Mouse keys to the key settings! <br/> <br/>You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.</div>
+			<table id="key-settings">
+				<tr id="key-header">
+					<th id="key-action">Actions</th>
+					<th id="key-col">Primary Keys</th>
+					<th id="key-col-alt">Alternate Keys</th>
+				</tr>
+			</table>
+			<div class="button" id="button-4">Save</div> <div class="button" id="button-5">Reset</div>
 		</div>
 		<dialog id="lobby-name-dialog">
 			Type in your prefered Lobby name!<br/>
 			<input type="text" placeholder="Lobby name" id="lobby-input"/><br/>
 			<button type="button" class="cancel-button">Cancel</button><button type="button" class="okay-button" id="lobby-okay">Okay</button>
 		</dialog>
-		<script src="dialogs.js"></script>
+		<!-- <script src="dialogs.js"></script> -->
 		<script src="audio.js"></script>
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
+		<script src="engine.js"></script>
 		<script src="websocket_client.js"></script>
 		<script src="controls.js"></script>		
 	<body>
