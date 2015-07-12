@@ -118,7 +118,7 @@ lobbies.createLobby = function(_name, _maxPlayers){
 		chunks.push({x: x, y: y});
 	}
 	chunks.addChunk(0, 0);
-	this.push({uid: generateUid(), lobbyName: n, players: Array.apply(null, Array(m)).map(Number.prototype.valueOf, 0), playersAmount: 0, getPlayerData: f, chunks: chunks, planets: planets});
+	this.push({uid: generateUid(), lobbyName: n, players: Array.apply(null, Array(m)).map(Number.prototype.valueOf, 0), playersAmount: 0, getPlayerData: f, chunks: chunks, planets: planets, chat: []});
 }
 lobbies.findLobbyUid = function (uid){
 	for (var i = 0; i != lobbies.length; i++){
@@ -149,9 +149,15 @@ var MESSAGE_ERROR = 0,
 	MESSAGE_DISCONNECT = 12,
 	MESSAGE_LEAVE_LOBBY = 13,
 	MESSAGE_PLAYER_CONTROLS = 14,
-	MESSAGE_GAME_PLANETS = 15;
+	MESSAGE_GAME_PLANETS = 15,
+	MESSAGE_CHAT = 16;
 
-wss.on("connection", function(ws){	
+wss.on("connection", function(ws){
+	function sendToAll(lobby, message){
+		for (var i = 0; i < lobbies[lobby].players.length; i++){
+			if (lobbies[lobby].players[i] !== 0) lobbies[lobby].players[i].ws.send(message);
+		}
+	}
 	ws.on("message", function(message){
 		var msg;
 		try{
@@ -165,16 +171,12 @@ wss.on("connection", function(ws){
 			case MESSAGE_CONNECT:
 				var id = lobbies.findLobbyUid(msg.data.uid);
 				if (id >= 0){
-					if (lobbies[id].players.length === lobbies[id].maxplayers){
-						ws.send(JSON.stringify({msgType: MESSAGE_CONNECT_ERR_FULL}));
-					} else {
-						var pid = lobbies[id].players.indexOf(0), data;
-						lobbies[id].players.splice(pid, 1, ({name: msg.data.name, appearance: msg.data.appearance, ws: this}));
-						lobbies[id].playersAmount++;
-						ws.send(JSON.stringify({msgType: MESSAGE_CONNECT_SUCCESSFUL, data: {pid: pid}}));							
-						ws.send(JSON.stringify({msgType: MESSAGE_PLAYER_DATA, data: lobbies[id].getPlayerData()}));
-						ws.send(JSON.stringify({msgType: MESSAGE_GAME_PLANETS, data: lobbies[id].planets}));
-					}
+					var pid = lobbies[id].players.indexOf(0);
+					lobbies[id].players.splice(pid, 1, ({name: msg.data.name, appearance: msg.data.appearance, ws: ws}));
+					lobbies[id].playersAmount++;
+					ws.send(JSON.stringify({msgType: MESSAGE_CONNECT_SUCCESSFUL, data: {pid: pid}}));
+					ws.send(JSON.stringify({msgType: MESSAGE_PLAYER_DATA, data: lobbies[id].getPlayerData()}));
+					//ws.send(JSON.stringify({msgType: MESSAGE_GAME_PLANETS, data: lobbies[id].planets}));
 				}
 				break;
 			case MESSAGE_GET_LOBBIES:
@@ -196,10 +198,19 @@ wss.on("connection", function(ws){
 					ws.send(JSON.stringify({msgType: MESSAGE_ERROR, data: {content: "Lobby doesnt exist (anymore)"}}));
 				}
 				break;
+			case MESSAGE_CHAT:
+				var id = lobbies.findLobbyUid(msg.data.uid), i;
+				if (id >= 0){
+				 	i = lobbies[id].players[msg.data.pid].name + ": " + msg.data.content;
+					sendToAll(id, JSON.stringify({msgType: MESSAGE_CHAT, data: {content: i}}));
+				 	lobbies[id].chat.splice(0, 0, i);				
+				}
+				break;
 			case MESSAGE_DISCONNECT:
 			case MESSAGE_LEAVE_LOBBY:
 				var id = lobbies.findLobbyUid(msg.data.uid);
 				if (id >= 0){
+					sendToAll(id, JSON.stringify({msgType: MESSAGE_CHAT, data: {content: "'" + lobbies[id].players[msg.data.pid].name + "' has left the game"}}));
 					lobbies[id].players[msg.data.pid] = 0;
 					lobbies[id].playersAmount--;
 				}
@@ -209,12 +220,12 @@ wss.on("connection", function(ws){
 	ws.on("close", function(e){
 		var found = false;
 		console.log("testing....");
-		lobbies.forEach(function (lobby){			
+		lobbies.forEach(function (lobby, li){			
 			lobby.players.forEach(function (player, i){
 				if (player.ws == ws){
-					console.log("player found in " + lobby.lobbyName + " : " + i);
 					lobby.players[i] = 0;
 					lobby.playersAmount--;
+					sendToAll(li, JSON.stringify({msgType: MESSAGE_CHAT, data: {content: "'" + player.name + "' has left the game"}}));
 					found = true;
 					return;	
 				}

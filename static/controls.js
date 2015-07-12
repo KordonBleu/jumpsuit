@@ -214,7 +214,7 @@ document.getElementById("chat-input").addEventListener("blur", function(){
 });
 document.getElementById("chat-input").addEventListener("keydown", function(e){
 	if (e.keyCode == 13){
-		chat.history.splice(0, 0, this.value);
+		currentConnection.sendChat(this.value);
 		this.value = "";
 	}
 });

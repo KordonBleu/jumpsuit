@@ -15,6 +15,9 @@ html, body {
 	-ms-user-select: none;
 	user-select: none;
 }
+button {
+	outline-color: #702318;
+}
 #controls {
 	position: fixed;
 	bottom: 0;
@@ -163,7 +166,7 @@ html, body {
 	margin: 5px 0;
 	width: 50%;
 }
-.multiplayer-box .button{
+.multiplayer-box button{
 	box-sizing: border-box;
 	cursor: pointer;
 	float: left;
@@ -177,7 +180,7 @@ html, body {
 	border: 2px solid transparent;
 	text-align: center;
 }
-.multiplayer-box .button:disabled{
+.multiplayer-box button:disabled{
 	background: #555;
 }
 .multiplayer-box #player-list{
@@ -234,6 +237,7 @@ html, body {
 	text-align: left;
 	border-collapse: collapse;
 	cursor: pointer;
+	margin-bottom: 16px;
 }
 .multiplayer-box #key-settings #key-action{
 	width: 140px;

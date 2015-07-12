@@ -13,14 +13,15 @@ var MESSAGE_ERROR = 0,
 	MESSAGE_DISCONNECT = 12,
 	MESSAGE_LEAVE_LOBBY = 13,
 	MESSAGE_PLAYER_CONTROLS = 14,
-	MESSAGE_GAME_PLANETS = 15;
+	MESSAGE_GAME_PLANETS = 15,
+	MESSAGE_CHAT = 16;
 
 function connection(){
 	var socket = new WebSocket("ws://localhost:8080"), pid = -1;
 	this.alive = function (){ return socket.readyState === 1; }
 	
 
-	socket.onopen = function(e){		
+	socket.onopen = function(e){
 		this.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
 		document.getElementById("button-3").disabled = false;
 		document.getElementById("button-2").textContent = "Refresh";
@@ -54,6 +55,7 @@ function connection(){
 				break;
 			case MESSAGE_CONNECT_SUCCESSFUL:					
 				pid = msg.data.pid;
+				console.log(pid);
 				document.getElementById("button-2").textContent = "Leave Lobby";
 				break;
 			case MESSAGE_PLAYER_DATA:
@@ -67,6 +69,9 @@ function connection(){
 					if (i === pid) li.style.color = "#f33";
 					list.appendChild(li);
 				}
+				break;
+			case MESSAGE_CHAT:
+				chat.history.splice(0, 0, msg.data.content);
 				break;
 			case MESSAGE_GAME_PLANETS:
 				var i;
@@ -119,6 +124,12 @@ function connection(){
 			data: {pid: pid, uid: location.hash.substr(3), name: player.playerName, appearance: player.name}
 		}));
 	};
+	this.sendChat = function (content){
+		socket.send(JSON.stringify({
+			msgType: MESSAGE_CHAT,
+			data: {pid: pid, uid: location.hash.substr(3), content: content}
+		}));	
+	}
 }
 
 var currentConnection = new connection();

@@ -6,7 +6,7 @@ var canvas = document.getElementById("canvas"),
 	meteors = [],
 	pause = 0,
 	player = {
-		health: 10, facesLeft: false, name: "alienGreen",
+		health: 10, facesLeft: false, name: "alienGreen", playerName: "Unnamed Player",
 		velX: 0, velY: 0,
 		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
 		set walkFrame(v){
@@ -314,8 +314,7 @@ function loop(){
 
 	context.fillStyle = "#eee";
 	context.drawImage(resources[player.name + "_badge"], 8, 18, 32, 32);
-	context.fillText("Player Name".toUpperCase(), 55, 20); //uppercase looks better
-
+	context.fillText(player.playerName, 55, 20);
 	context.font = "20px Open Sans";
 	context.fillText("Health: ", 8, 90);
 	for (var i = 0; i < player.health; i++){

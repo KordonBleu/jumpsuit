@@ -45,9 +45,9 @@
 			</div>			
 		</div>
 		<div id="multiplayer-box" class="multiplayer-box hidden">
-			<button class="button" id="button-1" style="float: right;">Disconnect</button>
-			<button class="button" id="button-2" style="float: right;" disabled>Refresh</button>
-			<button class="button" id="button-3" style="float: right;" disabled>Create New Lobby</button>
+			<button id="button-1" style="float: right;">Disconnect</button>
+			<button id="button-2" style="float: right;" disabled>Refresh</button>
+			<button id="button-3" style="float: right;" disabled>Create New Lobby</button>
 			<h2>Multiplayer Lobby</h2>
 			<h4 id="status">Waiting for other players...</h4>
 			<ul id="player-list">
@@ -55,9 +55,9 @@
 			</ul>
 			<hr>
 			<h4>Settings</h4>
-			<form>
+			<form onsubmit="return false;">
 				<label>Name: </label>
-				<input type="text" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'"/>
+				<input id="name" type="text" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" value="Unnamed Player"/>
 				<div class="placeholder"></div>
 				<label>Appearance: </label>
 				<div id="playerBlue" class="playerSelect"></div>
@@ -75,14 +75,14 @@
 					<th id="key-col-alt">Alternate Keys</th>
 				</tr>
 			</table>
-			<div class="button" id="button-4">Save</div> <div class="button" id="button-5">Reset</div>
+			<button id="button-4">Save</button> <button id="button-5">Reset</button>
 		</div>
 		<dialog id="lobby-name-dialog">
 			Type in your prefered Lobby name!<br/>
 			<input type="text" placeholder="Lobby name" id="lobby-input"/><br/>
 			<button type="button" class="cancel-button">Cancel</button><button type="button" class="okay-button" id="lobby-okay">Okay</button>
 		</dialog>
-		<!-- <script src="dialogs.js"></script> -->
+		<script src="dialogs.js"></script>
 		<script src="audio.js"></script>
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
