@@ -147,6 +147,11 @@ function doPhysics() {
 		player.vel.y = 0;
 		player.fuel = 300;
 
+		if(player.jetpackSoundPlaying) {
+			stopSound("jetpack");
+			player.jetpackSoundPlaying = false;
+		}
+
 		if (controls["jump"] > 0) {
 			player.attachedPlanet = -1;
 			player.walkFrame = "_jump";
@@ -186,12 +191,22 @@ function doPhysics() {
 		});
 
 		if(controls["jetpack"] > 0 && player.fuel > 0 && controls["crouch"] < 1){
+			if(!player.jetpackSoundPlaying) {
+				playSound("jetpack");
+				player.jetpackSoundPlaying = true;
+			}
 			player.fuel-= controls["jetpack"];
 			player.vel.x += (Math.sin(player.box.angle) / 10) * controls["jetpack"];
 			player.vel.y += (-Math.cos(player.box.angle) / 10) * controls["jetpack"];
-		} else if (controls["crouch"] > 0){
-			player.vel.x = player.vel.x * 0.987;
-			player.vel.y = player.vel.y * 0.987;
+		} else {
+			if(player.jetpackSoundPlaying) {
+				stopSound("jetpack");
+				player.jetpackSoundPlaying = false;
+			}
+			if (controls["crouch"] > 0){
+				player.vel.x = player.vel.x * 0.987;
+				player.vel.y = player.vel.y * 0.987;
+			}
 		}
 
 		var runMultiplicator = controls["run"] ? 1.7 : 1;

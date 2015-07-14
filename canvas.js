@@ -18,7 +18,8 @@ var canvas = document.getElementById("canvas"),
 			return this._walkFrame;
 		},
 		attachedPlanet: 0,
-		oldChunkX: 0, oldChunkY: 0
+		oldChunkX: 0, oldChunkY: 0,
+		jetpackSoundPlaying: false
 	},
 	game = {
 		paused: false,
