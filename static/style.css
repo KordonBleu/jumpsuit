@@ -243,7 +243,7 @@ button {
 	width: 140px;
 }
 .multiplayer-box #key-settings tr{
-	transition: background .2s;
+	transition: background .2s, color .2s;
 }
 .multiplayer-box #key-settings tr:not(#key-header):not(.selected):hover{
 	background: #AD3726;

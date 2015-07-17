@@ -152,7 +152,7 @@ Rectangle.prototype.collision = function(geomObj) {
 			return this.obbObb(this, geomObj);
 		}
 	} else if(geomObj instanceof Circle) {
-			return this.circleObb(geomObj, this);
+		return this.circleObb(geomObj, this);
 	} else {
 		throw new TypeError("Not a valid geometric object");
 	}

@@ -42,7 +42,7 @@ function handleInputMobile(e){
 	}
 }
 function handleInput(e){
-	var s = e.type === "keydown",
+	var s = (e.type === "keydown") * 1,
 		triggered,
 		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1);
 
@@ -67,6 +67,7 @@ function handleInput(e){
 		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chat.enabled && framesClosed) {
 			e.preventDefault();
 			controls[triggered] = s;
+			currentConnection.refreshControls(controls);
 		}
 	}
 }
@@ -214,8 +215,37 @@ document.getElementById("chat-input").addEventListener("blur", function(){
 });
 document.getElementById("chat-input").addEventListener("keydown", function(e){
 	if (e.keyCode == 13){
+		if (!currentConnection.alive()) return;
 		currentConnection.sendChat(this.value);
 		this.value = "";
+	} else if (e.keyCode == 9){
+		e.preventDefault();
+		
+		if (!this.playerSelection){
+			this.playerSelection = true;
+			this.cursor = this.selectionStart;
+			var text = (this.cursor === 0) ? "" : this.value.substr(0, this.cursor);
+			this.search = text.substr((text.lastIndexOf(" ") === -1) ? 0 : text.lastIndexOf(" ") + 1);
+
+			this.searchIndex = 0;		
+			this.textParts = [this.value.substr(0, this.cursor - this.search.length), this.value.substr(this.cursor)];
+		}
+		
+		var filteredPlayerList = (player.playerName.indexOf(this.search) === 0) ? [player.playerName] : [];
+		console.log(otherPlayers);
+		for (pid in otherPlayers){
+			if (otherPlayers[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[pid].name);
+		}
+
+		if (filteredPlayerList.length !== 0){			
+			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];			
+			this.searchIndex++;
+			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0; 
+		}		
+			
+	} else {
+
+		this.playerSelection = false;
 	}
 });
 

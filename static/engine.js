@@ -14,90 +14,28 @@ function Planet(x, y, radius, color, enemyAmount) {
 	this.box = new Circle(new Point(x, y), radius);
 	this.atmosBox = new Circle(this.box.center, radius * (1.5 + Math.random()/2));
 	this.color = color;
-	this.player = -1;
-
-	this.enemies = [];
-	var lastEnemyAng = 0;
-	for (var j = 0; j < enemyAmount; j++) {
-		var enemyAng = Math.map(Math.random(), 0, 1, lastEnemyAng + Math.PI / 4, lastEnemyAng + Math.PI * 1.875),
-			enemyDistance = Math.floor(Math.map(Math.random(), 0, 1, this.atmosBox.radius, this.atmosBox.radius * 4));
-		this.enemies[j] = new Enemy(Math.sin(enemyAng) * enemyDistance + this.box.center.x, -Math.cos(enemyAng) * enemyDistance + this.box.center.y);
-		lastEnemyAng = enemyAng;
-	}
+	this.player = -1;	
 }
 function Enemy(x, y, appearance) {
-	this.x = x;
-	this.y = y;
-	this.appearance = appearance !== undefined ? appearance : "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
+	this.appearance = "enemy" + appearance;
 	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
 	this.aggroBox = new Circle(new Point(x, y), 350);
-	this.fireRate = 0;
-	this.angle = 0
 	this.shots = [];
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
-var planets = [
-		//emptiness
-	],
-	planetColours = [
-		"rgb(255,51,51)",
-		"rgb(220,170,80)",
-		"rgb(120, 240,60)",
-		"rgb(12,135,242)",
-		"rgb(162,191,57)",
-		"rgb(221,86,41)",
-		"rgb(54,38,127)",
-		"rgb(118,33,129)"
-	],
-	chunks = [
-		//emptiness
-	],
-	chunkSize = 4000;
-//the server knows the content of all chunks
-//the client is only aware of the chunk where it is and the 8 chunks around it
-chunks.chunkExist = function(x, y) {
-	var result = -1;
-	this.forEach(function (element, index) {
-		if (element.x === x && element.y === y) {
-			result = index;
-			return;
-		}
-	});
-	return result;
-}
-chunks.removeChunk = function (x, y) {
-	var c = this.chunkExist(x, y);
-	if (c < 0) return;
-
-	for (var i = 0; i < planets.length; i++) {
-		if (planets[i].box.center.x >= x * chunkSize && planets[i].box.center.x <= (x + 1) * chunkSize && planets[i].box.center.y >= y * chunkSize && planets[i].box.center.y <= (y + 1) * chunkSize) {
-			planets.splice(i,1);
-			i--;
-		}
-	}
-
-	chunks.splice(c, 1);
-}
-chunks.addChunk = function (x, y) {
-	if (this.chunkExist(x, y) >= 0) return;
-	var planetsAmount = Math.floor(Math.map(Math.random(), 0, 1, 2, 6));
-
-	for (var i = 0; i < planetsAmount; i++) {
-		var planetRadius = Math.map(Math.random(), 0, 1, 150, (chunkSize - 150) / (3 * planetsAmount)),
-			planetColour = planetColours[Math.floor(Math.random() * planetColours.length)],
-			enemyAmount = Math.floor(Math.map(Math.random(), 0, 1, 0, (planetRadius < 200) ? 2 : 4)),
-			planetPosition = {px: (((i + 1) / planetsAmount) + x) * chunkSize, py: Math.map(Math.random(), 0, 1, y * chunkSize, (y + 1) * chunkSize)};
-
-		planets.push(new Planet(planetPosition.px, planetPosition.py, planetRadius, planetColour, enemyAmount));
-	}
-	chunks.push({x: x, y: y});
+function Player(name, appearance){
+	this.name = name;
+	this.appearance = appearance;
+	this.box = new Rectangle(new Point(0, 0), 0, 0);
+	this.walkFrame = "_stand";
 }
 
-//resources need to be loaded in `resources` to have the following function working
+var planets = [],
+	enemies = [];
+
 function doPhysics() {
-	planets.forEach(function (planet) {
-		planet.enemies.forEach(function (enemy, ei) {
+	planet.enemies.forEach(function (enemy, ei) {
 			if (!(enemy.aggroBox.collision(player.box))){
 				enemy.box.angle = enemy.box.angle + Math.PI / 150;
 				enemy.fireRate = 0;
@@ -105,10 +43,8 @@ function doPhysics() {
 				enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - player.box.center.x, enemy.box.center.y - player.box.center.y);
 				if (++enemy.fireRate >= 20) {
 					enemy.fireRate = 0;
-					//SHOT.BOX SHOULD NOT BE A CIRCLE BUT A RECTANGLE
-					//TODO: replace this once obbObb collisions are supported
 					enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});//lt = lifetime
-					playSound("laser");//TODO: the server must tell the client to play this sound
+					playSound("laser");
 				}
 			}
 			enemy.shots.forEach(function (shot, si) {
@@ -121,8 +57,6 @@ function doPhysics() {
 				}
 			});
 		});
-	});
-
 	if (player.attachedPlanet >= 0){
 		var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].box.radius);
 		if (controls["moveLeft"] > 0){

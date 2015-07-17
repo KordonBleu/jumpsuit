@@ -13,5 +13,3 @@ lobbyOkay.addEventListener("click", function (e){
 		cancelHandler(e);
 	}		
 });
-
-

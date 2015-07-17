@@ -17,11 +17,10 @@ var canvas = document.getElementById("canvas"),
 		get walkFrame(){
 			return this._walkFrame;
 		},
-		attachedPlanet: 0,
-		oldChunkX: 0, oldChunkY: 0
+		attachedPlanet: 0
 	},
+	otherPlayers = [],
 	game = {
-		paused: false,
 		muted: false,
 		dragStartX: 0,
 		dragStartY: 0,
@@ -38,7 +37,8 @@ var canvas = document.getElementById("canvas"),
 		crouch: 0,
 		jetpack: 0,
 		moveLeft: 0,
-		moveRight: 0
+		moveRight: 0,
+		run: 0
 	};
 
 function init() {//init is done differently in the server
@@ -90,13 +90,6 @@ function init() {//init is done differently in the server
 
 	loadProcess(function(){//gets called once every resource is loaded
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
-
-  		for (var y = -1; y <= 1; y++){
-  			for (var x = -1; x <= 1; x++){
-  				chunks.addChunk(x, y);
-  				if (x === 0 && y === 0) player.attachedPlanet = planets.length - 1;
-  			}
-  		}
   		document.getElementById("multiplayer-box").className = "multiplayer-box";
 		loop();
 	});
@@ -160,16 +153,21 @@ function loop(){
 		return lines;
 	}
 	function drawChat(){
-		context.fillStyle = "#eee";
 		context.font = "14px Open Sans";
 		var y = 0;
 		for (var i = 0; i < chat.history.length; i++){
-			var text = wrapText(chat.history[i], 300);
+			var text = wrapText((chat.history[i].pid !== -1 ? chat.history[i].name + ": " : "") + chat.history[i].content, 300);
+
 			if (y + text.length * 14 > canvas.height - 380) {
 				if (chat.history.length > 48) chat.length = 48;
 				return;
 			}
-			for (var j = 0; j < text.length; j++) context.fillText(text[j], 18, 150 + y + j * 17);
+			for (var j = 0; j < text.length; j++) {
+				if (chat.history[i].pid === -1) context.fillStyle = "#fff37f";
+				else if (chat.history[i].name === player.playerName) context.fillStyle = "#56d7ff";
+				else context.fillStyle = "#eee";
+				context.fillText(text[j], 18, 150 + y + j * 17);				
+			}
 			y += text.length * 17 + 3;
 		}
 	}
@@ -266,10 +264,6 @@ function loop(){
 
 
 	//layer 2: the game
-	doPhysics();
-
-	offsetX = ((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
-	offsetY = ((player.box.center.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + offsetX, canvas.clientHeight/2 + offsetY), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
 
@@ -280,23 +274,38 @@ function loop(){
 
 		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
 
-		planet.enemies.forEach(function (enemy, ei) {
-			enemy.shots.forEach(function (shot){
-				if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - offsetX, shot.box.center.y - offsetY, shot.box.angle, false);
-			});
-			context.fillStyle = "#aaa";
-			if (windowBox.collision(enemy.aggroBox)) strokeCircle(enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, 350, 4);
-			if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, enemy.box.angle, false);
-		});
-
 		var deltaX = planet.box.center.x - player.box.center.x,
 			deltaY = planet.box.center.y - player.box.center.y,
 			distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2),
 			origX = player.box.center.x - offsetX,
 			origY = player.box.center.y - offsetY;
 
-		if (Math.pow(distPowFour, 1 / 4) < chunkSize && player.attachedPlanet === -1) drawArrow(origX, origY, Math.atan2(planet.box.center.x - offsetX - origX, planet.box.center.y - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
+		if (Math.pow(distPowFour, 1 / 4) < 4000 && player.attachedPlanet === -1) drawArrow(origX, origY, Math.atan2(planet.box.center.x - offsetX - origX, planet.box.center.y - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
 	});
+
+	enemies.forEach(function (enemy, ei) {
+		enemy.shots.forEach(function (shot){
+			if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - offsetX, shot.box.center.y - offsetY, shot.box.angle, false);
+		});
+		context.fillStyle = "#aaa";
+		if (windowBox.collision(enemy.aggroBox)) strokeCircle(enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, 350, 4);
+		if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, enemy.box.angle, false);
+	});
+
+	context.fillStyle = "#eee";
+	context.font = "22px Open Sans";
+	context.textAlign = "center";
+	otherPlayers.forEach(function (otherPlayer){
+		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
+			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
+		context.fillText(otherPlayer.name, otherPlayer.box.center.x - offsetX, otherPlayer.box.center.y - offsetY - distance);
+		drawRotatedImage(res,
+			otherPlayer.box.center.x - offsetX,
+			otherPlayer.box.center.y - offsetY,
+			otherPlayer.box.angle,
+			otherPlayer.looksLeft);
+	});
+
 
 	fadeBackground(fadeMusic);
 
