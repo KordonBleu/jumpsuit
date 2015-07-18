@@ -51,6 +51,7 @@ function playSound(name, distance) {
 	sound.source.start(0);
 }
 function stopSound(name) {
+	if(sounds[name] === undefined) return;
 	sounds[name].source.stop();
 }
 
