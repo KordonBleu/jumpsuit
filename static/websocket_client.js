@@ -15,20 +15,21 @@ var MESSAGE_ERROR = 0,
 	MESSAGE_PLAYER_CONTROLS = 14;
 
 function connection(){
-	var socket = new WebSocket("ws://localhost:8080"), pid = -1;
+	var socket = new WebSocket("ws://localhost:8080"),
+		pid = -1;
 	this.alive = function (){ return socket.readyState === 1; }
 	
 
 	socket.onopen = function(e){
 		// this.socket.send(JSON.stringify({ msgType: MESSAGE_CONNECT, data: {name: player.playerName, appearance: player.name, lobby: 0}})); use if lobby is selected
 		this.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
-		document.getElementById("button-3").disabled = false;
-		document.getElementById("button-2").textContent = "Refresh";
-		document.getElementById("button-2").disabled = false;
+		document.getElementById("new-lobby").disabled = false;
+		document.getElementById("refresh-or-leave").disabled = false;
+		document.getElementById("disconnect").disabled = false;
 	};
 	socket.onerror = function(e){
-		document.getElementById("button-3").disabled = true;
-		document.getElementById("button-2").disabled = true;
+		document.getElementById("new-lobby").disabled = true;
+		document.getElementById("refresh-or-leave").disabled = true;
 		this.close();		
 	};
 	socket.onmessage = function(message){	
@@ -51,7 +52,7 @@ function connection(){
 					break;
 				case MESSAGE_CONNECT_SUCCESSFUL:					
 					pid = msg.data.pid;
-					document.getElementById("button-2").textContent = "Leave Lobby";
+					document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
 					break;
 				case MESSAGE_PLAYER_DATA:
 					var i, list = document.getElementById("player-list"), li;
@@ -68,7 +69,7 @@ function connection(){
 				case MESSAGE_PLAYER_POSITIONS:
 					break;
 				case MESSAGE_ERROR:
-					alert("Error", msg.data.content);
+					alert("Error: ", msg.data.content);
 					break;
 			}
 		} catch(err) {
@@ -117,9 +118,9 @@ function connection(){
 var currentConnection = new connection();
 
 function closeSocket(){
-	document.getElementById("button-3").disabled = true;
-	document.getElementById("button-2").textContent = "Refresh";
-	document.getElementById("button-2").disabled = true;
+	document.getElementById("new-lobby").disabled = true;
+	document.getElementById("refresh-or-leave").textContent = "Refresh";
+	document.getElementById("refresh-or-leave").disabled = true;
 	currentConnection.close();
 }
 function openSocket(){
