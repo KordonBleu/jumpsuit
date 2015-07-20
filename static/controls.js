@@ -1,3 +1,7 @@
+String.prototype.ucFirst = function (){
+	//uppercasing the first letter
+	return this.charAt(0).toUpperCase() + this.slice(1);
+}
 function changeTab (obj){
 	var tab = obj.textContent;
 	document.getElementById("donate").setAttribute("style", "display: " + ((tab == "Donate") ? "block" : "none"));

@@ -1,13 +1,37 @@
 //Game engine to be shared between the client and server
 "use strict";
 
+var resPaths = [
+	"background.png",
+	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
+	"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
+	"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
+	"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
+	"alienGreen_badge.svg", "alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
+	"alienPink_badge.svg", "alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
+	"alienYellow_badge.svg", "alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
+	"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
+	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
+	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
+	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg"
+	],
+	resources = {};
+
+if(typeof module !== "undefined" && typeof module.exports !== "undefined") {
+	var collisions = require("./collisions.js"),
+		Point = collisions.Point,
+		Rectangle = collisions.Rectangle,
+		Circle = collisions.Circle,
+		Vector = collisions.vector,
+		sizeOf = require("image-size");
+		resPaths.forEach(function(path, i) {
+			resources[path.slice(0, path.lastIndexOf("."))] = sizeOf("./static/assets/images/" + path);
+		});
+}
+
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	//mapping a value x from a range to another range to allow scaling or moving values easily
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
-String.prototype.ucFirst = function (){
-	//uppercasing the first letter
-	return this.charAt(0).toUpperCase() + this.slice(1);
 }
 
 function Planet(x, y, radius, color, enemyAmount) {
@@ -161,20 +185,6 @@ function doPhysics() {
 			player.vel.apply(player.box.center);
 		}
 	} else {
-		var chunkX = Math.floor(player.box.center.x / chunkSize),
-			chunkY = Math.floor(player.box.center.y / chunkSize);
-
-		if (chunkX !== player.oldChunkX || chunkY !== player.oldChunkY){
-			for (var y = -3; y <= 3; y++){
-				for (var x = -3; x <= 3; x++){
-					if (y >= -1 && y <= 1 && x >= -1 && x <= 1) chunks.addChunk(chunkX + x, chunkY + y);
-					else chunks.removeChunk(chunkX + x, chunkY + y);
-				}
-			}
-		}
-
-		player.oldChunkX = chunkX;
-		player.oldChunkY = chunkY;
 
 		planets.forEach(function (planet, pi){
 			var deltaX = planet.box.center.x - player.box.center.x,
@@ -215,4 +225,13 @@ function doPhysics() {
 
 		player.vel.apply(player.box.center);
 	}
+}
+
+if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {
+	doPhysics: doPhysics,
+	chunks: chunks,
+	planets: planets,
+	planetColors: planetColours,
+	Planet: Planet,
+	Enemy: Enemy
 }

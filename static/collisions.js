@@ -232,3 +232,10 @@ Object.defineProperty(Circle.prototype, "collision", {
 		}
 	}
 });
+
+if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
+	Point: Point,
+	Vector: Vector,
+	Rectangle: Rectangle,
+	Circle: Circle
+};

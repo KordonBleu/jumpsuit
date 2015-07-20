@@ -1,19 +1,3 @@
-var MESSAGE_ERROR = 0,
-	MESSAGE_CONNECT = 1,
-	MESSAGE_GET_LOBBIES = 2,
-	MESSAGE_SENT_LOBBIES = 3,
-	MESSAGE_SETTINGS_CHANGED = 4,
-	MESSAGE_CREATE_LOBBY = 5,
-	MESSAGE_CONNECT_ERR_FULL = 6,
-	MESSAGE_CONNECT_SUCCESSFUL = 7,
-	MESSAGE_PLAYER_DATA = 8,
-	MESSAGE_PLAYER_POSITIONS = 9,
-	MESSAGE_CHUNKS = 10,
-	MESSAGE_CHECK_ALIVE = 11,
-	MESSAGE_DISCONNECT = 12,
-	MESSAGE_LEAVE_LOBBY = 13,
-	MESSAGE_PLAYER_CONTROLS = 14;
-
 function connection(){
 	var socket = new WebSocket("ws://localhost:8080"),
 		pid = -1;
@@ -21,8 +5,8 @@ function connection(){
 	
 
 	socket.onopen = function(e){
-		// this.socket.send(JSON.stringify({ msgType: MESSAGE_CONNECT, data: {name: player.playerName, appearance: player.name, lobby: 0}})); use if lobby is selected
-		this.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
+		// this.socket.send(JSON.stringify({ msgType: MESSAGE.CONNECT, data: {name: player.playerName, appearance: player.name, lobby: 0}})); use if lobby is selected
+		this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
 		document.getElementById("new-lobby").disabled = false;
 		document.getElementById("refresh-or-leave").disabled = false;
 		document.getElementById("disconnect").disabled = false;
@@ -30,13 +14,13 @@ function connection(){
 	socket.onerror = function(e){
 		document.getElementById("new-lobby").disabled = true;
 		document.getElementById("refresh-or-leave").disabled = true;
-		this.close();		
+		this.close();
 	};
-	socket.onmessage = function(message){	
+	socket.onmessage = function(message){
 		try{
 			msg = JSON.parse(message.data);
 			switch(msg.msgType){
-				case MESSAGE_SENT_LOBBIES:
+				case MESSAGE.SENT_LOBBIES:
 					var i, list = document.getElementById("player-list"), el, li;
 					while (list.firstChild) {
    						list.removeChild(list.firstChild);
@@ -50,11 +34,11 @@ function connection(){
 						list.appendChild(li);
 					}
 					break;
-				case MESSAGE_CONNECT_SUCCESSFUL:					
+				case MESSAGE.CONNECT_SUCCESSFUL:
 					pid = msg.data.pid;
 					document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
 					break;
-				case MESSAGE_PLAYER_DATA:
+				case MESSAGE.PLAYER_DATA:
 					var i, list = document.getElementById("player-list"), li;
 					while (list.firstChild) {
 						list.removeChild(list.firstChild);
@@ -65,10 +49,10 @@ function connection(){
 						if (i === pid) li.style.color = "#f33";
 						list.appendChild(li);
 					}
-					break;				
-				case MESSAGE_PLAYER_POSITIONS:
 					break;
-				case MESSAGE_ERROR:
+				case MESSAGE.PLAYER_POSITIONS:
+					break;
+				case MESSAGE.ERROR:
 					alert("Error: ", msg.data.content);
 					break;
 			}
@@ -78,38 +62,38 @@ function connection(){
 	};
 	this.close = function(){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_DISCONNECT,
+			msgType: MESSAGE.DISCONNECT,
 			data: {uid: location.hash.substr(3), pid: pid}
 		}));
 		location.hash = "";
-		socket.close();		
+		socket.close();
 	};
 	this.connectLobby = function (){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_CONNECT,
+			msgType: MESSAGE.CONNECT,
 			data: {uid: location.hash.substr(3), name: player.playerName, appearance: player.name}
 		}));
 	};
 	this.createLobby = function (n){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_CREATE_LOBBY,
+			msgType: MESSAGE.CREATE_LOBBY,
 			data: {name: n, privateLobby: false}
 		}));
 		this.refreshLobbies();
 	};
 	this.refreshLobbies = function(){
-		socket.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
+		socket.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
 	};
 	this.leaveLobby = function(){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_LEAVE_LOBBY,
+			msgType: MESSAGE.LEAVE_LOBBY,
 			data: {pid: pid, uid: location.hash.substr(3)}
 		}));
 		location.hash = "";
 	};
 	this.sendSettings = function (){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_PLAYER_DATA,
+			msgType: MESSAGE.PLAYER_DATA,
 			data: {pid: pid, uid: location.hash.substr(3), name: player.playerName, appearance: player.name}
 		}));
 	};

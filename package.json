@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "A sweet canvas game",
   "dependencies": {
-    "ws": "^0.7.2"
+    "ws": "^0.7.2",
+	"image-size": "0.x"
   },
   "repository": {
     "type": "git",

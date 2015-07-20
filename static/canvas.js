@@ -2,7 +2,6 @@
 
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
-	resources = {},
 	meteors = [],
 	pause = 0,
 	player = {
@@ -17,7 +16,7 @@ var canvas = document.getElementById("canvas"),
 		get walkFrame(){
 			return this._walkFrame;
 		},
-		attachedPlanet: 0,
+		attachedPlanet: -1,
 		oldChunkX: 0, oldChunkY: 0,
 		jetpackSoundPlaying: false
 	},
@@ -63,7 +62,7 @@ function init() {//init is done differently in the server
 		}
 		function drawBar() {
 			context.fillStyle = "#007d6c";
-			context.fillRect(0, 0, ((loadProcess.progress + 1) / init.paths.length) * canvas.width, 15);
+			context.fillRect(0, 0, ((loadProcess.progress + 1) / resPaths.length) * canvas.width, 15);
 		}
 
 		if (loadProcess.progress === undefined) {
@@ -75,7 +74,7 @@ function init() {//init is done differently in the server
 		function eHandler(e) {
 			e.target.removeEventListener("load", eHandler);
 			loadProcess.progress++;
-			if (loadProcess.progress !== init.paths.length) {
+			if (loadProcess.progress !== resPaths.length) {
 				loadProcess(callback);
 			} else {
 				window.removeEventListener("resize", resizeHandler);
@@ -86,38 +85,17 @@ function init() {//init is done differently in the server
 		drawBar();
 		var r = new Image();
 		r.addEventListener("load", eHandler);
-		r.src = "assets/images/" + init.paths[loadProcess.progress];
-		resources[init.paths[loadProcess.progress].slice(0, init.paths[loadProcess.progress].lastIndexOf("."))] = r;
+		r.src = "assets/images/" + resPaths[loadProcess.progress];
+		resources[resPaths[loadProcess.progress].slice(0, resPaths[loadProcess.progress].lastIndexOf("."))] = r;
 	}
 
 	loadProcess(function(){//gets called once every resource is loaded
 		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
 
-  		for (var y = -1; y <= 1; y++){
-  			for (var x = -1; x <= 1; x++){
-  				chunks.addChunk(x, y);//the server should do that...
-  				if (x === 0 && y === 0) player.attachedPlanet = planets.length - 1;
-  			}
-  		}
   		document.getElementById("multiplayer-box").className = "multiplayer-box";
 		loop();
 	});
 }
-init.paths = [//this could be in the engine
-	"background.png",
-	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
-	"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
-	"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
-	"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
-	"alienGreen_badge.svg", "alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
-	"alienPink_badge.svg", "alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
-	"alienYellow_badge.svg", "alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
-	"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
-	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
-	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
-	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg"
-];
-
 
 function loop(){
 	handleGamepad();
