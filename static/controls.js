@@ -1,3 +1,7 @@
+String.prototype.ucFirst = function (){
+	//uppercasing the first letter
+	return this.charAt(0).toUpperCase() + this.slice(1);
+}
 function changeTab (obj){
 	var tab = obj.textContent;
 	document.getElementById("donate").setAttribute("style", "display: " + ((tab == "Donate") ? "block" : "none"));
@@ -37,7 +41,7 @@ function handleInputMobile(e){
 			e.preventDefault();
 			if (e.type.indexOf("move") !== -1) return;
 			var s = (e.type.indexOf("start") > -1 && e.type.indexOf("end") == -1);
-			if (controls[touch.target.id] !== undefined) controls[touch.target.id] = s;
+			if (player.controls[touch.target.id] !== undefined) player.controls[touch.target.id] = s;
 		}
 	}
 }
@@ -51,7 +55,7 @@ function handleInput(e){
 	} else if (!changingKeys) {
 		if(e.type.substring(0, 3) === "key"){
 			triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
-		} else if (controls[e.target.id] !== undefined){
+		} else if (player.controls[e.target.id] !== undefined){
 			e.preventDefault();
 			triggered = e.target.id;
 		}
@@ -66,27 +70,27 @@ function handleInput(e){
 			if (s == 1) chat.enabled = !chat.enabled;
 		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chat.enabled && framesClosed) {
 			e.preventDefault();
-			controls[triggered] = s;
-			currentConnection.refreshControls(controls);
+			player.controls[triggered] = s;
+			currentConnection.refreshControls(player.controls);
 		}
 	}
 }
 handleInput.keyMap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
 
-function dragging(ev, x, y){
+function dragging(ev, x, y){	
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
-		game.dragX = x;
-		game.dragY = y;
-		game.dragStartX = x;
-		game.dragStartY = y;
+		game.drag.x = x;
+		game.drag.y = y;
+		game.dragStart.x = x;
+		game.dragStart.y = y;
 	} else if (ev.indexOf("end") !== -1 || ev.indexOf("up") !== -1){
-		game.dragX = 0;
-		game.dragY = 0;
-		game.dragStartX = 0;
-		game.dragStartY = 0;
+		game.drag.x = 0;
+		game.drag.y = 0;
+		game.dragStart.x = 0;
+		game.dragStart.y = 0;
 	} else if (ev.indexOf("move") !== -1){
-		game.dragX = game.dragStartX !== 0 ? x : 0;
-		game.dragY = game.dragStartY !== 0 ? y : 0;
+		game.drag.x = game.dragStart.x !== 0 ? x : 0;
+		game.drag.y = game.dragStart.y !== 0 ? y : 0;
 	}
 }
 
@@ -103,18 +107,18 @@ document.getElementById("audio-icon").addEventListener("click", function(ev){
 function handleGamepad(){
 	var gamepads = navigator.getGamepads(), g = gamepads[0];
 	if (typeof(g) !== "undefined"){
-		controls["jump"] = g.buttons[0].value;
-		controls["run"] = g.buttons[1].value;
-		controls["crouch"] = g.buttons[4].value;
-		controls["jetpack"] = g.buttons[7].value;
+		player.controls["jump"] = g.buttons[0].value;
+		player.controls["run"] = g.buttons[1].value;
+		player.controls["crouch"] = g.buttons[4].value;
+		player.controls["jetpack"] = g.buttons[7].value;
 
-		controls["moveLeft"] = 0;
-		controls["moveRight"] = 0;
-		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
-		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.dragX = -canvas.width / 2 * g.axes[2];
-		else game.dragX = 0;
-		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.dragY = -canvas.height / 2 * g.axes[3];
-		else game.dragY = 0;
+		player.controls["moveLeft"] = 0;
+		player.controls["moveRight"] = 0;
+		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) player.controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
+		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
+		else game.drag.x = 0;
+		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
+		else game.drag.y = 0;
 	}
 }
 
@@ -135,7 +139,7 @@ for (action in reverseKeyMap) {
 	rowEl.appendChild(actionEl);
 
 	var slice = reverseKeyMap[action];
-	for (var i = 0; i != 2; i++){		
+	for (var i = 0; i != 2; i++){
 		keyEl = document.createElement("td");
 		if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
 		else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
@@ -155,6 +159,7 @@ settingsEl.addEventListener("click", function(e) {
 			e.target.parentNode.parentNode.childNodes[row].className = "";
 			document.removeEventListener("keydown", wrap);
 		}		
+
 		if (typeof obj !== "undefined") {
 			obj.className = "selected";
 			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
@@ -232,7 +237,6 @@ document.getElementById("chat-input").addEventListener("keydown", function(e){
 		}
 		
 		var filteredPlayerList = (player.playerName.indexOf(this.search) === 0) ? [player.playerName] : [];
-		console.log(otherPlayers);
 		for (pid in otherPlayers){
 			if (otherPlayers[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[pid].name);
 		}
@@ -241,14 +245,11 @@ document.getElementById("chat-input").addEventListener("keydown", function(e){
 			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];			
 			this.searchIndex++;
 			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0; 
-		}		
-			
+		}			
 	} else {
-
 		this.playerSelection = false;
 	}
 });
-
 
 var chosenAppearance = "alienBlue";
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
@@ -256,8 +257,7 @@ var chosenAppearance = "alienBlue";
 		chosenAppearance = this.id.replace("player", "alien");
 	});
 });
-
-document.getElementById("button-1").addEventListener("click", function(){
+document.getElementById("disconnect").addEventListener("click", function(){
 	if (this.textContent == "Disconnect"){
 		this.textContent = "Connect";
 		closeSocket();
@@ -266,13 +266,13 @@ document.getElementById("button-1").addEventListener("click", function(){
 		openSocket();		
 	}
 });
-document.getElementById("button-2").addEventListener("click", function(){
+document.getElementById("refresh-or-leave").addEventListener("click", function(){
 	if (this.textContent === "Leave Lobby")	leaveLobby();
 	else refreshLobbies();
 });
-document.getElementById("button-3").addEventListener("click", newLobby);
-document.getElementById("button-4").addEventListener("click", function(){
-	player.name = chosenAppearance;
-	player.playerName = document.getElementById("name").value;
+document.getElementById("new-lobby").addEventListener("click", newLobby);
+document.getElementById("save").addEventListener("click", function(){
+	player.appearance = chosenAppearance;
+	player.name = document.getElementById("name").value;
 	settingsChanged();
 });

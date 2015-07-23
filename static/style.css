@@ -164,9 +164,8 @@ button {
 .multiplayer-box h2, h4{
 	display: inline-block;
 	margin: 5px 0;
-	width: 50%;
 }
-.multiplayer-box button{
+.multiplayer-box .button, button{
 	box-sizing: border-box;
 	cursor: pointer;
 	float: left;
@@ -220,6 +219,7 @@ button {
 .multiplayer-box form .playerSelect:hover {
 	background-size: 85px 85px;
 }
+
 .multiplayer-box form #playerBlue {background-image: url("assets/images/alienBlue_badge.svg");}
 .multiplayer-box form #playerBeige {background-image: url("assets/images/alienBeige_badge.svg");}
 .multiplayer-box form #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}

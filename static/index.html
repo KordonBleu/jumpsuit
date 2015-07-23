@@ -13,23 +13,22 @@
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
 		<img src="assets/images/controls/unmute.svg" id="audio-icon"/>
 		<ul id="controls">
-			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"></img><br/>
-				<img src="assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"></img>
-				<img src="assets/images/controls/crouch.svg" alt="crouch control" id="crouch"></img></li>
-			<li><img src="assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"></img>
-			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"></img></li>
+			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
+				<img src="assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
+				<img src="assets/images/controls/crouch.svg" alt="crouch control" id="crouch"/></li>
+			<li><img src="assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"/>
+			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/></li>
 		</ul>
-		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150 />
+		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
 			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
-			<p>Music by Arnaud Poyeton<br/>
+			<p>Music &amp; sound effects by Arnaud Poyeton (except the laser sound which is from Kenney)<br/>
 			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
-
-			<a class="button" onclick="changeTab(this)">Share</a><a class="button" onclick="changeTab(this)">Donate</a>
+			<a class="button" onclick="changeTab(this);">Share</a><a class="button" onclick="changeTab(this);">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
-				<div id="donate">
+				<div id="donate" style="display: none;">
 					<h3>Donate</h3>
 					<p>This game is free software: you can fork it and edit it.<br/>
 						Despite that we would appreciate it if you'd donate to us by simply clicking the link below.<br/><br/>
@@ -45,20 +44,26 @@
 			</div>
 		</div>
 		<div id="multiplayer-box" class="multiplayer-box hidden">
-			<button id="button-1" style="float: right;">Disconnect</button>
-			<button id="button-2" style="float: right;" disabled>Refresh</button>
-			<button id="button-3" style="float: right;" disabled>Create New Lobby</button>
+			<button id="disconnect" style="float: right;">Disconnect</button>
+			<button id="refresh-or-leave" style="float: right;">Refresh</button>
+			<button id="new-lobby" style="float: right;">Create New Lobby</button>
 			<h2>Multiplayer Lobby</h2>
 			<h4 id="status">Waiting for other players...</h4>
 			<ul id="player-list">
-				<li>Couldnt connect to a server, press "Connect" to attemp a reconnection</li>
+				<li>Fju</li>
+				<li>Getkey</li>
+				<li>A guy with a long name</li>
+				<li>Arnaud Poyeton</li>
+				<li>Kenney Vleugels</li>
+				<li>Piotr Gawiński</li>
+				<li>Fju</li>
+				<li>Fju</li>
 			</ul>
 			<hr>
 			<h4>Settings</h4>
-			<form onsubmit="return false;">
+			<form>
 				<label>Name: </label>
-				<input id="name" type="text" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" value="Unnamed Player"/>
-				<div class="placeholder"></div>
+				<input type="text" id="name" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'"/><div class="placeholder"></div>
 				<label>Appearance: </label>
 				<div id="playerBlue" class="playerSelect"></div>
 				<div id="playerBeige" class="playerSelect"></div>
@@ -67,7 +72,7 @@
 				<div id="playerYellow" class="playerSelect"></div>
 				<div class="placeholder"></div>
 			</form>
-			<div class="key-info" id="key-info">Note that all F-Keys (F1 to F12) won't do their default job once they are listed here. <br/> Also you can't assign Mouse keys to the key settings! <br/> <br/>You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.</div>
+			<div class="key-info" id="key-info">Note that all F-Keys (F1 to F12) won't do their default job once they are listed here. <br> Also you can't assign Mouse keys to the key settings! <br> <br>You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.</div>
 			<table id="key-settings">
 				<tr id="key-header">
 					<th id="key-action">Actions</th>
@@ -75,7 +80,7 @@
 					<th id="key-col-alt">Alternate Keys</th>
 				</tr>
 			</table>
-			<button id="button-4">Save</button> <button id="button-5">Reset</button>
+			<button id="save">Save</button> <button id="reset">Reset</button>
 		</div>
 		<dialog id="lobby-name-dialog">
 			Type in your prefered Lobby name!<br/>
@@ -84,10 +89,11 @@
 		</dialog>
 		<script src="dialogs.js"></script>
 		<script src="audio.js"></script>
+		<script src="engine.js"></script>
 		<script src="collisions.js"></script>
 		<script src="canvas.js"></script>
-		<script src="engine.js"></script>
+		<script src="message.js"></script>
 		<script src="websocket_client.js"></script>
 		<script src="controls.js"></script>		
-	<body>
+	</body>
 </html>

@@ -1,25 +1,36 @@
 "use strict";
 function GeometricObject() {
-	//to inherit from `GeometricObject`:
-	//call `return GeometricObject.call(this);` at the end of any constructor
-	//create a new prototype for your object, whose prototype is `GeometricObject.prototype`. Example: `YourConstructor.prototype = Object.create(GeometricObject.prototype);`.
-	var handler = {
-		set: function(target, name, value) {
-			if(target.hasOwnProperty(name)) {
-				target._cache.needsUpdate = true;
-				target[name] = value;
-				return true;
-			} else {
-				throw new ReferenceError("This object doesn't allow properties to be added");
-			}
+	//To inherit from `GeometricObject`:
+	// * call `return GeometricObject.call(this);` at the end of any constructor
+	// * create a new prototype for your object, whose prototype is `GeometricObject.prototype`. Example: `YourConstructor.prototype = Object.create(GeometricObject.prototype);`.
+	// * add a `_proxyMap` property to your object (directly or to its prototype).
+	this._cache = {};
+	this._upToDate = {};
+	this._parents = [];
+	if(typeof Proxy !== "undefined") return new Proxy(this, GeometricObject.proxyHandler);
+}
+GeometricObject.proxyHandler = {
+	set: function(target, name, value) {
+		if(name === "_proxyMap") {
+			target[name] = value;
+			return true;
 		}
-	}
-	this._cache = {
-		needsUpdate: true
-	};
-	if(typeof Proxy !== "undefined"){
-		var proxy = new Proxy(this, handler);
-		return proxy;
+		if(target.hasOwnProperty(name)) {
+			target[name] = value;
+			for(var key in target._proxyMap) {
+				if(key === name) {
+					target._proxyMap[key].forEach(function(key) {
+						if(target._parents.length === 0) target._upToDate[key] = false;
+						else target._parents.forEach(function(parent) {
+							parent._upToDate[key] = false;
+						});
+					});
+					return true;
+				}
+			}
+			return true;
+		}
+		return false;
 	}
 }
 GeometricObject.prototype.circleObb = function(circle, rect) {
@@ -43,16 +54,20 @@ GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 		rectOne = new Rectangle(rectOne.center, rectOne.width, rectOne.height),
 		rectTwo = new Rectangle(rectTwo.center, rectTwo.width, rectTwo.height, rectTwoRot);
 
+	rectOne.center._parents.pop();//rectOne and RectTwo should be garbage collected at the end of the scope
+	rectTwo.center._parents.pop();//so references to them must be made unreachable
+
 	//we can't check against the diagonal because it is too CPU intensive
 	var sideSum = rectTwo.width + rectTwo.height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
 	if (!this.aabbAabb(rectOne, new Rectangle(new Point(rectTwo.center.x, rectTwo.center.y), sideSum, sideSum))) return false;//eliminates most non-collisions
 
-	var axesVectOne =  [new Vector(1, 0), new Vector(0, 1)],//rectOne is an AABB
+	var axesVectOne = [new Vector(1, 0), new Vector(0, 1)],//rectOne is an AABB
 		axesVectTwo = [];
 	rectTwo.vertices.forEach(function(vertex, index, array) {
 		var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
 		vector = new Vector(vertex, prevVertex).orthogonalVector;//this is stupid for a rectangle, not for a polygon
 
+		//vector.normalize();
 		axesVectTwo.push(vector);
 	});
 	var axesVect = axesVectOne.concat(axesVectTwo);
@@ -75,9 +90,6 @@ GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 }
 
 
-/* Do NOT inherit from the following classes!
-   Why? Because the cache will be set to be refreshed if you modify
-   any property of the instance of the inheriting class. */
 function Point(x, y) {
 	this.x = x;
 	this.y = y;
@@ -94,21 +106,48 @@ function Vector(argOne, argTwo) {
 	}
 	return GeometricObject.call(this);
 }
-Object.defineProperty(Vector.prototype, "orthogonalVector", {
-	get: function() {
-		if(this._cache.needsUpdate) {
-			this._cache.needsUpdate = false;
-			this._cache.orthogonalVector = new Vector(-this.y, this.x);
+Vector.prototype._proxyMap = {
+	x: ["orthogonalVector", "length"],
+	y: ["orthogonalVector", "length"]
+};
+Object.defineProperties(Vector.prototype, {
+	"orthogonalVector": {
+		get: function() {
+			if(!this._upToDate.orthogonalVector) {
+				this._upToDate.orthogonalVector = true;
+				this._cache.orthogonalVector = new Vector(-this.y, this.x);
+			}
+			return this._cache.orthogonalVector;
 		}
-		return this._cache.orthogonalVector;
+	},
+	"length": {
+		get: function() {
+			if(!this._upToDate.length) {
+				this._upToDate.length = true;
+				this._cache.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+			}
+			return this._cache.length;
+		}
 	}
 });
 Vector.prototype.dotProduct = function(vector) {
 	return this.x*vector.x + this.y*vector.y;
 }
 
+Vector.prototype.normalize = function() {
+	this.x /= this.length;
+	this.y /= this.length;
+}
+Vector.prototype.apply = function(point) {
+	point.x += this.x;
+	point.y += this.y;
+}
+
 function Rectangle(centerPoint, width, height, angle) {
 	this.center = centerPoint;
+	this.center._proxyMap = Rectangle.centerProxyMap;//TODO: alow differents parents
+	this.center._parents.push(this);//to have differents maps applied to them
+
 	this.width = width;
 	this.height = height;
 
@@ -117,15 +156,23 @@ function Rectangle(centerPoint, width, height, angle) {
 	return GeometricObject.call(this);
 }
 Rectangle.prototype = Object.create(GeometricObject.prototype);
+Rectangle.prototype._proxyMap = {
+	width: ["vertices", "AAVertices"],
+	height: ["vertices", "AAVertices"],
+	angle: ["vertices"]
+};
+Rectangle.centerProxyMap = {
+	x: ["vertices", "AAVertices"],
+	y: ["vertices", "AAVertices"]
+};
 Object.defineProperties(Rectangle.prototype, {
 	"vertices": {
 		get: function() {
-			if(this._cache.needsUpdate || this.center._cache.needsUpdate) {
-				this._cache.needsUpdate = false;
-				this.center._cache.needsUpdate = false;
+			if(!this._upToDate.vertices) {
+				this._upToDate.vertices = true;
 
 				this._cache.vertices = [];
-				this.unrotatedVertices.forEach(function(vertex) {
+				this.AAVertices.forEach(function(vertex) {
 					var x = vertex.x - this.center.x,
 						y = vertex.y - this.center.y,
 						newVertex = new Point(
@@ -136,11 +183,16 @@ Object.defineProperties(Rectangle.prototype, {
 				}, this);
 			}
 			return this._cache.vertices;
-		}
+		},
+		enumerable: true
 	},
-	"unrotatedVertices": {
+	"AAVertices": {
 		get: function() {
-			return [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2)];
+			if(!this._upToDate.AAVertices) {
+				this._upToDate.AAVertices = true;
+				this._cache.AAVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2)];
+			}
+			return this._cache.AAVertices;
 		}
 	}
 });
@@ -182,3 +234,10 @@ Object.defineProperty(Circle.prototype, "collision", {
 		}
 	}
 });
+
+if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
+	Point: Point,
+	Vector: Vector,
+	Rectangle: Rectangle,
+	Circle: Circle
+};

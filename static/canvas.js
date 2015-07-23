@@ -2,36 +2,21 @@
 
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
-	resources = {},
 	meteors = [],
-	pause = 0,
-	player = {
-		health: 10, facesLeft: false, name: "alienGreen", playerName: "Unnamed Player",
-		velX: 0, velY: 0,
-		_walkFrame: "_stand", walkCounter: 0, walkState: 0, fuel: 400,
-		set walkFrame(v){
-			this._walkFrame = v;
-			this.box.width = resources[this.name + this.walkFrame].width;
-			this.box.height = resources[this.name + this.walkFrame].height;
-		},
-		get walkFrame(){
-			return this._walkFrame;
-		},
-		attachedPlanet: 0
-	},
+	player,	
 	otherPlayers = [],
+	planets = [],
+	enemies = [],
 	game = {
 		muted: false,
-		dragStartX: 0,
-		dragStartY: 0,
-		dragX: 0,
-		dragY: 0	
+		dragStart: {x: 0, y: 0},
+		drag: {x: 0, y: 0},
+		offset: {x: 0, y: 0}
 	},
 	chat = {
 		history: [],
-		hidden: false
+		enabled: false
 	},
-	offsetX = 0, offsetY = 0,
 	controls = {
 		jump: 0,
 		crouch: 0,
@@ -62,7 +47,7 @@ function init() {//init is done differently in the server
 		}
 		function drawBar() {
 			context.fillStyle = "#007d6c";
-			context.fillRect(0, 0, ((loadProcess.progress + 1) / init.paths.length) * canvas.width, 15);
+			context.fillRect(0, 0, ((loadProcess.progress + 1) / resPaths.length) * canvas.width, 15);
 		}
 
 		if (loadProcess.progress === undefined) {
@@ -71,9 +56,10 @@ function init() {//init is done differently in the server
 			window.addEventListener("resize", resizeHandler);
 		}
 
-		function eHandler() {
+		function eHandler(e) {
+			e.target.removeEventListener("load", eHandler);
 			loadProcess.progress++;
-			if (loadProcess.progress !== init.paths.length) {
+			if (loadProcess.progress !== resPaths.length) {
 				loadProcess(callback);
 			} else {
 				window.removeEventListener("resize", resizeHandler);
@@ -82,33 +68,18 @@ function init() {//init is done differently in the server
 		}
 
 		drawBar();
-		var r = new Image();
-		r.addEventListener("load", eHandler);
-		r.src = "assets/images/" + init.paths[loadProcess.progress];
-		resources[init.paths[loadProcess.progress].slice(0, init.paths[loadProcess.progress].lastIndexOf("."))] = r;
+		var img = new Image();
+		img.addEventListener("load", eHandler);
+		img.src = "assets/images/" + resPaths[loadProcess.progress];
+		resources[resPaths[loadProcess.progress].slice(0, resPaths[loadProcess.progress].lastIndexOf("."))] = img;
 	}
 
 	loadProcess(function(){//gets called once every resource is loaded
-		player.box = new Rectangle(new Point(0, 0), resources[player.name + player.walkFrame].width, resources[player.name + player.walkFrame].height);
+		player = new Player("Unnamed Player", "alienGreen", 0, 0);
   		document.getElementById("multiplayer-box").className = "multiplayer-box";
 		loop();
 	});
 }
-init.paths = [//this could be in the engine
-	"background.png",
-	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
-	"shield.png", "pill_red.png", "laserBeam.png", "laserBeamDead.png",
-	"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
-	"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
-	"alienGreen_badge.svg", "alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
-	"alienPink_badge.svg", "alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
-	"alienYellow_badge.svg", "alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
-	"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
-	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
-	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
-	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg"
-];
-
 
 function loop(){
 	handleGamepad();
@@ -120,6 +91,7 @@ function loop(){
 		if (mirror === true) context.scale(-1, 1);
 		context.drawImage(image, -(image.width / 2), -(image.height / 2));
 		context.restore();
+		
 	}
 	function wrapText(text, maxWidth) {
 		var words = text.split(' '),
@@ -157,8 +129,7 @@ function loop(){
 		var y = 0;
 		for (var i = 0; i < chat.history.length; i++){
 			var text = wrapText((chat.history[i].pid !== -1 ? chat.history[i].name + ": " : "") + chat.history[i].content, 300);
-
-			if (y + text.length * 14 > canvas.height - 380) {
+			if (y + text.length * 14 > canvas.height - 380){
 				if (chat.history.length > 48) chat.length = 48;
 				return;
 			}
@@ -236,7 +207,7 @@ function loop(){
 
 	//layer 1: meteors
 	if (Math.random() < 0.01){
-		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1",	"meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
+		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1", "meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
 			m_rand = Math.floor(1 / Math.random()) - 1,
 			chosen_img = m_resources[(m_rand > m_resources.length - 1) ? m_resources.length - 1 : m_rand];
 
@@ -264,32 +235,32 @@ function loop(){
 
 
 	//layer 2: the game
-	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + offsetX, canvas.clientHeight/2 + offsetY), canvas.clientWidth, canvas.clientWidth),
+	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
-
+	//doPhysics();
 	planets.forEach(function (planet){
-		context.fillStyle = planet.color;
-		if (windowBox.collision(planet.atmosBox)) strokeCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.atmosBox.radius, 2);
-		if (windowBox.collision(planet.box)) fillCircle(planet.box.center.x - offsetX, planet.box.center.y - offsetY, planet.box.radius);
+		context.fillStyle = "#f33";
+		if (windowBox.collision(planet.atmosBox)) strokeCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
+		if (windowBox.collision(planet.box)) fillCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
 
 		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
 
 		var deltaX = planet.box.center.x - player.box.center.x,
 			deltaY = planet.box.center.y - player.box.center.y,
 			distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2),
-			origX = player.box.center.x - offsetX,
-			origY = player.box.center.y - offsetY;
+			origX = player.box.center.x - game.offset.x,
+			origY = player.box.center.y - game.offset.y;
 
-		if (Math.pow(distPowFour, 1 / 4) < 4000 && player.attachedPlanet === -1) drawArrow(origX, origY, Math.atan2(planet.box.center.x - offsetX - origX, planet.box.center.y - offsetY - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
+		if (Math.pow(distPowFour, 1 / 4) < 4000 && player.attachedPlanet === -1) drawArrow(origX, origY, Math.atan2(planet.box.center.x - game.offset.x - origX, planet.box.center.y - game.offset.y - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
 	});
 
 	enemies.forEach(function (enemy, ei) {
 		enemy.shots.forEach(function (shot){
-			if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - offsetX, shot.box.center.y - offsetY, shot.box.angle, false);
+			if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 		});
 		context.fillStyle = "#aaa";
-		if (windowBox.collision(enemy.aggroBox)) strokeCircle(enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, 350, 4);
-		if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - offsetX, enemy.box.center.y - offsetY, enemy.box.angle, false);
+		if (windowBox.collision(enemy.aggroBox)) strokeCircle(enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, 350, 4);
+		if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, enemy.box.angle, false);
 	});
 
 	context.fillStyle = "#eee";
@@ -298,20 +269,19 @@ function loop(){
 	otherPlayers.forEach(function (otherPlayer){
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
-		context.fillText(otherPlayer.name, otherPlayer.box.center.x - offsetX, otherPlayer.box.center.y - offsetY - distance);
-		drawRotatedImage(res,
-			otherPlayer.box.center.x - offsetX,
-			otherPlayer.box.center.y - offsetY,
+		context.fillText(otherPlayer.name, otherPlayer.box.center.x - game.offset.x, otherPlayer.box.center.y - game.offset.y - distance);
+		drawRotatedImage(otherPlayer.appearance + otherPlayer.walkFrame,
+			otherPlayer.box.center.x - game.offset.x,
+			otherPlayer.box.center.y - game.offset.y,
 			otherPlayer.box.angle,
 			otherPlayer.looksLeft);
 	});
 
-
 	fadeBackground(fadeMusic);
-
-	drawRotatedImage(resources[player.name + player.walkFrame],
-		player.box.center.x - offsetX,
-		player.box.center.y - offsetY,
+	
+	drawRotatedImage(resources[player.appearance + player.walkFrame],
+		player.box.center.x - game.offset.x,
+		player.box.center.y - game.offset.y,
 		player.box.angle,
 		player.looksLeft);
 
@@ -322,8 +292,8 @@ function loop(){
 	context.textBaseline = "hanging";
 
 	context.fillStyle = "#eee";
-	context.drawImage(resources[player.name + "_badge"], 8, 18, 32, 32);
-	context.fillText(player.playerName, 55, 20);
+	context.drawImage(resources[player.appearance + "_badge"], 8, 18, 32, 32);
+	context.fillText(player.name, 55, 20);
 	context.font = "20px Open Sans";
 	context.fillText("Health: ", 8, 90);
 	for (var i = 0; i < player.health; i++){

@@ -1,39 +1,20 @@
-var MESSAGE_ERROR = 0,
-	MESSAGE_CONNECT = 1,
-	MESSAGE_GET_LOBBIES = 2,
-	MESSAGE_SENT_LOBBIES = 3,
-	MESSAGE_SETTINGS_CHANGED = 4,
-	MESSAGE_CREATE_LOBBY = 5,
-	MESSAGE_CONNECT_ERR_FULL = 6,
-	MESSAGE_CONNECT_SUCCESSFUL = 7,
-	MESSAGE_PLAYER_SETTINGS = 8,
-	MESSAGE_PLAYER_POSITIONS = 9,
-	MESSAGE_CHUNKS = 10,
-	MESSAGE_CHECK_ALIVE = 11,
-	MESSAGE_DISCONNECT = 12,
-	MESSAGE_LEAVE_LOBBY = 13,
-	MESSAGE_PLAYER_CONTROLS = 14,
-	MESSAGE_GAME_DATA = 15,
-	MESSAGE_CHAT = 16,
-	MESSAGE_PLAYER_DATA = 17,
-	MESSAGE_PLAYER_CONTROLS = 18;
+function connection(address){
+	var socket = new WebSocket(address || "ws://localhost:8080"),
+		pid = -1;
 
-var oldDate = new Date();
-function connection(adress){
-	var socket = new WebSocket(adress || "ws://localhost:8080"), pid = -1;
 	this.alive = function (){ return socket.readyState === 1; }
 	
 
 	socket.onopen = function(e){
-		this.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
-		document.getElementById("button-3").disabled = false;
-		document.getElementById("button-2").textContent = "Refresh";
-		document.getElementById("button-2").disabled = false;
+		this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
+		document.getElementById("new-lobby").disabled = false;
+		document.getElementById("refresh-or-leave").textContent = "Refresh";
+		document.getElementById("refresh-or-leave").disabled = false;
 	};
 	socket.onerror = function(e){
-		document.getElementById("button-3").disabled = true;
-		document.getElementById("button-2").disabled = true;
-		this.close();		
+		document.getElementById("new-lobby").disabled = true;
+		document.getElementById("refresh-or-leave").disabled = true;
+		this.close();
 	};
 	socket.onmessage = function(message){
 		try{
@@ -43,8 +24,8 @@ function connection(adress){
 			console.log("'" + message.data + "'");
 		}
 		switch(msg.msgType){
-			case MESSAGE_SENT_LOBBIES:
-				document.getElementById("button-3").disabled = false;
+			case MESSAGE.SENT_LOBBIES:
+				document.getElementById("new-lobby").disabled = false;
 				var i, list = document.getElementById("player-list"), el, li;
 				while (list.firstChild) {
    					list.removeChild(list.firstChild);
@@ -58,12 +39,12 @@ function connection(adress){
 					list.appendChild(li);
 				}
 				break;
-			case MESSAGE_CONNECT_SUCCESSFUL:					
+			case MESSAGE.CONNECT_SUCCESSFUL:					
 				pid = msg.data.pid;				
-				document.getElementById("button-2").textContent = "Leave Lobby";
-				document.getElementById("button-3").disabled = true;
+				document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
+				document.getElementById("new-lobby").disabled = true;
 				break;
-			case MESSAGE_PLAYER_SETTINGS:
+			case MESSAGE.PLAYER_SETTINGS:
 				var i, list = document.getElementById("player-list"), li;
 				while (list.firstChild) {
 					list.removeChild(list.firstChild);
@@ -75,22 +56,22 @@ function connection(adress){
 					list.appendChild(li);
 				}
 				break;
-			case MESSAGE_CHAT:
+			case MESSAGE.CHAT:
 				chat.history.splice(0, 0, msg.data);
 				break;
-			case MESSAGE_PLAYER_DATA:
+			case MESSAGE.PLAYER_DATA:
 				if (msg.data.pid === pid){
 					player.box.center.x = msg.data.x;
-					player.box.center.y = msg.data.y;
-					offsetX = ((player.box.center.x - canvas.width / 2 + (game.dragStartX - game.dragX)) + 19 * offsetX) / 20;
-					offsetY = ((player.box.center.y - canvas.height / 2 + (game.dragStartY - game.dragY)) + 19 * offsetY) / 20;
+					player.box.center.y = msg.data.y;					
 					player.looksLeft = msg.data.looksLeft;
 					player.box.angle = msg.data.angle;
 					player.health = msg.data.health;
 					player.fuel = msg.data.fuel;
 					player.walkFrame = msg.data.walkFrame;
+					game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
+					game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
 				} else {
-					if (otherPlayers[msg.data.pid] === undefined) otherPlayers[msg.data.pid] = new Player(msg.data.name, msg.data.appearance);
+					if (otherPlayers[msg.data.pid] === undefined) otherPlayers[msg.data.pid] = new Player(msg.data.name, msg.data.appearance, msg.data.x, mgs.data.y);
 					otherPlayers[msg.data.pid].box.center.x = msg.data.x;
 					otherPlayers[msg.data.pid].box.center.y = msg.data.y;
 					otherPlayers[msg.data.pid].box.angle = msg.data.angle;
@@ -100,7 +81,7 @@ function connection(adress){
 					otherPlayers[msg.data.pid].appearance = msg.data.appearance;
 				}
 				break;
-			case MESSAGE_GAME_DATA:
+			case MESSAGE.GAME_DATA:
 				var i, j, k, l, m;
 				planets.length = 0;
 				for (i = 0; i < msg.data.planets.length; i++){
@@ -108,7 +89,6 @@ function connection(adress){
 					planets.push(new Planet(j.x, j.y, j.radius, "#f33"));
 				}
 				enemies.length = 0;
-				console.log(msg.data.enemies);
 				for (i = 0; i < msg.data.enemies.length; i++){
 					j = msg.data.enemies[i]; m = [];
 					for (l = 0; l < j.shots.length; l++) m.push({box: new Rectangle(new Point(j.shots[l].x, j.shots[l].y), resources["laserBeam"].width, resources["laserBeam"].height, j.shots[l].angle), lt: j.shots[l].lt});
@@ -116,63 +96,57 @@ function connection(adress){
 					enemies.push(k);
 				}
 				break;			
-			case MESSAGE_ERROR:
+			case MESSAGE.ERROR:
 				alert("Error", msg.data.content);
 				break;
 		}	
 	};
 	this.close = function(){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_DISCONNECT,
+			msgType: MESSAGE.DISCONNECT,
 			data: {uid: location.hash.substr(3), pid: pid}
 		}));
 		location.hash = "";
-		socket.close();		
+		socket.close();
 	};
 	this.connectLobby = function (){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_CONNECT,
-			data: {
-				uid: location.hash.substr(3), name: player.playerName, appearance: player.name,
-				width: resources[player.name + player.walkFrame].width, height: resources[player.name + player.walkFrame].height
-			}
+			msgType: MESSAGE.CONNECT,
+			data: {	uid: location.hash.substr(3), name: player.name, appearance: player.appearance }
 		}));
 	};
 	this.createLobby = function (n){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_CREATE_LOBBY,
+			msgType: MESSAGE.CREATE_LOBBY,
 			data: {name: n, privateLobby: false}
 		}));
 		this.refreshLobbies();
 	};
 	this.refreshLobbies = function(){
-		socket.send(JSON.stringify({ msgType: MESSAGE_GET_LOBBIES }));
+		socket.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
 	};
 	this.leaveLobby = function(){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_LEAVE_LOBBY,
+			msgType: MESSAGE.LEAVE_LOBBY,
 			data: {pid: pid, uid: location.hash.substr(3)}
 		}));
 		location.hash = "";
 	};
 	this.sendSettings = function (){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_PLAYER_SETTINGS,
-			data: {
-				pid: pid, uid: location.hash.substr(3), name: player.playerName, appearance: player.name,
-				width: resources[player.name + player.walkFrame].width, height: resources[player.name + player.walkFrame].height
-			}
+			msgType: MESSAGE.PLAYER_DATA,
+			data: {pid: pid, uid: location.hash.substr(3), name: player.name, appearance: player.appearance}
 		}));
 	};
 	this.sendChat = function (content){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_CHAT,
+			msgType: MESSAGE.CHAT,
 			data: {pid: pid, uid: location.hash.substr(3), content: content}
 		}));	
 	}
 	this.refreshControls = function (controls){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE_PLAYER_CONTROLS,
+			msgType: MESSAGE.PLAYER_CONTROLS,
 			data: {pid: pid, uid: location.hash.substr(3), controls: controls}
 		}));
 	}
@@ -181,9 +155,9 @@ function connection(adress){
 var currentConnection = new connection();
 
 function closeSocket(){
-	document.getElementById("button-3").disabled = true;
-	document.getElementById("button-2").textContent = "Refresh";
-	document.getElementById("button-2").disabled = true;	
+	document.getElementById("new-lobby").disabled = true;
+	document.getElementById("refresh-or-leave").textContent = "Refresh";
+	document.getElementById("refresh-or-leave").disabled = true;
 	currentConnection.close();
 }
 function openSocket(){
@@ -203,7 +177,7 @@ function leaveLobby(){
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
 	currentConnection.refreshLobbies();
-	document.getElementById("button-2").textContent = "Refresh";
+	document.getElementById("refresh-or-leave").textContent = "Refresh";
 }
 
 function hashChange() {
