@@ -19,7 +19,8 @@ rl.on("line", function (cmd) {
 //send static files
 var server = http.createServer(function (req, res){
 	if(req.url === "/") req.url = "/index.html";
-	var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1), mine;
+	var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1),
+		mime;
 	switch(extension) {
 		case "html":
 			mime = "text/html";
@@ -61,128 +62,122 @@ var lobbies = [],
 	wss = new WebSocketServer({server: server});
 
 
-function lobby(_name, _maxplayers){
-	this.players = new Array(_maxplayers | 8),
-	this.planets = [],
-	this.enemies = [];		
-	this.processtime = 0;
+function lobby(name, maxPlayers){
+	this.players = new Array(maxPlayers || 8);
+	this.planets = [];
+	this.enemies = [];
+	this.processTime = 0;
 	this.players.firstEmpty = function(){
 		for (var i = 0; i < this.length; i++){
 			if (this[i] === undefined) return i;
 		}
+		return -1;
 	};
 	this.players.amount = function(){
-		var i, j = 0;
-		for (i = 0; i < this.length; i++){
-			j += (this[i] !== undefined) * 1;
-		}
-		return j;
+		var amount = 0;
+		this.forEach(function(player) {
+			amount += 1;
+		});
+		return amount;
 	};
 	this.players.getData = function(){
-		var i, j = [];
-		for (i = 0; i < this.length; i++){
-			if (this[i] !== undefined) j.push({name: this[i].name, appearance: this[i].appearance});
-		}
-		return j;
+		var plData = [];
+		this.forEach(function(player) {
+			plData.push({name: player.name, appearance: player.appearance});
+		});
+		return plData;
 	};
 	this.enemies.getData = function(){
-		var i, j, k, l = [];
-		for (i = 0; i < this.length; i++){
-			k = [];
-			for (j = 0; j < this[i].shots.length; j++){
-				k.push({x: this[i].shots[j].box.center.x, y: this[i].shots[j].box.center.y, angle: this[i].shots[j].box.angle, lt: this[i].shots[j]});
+		var serEnemies = [];
+		for (var i = 0; i < this.length; i++){
+			var serShots = [];
+			for (var j = 0; j < this[i].shots.length; j++){
+				serShots.push({x: this[i].shots[j].box.center.x, y: this[i].shots[j].box.center.y, angle: this[i].shots[j].box.angle, lt: this[i].shots[j].lt});
 			}
-			l.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance, shots: k, angle: this[i].box.angle});
+			serEnemies.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance, shots: serShots, angle: this[i].box.angle});
 		}
-		return l;
+		return serEnemies;
 	}
 	this.planets.getData = function(){
-		var i, j = [];
-		for (i = 0; i < this.length; i++){
+		var j = [];
+		for (var i = 0; i < this.length; i++){
 			j.push({x: this[i].box.center.x, y: this[i].box.center.y, radius: this[i].box.radius, progress: this[i].progress});
 		}
 		return j;
 	}	
 
-	function _update(){
-		var oldDate = new Date(),
-			newDate = engine.doPhysics(this.players, this.planets, this.enemies);
-		
-		this.processtime = (oldDate - newDate);
-		for (var i = 0; i < this.players.length; i++){
-			if (this.players[i] === undefined) continue;
-			var toSend = JSON.stringify({
-				msgType: MESSAGE.PLAYER_DATA,
-				data: {
-					pid: i, x: this.players[i].box.center.x.toFixed(2), y: this.players[i].box.center.y.toFixed(2),
-					angle: this.players[i].box.angle.toFixed(4), walkFrame: this.players[i].walkFrame, health: this.players[i].health, fuel: this.players[i].fuel,
-					name: this.players[i].name, appearance: this.players[i].appearance, looksLeft: this.players[i].looksLeft
-				}
-			});	
-			this.sendToAll(toSend);
-		}
-	}
-	
-	function _sendToAll(message){
-		for (var i = 0; i < this.players.length; i++){
-			if (this.players[i] !== undefined) this.players[i].ws.send(message);
-		}
-	}
 
 	this.planets.push(new engine.Planet(300, 500, 180));
 	this.enemies.push(new engine.Enemy(800, -600));
 
-	this.name = _name || "Unnamed Lobby";
-	this.maxplayers = _maxplayers | 8;
-	this.update = _update;
-	this.sendToAll = _sendToAll;
-	this.uid = generateUid();
+	this.name = name || "Unnamed Lobby";
+	this.maxPlayers = maxPlayers || 8;
 }
-lobbies.findLobbyUid = function (uid){
-	for (var i = 0; i != lobbies.length; i++){
-		lobbies[i].uid === uid;
-		return i;
+lobby.prototype.broadcast = function(message) {
+	this.players.forEach(function(player) {
+		try {
+			player.ws.send(message);
+		} catch(e) {/*Ignore errors*/}
+	});
+}
+lobby.prototype.update = function() {
+	var oldDate = new Date();
+	engine.doPhysics(this.players, this.planets, this.enemies);
+	this.processTime = oldDate - new Date();
+
+	for (var i = 0; i < this.players.length; i++){
+		if (this.players[i] === undefined) continue;
+		var toSend = JSON.stringify({
+			msgType: MESSAGE.PLAYER_DATA,
+			data: {
+				pid: i, x: this.players[i].box.center.x.toFixed(2), y: this.players[i].box.center.y.toFixed(2),
+				angle: this.players[i].box.angle.toFixed(4), walkFrame: this.players[i].walkFrame, health: this.players[i].health, fuel: this.players[i].fuel,
+				name: this.players[i].name, appearance: this.players[i].appearance, looksLeft: this.players[i].looksLeft
+			}
+		});
+		this.broadcast(toSend);
 	}
-	return -1;
+}
+lobbies.getUid = function(index) {
+	var uid = index.toString(16);
+	while(uid.length !== 6) {
+		uid = "0" + uid;
+	}
+	return uid;
+}
+lobbies.getIndex = function(uid) {
+	return parseInt(uid, 16);
 }
 
 function updateLobbies(){
-	if (lobbies.length === 0) return;
-	for (var i = 0; i < lobbies.length; i++){
-		lobbies[i].update();
-	}	
+	lobbies.forEach(function(lobby) {
+		lobby.update();
+	});
 }
-setInterval(updateLobbies, 16); //update cycle 
+setInterval(updateLobbies, 16);//update cycle
+//note that 16ms actually means 16 up to 16 + ~5
 
-var monitoring = function(){
-	if (monitoringDisabled !== true){
-		process.stdout.write('\033c');
-		console.log("Jumpsuit Server [STATUS: RUNNING]");
-		console.log("\nMonitoring Lobbies:");
-		var headerSizes = [40, 10, 20],
-			headerNames = ["lobby name", "player", "process time", "lifetime"],
-			header = "";
-		for (var i = 0; i < headerSizes.length; i++){
-			header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase() + Array(headerSizes[i] - headerNames[i].length).join(" "); 
-		}
-		console.log(header);
-		for (var i = 0; i < lobbies.length; i++){
-			var info = lobbies[i].name + Array(headerSizes[0] - lobbies[i].name.length).join(" "), 
-				amount = lobbies[i].players.amount().toString(),
-				processtime = lobbies[i].processtime.toString();
-			info += " | " + amount + Array(headerSizes[1] - amount.length).join(" ");
-			info += " | " + processtime + Array(headerSizes[2] - processtime.length).join(" ");
-			console.log(info);
-		}
+function monitoring(){
+	process.stdout.write('\033c');
+	console.log("Jumpsuit Server [STATUS: RUNNING]");
+	console.log("\nMonitoring Lobbies:");
+	var headerSizes = [40, 10, 20],
+		headerNames = ["lobby name", "player", "process time", "lifetime"],
+		header = "";
+	for (var i = 0; i < headerSizes.length; i++){
+		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase() + Array(headerSizes[i] - headerNames[i].length).join(" ");
 	}
-}, monitoringDisabled = true;
-setInterval(monitoring, 500);
-
-function generateUid(){
-	//hexadecimal form 1048576 to 16777215
-	//TODO: make it not repeatable ! (important :D)
-	return Math.floor(Math.random() * 16 * 1048576).toString(16);
+	console.log(header);
+	for (var i = 0; i < lobbies.length; i++){
+		var info = lobbies[i].name + Array(headerSizes[0] - lobbies[i].name.length).join(" "),
+			amount = lobbies[i].players.amount().toString(),
+			processTime = lobbies[i].processTime.toString();
+		info += " | " + amount + Array(headerSizes[1] - amount.length).join(" ");
+		info += " | " + processTime + Array(headerSizes[2] - processTime.length).join(" ");
+		console.log(info);
+	}
 }
+if(process.argv[2] === "-m") setInterval(monitoring, 500);
 
 wss.on("connection", function(ws){	
 	ws.on("message", function(message){
@@ -195,20 +190,20 @@ wss.on("connection", function(ws){
 		}
 		switch(msg.msgType){
 			case MESSAGE.CONNECT:
-				var id = lobbies.findLobbyUid(msg.data.uid);
+				var id = lobbies.getIndex(msg.data.uid);
 				if (id >= 0){
 					var pid = lobbies[id].players.firstEmpty();
 					lobbies[id].players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));					
 					ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
 					ws.send(JSON.stringify({msgType: MESSAGE.GAME_DATA, data: {planets: lobbies[id].planets.getData(), enemies: lobbies[id].enemies.getData()}}));
-					lobbies[id].sendToAll(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
-					lobbies[id].sendToAll(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
+					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
+					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
 				}
 				break;
 			case MESSAGE.GET_LOBBIES:
 				var i, j = [];
 				for (i = 0; i != lobbies.length; i++){
-					j[i] = {uid: lobbies[i].uid, name: lobbies[i].name, players: lobbies[i].players.amount(), maxplayers: lobbies[i].maxplayers};
+					j[i] = {uid: lobbies.getUid(i), name: lobbies[i].name, players: lobbies[i].players.amount(), maxPlayers: lobbies[i].maxPlayers};
 				}
 				ws.send(JSON.stringify({msgType: MESSAGE.SENT_LOBBIES, data: j}));
 				break;
@@ -216,27 +211,27 @@ wss.on("connection", function(ws){
 				lobbies.push(new lobby(msg.data.name, 8));
 				break;
 			case MESSAGE.PLAYER_SETTINGS:
-				var id = lobbies.findLobbyUid(msg.data.uid);
+				var id = lobbies.getIndex(msg.data.uid);
 				if (id >= 0){
 					var oldName = lobbies[id].players[msg.data.pid].name;
 					lobbies[id].players[msg.data.pid].box = new collisions.Rectangle(lobbies[id].players[msg.data.pid].box.center, msg.data.width, msg.data.height);
 					lobbies[id].players[msg.data.pid].name = msg.data.name;
 					lobbies[id].players[msg.data.pid].appearance = msg.data.appearance;
-					lobbies[id].sendToAll(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
-					if (oldName !== msg.data.name) lobbies[id].sendToAll(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'", pid: -1}}));
+					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
+					if (oldName !== msg.data.name) lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'", pid: -1}}));
 				} else {
 					ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {content: "Lobby doesnt exist (anymore)"}}));
 				}
 				break;
 			case MESSAGE.CHAT:
-				var id = lobbies.findLobbyUid(msg.data.uid), i;
+				var id = lobbies.getIndex(msg.data.uid), i;
 				if (id >= 0){
 				 	i = msg.data.content;
-					lobbies[id].sendToAll(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobbies[id].players[msg.data.pid].name, pid: msg.data.pid}}));
+					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobbies[id].players[msg.data.pid].name, pid: msg.data.pid}}));
 				}
 				break;
 			case MESSAGE.PLAYER_CONTROLS:
-				var id = lobbies.findLobbyUid(msg.data.uid), i;
+				var id = lobbies.getIndex(msg.data.uid), i;
 				if (id >= 0){
 					for (i in msg.data.controls){
 						lobbies[id].players[msg.data.pid].controls[i] = msg.data.controls[i];
@@ -245,21 +240,21 @@ wss.on("connection", function(ws){
 				break;
 			case MESSAGE.DISCONNECT:
 			case MESSAGE.LEAVE_LOBBY:
-				var id = lobbies.findLobbyUid(msg.data.uid);
+				var id = lobbies.getIndex(msg.data.uid);
 				if (id >= 0){
-					lobbies[id].sendToAll(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobbies[id].players[msg.data.pid].name + "' has left the game", pid: -1}}));
+					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobbies[id].players[msg.data.pid].name + "' has left the game", pid: -1}}));
 					delete lobbies[id].players[msg.data.pid];
 				}
 				break;
 		}		
 	});
 	ws.on("close", function(e){
-		var found = false;		
+		var found = false;
 		lobbies.forEach(function (lobby){
 			lobby.players.forEach(function (player, i){
 				if (player.ws == ws){
 					delete lobby.players[i];
-					lobby.sendToAll(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game", pid: -1}}));
+					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game", pid: -1}}));
 					found = true;
 					return;
 				}

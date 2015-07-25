@@ -270,7 +270,7 @@ function loop(){
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 		context.fillText(otherPlayer.name, otherPlayer.box.center.x - game.offset.x, otherPlayer.box.center.y - game.offset.y - distance);
-		drawRotatedImage(otherPlayer.appearance + otherPlayer.walkFrame,
+		drawRotatedImage(resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			otherPlayer.box.center.x - game.offset.x,
 			otherPlayer.box.center.y - game.offset.y,
 			otherPlayer.box.angle,
