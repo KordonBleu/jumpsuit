@@ -83,7 +83,7 @@ function connection(address){
 					planets.length = 0;
 					for (i = 0; i < msg.data.planets.length; i++){
 						j = msg.data.planets[i];
-						planets.push(new Planet(j.x, j.y, j.radius, "#f33"));
+						planets.push(new Planet(j.x, j.y, j.radius));
 					}
 					enemies.length = 0;
 					for (i = 0; i < msg.data.enemies.length; i++){
