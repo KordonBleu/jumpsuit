@@ -14,10 +14,11 @@ var MESSAGE = {
 	DISCONNECT: 12,
 	LEAVE_LOBBY: 13,
 	PLAYER_CONTROLS: 14,
-	GAME_DATA: 15,
+	WORLD_DATA: 15,
 	CHAT: 16,
 	PLAYER_DATA: 17,
-	PLAYER_CONTROLS: 18
+	PLAYER_CONTROLS: 18,
+	GAME_DATA: 19
 };
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = MESSAGE;

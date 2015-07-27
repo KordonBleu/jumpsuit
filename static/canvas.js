@@ -191,6 +191,18 @@ function loop(){
 		context.stroke();
 	}
 
+	function drawCircleBar(x, y, val){
+		console.log(x, y, val)
+		context.save();
+		context.beginPath();
+		context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
+		context.lineWidth = 8;
+		context.strokeStyle = "#000";
+		context.globalAlpha = 0.2;
+		context.stroke();
+		context.restore();
+	}
+
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	context.globalAlpha = 1;
@@ -239,10 +251,15 @@ function loop(){
 		fadeMusic = false;
 	//doPhysics();
 	planets.forEach(function (planet){
-		context.fillStyle = "#f33";
+		var fadeRGB = [];
+		if (planet.progress.team === "neutral") fadeRGB = [80, 80, 80];
+		else for (var i = 0; i <= 2; i++) fadeRGB[i] = Math.floor(planet.progress.value / 100 * (parseInt(Planet.prototype.teamColours[planet.progress.team].substr(1 + i * 2, 2), 16) - 80) + 80);
+		context.fillStyle = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
+
 		if (windowBox.collision(planet.atmosBox)) strokeCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
 		if (windowBox.collision(planet.box)) fillCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
-
+		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
+		
 		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
 
 		var deltaX = planet.box.center.x - player.box.center.x,

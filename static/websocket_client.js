@@ -78,8 +78,8 @@ function connection(address){
 						otherPlayers[msg.data.pid].appearance = msg.data.appearance;
 					}
 					break;
-				case MESSAGE.GAME_DATA:
-					var i, j, k, l, m;
+				case MESSAGE.WORLD_DATA:
+					var i, j;
 					planets.length = 0;
 					for (i = 0; i < msg.data.planets.length; i++){
 						j = msg.data.planets[i];
@@ -87,12 +87,27 @@ function connection(address){
 					}
 					enemies.length = 0;
 					for (i = 0; i < msg.data.enemies.length; i++){
-						j = msg.data.enemies[i]; m = [];
-						for (l = 0; l < j.shots.length; l++) m.push({box: new Rectangle(new Point(j.shots[l].x, j.shots[l].y), resources["laserBeam"].width, resources["laserBeam"].height, j.shots[l].angle), lt: j.shots[l].lt});
-						k = new Enemy(j.x, j.y, j.appearance); k.shots = m;
-						enemies.push(k);
+						j = msg.data.enemies[i];
+						enemies.push(new Enemy(j.x, j.y, j.appearance));
 					}
-					break;			
+					break;
+				case MESSAGE.GAME_DATA:
+					var i, j;
+					for (i = 0; i < msg.data.planets.length; i++){
+						planets[i].progress = msg.data.planets[i];						
+					}
+					for (i = 0; i < msg.data.enemies.length; i++){
+						enemies[i].box.angle = msg.data.enemies[i].angle;
+						enemies[i].shots.length = msg.data.enemies[i].shots.length;
+						for (j = 0; j < msg.data.enemies[i].shots.length; j++){
+							if (typeof enemies[i].shots[j] === "undefined") enemies[i].shots[j] = {box: new Rectangle(new Point(0, 0), resources["laserBeam"].width, resources["laserBeam"].height, 0), lt: 0};
+							enemies[i].shots[j].box.center.x = msg.data.enemies[i].shots[j].x;
+							enemies[i].shots[j].box.center.y = msg.data.enemies[i].shots[j].y;
+							enemies[i].shots[j].box.angle = msg.data.enemies[i].shots[j].angle;
+							enemies[i].shots[j].lt = msg.data.enemies[i].shots[j].lt;
+						}
+					}
+					break;
 				case MESSAGE.ERROR:
 					alert("Error", msg.data.content);
 					break;
@@ -135,7 +150,7 @@ function connection(address){
 	};
 	this.sendSettings = function (){
 		socket.send(JSON.stringify({
-			msgType: MESSAGE.PLAYER_DATA,
+			msgType: MESSAGE.PLAYER_SETTINGS,
 			data: {pid: pid, uid: location.hash.substr(3), name: player.name, appearance: player.appearance}
 		}));
 	};

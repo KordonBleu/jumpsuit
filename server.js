@@ -87,25 +87,38 @@ function lobby(name, maxPlayers){
 		});
 		return plData;
 	};
-	this.enemies.getData = function(){
-		var serEnemies = [];
+	this.enemies.getWorldData = function(){
+		var enemData = [];
+		for (var i = 0; i < this.length; i++){			
+			enemData.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance, angle: this[i].box.angle});
+		}
+		return enemData;
+	};
+	this.enemies.getGameData = function(){
+		var enemData = [], enemShotData;
 		for (var i = 0; i < this.length; i++){
-			var serShots = [];
+			enemShotData = [];
 			for (var j = 0; j < this[i].shots.length; j++){
-				serShots.push({x: this[i].shots[j].box.center.x, y: this[i].shots[j].box.center.y, angle: this[i].shots[j].box.angle, lt: this[i].shots[j].lt});
+				enemShotData.push({x: this[i].shots[j].box.center.x, y: this[i].shots[j].box.center.y, angle: this[i].shots[j].box.angle, lt: this[i].shots[j].lt});
 			}
-			serEnemies.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance, shots: serShots, angle: this[i].box.angle});
+			enemData.push({angle: this[i].box.angle, shots: enemShotData});
 		}
-		return serEnemies;
-	}
-	this.planets.getData = function(){
-		var j = [];
+		return enemData;
+	};
+	this.planets.getWorldData = function(){
+		var pltData = [];
 		for (var i = 0; i < this.length; i++){
-			j.push({x: this[i].box.center.x, y: this[i].box.center.y, radius: this[i].box.radius, progress: this[i].progress});
+			pltData.push({x: this[i].box.center.x, y: this[i].box.center.y, radius: this[i].box.radius});
 		}
-		return j;
-	}	
-
+		return pltData;
+	};
+	this.planets.getGameData = function(){
+		var pltData = [];
+		for (var i = 0; i < this.length; i++){
+			pltData.push(this[i].progress);
+		}
+		return pltData;
+	};
 
 	this.planets.push(new engine.Planet(300, 500, 180));
 	this.enemies.push(new engine.Enemy(800, -600));
@@ -127,15 +140,21 @@ lobby.prototype.update = function() {
 
 	for (var i = 0; i < this.players.length; i++){
 		if (this.players[i] === undefined) continue;
-		var toSend = JSON.stringify({
+		this.broadcast(JSON.stringify({
 			msgType: MESSAGE.PLAYER_DATA,
 			data: {
 				pid: i, x: this.players[i].box.center.x.toFixed(2), y: this.players[i].box.center.y.toFixed(2),
 				angle: this.players[i].box.angle.toFixed(4), walkFrame: this.players[i].walkFrame, health: this.players[i].health, fuel: this.players[i].fuel,
 				name: this.players[i].name, appearance: this.players[i].appearance, looksLeft: this.players[i].looksLeft
 			}
-		});
-		this.broadcast(toSend);
+		}));
+		this.broadcast(JSON.stringify({
+			msgType: MESSAGE.GAME_DATA,
+			data: {
+				planets: this.planets.getGameData(),
+				enemies: this.enemies.getGameData()
+			}
+		}));
 	}
 }
 lobbies.getUid = function(index) {
@@ -195,7 +214,7 @@ wss.on("connection", function(ws){
 					var pid = lobbies[id].players.firstEmpty();
 					lobbies[id].players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));					
 					ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
-					ws.send(JSON.stringify({msgType: MESSAGE.GAME_DATA, data: {planets: lobbies[id].planets.getData(), enemies: lobbies[id].enemies.getData()}}));
+					ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobbies[id].planets.getWorldData(), enemies: lobbies[id].enemies.getWorldData()}}));
 					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
 					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
 				}
@@ -214,7 +233,6 @@ wss.on("connection", function(ws){
 				var id = lobbies.getIndex(msg.data.uid);
 				if (id >= 0){
 					var oldName = lobbies[id].players[msg.data.pid].name;
-					lobbies[id].players[msg.data.pid].box = new collisions.Rectangle(lobbies[id].players[msg.data.pid].box.center, msg.data.width, msg.data.height);
 					lobbies[id].players[msg.data.pid].name = msg.data.name;
 					lobbies[id].players[msg.data.pid].appearance = msg.data.appearance;
 					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));

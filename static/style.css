@@ -253,3 +253,51 @@ button {
 	background: #178e3a;
 	color: #ddd;
 }
+
+
+.loader {
+	-webkit-padding-start: 0;
+	font-size: 100px;
+	width: 1em;
+	height: 1em;
+	margin: 100px auto;
+	position: relative;
+	list-style: none;
+}
+.loader li {
+	width: .2em;
+	height: .2em;
+	position: absolute;
+	border-radius: 50%;
+	top: 0;
+	left: 50%;
+	margin-left: -.1em;
+	transform-origin: 50% 250%;
+}
+.loader li:nth-child(1) {
+	background: #e5d9be;
+	animation: rota 1.33s linear infinite;
+}
+
+.loader li:nth-child(2) {
+	background: #a2c2ea;
+	animation: rota 1.86s linear infinite;
+}
+
+.loader li:nth-child(3) {
+	background: #8aceb9;
+	animation: rota 1.45s linear infinite;
+}
+
+.loader li:nth-child(4) {
+	background: #f19cb7;
+	animation: rota 1.72s linear infinite;
+}
+.loader li:nth-child(5) {
+	background: #fed532;
+	animation: rota 2s linear infinite;
+}
+
+@keyframes rota {
+    to { transform: rotate(360deg); }
+}

@@ -47,8 +47,10 @@ function Player(name, appearance, startx, starty, ws){
 		} else {
 			var leftOrRight = (this.controls["moveLeft"] || this.controls["moveRight"]);
 			if (!leftOrRight) this.walkFrame = (this.controls["crouch"]) ? "_duck" : "_stand";
-			//this is some cool shit
-			if ((this._walkCounter = ++this._walkCounter % (this.controls["run"]) ? 6 : 10) === 0) if (leftOrRight) this.walkFrame = (players[i].walkFrame === "_walk1") ? "_walk2" : "_walk1";		
+			else if (this._walkCounter++ >= (this.controls["run"] > 0 ? 6 : 10)){
+				this._walkCounter = 0;
+				this.walkFrame = (this.walkFrame === "_walk1") ? "_walk2" : "_walk1";
+			}
 			this.box.width = resources[this.appearance + this.walkFrame].width;
 			this.box.height = resources[this.appearance + this.walkFrame].height;
 		}
@@ -62,7 +64,7 @@ function Player(name, appearance, startx, starty, ws){
 
 function Planet(x, y, radius) {
 	this.box = new Circle(new Point(x, y), radius);
-	this.atmosBox = new Circle(this.box.center, radius * (1.5 + Math.random()/2));
+	this.atmosBox = new Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
 	this.progress = {team: "neutral", value: 0};
 }
 Planet.prototype.teamColours = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
@@ -77,12 +79,13 @@ function Enemy(x, y) {
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
 function doPhysics(players, planets, enemies) {
+	var playersOnPlanets = new Array(planets.length);
 	for (var i = 0; i < players.length; i++){
 		if (players[i] === undefined) continue;
 	
 		for (var enemy, ei = 0; ei < enemies.length; ei++){
 			enemy = enemies[ei];
-			if (!(enemy.aggroBox.collision(players[i].box))){
+			if (!enemy.aggroBox.collision(players[i].box)){
 				enemy.box.angle = enemy.box.angle + Math.PI / 150;
 				enemy.fireRate = 0;
 			} else {
@@ -105,6 +108,13 @@ function doPhysics(players, planets, enemies) {
 		}
 		
 		if (players[i].attachedPlanet >= 0){
+			if (typeof playersOnPlanets[players[i].attachedPlanet] === "undefined") playersOnPlanets[players[i].attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
+			for (team in Planet.prototype.teamColours){
+				if (team === players[i].appearance) {
+					playersOnPlanets[players[i].attachedPlanet][team]++;
+					console.log(players[i].appearance);
+				} else playersOnPlanets[players[i].attachedPlanet][team] -= (playersOnPlanets[players[i].attachedPlanet][team] > 0) * 1;
+			}
 			var stepSize = Math.PI * 0.007 * (150 / planets[players[i].attachedPlanet].box.radius);
 			if (players[i].controls["moveLeft"] > 0){
 				stepSize = stepSize * players[i].controls["moveLeft"];
@@ -160,11 +170,26 @@ function doPhysics(players, planets, enemies) {
 		}
 		players[i].setWalkframe();
 	}
-	return new Date();
+	console.log(playersOnPlanets);
+	for (var i = 0; i < playersOnPlanets.length; i++){
+		if (typeof playersOnPlanets[i] === "undefined") continue;
+		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
+			max = Math.max.apply(null, toArray),
+			teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
+
+		if (max !== 0){
+			var team = teams[toArray.indexOf(max)];
+			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + max > 100) ? 100 : planets[i].progress.value + max;
+			else {
+				planets[i].progress.value -= max;
+				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
+			}
+		}		
+	}
+
 }
 
-
-if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {
 	doPhysics: doPhysics,
 	Player: Player,
 	Planet: Planet,
