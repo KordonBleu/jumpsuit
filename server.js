@@ -2,7 +2,8 @@ var fs = require("fs"),
 	readline = require("readline"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
-	MESSAGE = require("./static/message.js"),
+	MESSAGE = require("./static/message.js").MESSAGE,
+	ERROR = require("./static/message.js").ERROR,
 	collisions = require("./static/collisions.js"),
 	engine = require("./static/engine.js");
 
@@ -62,7 +63,7 @@ var lobbies = [],
 	wss = new WebSocketServer({server: server});
 
 
-function lobby(name, maxPlayers){
+function Lobby(name, maxPlayers){
 	this.players = new Array(maxPlayers || 8);
 	this.planets = [];
 	this.enemies = [];
@@ -104,7 +105,7 @@ function lobby(name, maxPlayers){
 			j.push({x: this[i].box.center.x, y: this[i].box.center.y, radius: this[i].box.radius, progress: this[i].progress});
 		}
 		return j;
-	}	
+	}
 
 
 	this.planets.push(new engine.Planet(300, 500, 180));
@@ -113,17 +114,17 @@ function lobby(name, maxPlayers){
 	this.name = name || "Unnamed Lobby";
 	this.maxPlayers = maxPlayers || 8;
 }
-lobby.prototype.broadcast = function(message) {
+Lobby.prototype.broadcast = function(message) {
 	this.players.forEach(function(player) {
 		try {
 			player.ws.send(message);
 		} catch(e) {/*Ignore errors*/}
 	});
 }
-lobby.prototype.update = function() {
+Lobby.prototype.update = function() {
 	var oldDate = new Date();
 	engine.doPhysics(this.players, this.planets, this.enemies);
-	this.processTime = oldDate - new Date();
+	this.processTime = new Date() - oldDate;
 
 	for (var i = 0; i < this.players.length; i++){
 		if (this.players[i] === undefined) continue;
@@ -145,8 +146,10 @@ lobbies.getUid = function(index) {
 	}
 	return uid;
 }
-lobbies.getIndex = function(uid) {
-	return parseInt(uid, 16);
+lobbies.getByUid = function(uid) {
+	var index = parseInt(uid, 16);
+	if(index === NaN || !isFinite(index) || index % 1 !== 0) return null;
+	return this[index];
 }
 
 function updateLobbies(){
@@ -179,74 +182,76 @@ function monitoring(){
 }
 if(process.argv[2] === "-m") setInterval(monitoring, 500);
 
-wss.on("connection", function(ws){	
+wss.on("connection", function(ws){
 	ws.on("message", function(message){
 		var msg;
-		try{
+		try {
 			msg = JSON.parse(message);
 			console.log("received: ", msg);
+
+			switch(msg.msgType){
+				case MESSAGE.CONNECT:
+					var lobby = lobbies.getByUid(msg.data.uid);
+					if(lobby.players.amount() === lobby.maxPlayers) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NO_SLOT}}));
+					else if(lobby.players.some(function(player) { return player.name === msg.data.name; })) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NAME_TAKEN}}));
+					else if(lobby === null) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NO_LOBBY}}));
+					else {
+						var pid = lobby.players.firstEmpty();
+						lobby.players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));
+						ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
+						ws.send(JSON.stringify({msgType: MESSAGE.GAME_DATA, data: {planets: lobby.planets.getData(), enemies: lobby.enemies.getData()}}));
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
+					}
+					break;
+				case MESSAGE.GET_LOBBIES:
+					var lobbyList = [];
+					lobbies.forEach(function(lobby, i) {
+						lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.amount(), maxPlayers: lobby.maxPlayers});
+					});
+					ws.send(JSON.stringify({msgType: MESSAGE.SENT_LOBBIES, data: lobbyList}));
+					break;
+				case MESSAGE.CREATE_LOBBY:
+					lobbies.push(new Lobby(msg.data.name, 8));
+					break;
+				case MESSAGE.PLAYER_SETTINGS:
+					var lobby = lobbies.getByUid(msg.data.uid);
+					if (lobby === null) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NO_LOBBY}}));
+					else {
+						var oldName = lobby.players[msg.data.pid].name;
+						lobby.players[msg.data.pid].name = msg.data.name;
+						lobby.players[msg.data.pid].appearance = msg.data.appearance;
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
+						if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'", pid: -1}}));
+					}
+					break;
+				case MESSAGE.CHAT:
+					var lobby = lobbies.getByUid(msg.data.uid);
+					if (lobby !== null){
+						i = msg.data.content;
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobby.players[msg.data.pid].name, pid: msg.data.pid}}));
+					}
+					break;
+				case MESSAGE.PLAYER_CONTROLS:
+					var lobby = lobbies.getByUid(msg.data.uid);
+					if (lobby !== null){
+						for (i in msg.data.controls){
+							lobby.players[msg.data.pid].controls[i] = msg.data.controls[i];
+						}
+					}
+					break;
+				case MESSAGE.DISCONNECT:
+				case MESSAGE.LEAVE_LOBBY:
+					var lobby = lobbies.getByUid(msg.data.uid);
+					if (lobby !== null){
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));
+						delete lobby.players[msg.data.pid];
+					}
+					break;
+			}
 		} catch (e){
 			console.log("ERROR", e, msg);
 		}
-		switch(msg.msgType){
-			case MESSAGE.CONNECT:
-				var id = lobbies.getIndex(msg.data.uid);
-				if (id >= 0){
-					var pid = lobbies[id].players.firstEmpty();
-					lobbies[id].players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));					
-					ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
-					ws.send(JSON.stringify({msgType: MESSAGE.GAME_DATA, data: {planets: lobbies[id].planets.getData(), enemies: lobbies[id].enemies.getData()}}));
-					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
-					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
-				}
-				break;
-			case MESSAGE.GET_LOBBIES:
-				var i, j = [];
-				for (i = 0; i != lobbies.length; i++){
-					j[i] = {uid: lobbies.getUid(i), name: lobbies[i].name, players: lobbies[i].players.amount(), maxPlayers: lobbies[i].maxPlayers};
-				}
-				ws.send(JSON.stringify({msgType: MESSAGE.SENT_LOBBIES, data: j}));
-				break;
-			case MESSAGE.CREATE_LOBBY:
-				lobbies.push(new lobby(msg.data.name, 8));
-				break;
-			case MESSAGE.PLAYER_SETTINGS:
-				var id = lobbies.getIndex(msg.data.uid);
-				if (id >= 0){
-					var oldName = lobbies[id].players[msg.data.pid].name;
-					lobbies[id].players[msg.data.pid].box = new collisions.Rectangle(lobbies[id].players[msg.data.pid].box.center, msg.data.width, msg.data.height);
-					lobbies[id].players[msg.data.pid].name = msg.data.name;
-					lobbies[id].players[msg.data.pid].appearance = msg.data.appearance;
-					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobbies[id].players.getData()}));
-					if (oldName !== msg.data.name) lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'", pid: -1}}));
-				} else {
-					ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {content: "Lobby doesnt exist (anymore)"}}));
-				}
-				break;
-			case MESSAGE.CHAT:
-				var id = lobbies.getIndex(msg.data.uid), i;
-				if (id >= 0){
-				 	i = msg.data.content;
-					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobbies[id].players[msg.data.pid].name, pid: msg.data.pid}}));
-				}
-				break;
-			case MESSAGE.PLAYER_CONTROLS:
-				var id = lobbies.getIndex(msg.data.uid), i;
-				if (id >= 0){
-					for (i in msg.data.controls){
-						lobbies[id].players[msg.data.pid].controls[i] = msg.data.controls[i];
-					}
-				}
-				break;
-			case MESSAGE.DISCONNECT:
-			case MESSAGE.LEAVE_LOBBY:
-				var id = lobbies.getIndex(msg.data.uid);
-				if (id >= 0){
-					lobbies[id].broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobbies[id].players[msg.data.pid].name + "' has left the game", pid: -1}}));
-					delete lobbies[id].players[msg.data.pid];
-				}
-				break;
-		}		
 	});
 	ws.on("close", function(e){
 		var found = false;
@@ -260,7 +265,7 @@ wss.on("connection", function(ws){
 				}
 			});
 			if (found) return;
-		});		
+		});
 	});
 });
 
@@ -268,4 +273,4 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-lobbies.push(new lobby("Lobby No. 1", 7));
+lobbies.push(new Lobby("Lobby No. 1", 7));

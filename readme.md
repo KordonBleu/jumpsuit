@@ -26,6 +26,13 @@ Another suggestion was "DontLookAtIt" - DLAI (pronounced Delay), but we thought 
 ## How to run
 ```sh
 $ npm install
+$ git submodules init
+$ git submodules update
 $ node server.js
 ```
 Now you can access it at `http://localhost:8080` in your browser.
+
+### Monitor mode
+```sh
+$ node server.js -m
+```
