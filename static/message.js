@@ -18,7 +18,13 @@ var MESSAGE = {
 	CHAT: 16,
 	PLAYER_DATA: 17,
 	PLAYER_CONTROLS: 18,
-	GAME_DATA: 19
-};
+	PLAY_SOUND: 19,
+	GAME_DATA: 20
+},
+ERROR = {
+	NO_LOBBY: 0,
+	NO_SLOT: 1,
+	NAME_TAKEN: 2
+}
 
-if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = MESSAGE;
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = { MESSAGE: MESSAGE, ERROR: ERROR };

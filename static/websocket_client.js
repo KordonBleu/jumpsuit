@@ -2,7 +2,7 @@ function connection(address){
 	var socket = new WebSocket(address || "ws://localhost:8080"),
 		pid = -1;
 
-	this.alive = function (){ return socket.readyState === 1; }
+	this.alive = function() { return socket.readyState === 1; };
 	
 
 	socket.onopen = function(e){
@@ -109,7 +109,19 @@ function connection(address){
 					}
 					break;
 				case MESSAGE.ERROR:
-					alert("Error", msg.data.content);
+					var errDesc;
+					switch(msg.data.code) {
+						case ERROR.NO_LOBBY:
+							errDesc = "This lobby doesn't exist (anymore)";
+							break;
+						case ERROR.NO_SLOT:
+							errDesc = "There's no slot left in the lobby";
+							break;
+						case ERROR.NAME_TAKEN:
+							errDesc = "The name" + player.name + "is already taken";
+							break;
+					}
+					alert("Error " + msg.data.code + ":\n" + errDesc);
 					break;
 			}
 		} catch(err) {
