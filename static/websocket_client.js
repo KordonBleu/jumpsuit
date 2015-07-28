@@ -219,4 +219,5 @@ window.addEventListener("hashchange", hashChange);
 function settingsChanged(){
 	if (!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return; 
 	currentConnection.sendSettings();
+	//TODO: save parameters in a cookie
 }

@@ -1,9 +1,15 @@
-::selection{
+::selection {
 	background: #AD3726;
 	color: #c9c9c9;
 }
 @viewport {
 	user-zoom: fixed;
+}
+@font-face {
+	font-family: "Open Sans";
+	font-style: normal;
+	font-weight: 400;
+	src: local('Open Sans'), local('OpenSans'), url("assets/fonts/open_sans.woff2") format("woff2"), url("assets/fonts/open_sans.woff") format("woff");
 }
 html, body {
 	margin: 0;
@@ -37,14 +43,71 @@ button {
 	opacity: 0.3;
 	transition: opacity .15s;
 }
-#audio-icon{
+#audio-icon {
 	position: fixed;
 	width: 24px;
 	height: 24px;
 	top: 8px;
 	right: 8px;
 }
-.chat-input{
+#name {
+	position: fixed;
+	top: 20px;
+	left: 55px;
+	margin: 0;
+	padding: 0;
+	height: 32px;
+	border: none;
+	font-size: 1.8em;
+	color: #eee;
+	background: none;
+}
+#badge {
+	position: fixed;
+	top: 18px;
+	left: 8px;
+	width: 32px;
+	height: 32px;
+}
+#appearance-box {
+	position: fixed;
+	top: 60px;
+	left: 8px;
+	background-color: #ebedf4;
+	border-radius: 1px;
+}
+#appearance-box:before {/* The triangle hack */
+	border: solid;
+	border-color: #ebedf4 transparent;
+	border-width: 0 6px 6px 6px;
+	position: fixed;
+	left: 18px;
+	top: 54px;
+	content: "";
+}
+#appearance-box .playerSelect {
+	width: 47px;
+	height: 47px;
+	margin: 8px 8px;
+	display: block;
+	float: left;
+	background-size: 47px 47px;
+	background-position: center;
+	border-radius: 5px;
+	transition: background-size .1s;
+}
+#appearance-box .playerSelect:hover {
+	background-size: 85px 85px;
+}
+#appearance-box #playerBlue {background-image: url("assets/images/alienBlue_badge.svg");}
+#appearance-box #playerBeige {background-image: url("assets/images/alienBeige_badge.svg");}
+#appearance-box #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
+#appearance-box #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
+#appearance-box #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
+#name.hidden, #badge.hidden, #appearance-box.hidden {
+	display: none;
+}
+.chat-input {
 	position: fixed;
 	bottom: 20px;
 	left: 20%;
@@ -71,7 +134,7 @@ button {
 	min-width: 240px;
 	transition: width .5s ease, min-width .5s ease, opacity .5s;
 }
-.info-box .container{
+.info-box .container {
 	float: left;
 /*	border-top: 2px solid #AD3726;*/
 }
@@ -130,7 +193,7 @@ button {
 	background: transparent;
 	color: #AD3726;
 }
-.multiplayer-box{
+.multiplayer-box {
 	transition: left .4s;
 	opacity: 1;
 	position: fixed;
@@ -149,7 +212,7 @@ button {
 	overflow-y: auto;
 	overflow-x: hidden;
 }
-.multiplayer-box.hidden{
+.multiplayer-box.hidden {
 	transition: height .2s, width .2s .2s, opacity .8s, left 0s .4s;
 	height: 5px;
 	width: 5px;
@@ -158,14 +221,14 @@ button {
 	opacity: 0;
 	left: -200%;
 }
-.multiplayer-box.hidden *{
+.multiplayer-box.hidden * {
 	display: none;
 }
-.multiplayer-box h2, h4{
+.multiplayer-box h2, h4 {
 	display: inline-block;
 	margin: 5px 0;
 }
-.multiplayer-box .button, button{
+.multiplayer-box .button, button {
 	box-sizing: border-box;
 	cursor: pointer;
 	float: left;
@@ -179,52 +242,18 @@ button {
 	border: 2px solid transparent;
 	text-align: center;
 }
-.multiplayer-box button:disabled{
+.multiplayer-box button:disabled {
 	background: #555;
 }
-.multiplayer-box #player-list{
+.multiplayer-box #player-list {
 	font-size: 24px;
 	list-style-type: none;
 	width: 100%;
 }
-.multiplayer-box #player-list a{
+.multiplayer-box #player-list a {
 	color: #f33;
 	text-decoration: none;
 }
-.multiplayer-box form label{
-	float: left;
-	width: 100px;
-}
-.multiplayer-box form input[type=text]{
-	width: 300px;
-	padding: 4px;
-}
-.multiplayer-box form .placeholder{
-	float: left;
-	width: 100%;
-	height: 20px;
-	display: block;
-}
-.multiplayer-box form .playerSelect {
-	width: 47px;
-	height: 47px;
-	margin: 8px 8px;
-	display: block;
-	float: left;
-	background-size: 47px 47px;
-	background-position: center;
-	border-radius: 5px;
-	transition: background-size .1s;
-}
-.multiplayer-box form .playerSelect:hover {
-	background-size: 85px 85px;
-}
-
-.multiplayer-box form #playerBlue {background-image: url("assets/images/alienBlue_badge.svg");}
-.multiplayer-box form #playerBeige {background-image: url("assets/images/alienBeige_badge.svg");}
-.multiplayer-box form #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
-.multiplayer-box form #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
-.multiplayer-box form #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
 
 .multiplayer-box #key-info {
 	width: 100%;
@@ -239,17 +268,17 @@ button {
 	cursor: pointer;
 	margin-bottom: 16px;
 }
-.multiplayer-box #key-settings #key-action{
+.multiplayer-box #key-settings #key-action {
 	width: 140px;
 }
-.multiplayer-box #key-settings tr{
+.multiplayer-box #key-settings tr {
 	transition: background .2s, color .2s;
 }
 .multiplayer-box #key-settings tr:not(#key-header):not(.selected):hover{
 	background: #AD3726;
 	color: #ddd;
 }
-.multiplayer-box #key-settings  tr.selected{
+.multiplayer-box #key-settings  tr.selected {
 	background: #178e3a;
 	color: #ddd;
 }

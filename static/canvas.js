@@ -77,6 +77,8 @@ function init() {//init is done differently in the server
 	loadProcess(function(){//gets called once every resource is loaded
 		player = new Player("Unnamed Player", "alienGreen", 0, 0);
   		document.getElementById("multiplayer-box").className = "multiplayer-box";
+		document.getElementById("name").removeAttribute("class");
+		document.getElementById("badge").removeAttribute("class");
 		loop();
 	});
 }
@@ -304,14 +306,11 @@ function loop(){
 
 
 	//layer 3: HUD / GUI
-	context.font = "28px Open Sans";
 	context.textAlign = "left";
 	context.textBaseline = "hanging";
-
 	context.fillStyle = "#eee";
-	context.drawImage(resources[player.appearance + "_badge"], 8, 18, 32, 32);
-	context.fillText(player.name, 55, 20);
 	context.font = "20px Open Sans";
+
 	context.fillText("Health: ", 8, 90);
 	for (var i = 0; i < player.health; i++){
 		context.drawImage(resources["shield"], 80 + i * 22, 90, 18, 18);
