@@ -109,12 +109,8 @@ function doPhysics(players, planets, enemies) {
 		
 		if (players[i].attachedPlanet >= 0){
 			if (typeof playersOnPlanets[players[i].attachedPlanet] === "undefined") playersOnPlanets[players[i].attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
-			for (team in Planet.prototype.teamColours){
-				if (team === players[i].appearance) {
-					playersOnPlanets[players[i].attachedPlanet][team]++;
-					console.log(players[i].appearance);
-				} else playersOnPlanets[players[i].attachedPlanet][team] -= (playersOnPlanets[players[i].attachedPlanet][team] > 0) * 1;
-			}
+			for (team in Planet.prototype.teamColours) playersOnPlanets[players[i].attachedPlanet][team] += (team === players[i].appearance) ? 1 : -1;
+
 			var stepSize = Math.PI * 0.007 * (150 / planets[players[i].attachedPlanet].box.radius);
 			if (players[i].controls["moveLeft"] > 0){
 				stepSize = stepSize * players[i].controls["moveLeft"];
@@ -170,23 +166,21 @@ function doPhysics(players, planets, enemies) {
 		}
 		players[i].setWalkframe();
 	}
-	console.log(playersOnPlanets);
 	for (var i = 0; i < playersOnPlanets.length; i++){
 		if (typeof playersOnPlanets[i] === "undefined") continue;
 		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
 			max = Math.max.apply(null, toArray),
 			teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
 
-		if (max !== 0){
+		if (max > 0){
 			var team = teams[toArray.indexOf(max)];
-			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + max > 100) ? 100 : planets[i].progress.value + max;
+			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
 			else {
-				planets[i].progress.value -= max;
+				planets[i].progress.value -= max / 3;
 				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
 			}
-		}		
+		}
 	}
-
 }
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {

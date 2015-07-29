@@ -236,7 +236,7 @@ document.getElementById("chat-input").addEventListener("keydown", function(e){
 			this.textParts = [this.value.substr(0, this.cursor - this.search.length), this.value.substr(this.cursor)];
 		}
 		
-		var filteredPlayerList = (player.playerName.indexOf(this.search) === 0) ? [player.playerName] : [];
+		var filteredPlayerList = (player.name.indexOf(this.search) === 0) ? [player.name] : [];
 		for (pid in otherPlayers){
 			if (otherPlayers[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[pid].name);
 		}

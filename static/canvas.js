@@ -135,7 +135,7 @@ function loop(){
 			}
 			for (var j = 0; j < text.length; j++) {
 				if (chat.history[i].pid === -1) context.fillStyle = "#fff37f";
-				else if (chat.history[i].name === player.playerName) context.fillStyle = "#56d7ff";
+				else if (chat.history[i].name === player.name) context.fillStyle = "#56d7ff";
 				else context.fillStyle = "#eee";
 				context.fillText(text[j], 18, 150 + y + j * 17);				
 			}

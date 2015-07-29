@@ -161,7 +161,7 @@ button {
 .multiplayer-box.hidden *{
 	display: none;
 }
-.multiplayer-box h2, h4{
+.multiplayer-box h4{
 	display: inline-block;
 	margin: 5px 0;
 }
