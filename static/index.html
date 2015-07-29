@@ -11,7 +11,7 @@
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<img src="assets/images/controls/unmute.svg" id="audio-icon"/>
+		<img src="assets/images/controls/unmute.svg" alt="mute icon" id="audio-icon"/>
 		<ul id="controls">
 			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
 				<img src="assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
@@ -19,12 +19,22 @@
 			<li><img src="assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"/>
 			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/></li>
 		</ul>
+		<img src="assets/images/alienGreen_badge.svg" alt="alien badge" id="badge" class="hidden"/>
+		<div id="appearance-box" class="hidden">
+			<span id="playerBlue" class="playerSelect"></span>
+			<span id="playerBeige" class="playerSelect"></span>
+			<span id="playerGreen" class="playerSelect"></span>
+			<span id="playerPink" class="playerSelect"></span>
+			<span id="playerYellow" class="playerSelect"></span>
+		</div>
+	<input type="text" id="name" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
-			<p>This is a little canvas-only game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
-			<p>Music &amp; sound effects by Arnaud Poyeton (except the laser sound which is from Kenney)<br/>
-			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> and <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a></p>
+			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
+			<p>Music &amp; sound effects by Arnaud Poyeton (except the laser sound from Kenney)<br/>
+			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> (except the jetpack icon from <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a>)<br/>
+			Open Sans font by Steve Matteson</p>
 			<a class="button" onclick="changeTab(this);">Share</a><a class="button" onclick="changeTab(this);">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<div class="container">
@@ -53,17 +63,6 @@
 			</ul>
 			<hr>
 			<h4>Settings</h4>
-			<form>
-				<label>Name: </label>
-				<input type="text" id="name" value="Unnamed Player" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'"/><div class="placeholder"></div>
-				<label>Appearance: </label>
-				<div id="playerBlue" class="playerSelect"></div>
-				<div id="playerBeige" class="playerSelect"></div>
-				<div id="playerGreen" class="playerSelect"></div>
-				<div id="playerPink" class="playerSelect"></div>
-				<div id="playerYellow" class="playerSelect"></div>
-				<div class="placeholder"></div>
-			</form>
 			<div class="key-info" id="key-info">Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
 				Also you can't assign Mouse keys to the key settings!<br/><br/>
 				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.
@@ -75,7 +74,6 @@
 					<th id="key-col-alt">Alternate Keys</th>
 				</tr>
 			</table>
-			<button id="save">Save</button> <button id="reset">Reset</button>
 		</div>
 		<dialog id="lobby-name-dialog">
 			Type in your prefered Lobby name!<br/>

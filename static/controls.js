@@ -68,7 +68,7 @@ function handleInput(e){
 		} else if (triggered == "chat"){
 			e.preventDefault();
 			if (s == 1) chat.enabled = !chat.enabled;
-		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chat.enabled && framesClosed) {
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chat.enabled && framesClosed && document.activeElement !== document.getElementById("name")) {
 			e.preventDefault();
 			player.controls[triggered] = s;
 			currentConnection.refreshControls(player.controls);
@@ -254,7 +254,10 @@ document.getElementById("chat-input").addEventListener("keydown", function(e){
 var chosenAppearance = "alienBlue";
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
-		chosenAppearance = this.id.replace("player", "alien");
+		player.appearance = this.id.replace("player", "alien");
+		document.getElementById("badge").setAttribute("src", "assets/images/" + player.appearance + "_badge.svg");
+		document.getElementById("appearance-box").className = "hidden";
+		settingsChanged();
 	});
 });
 document.getElementById("disconnect").addEventListener("click", function(){
@@ -271,8 +274,15 @@ document.getElementById("refresh-or-leave").addEventListener("click", function()
 	else refreshLobbies();
 });
 document.getElementById("new-lobby").addEventListener("click", newLobby);
-document.getElementById("save").addEventListener("click", function(){
-	player.appearance = chosenAppearance;
-	player.name = document.getElementById("name").value;
-	settingsChanged();
+document.getElementById("name").addEventListener("keydown", function(e) {
+	if(e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
+		player.name = this.value;
+		e.target.blur();
+		settingsChanged();
+	}
+});
+document.getElementById("badge").addEventListener("click", function() {
+	var apEl = document.getElementById("appearance-box");
+	if(apEl.className === "hidden") apEl.removeAttribute("class");
+	else apEl.className = "hidden";
 });
