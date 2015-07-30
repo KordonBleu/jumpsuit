@@ -1,8 +1,7 @@
 function connection(address){
-	var socket = new WebSocket(address || "ws://localhost:8080");
+	var socket = new WebSocket(address || "ws://" + location.hostname + (location.port !== "" ? "" : ":" + location.port));
 
-	this.alive = function() { return socket.readyState === 1; };
-	
+	this.alive = function() { return socket.readyState === 1; };	
 
 	socket.onopen = function(e){
 		this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
@@ -18,7 +17,6 @@ function connection(address){
 	socket.onmessage = function(message){
 		try{
 			msg = JSON.parse(message.data);
-
 			switch(msg.msgType){
 				case MESSAGE.SENT_LOBBIES:
 					document.getElementById("new-lobby").disabled = false;
@@ -93,7 +91,7 @@ function connection(address){
 				case MESSAGE.GAME_DATA:
 					var i, j;
 					for (i = 0; i < msg.data.planets.length; i++){
-						planets[i].progress = msg.data.planets[i];						
+						planets[i].progress = msg.data.planets[i];				
 					}
 					for (i = 0; i < msg.data.enemies.length; i++){
 						enemies[i].box.angle = msg.data.enemies[i].angle;

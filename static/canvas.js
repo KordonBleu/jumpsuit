@@ -307,7 +307,7 @@ function loop(){
 		player.looksLeft);
 
 
-	//layer 3: HUD / GUI
+	//layer 3: HUD / GUI	
 	context.textAlign = "left";
 	context.textBaseline = "hanging";
 	context.fillStyle = "#eee";
@@ -322,7 +322,7 @@ function loop(){
 	context.fillRect(80, 126, player.fuel, 8);
 
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
-		element.setAttribute("style", "opacity: " + (0.3 + controls[element.id] * 0.7));
+		element.setAttribute("style", "opacity: " + (0.3 + player.controls[element.id] * 0.7));
 	});
 
 	drawChat();

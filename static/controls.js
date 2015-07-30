@@ -34,16 +34,21 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	40: "ArrowDown"
 }
 
+
 function handleInputMobile(e){
+
 	for (var t = 0; t < e.changedTouches.length; t++){
-		var touch = e.changedTouches.item(t);
+		var touch = e.changedTouches[t];
 		if (touch.target.id == "canvas"){
 			dragging(e.type, touch.pageX, touch.pageY);
 		} else {
 			e.preventDefault();
 			if (e.type.indexOf("move") !== -1) return;
 			var s = (e.type.indexOf("start") > -1 && e.type.indexOf("end") == -1);
-			if (player.controls[touch.target.id] !== undefined) player.controls[touch.target.id] = s;
+			if (player.controls[touch.target.id] !== undefined) {
+				player.controls[touch.target.id] = s * 1;
+				currentConnection.refreshControls(player.controls);
+			}
 		}
 	}
 }

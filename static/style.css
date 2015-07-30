@@ -12,10 +12,10 @@ html, body {
 	height: 100%;
 	overflow: hidden;
 	font-family: "Open Sans";
-	-webkit-user-select: none;
+	/*-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
-	user-select: none;
+	user-select: none;*/
 }
 button {
 	outline-color: #702318;
