@@ -1,7 +1,7 @@
 function connection(address){
-	var socket = new WebSocket(address || "ws://" + location.hostname + (location.port !== "" ? "" : ":" + location.port));
+	var socket = new WebSocket(address || "ws://" + (location.hostname === "" ? "localhost:8080" : (location.hostname + location.port !== "" ? "" : ":" + location.port)));
 
-	this.alive = function() { return socket.readyState === 1; };	
+	this.alive = function() { return socket.readyState === 1; };
 
 	socket.onopen = function(e){
 		this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
