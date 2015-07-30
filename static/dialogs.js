@@ -1,15 +1,33 @@
-[].forEach.call(document.getElementsByTagName("dialog"), dialogPolyfill.registerDialog);
+var dialog = new function(){
+	var dialogElement = document.getElementById("dialog"),
+		textElement = document.getElementById("dialog-text"),
+		buttonConfirm = document.getElementById("dialog-confirm"),
+		buttonAbort = document.getElementById("dialog-abort"),
+		_callback;
 
-function cancelHandler(e) {
-	e.target.parentElement.close();
-}
-[].forEach.call(document.getElementsByClassName("cancel-button"), function (button) { button.addEventListener("click", cancelHandler) });
+	textElement.addEventListener("change", function(){
+		buttonConfirm.disabled = (textElement.value === "");
+	});
 
-var lobbyOkay = document.getElementById("lobby-okay");
-lobbyOkay.addEventListener("click", function (e){
-	var input = document.getElementById("lobby-input");
-	if (input.value !== "") {
-		currentConnection.createLobby(input.value);
-		cancelHandler(e);
-	}		
-});
+	textElement.addEventListener("keydown", function(e){
+		textElement.maxLength = 40;
+		if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter"){
+			dialog.close(textElement.value);
+		}
+	});
+	buttonConfirm.addEventListener("click", function(){
+		dialog.close(textElement.value);
+	});
+	buttonAbort.addEventListener("click", function(){
+		dialog.close();
+	});
+	this.show = function(callback){
+		_callback = callback;
+		textElement.value = "";
+		dialogElement.className = "";
+	}
+	this.close = function(result){
+		if (typeof result !== "undefined" && result !== "") _callback(result);
+		dialogElement.className = "hidden";
+	}
+};

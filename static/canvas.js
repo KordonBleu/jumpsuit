@@ -3,15 +3,16 @@
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
 	meteors = [],
-	player,	
+	player,
+	pid,
 	otherPlayers = [],
 	planets = [],
 	enemies = [],
 	game = {
 		muted: false,
-		dragStart: {x: 0, y: 0},
-		drag: {x: 0, y: 0},
-		offset: {x: 0, y: 0}
+		dragStart: new Vector(0, 0),
+		drag: new Vector(0, 0),
+		offset: new Vector(0, 0)
 	},
 	chat = {
 		history: [],
@@ -76,6 +77,8 @@ function init() {//init is done differently in the server
 
 	loadProcess(function(){//gets called once every resource is loaded
 		player = new Player("Unnamed Player", "alienGreen", 0, 0);
+		player.name = localStorage.getItem("settings.jumpsuit.name") || "Unnamed Player";
+		document.getElementById("name").value = player.name;
   		document.getElementById("multiplayer-box").className = "multiplayer-box";
 		document.getElementById("name").removeAttribute("class");
 		document.getElementById("badge").removeAttribute("class");
@@ -137,7 +140,7 @@ function loop(){
 			}
 			for (var j = 0; j < text.length; j++) {
 				if (chat.history[i].pid === -1) context.fillStyle = "#fff37f";
-				else if (chat.history[i].name === player.name) context.fillStyle = "#56d7ff";
+				else if (chat.history[i].pid === player.pid) context.fillStyle = "#56d7ff";
 				else context.fillStyle = "#eee";
 				context.fillText(text[j], 18, 150 + y + j * 17);				
 			}
@@ -194,7 +197,6 @@ function loop(){
 	}
 
 	function drawCircleBar(x, y, val){
-		console.log(x, y, val)
 		context.save();
 		context.beginPath();
 		context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);

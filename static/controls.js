@@ -1,3 +1,5 @@
+const defaultKeymap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
+
 String.prototype.ucFirst = function (){
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
@@ -46,6 +48,7 @@ function handleInputMobile(e){
 	}
 }
 function handleInput(e){
+	if (document.getElementById("dialog").className !== "hidden") return;
 	var s = (e.type === "keydown") * 1,
 		triggered,
 		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1);
@@ -75,9 +78,9 @@ function handleInput(e){
 		}
 	}
 }
-handleInput.keyMap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
+handleInput.keyMap = defaultKeymap;
 
-function dragging(ev, x, y){	
+function dragging(ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.drag.x = x;
 		game.drag.y = y;
@@ -122,43 +125,54 @@ function handleGamepad(){
 	}
 }
 
-var reverseKeyMap = {};
-for (key in handleInput.keyMap) {
-	var action = handleInput.keyMap[key];
-	if(reverseKeyMap[action] === undefined) reverseKeyMap[action] = [];
-	reverseKeyMap[action].push(key);
+
+var settingsEl = document.getElementById("key-settings"),
+	presets = localStorage.getItem("settings.jumpsuit.keys");
+if (presets != null){
+	try{
+		handleInput.keyMap = JSON.parse(presets);
+	} catch (e) {/* nothing to see */}
 }
 
-var settingsEl = document.getElementById("key-settings");
-for (action in reverseKeyMap) {
-	var rowEl = document.createElement("tr"),
-		actionEl = document.createElement("td"),
-		keyEl;
-
-	actionEl.textContent = action;
-	rowEl.appendChild(actionEl);
-
-	var slice = reverseKeyMap[action];
-	for (var i = 0; i != 2; i++){
-		keyEl = document.createElement("td");
-		if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
-		else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
-		rowEl.appendChild(keyEl);
+var reverseKeyMap;
+function initKeymap(){
+	reverseKeyMap = {};
+	for (key in handleInput.keyMap) {
+		var action = handleInput.keyMap[key];
+		if(reverseKeyMap[action] === undefined) reverseKeyMap[action] = [];
+		reverseKeyMap[action].push(key);
 	}
-	settingsEl.appendChild(rowEl);
-}
 
+	for (action in reverseKeyMap) {
+		var rowEl = document.createElement("tr"),
+			actionEl = document.createElement("td"),
+			keyEl;
+
+		actionEl.textContent = action;
+		rowEl.appendChild(actionEl);
+
+		var slice = reverseKeyMap[action];
+		for (var i = 0; i != 2; i++){
+			keyEl = document.createElement("td");
+			if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
+			else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
+			rowEl.appendChild(keyEl);
+		}
+		settingsEl.appendChild(rowEl);
+	}
+}
+initKeymap();
 
 var keyCol = document.getElementById("key-col"),
 	changingKeys = false,
 	selectedRow = -1;
 
-settingsEl.addEventListener("click", function(e) {	
-	function reselect(obj){	
+settingsEl.addEventListener("click", function(e) {
+	function reselect(obj){
 		for (row in e.target.parentNode.parentNode.childNodes){
 			e.target.parentNode.parentNode.childNodes[row].className = "";
 			document.removeEventListener("keydown", wrap);
-		}		
+		}
 
 		if (typeof obj !== "undefined") {
 			obj.className = "selected";
@@ -175,11 +189,11 @@ settingsEl.addEventListener("click", function(e) {
 		var keyName = e.key || convertToKey(e.keyCode),
 			target = document.getElementById("key-settings").childNodes[selectedRow],
 			firstKey = target.childNodes[1],
-			altKey = target.childNodes[2];		
-		delete handleInput.keyMap[altKey.textContent];		
+			altKey = target.childNodes[2];
+		delete handleInput.keyMap[altKey.textContent];
 		handleInput.keyMap[keyName] = target.firstChild.textContent;
 		altKey.textContent = firstKey.textContent;
-		firstKey.textContent = keyName.replace(" ", "Space").ucFirst();		
+		firstKey.textContent = keyName.replace(" ", "Space").ucFirst();
 	}
 	function wrap(nE) {
 		nE.preventDefault();
@@ -192,7 +206,7 @@ settingsEl.addEventListener("click", function(e) {
 			case "keyup":
 				handleChangeKey(nE);
 				reselect();
-				break;				
+				break;
 		}
 	}
 	if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
@@ -273,9 +287,11 @@ document.getElementById("refresh-or-leave").addEventListener("click", function()
 	if (this.textContent === "Leave Lobby")	leaveLobby();
 	else refreshLobbies();
 });
-document.getElementById("new-lobby").addEventListener("click", newLobby);
+document.getElementById("new-lobby").addEventListener("click", function(){
+	dialog.show(newLobby);
+});
 document.getElementById("name").addEventListener("keydown", function(e) {
-	if(e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
+	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
 		player.name = this.value;
 		e.target.blur();
 		settingsChanged();
@@ -283,6 +299,12 @@ document.getElementById("name").addEventListener("keydown", function(e) {
 });
 document.getElementById("badge").addEventListener("click", function() {
 	var apEl = document.getElementById("appearance-box");
-	if(apEl.className === "hidden") apEl.removeAttribute("class");
+	if (apEl.className === "hidden") apEl.removeAttribute("class");
 	else apEl.className = "hidden";
 });
+
+
+window.onbeforeunload = function(){
+	localStorage.setItem("settings.jumpsuit.name", player.name);
+	localStorage.setItem("settings.jumpsuit.keys", JSON.stringify(handleInput.keyMap));
+}

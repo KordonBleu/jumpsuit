@@ -1,4 +1,4 @@
-var MESSAGE = {
+const MESSAGE = {
 	ERROR: 0,
 	CONNECT: 1,
 	GET_LOBBIES: 2,

@@ -1,6 +1,5 @@
 function connection(address){
-	var socket = new WebSocket(address || "ws://localhost:8080"),
-		pid = -1;
+	var socket = new WebSocket(address || "ws://localhost:8080");
 
 	this.alive = function() { return socket.readyState === 1; };
 	
@@ -25,7 +24,7 @@ function connection(address){
 					document.getElementById("new-lobby").disabled = false;
 					var list = document.getElementById("player-list");
 					while (list.firstChild) {
-							list.removeChild(list.firstChild);
+						list.removeChild(list.firstChild);
 					}
 					for (var i = 0, el, li; i != msg.data.length; i++){
 						li = document.createElement("li");
@@ -135,6 +134,7 @@ function connection(address){
 			data: {uid: location.hash.substr(3), pid: pid}
 		}));
 		location.hash = "";
+		pid = -1;
 		socket.close();
 	};
 	this.connectLobby = function (){
@@ -191,10 +191,9 @@ function closeSocket(){
 function openSocket(){
 	currentConnection = new connection();
 }
-function newLobby(){
+function newLobby(name){
 	if (!currentConnection.alive()) return;
-	var dialog = document.getElementById("lobby-name-dialog");
-	dialog.showModal();
+	currentConnection.createLobby(name);
 }
 
 function refreshLobbies(){

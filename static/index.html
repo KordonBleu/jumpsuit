@@ -75,11 +75,15 @@
 				</tr>
 			</table>
 		</div>
-		<dialog id="lobby-name-dialog">
-			Type in your prefered Lobby name!<br/>
-			<input type="text" placeholder="Lobby name" id="lobby-input"/><br/>
-			<button type="button" class="cancel-button">Cancel</button><button type="button" class="okay-button" id="lobby-okay">Okay</button>
-		</dialog>
+		<div id="dialog" class="hidden">
+			<div id="dialog-backdrop"></div>
+			<div class="dialog-content">
+				<h2>Enter your desired name to create a new lobby</h2>
+				<input id="dialog-text" type="text" maxlength="40" />
+				<button id="dialog-confirm">Yeah</button>
+				<button id="dialog-abort">Nah</button>
+			</div>
+		</div>
 		<script src="dialogs.js"></script>
 		<script src="audio.js"></script>
 		<script src="engine.js"></script>
