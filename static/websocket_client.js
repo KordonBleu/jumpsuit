@@ -16,7 +16,7 @@ function connection(address){
 		this.close();
 	};
 	socket.onmessage = function(message){
-		try{
+		//try{
 			msg = JSON.parse(message.data);
 			switch(msg.msgType){
 				case MESSAGE.SENT_LOBBIES:
@@ -35,21 +35,31 @@ function connection(address){
 					}
 					break;
 				case MESSAGE.CONNECT_SUCCESSFUL:					
-					pid = msg.data.pid;				
+					pid = msg.data.pid;
 					document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
 					document.getElementById("new-lobby").disabled = true;
+					break;
+				case MESSAGE.PING:
+					socket.send(JSON.stringify({
+						msgType: MESSAGE.PONG,
+						data: {
+							pid: pid,
+							key: msg.data.key,
+							uid: location.hash.substr(3)
+						}
+					}));
 					break;
 				case MESSAGE.PLAYER_SETTINGS:
 					var list = document.getElementById("player-list");
 					while (list.firstChild) {
 						list.removeChild(list.firstChild);
 					}
-					for (var i = 0, li; i != msg.data.length; i++){
+					msg.data.forEach(function(player, index) {
 						li = document.createElement("li");
-						li.textContent = msg.data[i].name;
-						if (i === pid) li.style.color = "#f33";
+						li.textContent = player.name;
+						if (index === pid) li.style.color = "#f33";
 						list.appendChild(li);
-					}
+					});
 					break;
 				case MESSAGE.CHAT:
 					chat.history.splice(0, 0, msg.data);
@@ -135,10 +145,10 @@ function connection(address){
 					alert("Error " + msg.data.code + ":\n" + errDesc);
 					break;
 			}
-		} catch(err) {
+		/*} catch(err) {
 			console.log("Badly formated JSON message received:", err);
 			console.log("'" + message.data + "'");
-		}
+		}*/
 	};
 	this.close = function(){
 		socket.send(JSON.stringify({

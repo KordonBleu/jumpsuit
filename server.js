@@ -137,7 +137,54 @@ Lobby.prototype.broadcast = function(message) {
 Lobby.prototype.update = function() {
 	var oldDate = new Date();
 	engine.doPhysics(this.players, this.planets, this.enemies);
-	this.processTime = new Date() - oldDate;	
+	this.processTime = new Date() - oldDate;
+
+	for (var i = 0; i < this.players.length; i++){
+		if (this.players[i] === undefined) continue;
+		this.broadcast(JSON.stringify({
+			msgType: MESSAGE.PLAYER_DATA,
+			data: {
+				pid: i, x: this.players[i].box.center.x.toFixed(2), y: this.players[i].box.center.y.toFixed(2),
+				angle: this.players[i].box.angle.toFixed(4), walkFrame: this.players[i].walkFrame, health: this.players[i].health, fuel: this.players[i].fuel,
+				name: this.players[i].name, appearance: this.players[i].appearance, looksLeft: this.players[i].looksLeft
+			}
+		}));
+	}
+
+		this.players.forEach(function(player) {
+			setTimeout(function() {
+				player.ws.send(JSON.stringify({
+					msgType: MESSAGE.PLAYER_DATA,
+					data: {
+						pid: i, x: lobby.players[i].box.center.x.toFixed(5), y: lobby.players[i].box.center.y.toFixed(5), attachedPlanet: lobby.players[i].attachedPlanet,
+						angle: lobby.players[i].box.angle.toFixed(7), walkFrame: lobby.players[i].walkFrame, health: lobby.players[i].health, fuel: lobby.players[i].fuel,
+						name: lobby.players[i].name, appearance: lobby.players[i].appearance, looksLeft: lobby.players[i].looksLeft
+					}
+				}));
+				player.ws.send(JSON.stringify({
+					msgType: MESSAGE.GAME_DATA,
+					data: {
+						planets: lobby.planets.getGameData(),
+						enemies: lobby.enemies.getGameData()
+					}
+				}));
+				player.lastRefresh = Date.now();
+			}.bind(this), Date.now() - player.lastRefresh + player.latency);
+		}.bind(this));
+}
+Lobby.prototype.pingPlayers = function() {
+	this.players.forEach(function(player) {
+		player.lastPing = {};
+		player.lastPing.timestamp = new Date();
+		player.lastPing.key = Math.floor(Math.random()*65536);
+
+		player.ws.send(JSON.stringify({
+			msgType: MESSAGE.PING,
+			data: {
+				key: player.lastPing.key
+			}
+		}));
+	});
 }
 lobbies.getUid = function(index) {
 	var uid = index.toString(16);
@@ -152,34 +199,18 @@ lobbies.getByUid = function(uid) {
 	return this[index];
 }
 
-function updateLobbies(){
+setInterval(function() {
 	lobbies.forEach(function(lobby) {
 		lobby.update();
 	});
-}
-setInterval(function(){
-	lobbies.forEach(function (lobby){
-		for (var i = 0; i < lobby.players.length; i++){
-			if (lobby.players[i] === undefined) continue;
-			lobby.broadcast(JSON.stringify({
-				msgType: MESSAGE.PLAYER_DATA,
-				data: {
-					pid: i, x: lobby.players[i].box.center.x.toFixed(5), y: lobby.players[i].box.center.y.toFixed(5), attachedPlanet: lobby.players[i].attachedPlanet,
-					angle: lobby.players[i].box.angle.toFixed(7), walkFrame: lobby.players[i].walkFrame, health: lobby.players[i].health, fuel: lobby.players[i].fuel,
-					name: lobby.players[i].name, appearance: lobby.players[i].appearance, looksLeft: lobby.players[i].looksLeft
-				}
-			}));
-			lobby.broadcast(JSON.stringify({
-				msgType: MESSAGE.GAME_DATA,
-				data: {
-					planets: lobby.planets.getGameData(),
-					enemies: lobby.enemies.getGameData()
-				}
-			}));
-		}
-	});	
-}, 80); //send cycle
-setInterval(updateLobbies, 16); //physics cycle
+}, 16);//game physics update cycle
+//note that 16ms actually means 16 up to 16 + ~5
+setInterval(function() {
+	if(lobbies[0].players[0]) console.log("latency", lobbies[0].players[0].latency);
+	lobbies.forEach(function(lobby) {
+		lobby.pingPlayers();
+	});
+}, 1000);
 
 function monitoring(){
 	process.stdout.write('\033c');
@@ -203,8 +234,8 @@ function monitoring(){
 }
 if(process.argv[2] === "-m") setInterval(monitoring, 500);
 
-wss.on("connection", function(ws){
-	ws.on("message", function(message){
+wss.on("connection", function(ws) {
+	ws.on("message", function(message) {
 		var msg;
 		try {
 			msg = JSON.parse(message);
@@ -220,6 +251,7 @@ wss.on("connection", function(ws){
 						lobby.players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));
 						ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
 						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
+						lobby.players[pid].lastRefresh = new Date();
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
 					}
@@ -266,6 +298,16 @@ wss.on("connection", function(ws){
 					if (lobby !== null){
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));
 						delete lobby.players[msg.data.pid];
+					}
+					break;
+				case MESSAGE.PONG:
+					var lobby = lobbies.getByUid(msg.data.uid);
+					if(lobby !== null) {
+						var thisPlayer = lobby.players[msg.data.pid];
+						if(thisPlayer.lastPing.key === msg.data.key) {
+							thisPlayer.latency = (new Date() - thisPlayer.lastPing.timestamp) / 2;
+							//up speed is usually faster than down speed so we can send world data at `thisPlayer.latency` pace
+						}
 					}
 					break;
 			}
