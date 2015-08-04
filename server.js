@@ -135,9 +135,9 @@ Lobby.prototype.broadcast = function(message) {
 	});
 }
 Lobby.prototype.update = function() {
-	var oldDate = new Date();
+	var oldDate = Date.now();
 	engine.doPhysics(this.players, this.planets, this.enemies);
-	this.processTime = new Date() - oldDate;
+	this.processTime = Date.now() - oldDate;
 
 	for (var i = 0; i < this.players.length; i++){
 		if (this.players[i] === undefined) continue;
@@ -151,31 +151,34 @@ Lobby.prototype.update = function() {
 		}));
 	}
 
-		this.players.forEach(function(player) {
+		this.players.forEach(function(player, i) {
 			setTimeout(function() {
-				player.ws.send(JSON.stringify({
-					msgType: MESSAGE.PLAYER_DATA,
-					data: {
-						pid: i, x: lobby.players[i].box.center.x.toFixed(5), y: lobby.players[i].box.center.y.toFixed(5), attachedPlanet: lobby.players[i].attachedPlanet,
-						angle: lobby.players[i].box.angle.toFixed(7), walkFrame: lobby.players[i].walkFrame, health: lobby.players[i].health, fuel: lobby.players[i].fuel,
-						name: lobby.players[i].name, appearance: lobby.players[i].appearance, looksLeft: lobby.players[i].looksLeft
-					}
-				}));
-				player.ws.send(JSON.stringify({
-					msgType: MESSAGE.GAME_DATA,
-					data: {
-						planets: lobby.planets.getGameData(),
-						enemies: lobby.enemies.getGameData()
-					}
-				}));
+				if(player === undefined) return;
+				try {
+					player.ws.send(JSON.stringify({
+						msgType: MESSAGE.PLAYER_DATA,
+						data: {
+							pid: i, x: player.box.center.x.toFixed(5), y: player.box.center.y.toFixed(5), attachedPlanet: player.attachedPlanet,
+							angle: player.box.angle.toFixed(7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
+							name: player.name, appearance: player.appearance, looksLeft: player.looksLeft
+						}
+					}));
+					player.ws.send(JSON.stringify({
+						msgType: MESSAGE.GAME_DATA,
+						data: {
+							planets: this.planets.getGameData(),
+							enemies: this.enemies.getGameData()
+						}
+					}));
 				player.lastRefresh = Date.now();
+				} catch(e) {/*Ignore errors*/}
 			}.bind(this), Date.now() - player.lastRefresh + player.latency);
 		}.bind(this));
 }
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
 		player.lastPing = {};
-		player.lastPing.timestamp = new Date();
+		player.lastPing.timestamp = Date.now();
 		player.lastPing.key = Math.floor(Math.random()*65536);
 
 		player.ws.send(JSON.stringify({
@@ -251,7 +254,7 @@ wss.on("connection", function(ws) {
 						lobby.players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));
 						ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
 						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
-						lobby.players[pid].lastRefresh = new Date();
+						lobby.players[pid].lastRefresh = Date.now();
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
 					}
@@ -305,7 +308,7 @@ wss.on("connection", function(ws) {
 					if(lobby !== null) {
 						var thisPlayer = lobby.players[msg.data.pid];
 						if(thisPlayer.lastPing.key === msg.data.key) {
-							thisPlayer.latency = (new Date() - thisPlayer.lastPing.timestamp) / 2;
+							thisPlayer.latency = (Date.now() - thisPlayer.lastPing.timestamp) / 2;
 							//up speed is usually faster than down speed so we can send world data at `thisPlayer.latency` pace
 						}
 					}

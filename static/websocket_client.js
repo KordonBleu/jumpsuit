@@ -77,8 +77,8 @@ function connection(address){
 						game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
 					} else {
 						if (otherPlayers[msg.data.pid] === undefined) otherPlayers[msg.data.pid] = new Player(msg.data.name, msg.data.appearance, msg.data.x, msg.data.y);
-						otherPlayers[msg.data.pid].timestamps._old = otherPlayers[msg.data.pid].timestamps._new || new Date();
-						otherPlayers[msg.data.pid].timestamps._new = new Date();
+						otherPlayers[msg.data.pid].timestamps._old = otherPlayers[msg.data.pid].timestamps._new || Date.now();
+						otherPlayers[msg.data.pid].timestamps._new = Date.now();
 						
 						otherPlayers[msg.data.pid].lastBox.center.x = otherPlayers[msg.data.pid].box.center.x;
 						otherPlayers[msg.data.pid].lastBox.center.y = otherPlayers[msg.data.pid].box.center.y;						
