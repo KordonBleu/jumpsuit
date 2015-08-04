@@ -135,45 +135,37 @@ Lobby.prototype.broadcast = function(message) {
 	});
 }
 Lobby.prototype.update = function() {
-	var oldDate = Date.now();
+	var oldDate = Date.now(), playerData = [];
 	engine.doPhysics(this.players, this.planets, this.enemies);
 	this.processTime = Date.now() - oldDate;
 
-	for (var i = 0; i < this.players.length; i++){
-		if (this.players[i] === undefined) continue;
-		this.broadcast(JSON.stringify({
-			msgType: MESSAGE.PLAYER_DATA,
-			data: {
-				pid: i, x: this.players[i].box.center.x.toFixed(2), y: this.players[i].box.center.y.toFixed(2),
-				angle: this.players[i].box.angle.toFixed(4), walkFrame: this.players[i].walkFrame, health: this.players[i].health, fuel: this.players[i].fuel,
-				name: this.players[i].name, appearance: this.players[i].appearance, looksLeft: this.players[i].looksLeft
-			}
-		}));
-	}
+	this.players.forEach(function(player, i) {
+		playerData[i] = (player !== undefined) ? {x: player.box.center.x.toFixed(5), y: player.box.center.y.toFixed(5), attachedPlanet: player.attachedPlanet,
+			angle: player.box.angle.toFixed(7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
+			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft
+		} : undefined;		
+	});
+	this.players.forEach(function(player, i) {
+		setTimeout(function() {
+			if (player === undefined) return;
+			try {
+				player.ws.send(JSON.stringify({
+					msgType: MESSAGE.PLAYER_DATA,
+					data: playerData
+				}));
+				player.ws.send(JSON.stringify({
+					msgType: MESSAGE.GAME_DATA,
+					data: {
+						planets: this.planets.getGameData(),
+						enemies: this.enemies.getGameData()
+					}
+				}));
+			player.lastRefresh = Date.now();
+			} catch(e) {/*Ignore errors*/}
+		}.bind(this), Math.min(60, Math.max(16, Date.now() - player.lastRefresh + player.latency)));
+		console.log(Math.max(45, Date.now() - player.lastRefresh + player.latency));
+	}.bind(this));
 
-		this.players.forEach(function(player, i) {
-			setTimeout(function() {
-				if(player === undefined) return;
-				try {
-					player.ws.send(JSON.stringify({
-						msgType: MESSAGE.PLAYER_DATA,
-						data: {
-							pid: i, x: player.box.center.x.toFixed(5), y: player.box.center.y.toFixed(5), attachedPlanet: player.attachedPlanet,
-							angle: player.box.angle.toFixed(7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
-							name: player.name, appearance: player.appearance, looksLeft: player.looksLeft
-						}
-					}));
-					player.ws.send(JSON.stringify({
-						msgType: MESSAGE.GAME_DATA,
-						data: {
-							planets: this.planets.getGameData(),
-							enemies: this.enemies.getGameData()
-						}
-					}));
-				player.lastRefresh = Date.now();
-				} catch(e) {/*Ignore errors*/}
-			}.bind(this), Date.now() - player.lastRefresh + player.latency);
-		}.bind(this));
 }
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
@@ -206,8 +198,8 @@ setInterval(function() {
 	lobbies.forEach(function(lobby) {
 		lobby.update();
 	});
-}, 16);//game physics update cycle
-//note that 16ms actually means 16 up to 16 + ~5
+}, 16);
+
 setInterval(function() {
 	if(lobbies[0].players[0]) console.log("latency", lobbies[0].players[0].latency);
 	lobbies.forEach(function(lobby) {

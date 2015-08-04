@@ -300,6 +300,7 @@ function loop(){
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer){
 		var intensity = 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000;
+		console.log(intensity / 60 * 1000)
 		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;	
 		if (otherPlayer.attachedPlanet === -1){	
 			otherPlayer.predictedBox.center.x += (parseFloat(otherPlayer.box.center.x, 10) - parseFloat(otherPlayer.lastBox.center.x, 10)) / intensity;
@@ -308,7 +309,7 @@ function loop(){
 			otherPlayer.predictedBox.center.x = planets[otherPlayer.attachedPlanet].box.center.x + Math.sin(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 		}
-		
+		console.log(otherPlayer.predictedBox.center);
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 		context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);

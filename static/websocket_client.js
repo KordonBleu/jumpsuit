@@ -65,39 +65,47 @@ function connection(address){
 					chat.history.splice(0, 0, msg.data);
 					break;
 				case MESSAGE.PLAYER_DATA:
-					if (msg.data.pid === pid){
-						player.box.center.x = msg.data.x;
-						player.box.center.y = msg.data.y;					
-						player.looksLeft = msg.data.looksLeft;
-						player.box.angle = msg.data.angle;
-						player.health = msg.data.health;
-						player.fuel = msg.data.fuel;
-						player.walkFrame = msg.data.walkFrame;
-						game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
-						game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
-					} else {
-						if (otherPlayers[msg.data.pid] === undefined) otherPlayers[msg.data.pid] = new Player(msg.data.name, msg.data.appearance, msg.data.x, msg.data.y);
-						otherPlayers[msg.data.pid].timestamps._old = otherPlayers[msg.data.pid].timestamps._new || Date.now();
-						otherPlayers[msg.data.pid].timestamps._new = Date.now();
-						
-						otherPlayers[msg.data.pid].lastBox.center.x = otherPlayers[msg.data.pid].box.center.x;
-						otherPlayers[msg.data.pid].lastBox.center.y = otherPlayers[msg.data.pid].box.center.y;						
-						otherPlayers[msg.data.pid].lastBox.angle = otherPlayers[msg.data.pid].box.angle;
+					msg.data.forEach(function(_player, i){			
+						if (i === pid){
+							player.box.center.x = _player.x;
+							player.box.center.y = _player.y;					
+							player.looksLeft = _player.looksLeft;
+							player.box.angle = _player.angle;
+							player.health = _player.health;
+							player.fuel = _player.fuel;
+							player.walkFrame = _player.walkFrame;
+							game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
+							game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
+						} else {
+							if (_player === null){
+								delete otherPlayers[i];
+								return;	
+							}
 
-						otherPlayers[msg.data.pid].box.center.x = parseFloat(msg.data.x, 10);
-						otherPlayers[msg.data.pid].box.center.y = parseFloat(msg.data.y, 10);
-						otherPlayers[msg.data.pid].box.angle = parseFloat(msg.data.angle, 10);
+							if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
+							otherPlayers[i].timestamps._old = otherPlayers[i].timestamps._new || Date.now();
+							otherPlayers[i].timestamps._new = Date.now();
+							
+							otherPlayers[i].lastBox.center.x = otherPlayers[i].box.center.x;
+							otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
+							otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
 
-						otherPlayers[msg.data.pid].predictedBox.center.x = otherPlayers[msg.data.pid].box.center.x;
-						otherPlayers[msg.data.pid].predictedBox.center.y = otherPlayers[msg.data.pid].box.center.y;
-						otherPlayers[msg.data.pid].predictedBox.angle = otherPlayers[msg.data.pid].box.angle;
-												
-						otherPlayers[msg.data.pid].looksLeft = msg.data.looksLeft;
-						otherPlayers[msg.data.pid].walkFrame = msg.data.walkFrame;
-						otherPlayers[msg.data.pid].name = msg.data.name;
-						otherPlayers[msg.data.pid].appearance = msg.data.appearance;
-						otherPlayers[msg.data.pid].attachedPlanet = msg.data.attachedPlanet;
-					}
+							//console.log(_player.x, _player.y, otherPlayers[i].predictedBox.center);
+							otherPlayers[i].box.center.x = parseFloat(_player.x, 10);
+							otherPlayers[i].box.center.y = parseFloat(_player.y, 10);
+							otherPlayers[i].box.angle = parseFloat(_player.angle, 10);
+
+							otherPlayers[i].predictedBox.center.x = otherPlayers[i].box.center.x;
+							otherPlayers[i].predictedBox.center.y = otherPlayers[i].box.center.y;
+							otherPlayers[i].predictedBox.angle = otherPlayers[i].box.angle;
+											
+							otherPlayers[i].looksLeft = _player.looksLeft;
+							otherPlayers[i].walkFrame = _player.walkFrame;
+							otherPlayers[i].name = _player.name;
+							otherPlayers[i].appearance = _player.appearance;
+							otherPlayers[i].attachedPlanet = _player.attachedPlanet;
+						}	
+					});				
 					break;
 				case MESSAGE.WORLD_DATA:
 					var i, j;
@@ -203,7 +211,6 @@ function connection(address){
 			else lastControls[c] = player.controls[c];
 		}
 		if (accordance === b) return;
-		console.log(lastControls, player.controls);
 		socket.send(JSON.stringify({
 			msgType: MESSAGE.PLAYER_CONTROLS,
 			data: {pid: pid, uid: location.hash.substr(3), controls: controls}
