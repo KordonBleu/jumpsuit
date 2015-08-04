@@ -1,5 +1,6 @@
 function connection(address){
-	var socket = new WebSocket(address || "ws://" + (location.hostname === "" ? "localhost:8080" : (location.hostname + location.port !== "" ? "" : ":" + location.port)));
+	var socket = new WebSocket(address || "ws://" + location.hostname + (location.port === "" ? "" : ":" + location.port)),
+		lastControls;
 
 	this.alive = function() { return socket.readyState === 1; };
 
@@ -66,13 +67,26 @@ function connection(address){
 						game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
 					} else {
 						if (otherPlayers[msg.data.pid] === undefined) otherPlayers[msg.data.pid] = new Player(msg.data.name, msg.data.appearance, msg.data.x, msg.data.y);
-						otherPlayers[msg.data.pid].box.center.x = msg.data.x;
-						otherPlayers[msg.data.pid].box.center.y = msg.data.y;
-						otherPlayers[msg.data.pid].box.angle = msg.data.angle;
+						otherPlayers[msg.data.pid].timestamps._old = otherPlayers[msg.data.pid].timestamps._new || new Date();
+						otherPlayers[msg.data.pid].timestamps._new = new Date();
+						
+						otherPlayers[msg.data.pid].lastBox.center.x = otherPlayers[msg.data.pid].box.center.x;
+						otherPlayers[msg.data.pid].lastBox.center.y = otherPlayers[msg.data.pid].box.center.y;						
+						otherPlayers[msg.data.pid].lastBox.angle = otherPlayers[msg.data.pid].box.angle;
+
+						otherPlayers[msg.data.pid].box.center.x = parseFloat(msg.data.x, 10);
+						otherPlayers[msg.data.pid].box.center.y = parseFloat(msg.data.y, 10);
+						otherPlayers[msg.data.pid].box.angle = parseFloat(msg.data.angle, 10);
+
+						otherPlayers[msg.data.pid].predictedBox.center.x = otherPlayers[msg.data.pid].box.center.x;
+						otherPlayers[msg.data.pid].predictedBox.center.y = otherPlayers[msg.data.pid].box.center.y;
+						otherPlayers[msg.data.pid].predictedBox.angle = otherPlayers[msg.data.pid].box.angle;
+												
 						otherPlayers[msg.data.pid].looksLeft = msg.data.looksLeft;
 						otherPlayers[msg.data.pid].walkFrame = msg.data.walkFrame;
 						otherPlayers[msg.data.pid].name = msg.data.name;
 						otherPlayers[msg.data.pid].appearance = msg.data.appearance;
+						otherPlayers[msg.data.pid].attachedPlanet = msg.data.attachedPlanet;
 					}
 					break;
 				case MESSAGE.WORLD_DATA:
@@ -171,6 +185,15 @@ function connection(address){
 		}));	
 	}
 	this.refreshControls = function (controls){
+		if (typeof lastControls === "undefined") lastControls = {};
+		var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
+		for (c in player.controls){
+			b++;
+			if (lastControls[c] === player.controls[c]) accordance++;
+			else lastControls[c] = player.controls[c];
+		}
+		if (accordance === b) return;
+		console.log(lastControls, player.controls);
 		socket.send(JSON.stringify({
 			msgType: MESSAGE.PLAYER_CONTROLS,
 			data: {pid: pid, uid: location.hash.substr(3), controls: controls}

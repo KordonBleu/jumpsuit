@@ -25,6 +25,17 @@ var canvas = document.getElementById("canvas"),
 		moveLeft: 0,
 		moveRight: 0,
 		run: 0
+	},
+	onScreenMessage = {
+		style: "",
+		content: "",
+		lifetime: 0,
+		visible: false,
+		show: function(c){
+			this.content = c;
+			this.lifetime = 500;
+			this.visible = true;
+		}
 	};
 
 function init() {//init is done differently in the server
@@ -253,7 +264,7 @@ function loop(){
 	//layer 2: the game
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
-	//doPhysics();
+
 	planets.forEach(function (planet){
 		var fadeRGB = [];
 		if (planet.progress.team === "neutral") fadeRGB = [80, 80, 80];
@@ -288,18 +299,29 @@ function loop(){
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer){
+		var intensity = 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000;
+		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;	
+		if (otherPlayer.attachedPlanet === -1){	
+			otherPlayer.predictedBox.center.x += (parseFloat(otherPlayer.box.center.x, 10) - parseFloat(otherPlayer.lastBox.center.x, 10)) / intensity;
+			otherPlayer.predictedBox.center.y += (parseFloat(otherPlayer.box.center.y, 10) - parseFloat(otherPlayer.lastBox.center.y, 10)) / intensity;
+		} else {				
+			otherPlayer.predictedBox.center.x = planets[otherPlayer.attachedPlanet].box.center.x + Math.sin(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
+			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
+		}
+		
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
-		context.fillText(otherPlayer.name, otherPlayer.box.center.x - game.offset.x, otherPlayer.box.center.y - game.offset.y - distance);
+		context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
+
+
 		drawRotatedImage(resources[otherPlayer.appearance + otherPlayer.walkFrame],
-			otherPlayer.box.center.x - game.offset.x,
-			otherPlayer.box.center.y - game.offset.y,
-			otherPlayer.box.angle,
+			otherPlayer.predictedBox.center.x - game.offset.x,
+			otherPlayer.predictedBox.center.y - game.offset.y,
+			otherPlayer.predictedBox.angle,
 			otherPlayer.looksLeft);
 	});
 
 	fadeBackground(fadeMusic);
-	
 	drawRotatedImage(resources[player.appearance + player.walkFrame],
 		player.box.center.x - game.offset.x,
 		player.box.center.y - game.offset.y,
@@ -324,8 +346,28 @@ function loop(){
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
 		element.setAttribute("style", "opacity: " + (0.3 + player.controls[element.id] * 0.7));
 	});
-
 	drawChat();
+
+	if (onScreenMessage.visible === true){
+		context.font = "22px Open Sans";
+		context.textAlign = "center";
+		context.textBaseline = "hanging";
+
+		var posY, posX, boxWidth;
+		if (onScreenMessage.lifetime-- >= 490) posY = 36 * (500 - onScreenMessage.lifetime) / 10 - 31;
+		else if (onScreenMessage.lifetime-- <= 10) posY = 36 * (onScreenMessage.lifetime) / 10 - 31;
+		else posY = 5;
+
+		boxWidth = context.measureText(onScreenMessage.content).width + 16 * 2;
+		posX = canvas.clientWidth / 2 - boxWidth / 2;
+
+		if (onScreenMessage.lifetime === 0) onScreenMessage.visible = false;
+
+		context.fillStyle = "rgba(0, 0, 0, 0.4)";
+		context.fillRect(posX, posY, boxWidth, 31);
+		context.fillStyle = "#eee";
+		context.fillText(onScreenMessage.content, canvas.clientWidth / 2, posY + 2);
+	}
 	window.requestAnimationFrame(loop);
 }
 

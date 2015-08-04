@@ -39,6 +39,9 @@ function Player(name, appearance, startx, starty, ws){
 	this.appearance = appearance;
 	this.ws = ws;
 	this.box = new Rectangle(new Point(startx, starty), resources[this.appearance + "_stand"].width, resources[this.appearance + "_stand"].height);
+	this.lastBox = new Rectangle(new Point(startx, starty), 0, 0);
+	this.predictedBox = new Rectangle(new Point(startx, starty), 0, 0);
+	this.timestamps = {_old: null, _new: null, _ticks: 0};
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
 	this.setWalkframe = function(){
@@ -78,7 +81,7 @@ function Enemy(x, y) {
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
-function doPhysics(players, planets, enemies) {
+function doPhysics(players, planets, enemies, isClient) {
 	var playersOnPlanets = new Array(planets.length);
 	for (var i = 0; i < players.length; i++){
 		if (players[i] === undefined) continue;
@@ -109,7 +112,7 @@ function doPhysics(players, planets, enemies) {
 		
 		if (players[i].attachedPlanet >= 0){
 			if (typeof playersOnPlanets[players[i].attachedPlanet] === "undefined") playersOnPlanets[players[i].attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
-			for (team in Planet.prototype.teamColours) playersOnPlanets[players[i].attachedPlanet][team] += (team === players[i].appearance) ? 1 : -1;
+			playersOnPlanets[players[i].attachedPlanet][players[i].appearance]++;					
 
 			var stepSize = Math.PI * 0.007 * (150 / planets[players[i].attachedPlanet].box.radius);
 			if (players[i].controls["moveLeft"] > 0){
@@ -166,6 +169,7 @@ function doPhysics(players, planets, enemies) {
 		}
 		players[i].setWalkframe();
 	}
+	if (isClient) return;
 	for (var i = 0; i < playersOnPlanets.length; i++){
 		if (typeof playersOnPlanets[i] === "undefined") continue;
 		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
@@ -173,7 +177,14 @@ function doPhysics(players, planets, enemies) {
 			teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
 
 		if (max > 0){
-			var team = teams[toArray.indexOf(max)];
+			var team, a, b = 0;
+			while (toArray.indexOf(max) !== -1){
+				a = toArray.indexOf(max);
+				b++;
+				toArray.splice(a, 1);
+			}
+			if (b >= 2) return; 
+			team = teams[a];
 			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
 			else {
 				planets[i].progress.value -= max / 3;

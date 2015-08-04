@@ -36,7 +36,6 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 
 
 function handleInputMobile(e){
-
 	for (var t = 0; t < e.changedTouches.length; t++){
 		var touch = e.changedTouches[t];
 		if (touch.target.id == "canvas"){
@@ -113,20 +112,35 @@ document.getElementById("audio-icon").addEventListener("click", function(ev){
 });
 
 function handleGamepad(){
-	var gamepads = navigator.getGamepads(), g = gamepads[0];
-	if (typeof(g) !== "undefined"){
-		player.controls["jump"] = g.buttons[0].value;
-		player.controls["run"] = g.buttons[1].value;
-		player.controls["crouch"] = g.buttons[4].value;
-		player.controls["jetpack"] = g.buttons[7].value;
+	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+	if (this.usingGamepad == -1){
+		for (var i = 0; i < gamepads.length; i++) {
+			var gp = gamepads[i];
+			if (gp) {
+				onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
+				this.usingGamepad = gp.index;
+			}
+		}
+	} else {
+		var g = gamepads[this.usingGamepad];
+		if (typeof(g) !== "undefined"){
+			player.controls["jump"] = g.buttons[0].value;
+			player.controls["run"] = g.buttons[1].value;
+			player.controls["crouch"] = g.buttons[4].value;
+			player.controls["jetpack"] = g.buttons[7].value;
 
-		player.controls["moveLeft"] = 0;
-		player.controls["moveRight"] = 0;
-		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) player.controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
-		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
-		else game.drag.x = 0;
-		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
-		else game.drag.y = 0;
+			player.controls["moveLeft"] = 0;
+			player.controls["moveRight"] = 0;
+			if (g.axes[0] < -0.2 || g.axes[0] > 0.2) player.controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
+			if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
+			else game.drag.x = 0;
+			if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
+			else game.drag.y = 0;
+			currentConnection.refreshControls(player.controls);
+		} else {			
+			if (typeof this.usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (this.usingGamepad + 1).toString() + " disconnected");
+			this.usingGamepad = -1;
+		}
 	}
 }
 

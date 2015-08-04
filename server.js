@@ -137,26 +137,7 @@ Lobby.prototype.broadcast = function(message) {
 Lobby.prototype.update = function() {
 	var oldDate = new Date();
 	engine.doPhysics(this.players, this.planets, this.enemies);
-	this.processTime = new Date() - oldDate;
-
-	for (var i = 0; i < this.players.length; i++){
-		if (this.players[i] === undefined) continue;
-		this.broadcast(JSON.stringify({
-			msgType: MESSAGE.PLAYER_DATA,
-			data: {
-				pid: i, x: this.players[i].box.center.x.toFixed(2), y: this.players[i].box.center.y.toFixed(2),
-				angle: this.players[i].box.angle.toFixed(4), walkFrame: this.players[i].walkFrame, health: this.players[i].health, fuel: this.players[i].fuel,
-				name: this.players[i].name, appearance: this.players[i].appearance, looksLeft: this.players[i].looksLeft
-			}
-		}));
-		this.broadcast(JSON.stringify({
-			msgType: MESSAGE.GAME_DATA,
-			data: {
-				planets: this.planets.getGameData(),
-				enemies: this.enemies.getGameData()
-			}
-		}));
-	}
+	this.processTime = new Date() - oldDate;	
 }
 lobbies.getUid = function(index) {
 	var uid = index.toString(16);
@@ -176,8 +157,29 @@ function updateLobbies(){
 		lobby.update();
 	});
 }
-setInterval(updateLobbies, 16);//update cycle
-//note that 16ms actually means 16 up to 16 + ~5
+setInterval(function(){
+	lobbies.forEach(function (lobby){
+		for (var i = 0; i < lobby.players.length; i++){
+			if (lobby.players[i] === undefined) continue;
+			lobby.broadcast(JSON.stringify({
+				msgType: MESSAGE.PLAYER_DATA,
+				data: {
+					pid: i, x: lobby.players[i].box.center.x.toFixed(5), y: lobby.players[i].box.center.y.toFixed(5), attachedPlanet: lobby.players[i].attachedPlanet,
+					angle: lobby.players[i].box.angle.toFixed(7), walkFrame: lobby.players[i].walkFrame, health: lobby.players[i].health, fuel: lobby.players[i].fuel,
+					name: lobby.players[i].name, appearance: lobby.players[i].appearance, looksLeft: lobby.players[i].looksLeft
+				}
+			}));
+			lobby.broadcast(JSON.stringify({
+				msgType: MESSAGE.GAME_DATA,
+				data: {
+					planets: lobby.planets.getGameData(),
+					enemies: lobby.enemies.getGameData()
+				}
+			}));
+		}
+	});	
+}, 80); //send cycle
+setInterval(updateLobbies, 16); //physics cycle
 
 function monitoring(){
 	process.stdout.write('\033c');
