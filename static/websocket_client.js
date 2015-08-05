@@ -147,7 +147,7 @@ function connection(address){
 							errDesc = "There's no slot left in the lobby";
 							break;
 						case ERROR.NAME_TAKEN:
-							errDesc = "The name" + player.name + "is already taken";
+							errDesc = "The name " + player.name + " is already taken";
 							break;
 					}
 					alert("Error " + msg.data.code + ":\n" + errDesc);

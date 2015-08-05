@@ -99,15 +99,14 @@ function init() {//init is done differently in the server
 
 function loop(){
 	handleGamepad();
-	function drawRotatedImage(image, x, y, angle, mirror){
-		//courtesy of Seb Lee-Delisle
-		context.save();
+	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
 		context.translate(x, y);
 		context.rotate(angle);
 		if (mirror === true) context.scale(-1, 1);
-		context.drawImage(image, -(image.width / 2), -(image.height / 2));
-		context.restore();
-		
+		var wdt = sizeX !== undefined ? sizeX : image.width,
+			hgt = sizeY !== undefined ? sizeY : image.height;
+		context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
+		context.resetTransform();
 	}
 	function wrapText(text, maxWidth) {
 		var words = text.split(' '),
@@ -265,15 +264,30 @@ function loop(){
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
 
-	planets.forEach(function (planet){
-		var fadeRGB = [];
-		if (planet.progress.team === "neutral") fadeRGB = [80, 80, 80];
-		else for (var i = 0; i <= 2; i++) fadeRGB[i] = Math.floor(planet.progress.value / 100 * (parseInt(Planet.prototype.teamColours[planet.progress.team].substr(1 + i * 2, 2), 16) - 80) + 80);
-		context.fillStyle = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
-
+	//atmosphere
+	planets.forEach(function(planet) {
+		context.fillStyle = planet.progress.color;
 		if (windowBox.collision(planet.atmosBox)) strokeCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
-		if (windowBox.collision(planet.box)) fillCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
-		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
+	});
+
+	//jetpack
+	var shift = player.looksLeft === true ? -14 : 14,
+		jetpackX = player.box.center.x - game.offset.x -shift*Math.sin(player.box.angle + Math.PI/2),
+		jetpackY = player.box.center.y - game.offset.y + shift*Math.cos(player.box.angle + Math.PI/2);
+	drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+	if(player.controls["jetpack"] > 0 && player.fuel > 0 && player.controls["crouch"] < 1 && player.attachedPlanet === -1) {
+		drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
+		drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(player.box.angle + Math.PI/11), player.box.angle);
+	}
+
+	//planet
+	planets.forEach(function(planet) {
+		context.fillStyle = planet.progress.color;
+
+		if (windowBox.collision(planet.box)) {
+			fillCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
+			drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
+		}
 		
 		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
 
@@ -299,7 +313,7 @@ function loop(){
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer){
-		var intensity = 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000;
+		var intensity = Math.max(1, 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000);
 		console.log(intensity / 60 * 1000)
 		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;	
 		if (otherPlayer.attachedPlanet === -1){	
@@ -323,6 +337,7 @@ function loop(){
 	});
 
 	fadeBackground(fadeMusic);
+
 	drawRotatedImage(resources[player.appearance + player.walkFrame],
 		player.box.center.x - game.offset.x,
 		player.box.center.y - game.offset.y,
@@ -337,11 +352,13 @@ function loop(){
 	context.font = "20px Open Sans";
 
 	context.fillText("Health: ", 8, 90);
-	for (var i = 0; i < player.health; i++){
-		context.drawImage(resources["shield"], 80 + i * 22, 90, 18, 18);
+	for(var i = 2; i !== 8 + 2; i += 2) {
+		if(i <= player.health) context.drawImage(resources["heartFilled"], 60 + i * 15, 90, 20.8, 18);
+		else if(i - 1 === player.health) context.drawImage(resources["heartHalfFilled"], 60 + i * 15, 90, 20.8, 18);
+		else context.drawImage(resources["heartNotFilled"], 60 + i * 15, 90, 20.8, 18);
 	}
 	context.fillText("Fuel: ", 8, 120);
-	context.fillStyle = "#f33";
+	context.fillStyle = "#5493ce";
 	context.fillRect(80, 126, player.fuel, 8);
 
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){

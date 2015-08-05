@@ -116,7 +116,8 @@ function Lobby(name, maxPlayers){
 	this.planets.getGameData = function(){
 		var pltData = [];
 		for (var i = 0; i < this.length; i++){
-			pltData.push(this[i].progress);
+			//pltData.push(this[i].progress);
+			pltData.push({color: this[i].progress.color, value: this[i].progress.value});
 		}
 		return pltData;
 	};
@@ -140,8 +141,12 @@ Lobby.prototype.update = function() {
 	this.processTime = Date.now() - oldDate;
 
 	this.players.forEach(function(player, i) {
-		playerData[i] = (player !== undefined) ? {x: player.box.center.x.toFixed(5), y: player.box.center.y.toFixed(5), attachedPlanet: player.attachedPlanet,
-			angle: player.box.angle.toFixed(7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
+		function truncTo(number, decimalNbr) {
+			var lel = Math.pow(10, decimalNbr);
+			return Math.round(number * lel) / lel;
+		}
+		playerData[i] = (player !== undefined) ? {x: truncTo(player.box.center.x, 5), y: truncTo(player.box.center.y, 5), attachedPlanet: player.attachedPlanet,
+			angle: truncTo(player.box.angle, 7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
 			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft
 		} : undefined;		
 	});
@@ -163,7 +168,6 @@ Lobby.prototype.update = function() {
 			player.lastRefresh = Date.now();
 			} catch(e) {/*Ignore errors*/}
 		}.bind(this), Math.min(60, Math.max(16, Date.now() - player.lastRefresh + player.latency)));
-		console.log(Math.max(45, Date.now() - player.lastRefresh + player.latency));
 	}.bind(this));
 
 }
