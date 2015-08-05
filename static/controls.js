@@ -169,7 +169,9 @@ handleInput.updateKeyMap = function(){
 	handleInput.keyMap = {};
 	for (action in handleInput.reverseKeyMap){
 		var keys = handleInput.reverseKeyMap[action];
-		for (key in keys) {handleInput.keyMap[keys[key]] = action; }
+		for (key in keys) {
+			if (keys[key] !== undefined || keys[key] !== null) handleInput.keyMap[keys[key]] = action;
+		}
 	}
 }
 function dragging (ev, x, y){
@@ -254,6 +256,12 @@ function handleSettings(){
 		while (settingsEl.firstChild) {
 			settingsEl.removeChild(settingsEl.firstChild);
 		}
+		var tableTitles = ["Actions", "Primary Keys", "Alternate Keys"];
+		for (var i = 0; i < tableTitles; i++){
+			var tableHead = document.createElement("th");
+			tableHead.textContent = tableTitles[i];
+			settingsEl.appendChild(tableHead);
+		}
 		for (action in handleInput.reverseKeyMap) {
 			var rowEl = document.createElement("tr"),
 				actionEl = document.createElement("td"),
@@ -274,12 +282,13 @@ function handleSettings(){
 	}	
 	settingsEl.addEventListener("click", function(e) {
 		function reselect(obj){
-			for (row in e.target.parentNode.parentNode.childNodes){
-				e.target.parentNode.parentNode.childNodes[row].className = "";
+			for (row in settingsEl.childNodes){
+				if (row === "length") break;
+				settingsEl.childNodes[row].classList.remove("selected");
 				document.removeEventListener("keydown", wrap);
 			}
 			if (typeof obj !== "undefined") {
-				obj.className = "selected";
+				obj.classList.add("selected");
 				var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
 				if (nsr === selectedRow) reselect();
 				else selectedRow = nsr;
@@ -291,7 +300,7 @@ function handleSettings(){
 		}
 		function handleChangeKey(e) {
 			var keyName = e.key || convertToKey(e.keyCode),
-				action = document.getElementById("key-settings").childNodes[selectedRow].firstChild.textContent,
+				action = settingsEl.childNodes[selectedRow].firstChild.textContent,
 				alreadyTaken = false;
 
 			for (key in handleInput.keyMap){
@@ -299,9 +308,10 @@ function handleSettings(){
 				alreadyTaken = true;
 				break;
 			}
-			handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
-			handleInput.reverseKeyMap[action][0] = keyName;
-
+			if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
+			else handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
+			handleInput.reverseKeyMap[action][0] = keyName;			
+			initKeymap(true);
 		}
 		function wrap(nE) {
 			nE.preventDefault();
@@ -417,9 +427,7 @@ document.getElementById("badge").addEventListener("click", function() {
 	if (apEl.className === "hidden") apEl.removeAttribute("class");
 	else apEl.className = "hidden";
 });
-
-
-window.onbeforeunload = function(){
+window.onbeforeunload = function(){	
 	localStorage.setItem("settings.jumpsuit.name", player.name);
 	localStorage.setItem("settings.jumpsuit.keys", JSON.stringify(handleInput.reverseKeyMap));
 }

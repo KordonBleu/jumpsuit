@@ -45,7 +45,7 @@ function init() {//init is done differently in the server
 			canvas.height = window.innerHeight;
 
 			context.textBaseline = "top";
-				context.textAlign = "center";
+			context.textAlign = "center";
 
 			context.fillStyle = "#121012";
 			context.fillRect(0, 0, canvas.width, canvas.height);
@@ -318,7 +318,7 @@ function loop(){
 		if (otherPlayer.attachedPlanet === -1){	
 			otherPlayer.predictedBox.center.x += (parseFloat(otherPlayer.box.center.x, 10) - parseFloat(otherPlayer.lastBox.center.x, 10)) / intensity;
 			otherPlayer.predictedBox.center.y += (parseFloat(otherPlayer.box.center.y, 10) - parseFloat(otherPlayer.lastBox.center.y, 10)) / intensity;
-		} else {				
+		} else {
 			otherPlayer.predictedBox.center.x = planets[otherPlayer.attachedPlanet].box.center.x + Math.sin(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 		}
