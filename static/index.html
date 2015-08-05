@@ -3,7 +3,7 @@
 	<head>
 		<title>JumpSuit</title>
 		<meta charset="utf-8"/>
-		<meta name="viewport" content="user-scalable=no"/>
+		<meta name="viewport" content="width=device-width, user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
 		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"/>
 		<script src="assets/dialog-polyfill/dialog-polyfill.js"></script>
@@ -33,7 +33,7 @@
 			<h2>Information</h2>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>Music &amp; sound effects by Arnaud Poyeton (except the laser sound from Kenney)<br/>
-			Assets by <a href="http://kenney.nl">Kenney Vleugels</a> (except the jetpack icon from <a href="https://thenounproject.com/term/rocket/8041/">Piotr Gawiński</a>)<br/>
+			Assets by <a href="http://kenney.nl">Kenney Vleugels</a><br/>
 			Open Sans font by Steve Matteson</p>
 			<a class="button" onclick="changeTab(this);">Share</a><a class="button" onclick="changeTab(this);">Donate</a>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
@@ -61,11 +61,16 @@
 			<ul class="loader" style="" id="multiplayer-loader"><li></li><li></li><li></li><li></li><li></li></ul>
 			<ul id="player-list">		
 			</ul>
-			<hr>
-			<h4>Settings</h4>
-			<div class="key-info" id="key-info">Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
+			<hr>			
+			<div id="key-info">
+				<h3>Settings</h3>
+				Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
 				Also you can't assign Mouse keys to the key settings!<br/><br/>
 				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.
+			</div>
+			<div id="mobile-info">
+				<h3>Information</h3>
+				
 			</div>
 			<table id="key-settings">
 				<tr id="key-header">

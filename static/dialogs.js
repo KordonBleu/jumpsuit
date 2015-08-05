@@ -5,7 +5,8 @@ var dialog = new function(){
 		buttonAbort = document.getElementById("dialog-abort"),
 		_callback;
 
-	textElement.addEventListener("change", function(){
+	textElement.addEventListener("input", function(){
+		console.log("asd");
 		buttonConfirm.disabled = (textElement.value === "");
 	});
 
@@ -27,7 +28,7 @@ var dialog = new function(){
 		dialogElement.className = "";
 	}
 	this.close = function(result){
-		if (typeof result !== "undefined" && result !== "") _callback(result);
 		dialogElement.className = "hidden";
+		if (typeof result !== "undefined" && result !== "") _callback(result);		
 	}
 };

@@ -59,7 +59,7 @@ function Player(name, appearance, startx, starty, ws){
 		}
 	}
 	this.walkFrame = "_stand";
-	this.health = 10;
+	this.health = 8;
 	this.fuel = 400;
 	this.attachedPlanet = -1;
 	this.planet = 0;
@@ -71,6 +71,7 @@ function Planet(x, y, radius) {
 	this.progress = {team: "neutral", value: 0};
 }
 Planet.prototype.teamColours = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
+Planet.prototype.names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey", "X-Ray", "Yankee", "Zulu"];
 
 function Enemy(x, y) {
 	this.box = new Rectangle(new Point(x, y), 0, 0);

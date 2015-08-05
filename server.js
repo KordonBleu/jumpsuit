@@ -121,7 +121,19 @@ function Lobby(name, maxPlayers){
 		return pltData;
 	};
 
-	this.planets.push(new engine.Planet(300, 500, 180));
+	
+	//generate world structure
+	var areaSize = 6400,
+		chunkSize = 1600;
+
+	for (var y = 0; y < areaSize; y += chunkSize){
+		for (var x = 0; x < areaSize; x += chunkSize){
+			var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
+				py = Math.floor(Math.random() * (chunkSize - 400) + 200),
+				radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
+			this.planets.push(new engine.Planet(x + px, y + py, radius));
+		}
+	}
 	this.enemies.push(new engine.Enemy(800, -600));
 
 	this.name = name || "Unnamed Lobby";
@@ -162,8 +174,7 @@ Lobby.prototype.update = function() {
 				}));
 			player.lastRefresh = Date.now();
 			} catch(e) {/*Ignore errors*/}
-		}.bind(this), Math.min(60, Math.max(16, Date.now() - player.lastRefresh + player.latency)));
-		console.log(Math.max(45, Date.now() - player.lastRefresh + player.latency));
+		}.bind(this), Math.max(16, Date.now() - player.lastRefresh + player.latency));
 	}.bind(this));
 
 }

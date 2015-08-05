@@ -16,7 +16,9 @@ html, body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	-webkit-transform: translate3d(0, 0, 0);
 }
+
 button {
 	outline-color: #702318;
 	box-sizing: border-box;
@@ -32,7 +34,6 @@ button {
 	font-weight: normal;
 	border: 2px solid #AD3726;
 	text-align: center;
-
 	transition: background .2s, color .2s;
 }
 button:disabled {
@@ -291,7 +292,7 @@ button:disabled:hover{
 	color: #ddd;
 }
 .loader{
-	-webkit-padding-start: 0;
+	padding: 0;
 	font-size: 100px;
 	width: 1em;
 	height: 1em;
@@ -351,20 +352,16 @@ button:disabled:hover{
 	background: #fed532;
 	animation: rota 2s linear infinite;
 }
-/*
-Wanna hear a pun? - I mean who ever looks in the stylesheet of this site won't, i know ;)
-I have moved the third child of the loader on a third lane that cycles around the bigger grey point in the middle
-If I would have left it on the second lane the whole loader would have looked like the atomic structure of Boron
-But I changed for it for the simple reason that Boron in Germany is called Bor, so someone could say while watching the loader:
-This is BORing!
-Eventhough the adjective of Boron would be boric but #DontJudgeMe and yes I was bored while writing this
-
-I would tell you another chemistry joke, 
-but I am afraid they won't get a good reaction !
-Good one I know, not mine: http://www.quickmeme.com/img/9f/9fb79f6ae646f304ce86ff7e4ed3314e3a2c078020d846acc5c2dda87354a2ae.jpg
-*/
-
 @keyframes rota {
+	to { transform: rotate(360deg); }
+}
+@-webkit-keyframes rota {
+	to { transform: rotate(360deg); }
+}
+@-moz-keyframes rota {
+	to { transform: rotate(360deg); }
+}
+@-o-keyframes rota {
 	to { transform: rotate(360deg); }
 }
 

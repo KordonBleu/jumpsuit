@@ -1,5 +1,14 @@
 const defaultKeymap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
 
+var isMobile = (navigator.userAgent.match(/Android/i)
+	|| navigator.userAgent.match(/webOS/i)
+	|| navigator.userAgent.match(/iPhone/i)
+	|| navigator.userAgent.match(/iPad/i)
+	|| navigator.userAgent.match(/iPod/i)
+	|| navigator.userAgent.match(/BlackBerry/i)
+	|| navigator.userAgent.match(/Windows Phone/i));
+
+
 String.prototype.ucFirst = function (){
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
@@ -33,24 +42,86 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	39: "ArrowRight",
 	40: "ArrowDown"
 }
-
+function transformStyle(element, val){
+	var vendors = ["WebkitTransform", "MozTransform", "OTransform", "transform"],
+		correctVendor, obj;
+	for (var i = 0; i < vendors.length; i++){
+		if (vendors[i] in element.style){
+			correctVendor = vendors[i];
+			break;
+		}
+	}
+	element.style["transform"] = val;
+	console.log(correctVendor, val);
+}
 
 function handleInputMobile(e){
 	for (var t = 0; t < e.changedTouches.length; t++){
 		var touch = e.changedTouches[t];
-		if (touch.target.id == "canvas"){
+		handleInputMobile.gesture(touch, e.type);
+		if (touch.target.id === "canvas"){
 			dragging(e.type, touch.pageX, touch.pageY);
-		} else {
-			e.preventDefault();
-			if (e.type.indexOf("move") !== -1) return;
-			var s = (e.type.indexOf("start") > -1 && e.type.indexOf("end") == -1);
+		} else {		
+			var s = (e.type.indexOf("start") !== -1 && e.type.indexOf("end") === -1);
 			if (player.controls[touch.target.id] !== undefined) {
-				player.controls[touch.target.id] = s * 1;
+				e.preventDefault();
+				if (touch.target.id === "moveLeft" || touch.target.id === "moveRight"){
+					var value = handleInputMobile.transform(touch, e.type);
+					player.controls["run"] = (-value >= 38) * 1;
+				}
+				if (e.type.indexOf("move") === -1) player.controls[touch.target.id] = s * 1;
 				currentConnection.refreshControls(player.controls);
 			}
 		}
 	}
 }
+handleInputMobile.gesture = function (touch, type){
+	
+	var element = touch.target;
+	if (type.indexOf("start") !== -1){
+		var targetId = element.id;
+		if (element.parentNode.id === "multiplayer-box" || element.parentNode.parentNode.id === "multiplayer-box") targetId = "multiplayer-box";
+		else if (element.parentNode.id === "info-box" || element.parentNode.parentNode.id === "info-box") targetId = "info-box";
+		if (!(targetId === "multiplayer-box" || targetId === "info-box" || targetId === "canvas")) return false;
+		this.currentGestures.target = targetId;
+		this.currentGestures.start = new Point(touch.pageX, touch.pageY);		
+	} else if (type.indexOf("end") !== -1){
+		console.log(this.currentGestures);
+		if (this.currentGestures.target === "info-box"){
+			if (this.currentGestures.start.x - 40 > touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+				document.getElementById(this.currentGestures.target).classList.add("hidden");
+			}
+		} else if (this.currentGestures.target === "multiplayer-box"){
+			if (this.currentGestures.start.x + 40 < touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+				document.getElementById(this.currentGestures.target).classList.add("hidden");
+			}
+		} else if (this.currentGestures.target === "canvas"){
+			if (this.currentGestures.start.x <= 80 && this.currentGestures.start.x + 40 < touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+				document.getElementById("info-box").classList.remove("hidden");
+			} else if (this.currentGestures.start.x >= canvas.clientWidth - 80 && this.currentGestures.start.x - 40 > touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+				document.getElementById("multiplayer-box").classList.remove("hidden");
+			}
+		}
+	}
+	return true;
+}
+handleInputMobile.currentGestures = {target: "", start: new Point(0, 0)};
+handleInputMobile.transform = function (touch, type){
+	var element = touch.target, ytransform;
+	if (type.indexOf("start") !== -1){
+		element.setAttribute("touchstart", touch.pageY);
+		element.setAttribute("touchmove", touch.pageY);
+	} else if (type.indexOf("move") !== -1){
+		element.setAttribute("touchmove", touch.pageY);
+	} else {
+		element.setAttribute("touchstart", 0);
+		element.setAttribute("touchmove", 0);
+	}
+	ytransform = -Math.max(0, Math.min(50, Math.floor(element.getAttribute("touchstart") - element.getAttribute("touchmove"))));
+	transformStyle(element, "translateY(" + ytransform + "px)");
+	return ytransform;
+}
+
 function handleInput(e){
 	if (document.getElementById("dialog").className !== "hidden") return;
 	var s = (e.type === "keydown") * 1,
@@ -70,7 +141,8 @@ function handleInput(e){
 			e.preventDefault();
 			if (s == 1){
 				var box = document.getElementById((triggered == "menu") ? "info-box" : "multiplayer-box");
-				box.className = (box.className.indexOf("hidden") !== -1) ? box.className.substring(0, box.className.length - 7) : box.className + " hidden";		
+				if (box.className.indexOf("hidden") !== -1) box.classList.remove("hidden");
+				else box.classList.add("hidden");
 			}
 		} else if (triggered == "chat"){
 			e.preventDefault();
@@ -83,8 +155,9 @@ function handleInput(e){
 	}
 }
 handleInput.keyMap = defaultKeymap;
+handleInput.reverseKeyMap = {};
 
-function dragging(ev, x, y){
+function dragging (ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.drag.x = x;
 		game.drag.y = y;
@@ -100,6 +173,7 @@ function dragging(ev, x, y){
 		game.drag.y = game.dragStart.y !== 0 ? y : 0;
 	}
 }
+
 
 document.getElementById("audio-icon").addEventListener("click", function(ev){
 	if (ev.target.getAttribute("src") === "assets/images/controls/mute.svg") {
@@ -137,102 +211,128 @@ function handleGamepad(){
 			if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
 			else game.drag.y = 0;
 			currentConnection.refreshControls(player.controls);
-		} else {			
+		} else {		
 			if (typeof this.usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (this.usingGamepad + 1).toString() + " disconnected");
 			this.usingGamepad = -1;
 		}
 	}
 }
+var changingKeys = false;
+function handleSettings(){
+	var settingsEl = document.getElementById("key-settings"),
+		presets = localStorage.getItem("settings.jumpsuit.keys"),
+		selectedRow = -1;
 
-
-var settingsEl = document.getElementById("key-settings"),
-	presets = localStorage.getItem("settings.jumpsuit.keys");
-if (presets != null){
-	try{
-		handleInput.keyMap = JSON.parse(presets);
-	} catch (e) {/* nothing to see */}
-}
-
-var reverseKeyMap;
-function initKeymap(){
-	reverseKeyMap = {};
-	for (key in handleInput.keyMap) {
-		var action = handleInput.keyMap[key];
-		if(reverseKeyMap[action] === undefined) reverseKeyMap[action] = [];
-		reverseKeyMap[action].push(key);
-	}
-
-	for (action in reverseKeyMap) {
-		var rowEl = document.createElement("tr"),
-			actionEl = document.createElement("td"),
-			keyEl;
-
-		actionEl.textContent = action;
-		rowEl.appendChild(actionEl);
-
-		var slice = reverseKeyMap[action];
-		for (var i = 0; i != 2; i++){
-			keyEl = document.createElement("td");
-			if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
-			else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
-			rowEl.appendChild(keyEl);
-		}
-		settingsEl.appendChild(rowEl);
-	}
-}
-initKeymap();
-
-var keyCol = document.getElementById("key-col"),
-	changingKeys = false,
-	selectedRow = -1;
-
-settingsEl.addEventListener("click", function(e) {
-	function reselect(obj){
-		for (row in e.target.parentNode.parentNode.childNodes){
-			e.target.parentNode.parentNode.childNodes[row].className = "";
-			document.removeEventListener("keydown", wrap);
-		}
-
-		if (typeof obj !== "undefined") {
-			obj.className = "selected";
-			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
-			if (nsr === selectedRow) reselect();
-			else selectedRow = nsr;
-		} else {
-			selectedRow = -1;
-			document.removeEventListener("keyup", wrap);
-			changingKeys = false;
+	if (presets != null){
+		try{
+			handleInput.reverseKeyMap = JSON.parse(presets);
+			initKeymap(true);
+		} catch (e) {
+			initKeymap(false);
 		}
 	}
-	function handleChangeKey(e) {
-		var keyName = e.key || convertToKey(e.keyCode),
-			target = document.getElementById("key-settings").childNodes[selectedRow],
-			firstKey = target.childNodes[1],
-			altKey = target.childNodes[2];
-		delete handleInput.keyMap[altKey.textContent];
-		handleInput.keyMap[keyName] = target.firstChild.textContent;
-		altKey.textContent = firstKey.textContent;
-		firstKey.textContent = keyName.replace(" ", "Space").ucFirst();
+
+	function updateReverseKeyMap(){
+		handleInput.reverseKeyMap = {};
+		for (key in handleInput.keyMap) {
+			var action = handleInput.keyMap[key], index;
+			if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
+			if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
+			else index = 0;
+			handleInput.reverseKeyMap[action][index] = key;
+		}
 	}
-	function wrap(nE) {
-		nE.preventDefault();
-		switch(nE.type) {
-			case "keydown":
-				changingKeys = true;
+	function updateKeyMap(){
+		handleInput.keyMap = {};
+		for (action in handleInput.reverseKeyMap){
+			var keys = handleInput.reverseKeyMap[action];
+			for (key in keys) {handleInput.keyMap[keys[key]] = action; }
+		}
+	}
+	function initKeymap(fromReversed){
+		if (fromReversed) updateKeyMap();
+		else updateReverseKeyMap();
+
+		while (settingsEl.firstChild) {
+			settingsEl.removeChild(settingsEl.firstChild);
+		}
+		for (action in handleInput.reverseKeyMap) {
+			var rowEl = document.createElement("tr"),
+				actionEl = document.createElement("td"),
+				keyEl;
+
+			actionEl.textContent = action;
+			rowEl.appendChild(actionEl);
+
+			var slice = handleInput.reverseKeyMap[action];
+			for (var i = 0; i != 2; i++){
+				keyEl = document.createElement("td");
+				if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
+				else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
+				rowEl.appendChild(keyEl);
+			}
+			settingsEl.appendChild(rowEl);
+		}
+	}
+	
+	settingsEl.addEventListener("click", function(e) {
+		function reselect(obj){
+			for (row in e.target.parentNode.parentNode.childNodes){
+				e.target.parentNode.parentNode.childNodes[row].className = "";
 				document.removeEventListener("keydown", wrap);
-				document.addEventListener("keyup", wrap);
-				break;
-			case "keyup":
-				handleChangeKey(nE);
-				reselect();
-				break;
+			}
+
+			if (typeof obj !== "undefined") {
+				obj.className = "selected";
+				var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
+				if (nsr === selectedRow) reselect();
+				else selectedRow = nsr;
+			} else {
+				selectedRow = -1;
+				document.removeEventListener("keyup", wrap);
+				changingKeys = false;
+			}
 		}
-	}
-	if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
-		reselect(e.target.parentNode);
-		document.addEventListener("keydown", wrap);
-	}
-});
+		function handleChangeKey(e) {
+			var keyName = e.key || convertToKey(e.keyCode),
+				action = document.getElementById("key-settings").childNodes[selectedRow].firstChild.textContent,
+				alreadyTaken = false;
+
+			for (key in handleInput.keyMap){
+				if (key !== keyName) continue;
+				alreadyTaken = true;
+				break;
+			}
+			handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
+			handleInput.reverseKeyMap[action][0] = keyName;
+
+		}
+		function wrap(nE) {
+			nE.preventDefault();
+			switch(nE.type) {
+				case "keydown":
+					changingKeys = true;
+					document.removeEventListener("keydown", wrap);
+					document.addEventListener("keyup", wrap);
+					break;
+				case "keyup":
+					handleChangeKey(nE);
+					reselect();
+					break;
+			}
+		}
+		if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
+			reselect(e.target.parentNode);
+			document.addEventListener("keydown", wrap);
+		}
+	});
+}
+if (isMobile){
+	document.getElementById("mobile-info").style["display"] = "initial";
+	document.getElementById("key-info").style["display"] = "none";
+	document.getElementById("key-settings").style["display"] = "none";
+	document.body.classList.add("mobile");
+} else handleSettings();
 
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
@@ -244,8 +344,8 @@ window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 
 document.getElementById("chat-input").addEventListener("focus", function(){
-	document.getElementById("info-box").className = "info-box hidden";
-	document.getElementById("multiplayer-box").className = "multiplayer-box hidden";
+	document.getElementById("info-box").classList.add("hidden");
+	document.getElementById("multiplayer-box").classList.add("hidden");
 	chat.enabled = true;
 });
 document.getElementById("chat-input").addEventListener("blur", function(){
@@ -289,7 +389,7 @@ var chosenAppearance = "alienBlue";
 	element.addEventListener("mousedown", function(){
 		player.appearance = this.id.replace("player", "alien");
 		document.getElementById("badge").setAttribute("src", "assets/images/" + player.appearance + "_badge.svg");
-		document.getElementById("appearance-box").className = "hidden";
+		document.getElementById("appearance-box").classList.add("hidden");
 		settingsChanged();
 	});
 });
@@ -325,5 +425,5 @@ document.getElementById("badge").addEventListener("click", function() {
 
 window.onbeforeunload = function(){
 	localStorage.setItem("settings.jumpsuit.name", player.name);
-	localStorage.setItem("settings.jumpsuit.keys", JSON.stringify(handleInput.keyMap));
+	localStorage.setItem("settings.jumpsuit.keys", JSON.stringify(handleInput.reverseKeyMap));
 }

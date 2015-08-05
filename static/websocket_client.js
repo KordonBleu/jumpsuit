@@ -29,6 +29,7 @@ function connection(address){
 						li = document.createElement("li");
 						el = document.createElement("a");
 						el.href = "#c:" + msg.data[i].uid;
+						el.onclick = function(){ location.hash = this.href;	}
 						el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxPlayers + ")";
 						li.appendChild(el);
 						list.appendChild(li);
@@ -68,7 +69,7 @@ function connection(address){
 					msg.data.forEach(function(_player, i){			
 						if (i === pid){
 							player.box.center.x = _player.x;
-							player.box.center.y = _player.y;					
+							player.box.center.y = _player.y;
 							player.looksLeft = _player.looksLeft;
 							player.box.angle = _player.angle;
 							player.health = _player.health;
@@ -90,9 +91,12 @@ function connection(address){
 							otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
 							otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
 
-							//console.log(_player.x, _player.y, otherPlayers[i].predictedBox.center);
+							console.log(otherPlayers[i].predictedBox.center);
 							otherPlayers[i].box.center.x = parseFloat(_player.x, 10);
 							otherPlayers[i].box.center.y = parseFloat(_player.y, 10);
+							otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
+							otherPlayers[i].box.height = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].height;
+
 							otherPlayers[i].box.angle = parseFloat(_player.angle, 10);
 
 							otherPlayers[i].predictedBox.center.x = otherPlayers[i].box.center.x;

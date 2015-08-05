@@ -45,7 +45,7 @@ function init() {//init is done differently in the server
 			canvas.height = window.innerHeight;
 
 			context.textBaseline = "top";
-  			context.textAlign = "center";
+				context.textAlign = "center";
 
 			context.fillStyle = "#121012";
 			context.fillRect(0, 0, canvas.width, canvas.height);
@@ -90,7 +90,7 @@ function init() {//init is done differently in the server
 		player = new Player("Unnamed Player", "alienGreen", 0, 0);
 		player.name = localStorage.getItem("settings.jumpsuit.name") || "Unnamed Player";
 		document.getElementById("name").value = player.name;
-  		document.getElementById("multiplayer-box").className = "multiplayer-box";
+		document.getElementById("multiplayer-box").classList.remove("hidden");
 		document.getElementById("name").removeAttribute("class");
 		document.getElementById("badge").removeAttribute("class");
 		loop();
@@ -98,7 +98,6 @@ function init() {//init is done differently in the server
 }
 
 function loop(){
-	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror){
 		//courtesy of Seb Lee-Delisle
 		context.save();
@@ -265,7 +264,10 @@ function loop(){
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
 
-	planets.forEach(function (planet){
+	context.textAlign = "center";
+	context.textBaseline = "middle";
+	context.font = "50px Open Sans";
+	planets.forEach(function (planet, pi){
 		var fadeRGB = [];
 		if (planet.progress.team === "neutral") fadeRGB = [80, 80, 80];
 		else for (var i = 0; i <= 2; i++) fadeRGB[i] = Math.floor(planet.progress.value / 100 * (parseInt(Planet.prototype.teamColours[planet.progress.team].substr(1 + i * 2, 2), 16) - 80) + 80);
@@ -273,17 +275,11 @@ function loop(){
 
 		if (windowBox.collision(planet.atmosBox)) strokeCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
 		if (windowBox.collision(planet.box)) fillCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
+
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
-		
-		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
-
-		var deltaX = planet.box.center.x - player.box.center.x,
-			deltaY = planet.box.center.y - player.box.center.y,
-			distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2),
-			origX = player.box.center.x - game.offset.x,
-			origY = player.box.center.y - game.offset.y;
-
-		if (Math.pow(distPowFour, 1 / 4) < 4000 && player.attachedPlanet === -1) drawArrow(origX, origY, Math.atan2(planet.box.center.x - game.offset.x - origX, planet.box.center.y - game.offset.y - origY), 400 / Math.pow(distPowFour, 1 / 4) * planet.box.radius, planet.color);
+		context.fillStyle = "rgba(0, 0, 0, 0.2)";
+		context.fillText(Planet.prototype.names[pi].substr(0, 1), planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y);
+		if (planet.atmosBox.collision(player.box)) fadeMusic = true;		
 	});
 
 	enemies.forEach(function (enemy, ei) {
@@ -299,7 +295,7 @@ function loop(){
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer){
-		var intensity = 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000;
+		var intensity = Math.max(2, 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000);
 		console.log(intensity / 60 * 1000)
 		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;	
 		if (otherPlayer.attachedPlanet === -1){	
@@ -313,7 +309,6 @@ function loop(){
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 		context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
-
 
 		drawRotatedImage(resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			otherPlayer.predictedBox.center.x - game.offset.x,
@@ -341,13 +336,28 @@ function loop(){
 		context.drawImage(resources["shield"], 80 + i * 22, 90, 18, 18);
 	}
 	context.fillText("Fuel: ", 8, 120);
-	context.fillStyle = "#f33";
-	context.fillRect(80, 126, player.fuel, 8);
+	context.fillStyle = "#5493ce";
+	context.fillRect(80, 126, player.fuel / 1.7, 8);
 
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
-		element.setAttribute("style", "opacity: " + (0.3 + player.controls[element.id] * 0.7));
+		element.style["opacity"] = (0.3 + player.controls[element.id] * 0.7);
 	});
 	drawChat();
+
+	context.strokeStyle = "#fff";
+	context.fillStyle = "#fff";
+	context.lineWidth = 2;
+	planets.forEach(function (planet){
+		context.beginPath();
+		context.arc(canvas.clientWidth - 158 + (planet.box.center.x / 6400) * 150, 40 + (planet.box.center.y / 6400) * 150, 5, 0, 2 * Math.PI, false);
+		context.fill();
+	});
+
+	context.fillStyle = "#f33";
+	context.beginPath();
+		context.arc(canvas.clientWidth - 158 + (player.box.center.x / 6400) * 150, 40 + (player.box.center.y / 6400) * 150, 5, 0, 2 * Math.PI, false);
+		context.fill();
+	context.strokeRect(canvas.clientWidth - 158, 40, 150, 150);
 
 	if (onScreenMessage.visible === true){
 		context.font = "22px Open Sans";

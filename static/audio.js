@@ -23,7 +23,7 @@ function loadSound(url, name, loop, callback) {
 }
 
 function fadeBackground(filtered) {
-	if(!sounds["background"]) return;
+	if(typeof sounds === "undefined" || !sounds["background"]) return;
 
 	var fv = sounds["background"].filter.frequency.value;
 	if(filtered) {
@@ -33,10 +33,9 @@ function fadeBackground(filtered) {
 	}
 }
 
-function playSound(name, distance) {
+function playSound(name, distance) {	
+	if(typeof sounds === "undefined" || sounds[name] === undefined || !canPlay) return;
 	var sound = sounds[name];
-	if(sound === undefined || !canPlay) return;
-
 	sound.source = audioContext.createBufferSource();
 	sound.source.buffer = sound.buffer;
 
