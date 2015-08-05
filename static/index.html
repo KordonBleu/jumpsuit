@@ -5,9 +5,6 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
-		<link href="http://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet"/>
-		<script src="assets/dialog-polyfill/dialog-polyfill.js"></script>
-		<link href="assets/dialog-polyfill/dialog-polyfill.css" rel="stylesheet"/>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
@@ -27,7 +24,7 @@
 			<span id="playerPink" class="playerSelect"></span>
 			<span id="playerYellow" class="playerSelect"></span>
 		</div>
-	<input type="text" id="name" placeholder="Enter your name" maxlength="30" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
+	<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
