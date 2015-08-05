@@ -75,8 +75,7 @@ function handleInputMobile(e){
 		}
 	}
 }
-handleInputMobile.gesture = function (touch, type){
-	
+handleInputMobile.gesture = function (touch, type){	
 	var element = touch.target;
 	if (type.indexOf("start") !== -1){
 		var targetId = element.id;
@@ -156,7 +155,23 @@ function handleInput(e){
 }
 handleInput.keyMap = defaultKeymap;
 handleInput.reverseKeyMap = {};
-
+handleInput.updateReverseKeyMap = function(){
+	handleInput.reverseKeyMap = {};
+	for (key in handleInput.keyMap) {
+		var action = handleInput.keyMap[key], index;
+		if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
+		if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
+		else index = 0;
+		handleInput.reverseKeyMap[action][index] = key;
+	}
+}
+handleInput.updateKeyMap = function(){
+	handleInput.keyMap = {};
+	for (action in handleInput.reverseKeyMap){
+		var keys = handleInput.reverseKeyMap[action];
+		for (key in keys) {handleInput.keyMap[keys[key]] = action; }
+	}
+}
 function dragging (ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.drag.x = x;
@@ -231,27 +246,10 @@ function handleSettings(){
 			initKeymap(false);
 		}
 	}
-
-	function updateReverseKeyMap(){
-		handleInput.reverseKeyMap = {};
-		for (key in handleInput.keyMap) {
-			var action = handleInput.keyMap[key], index;
-			if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
-			if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
-			else index = 0;
-			handleInput.reverseKeyMap[action][index] = key;
-		}
-	}
-	function updateKeyMap(){
-		handleInput.keyMap = {};
-		for (action in handleInput.reverseKeyMap){
-			var keys = handleInput.reverseKeyMap[action];
-			for (key in keys) {handleInput.keyMap[keys[key]] = action; }
-		}
-	}
+	
 	function initKeymap(fromReversed){
-		if (fromReversed) updateKeyMap();
-		else updateReverseKeyMap();
+		if (fromReversed) handleInput.updateKeyMap();
+		else handleInput.updateReverseKeyMap();
 
 		while (settingsEl.firstChild) {
 			settingsEl.removeChild(settingsEl.firstChild);
@@ -273,15 +271,13 @@ function handleSettings(){
 			}
 			settingsEl.appendChild(rowEl);
 		}
-	}
-	
+	}	
 	settingsEl.addEventListener("click", function(e) {
 		function reselect(obj){
 			for (row in e.target.parentNode.parentNode.childNodes){
 				e.target.parentNode.parentNode.childNodes[row].className = "";
 				document.removeEventListener("keydown", wrap);
 			}
-
 			if (typeof obj !== "undefined") {
 				obj.className = "selected";
 				var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);

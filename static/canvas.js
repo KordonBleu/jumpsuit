@@ -285,17 +285,14 @@ function loop(){
 	}
 
 	//planet
-	planets.forEach(function(planet) {
+	planets.forEach(function (planet, pi) {
 		context.fillStyle = planet.progress.color;
 
 		if (windowBox.collision(planet.box)) {
 			fillCircle(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
 			drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
-		}
-		
+		}		
 		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
-
-
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		context.fillStyle = "rgba(0, 0, 0, 0.2)";
 		context.fillText(Planet.prototype.names[pi].substr(0, 1), planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y);

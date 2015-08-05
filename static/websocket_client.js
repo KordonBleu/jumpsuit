@@ -29,7 +29,6 @@ function connection(address){
 						li = document.createElement("li");
 						el = document.createElement("a");
 						el.href = "#c:" + msg.data[i].uid;
-						el.onclick = function(){ location.hash = this.href;	}
 						el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxPlayers + ")";
 						li.appendChild(el);
 						list.appendChild(li);
