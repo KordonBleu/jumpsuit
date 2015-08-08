@@ -220,18 +220,10 @@ function loop(){
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	context.globalAlpha = 1;
-	context.clearRect(0, 0, canvas.width, canvas.height);
+	//context.clearRect(0, 0, canvas.width, canvas.height);
 
 
-	//layer 0: background
-	for (var i = 0; i < Math.floor(canvas.width / 256) + 1; i++){
-		for (var j = 0; j < Math.floor(canvas.height / 256) + 1; j++){
-			context.drawImage(resources["background"], i * 256, j * 256);
-		}
-	}
-
-
-	//layer 1: meteors
+	//layer 0: meteors
 	if (Math.random() < 0.01){
 		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1", "meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
 			m_rand = Math.floor(1 / Math.random()) - 1,
@@ -260,7 +252,7 @@ function loop(){
 	context.globalAlpha = 1;
 
 
-	//layer 2: the game
+	//layer 1: the game
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
 
@@ -343,7 +335,7 @@ function loop(){
 		player.looksLeft);
 
 
-	//layer 3: HUD / GUI	
+	//layer 2: HUD / GUI
 	context.textAlign = "left";
 	context.textBaseline = "hanging";
 	context.fillStyle = "#eee";
