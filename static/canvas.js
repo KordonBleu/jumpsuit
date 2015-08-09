@@ -169,7 +169,10 @@ function loop(){
 		context.restore();
 	}
 
-
+	if(canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+	} else context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//layer 0: meteors
 	if (Math.random() < 0.01){

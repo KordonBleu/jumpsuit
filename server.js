@@ -1,5 +1,4 @@
 var fs = require("fs"),
-	readline = require("readline"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
 	MESSAGE = require("./static/message.js").MESSAGE,
@@ -7,6 +6,78 @@ var fs = require("fs"),
 	collisions = require("./static/collisions.js"),
 	engine = require("./static/engine.js");
 
+
+var configSkeleton = {
+	interactive: false,
+	monitor: false,
+	port: 8080
+},
+	configPath = process.argv[2] || "./config.json";
+try {
+	fs.statSync(configPath);
+} catch(err) {
+	if(err.code === "ENOENT") {
+		console.log("No config file (\033[1m" + configPath + "\033[0m) found. Creating it.");
+		fs.writeFileSync(configPath, JSON.stringify(configSkeleton, null, "\t"));
+	}
+}
+var config,
+	previousConfig;
+function loadConfig(firstRun) {
+	function clone(obj) {
+		var target = {};
+		for (var i in obj) {
+			if (obj.hasOwnProperty(i)) target[i] = obj[i];
+		}
+		return target;
+	}
+	if(config !== undefined) previousConfig = clone(config);
+
+	if(loadConfig.selfModified === true) {
+		loadConfig.selfModified = false;
+		return;
+	}
+	try {
+		config = JSON.parse(fs.readFileSync(configPath));
+		for(key in config) {
+			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
+		}
+		console.log("Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
+		var addedProp = [];
+		for(key in configSkeleton) {
+			if(!config.hasOwnProperty(key)) {
+				config[key] = configSkeleton[key];//all the properties must be listed in `config.json`
+				addedProp.push(key);
+			}
+		}
+		if(addedProp.length !== 0) {
+			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
+			loadConfig.selfModified = true;
+			console.log("New properties added to \033[1mconfig.json\033[0m file: \033[4m" + addedProp.join("\033[0m, \033[4m") + "\033[0m");
+		}
+	} catch(err) {
+		console.log(err, "Unproper config file found. Loading default settings.");
+		config = configSkeleton;
+	}
+	if(previousConfig !== undefined) {
+		if(config.port !== previousConfig.port) {
+			server.close();
+			server.listen(config.port);
+		}
+		if(config.monitor !== previousConfig.monitor) {
+			if(previousConfig.monitor) {
+				clearInterval(monitorTimerID);
+				process.stdout.write('\033c');
+			} else monitorTimerID = setInterval(monitoring, 500);
+		}
+		if(config.interactive !== previousConfig.interactive) {
+			if(previousConfig.interactive) rl.close();
+			else initRl();
+		}
+	}
+}
+loadConfig(true);
+fs.watchFile(configPath, loadConfig);//refresh config whenever the `config.json` is modified
 
 var files = {};
 files.construct = function(path, oName) {
@@ -23,11 +94,19 @@ files.construct = function(path, oName) {
 }
 files.construct("./static", "/");//load everything under `./static` in RAM for fast access
 
-var rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout
-});
+if(config.interactive) initRl();
+var rl;
+function initRl(){
+	rl = require("readline").createInterface({
+		input: process.stdin,
+		output: process.stdout
+	});
 
+	rl.on("line", function (cmd) {
+		//allowing to output variables on purpose
+		console.log(eval(cmd));
+	});
+}
 
 //send static files
 var server = http.createServer(function (req, res){
@@ -54,7 +133,6 @@ var server = http.createServer(function (req, res){
 			mime = "application/octet-stream";
 	}
 
-	console.log(req.url);
 	if(files[req.url] !== undefined) {
 			res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
 		if(req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).getTime() === files[req.url].mtime.getTime()) {
@@ -71,7 +149,7 @@ var server = http.createServer(function (req, res){
 		res.end("Error 404:\nPage not found\n");
 	}
 });
-server.listen(8080);
+server.listen(config.port);
 
 var lobbies = [],
 	wss = new WebSocketServer({server: server});
@@ -231,14 +309,13 @@ setInterval(function() {
 }, 16);
 
 setInterval(function() {
-	if(lobbies[0].players[0]) console.log("latency", lobbies[0].players[0].latency);
 	lobbies.forEach(function(lobby) {
 		lobby.pingPlayers();
 	});
 }, 1000);
 
-function monitoring(){
-	process.stdout.write('\033c');
+function monitoring() {
+	process.stdout.write("\033c");
 	console.log("Jumpsuit Server [STATUS: RUNNING]");
 	console.log("\nMonitoring Lobbies:");
 	var headerSizes = [40, 10, 20],
@@ -257,7 +334,7 @@ function monitoring(){
 		console.log(info);
 	}
 }
-if(process.argv[2] === "-m") setInterval(monitoring, 500);
+if(config.monitor) var monitorTimerID = setInterval(monitoring, 500);
 
 wss.on("connection", function(ws) {
 	ws.on("message", function(message) {

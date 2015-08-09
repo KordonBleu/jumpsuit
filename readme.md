@@ -32,7 +32,15 @@ $ node server.js
 ```
 Now you can access it at `http://localhost:8080` in your browser.
 
-### Monitor mode
+### Configuration
+The server needs a configuration file. The default file is `config.json`, but it is also possible to choose which to use:
 ```sh
-$ node server.js -m
+$ node server.js path/to/your/config.json
 ```
+In any case, if it doesn't exists, it will be created.
+
+In this file you can set the following parameters (note that most of them don't need the server to be restarted):
+Parameter | Explanation | Default | Value | Needs server restart
+interactive | Make it possible to enter Javascript commands while the server runs | false | boolean | yes
+monitor | Displays a neat view of the lobbys in real-time | false | boolean | no
+port | Set the server's port | 8080 | integer | no
