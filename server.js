@@ -7,15 +7,43 @@ var fs = require("fs"),
 	collisions = require("./static/collisions.js"),
 	engine = require("./static/engine.js");
 
-var rl = readline.createInterface({
-	input: process.stdin,
-	output: process.stdout
-});
+var serverParams = {
+	private: false,
+	name: "Another Jumpsuit Server",
+	port: 8080,
+	debug: false
+};
 
-rl.on("line", function (cmd) {
-	//allowing to output variables on purpose
-	console.log(eval(cmd));
-});
+if (fs.existsSync("config.json")) {
+	var content = fs.readFileSync("config.json", {encoding: ""}).toString(),
+		parameters;	
+	try {
+		parameters = JSON.parse(content);
+	} catch (e) {
+		console.log("[ERROR] Error occured while loading config file!");
+	}
+	serverParams.private = Boolean(parameters.private);
+	serverParams.name = parameters.name || "Another Jumpsuit Server";
+	serverParams.port = parseInt(parameters.port, 10) || 8080;
+	serverParams.debug = Boolean(parameters.debug);
+}
+for (param in serverParams)	console.log(param + " = '" + serverParams[param] + "'");
+
+if (serverParams.debug === true){
+	var rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout
+	});
+
+	rl.on("line", function (cmd) {
+		//allowing to output variables on purpose
+		console.log(eval(cmd));
+	});
+}
+
+function createPlainConfigFile(){
+	fs.writeFile("config.json", JSON.stringify(serverParams));
+}
 
 //send static files
 var server = http.createServer(function (req, res){
@@ -307,8 +335,8 @@ wss.on("connection", function(ws) {
 				case MESSAGE.LEAVE_LOBBY:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));
 						delete lobby.players[msg.data.pid];
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));						
 					}
 					break;
 				case MESSAGE.PONG:

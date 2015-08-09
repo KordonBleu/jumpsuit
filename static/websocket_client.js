@@ -16,11 +16,12 @@ function connection(address){
 		this.close();
 	};
 	socket.onmessage = function(message){
-		//try{
+		try{
 			msg = JSON.parse(message.data);
 			switch(msg.msgType){
 				case MESSAGE.SENT_LOBBIES:
 					document.getElementById("new-lobby").disabled = false;
+					document.getElementById("status").textContent = "Choose a lobby";
 					var list = document.getElementById("player-list");
 					while (list.firstChild) {
 						list.removeChild(list.firstChild);
@@ -51,6 +52,7 @@ function connection(address){
 					break;
 				case MESSAGE.PLAYER_SETTINGS:
 					var list = document.getElementById("player-list");
+					document.getElementById("status").textContent = "Connected to a lobby";
 					while (list.firstChild) {
 						list.removeChild(list.firstChild);
 					}
@@ -62,9 +64,17 @@ function connection(address){
 					});
 					break;
 				case MESSAGE.CHAT:
-					chat.history.splice(0, 0, msg.data);
+					var element = document.createElement("p"), chatElement = document.getElementById("gui-chat");
+					if (msg.data.pid === -1) element.className = "server";
+					else if (msg.data.pid === pid) element.className = "own";
+					element.textContent = (msg.data.name !== undefined ? msg.data.name + ": " : "") + msg.data.content;
+					chatElement.appendChild(element);
+					while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.lastChild);
 					break;
 				case MESSAGE.PLAYER_DATA:
+					player.timestamps._old = player.timestamps._new || 0;
+					player.timestamps._new = Date.now();				
+					
 					msg.data.forEach(function(_player, i){			
 						if (i === pid){
 							player.box.center.x = _player.x;
@@ -156,10 +166,10 @@ function connection(address){
 					alert("Error " + msg.data.code + ":\n" + errDesc);
 					break;
 			}
-		/*} catch(err) {
+		} catch(err) {
 			console.log("Badly formated JSON message received:", err);
 			console.log("'" + message.data + "'");
-		}*/
+		}
 	};
 	this.close = function(){
 		socket.send(JSON.stringify({
@@ -227,6 +237,7 @@ function closeSocket(){
 	document.getElementById("new-lobby").disabled = true;
 	document.getElementById("refresh-or-leave").textContent = "Refresh";
 	document.getElementById("refresh-or-leave").disabled = true;
+	document.getElementById("gui-chat").innerHTML = "";
 	currentConnection.close();
 }
 function openSocket(){
@@ -245,6 +256,7 @@ function leaveLobby(){
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
 	currentConnection.refreshLobbies();
+	document.getElementById("gui-chat").innerHTML = "";
 	document.getElementById("refresh-or-leave").textContent = "Refresh";
 }
 

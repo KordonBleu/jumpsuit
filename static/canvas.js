@@ -12,11 +12,8 @@ var canvas = document.getElementById("canvas"),
 		muted: false,
 		dragStart: new Vector(0, 0),
 		drag: new Vector(0, 0),
-		offset: new Vector(0, 0)
-	},
-	chat = {
-		history: [],
-		enabled: false
+		offset: new Vector(0, 0),
+		connectionProblems: false
 	},
 	controls = {
 		jump: 0,
@@ -90,9 +87,13 @@ function init() {//init is done differently in the server
 		player = new Player("Unnamed Player", "alienGreen", 0, 0);
 		player.name = localStorage.getItem("settings.jumpsuit.name") || "Unnamed Player";
 		document.getElementById("name").value = player.name;
+
 		document.getElementById("multiplayer-box").classList.remove("hidden");
 		document.getElementById("name").removeAttribute("class");
 		document.getElementById("badge").removeAttribute("class");
+		document.getElementById("gui-chat").removeAttribute("class");
+		document.getElementById("gui-health").removeAttribute("class");
+		document.getElementById("gui-fuel").removeAttribute("class")
 		loop();
 	});
 }
@@ -107,55 +108,6 @@ function loop(){
 			hgt = sizeY !== undefined ? sizeY : image.height;
 		context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 		context.resetTransform();
-	}
-	function wrapText(text, maxWidth) {
-		var words = text.split(' '),
-			lines = [],
-			line = "";
-		if (context.measureText(text).width < maxWidth) {
-			return [text];
-		}
-		while (words.length > 0) {
-			var split = false;
-			while (context.measureText(words[0]).width >= maxWidth) {
-				var tmp = words[0];
-				words[0] = tmp.slice(0, -1);
-				if (!split) {
-					split = true;
-					words.splice(1, 0, tmp.slice(-1));
-				} else {
-					words[1] = tmp.slice(-1) + words[1];
-				}
-			}
-			if (context.measureText(line + words[0]).width < maxWidth) {
-				line += words.shift() + " ";
-			} else {
-				lines.push(line);
-				line = "";
-			}
-			if (words.length === 0) {
-				lines.push(line);
-			}
-		}
-		return lines;
-	}
-	function drawChat(){
-		context.font = "14px Open Sans";
-		var y = 0;
-		for (var i = 0; i < chat.history.length; i++){
-			var text = wrapText((chat.history[i].pid !== -1 ? chat.history[i].name + ": " : "") + chat.history[i].content, 300);
-			if (y + text.length * 14 > canvas.height - 380){
-				if (chat.history.length > 48) chat.length = 48;
-				return;
-			}
-			for (var j = 0; j < text.length; j++) {
-				if (chat.history[i].pid === -1) context.fillStyle = "#fff37f";
-				else if (chat.history[i].pid === player.pid) context.fillStyle = "#56d7ff";
-				else context.fillStyle = "#eee";
-				context.fillText(text[j], 18, 150 + y + j * 17);				
-			}
-			y += text.length * 17 + 3;
-		}
 	}
 	function fillCircle(cx, cy, r){
 		context.save();
@@ -220,16 +172,6 @@ function loop(){
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	context.globalAlpha = 1;
-	context.clearRect(0, 0, canvas.width, canvas.height);
-
-
-	//layer 0: background
-	for (var i = 0; i < Math.floor(canvas.width / 256) + 1; i++){
-		for (var j = 0; j < Math.floor(canvas.height / 256) + 1; j++){
-			context.drawImage(resources["background"], i * 256, j * 256);
-		}
-	}
-
 
 	//layer 1: meteors
 	if (Math.random() < 0.01){
@@ -254,9 +196,8 @@ function loop(){
 		context.globalAlpha = m.depth;
 		m.rotAng += m.rotSpeed;
 		if (m.x - resources[m.res].width/2 > canvas.width || m.y - resources[m.res].height/2 > canvas.height || m.y + resources[m.res].height/2 < 0) meteors.splice(i, 1);
-		else drawRotatedImage(resources[m.res], m.x, m.y, m.rotAng);
+		else drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng);
 	});
-
 	context.globalAlpha = 1;
 
 
@@ -280,9 +221,11 @@ function loop(){
 		jetpackY = player.box.center.y - game.offset.y + shift*Math.cos(player.box.angle + Math.PI/2);
 	drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 	if(player.controls["jetpack"] > 0 && player.fuel > 0 && player.controls["crouch"] < 1 && player.attachedPlanet === -1) {
+		context.globalAlpha = 0.8;
 		drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
 		drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(player.box.angle + Math.PI/11), player.box.angle);
 	}
+	context.globalAlpha = 1;
 
 	//planet
 	planets.forEach(function (planet, pi) {
@@ -313,7 +256,7 @@ function loop(){
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer){
 		var intensity = Math.max(1, 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000);
-		console.log(intensity / 60 * 1000)
+		
 		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;	
 		if (otherPlayer.attachedPlanet === -1){	
 			otherPlayer.predictedBox.center.x += (parseFloat(otherPlayer.box.center.x, 10) - parseFloat(otherPlayer.lastBox.center.x, 10)) / intensity;
@@ -322,7 +265,7 @@ function loop(){
 			otherPlayer.predictedBox.center.x = planets[otherPlayer.attachedPlanet].box.center.x + Math.sin(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 		}
-		console.log(otherPlayer.predictedBox.center);
+		
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 		context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
@@ -344,26 +287,10 @@ function loop(){
 
 
 	//layer 3: HUD / GUI	
-	context.textAlign = "left";
-	context.textBaseline = "hanging";
-	context.fillStyle = "#eee";
-	context.font = "20px Open Sans";
-
-	context.fillText("Health: ", 8, 90);
-	for(var i = 2; i !== 8 + 2; i += 2) {
-		if(i <= player.health) context.drawImage(resources["heartFilled"], 60 + i * 15, 90, 20.8, 18);
-		else if(i - 1 === player.health) context.drawImage(resources["heartHalfFilled"], 60 + i * 15, 90, 20.8, 18);
-		else context.drawImage(resources["heartNotFilled"], 60 + i * 15, 90, 20.8, 18);
-	}
-	context.fillText("Fuel: ", 8, 120);
-	context.fillStyle = "#5493ce";
-	context.fillRect(80, 126, player.fuel / 1.7, 8);
-
-
+	if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
 		element.style["opacity"] = (0.3 + player.controls[element.id] * 0.7);
 	});
-	drawChat();
 
 	context.strokeStyle = "#fff";
 	context.fillStyle = "#fff";
@@ -379,6 +306,15 @@ function loop(){
 		context.arc(canvas.clientWidth - 158 + (player.box.center.x / 6400) * 150, 40 + (player.box.center.y / 6400) * 150, 5, 0, 2 * Math.PI, false);
 		context.fill();
 	context.strokeRect(canvas.clientWidth - 158, 40, 150, 150);
+
+	document.getElementById("gui-fuel-value").style["width"] = (player.fuel / 400 * 200) + "px";
+	[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
+		var state = "heartFilled";
+		if (index * 2 + 2 <= player.health) state = "heartFilled";
+		else if (index * 2 + 1 === player.health) state = "heartHalfFilled";
+		else state = "heartNotFilled";
+		element.className = state;
+	});
 
 	if (onScreenMessage.visible === true){
 		context.font = "22px Open Sans";

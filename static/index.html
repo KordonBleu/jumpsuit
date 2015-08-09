@@ -3,7 +3,7 @@
 	<head>
 		<title>JumpSuit</title>
 		<meta charset="utf-8"/>
-		<meta name="viewport" content="width=device-width, user-scalable=no"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
 	</head>
 	<body>
@@ -17,6 +17,15 @@
 			<img src="assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/></li>
 		</ul>
 		<img src="assets/images/alienGreen_badge.svg" alt="alien badge" id="badge" class="hidden"/>
+		<div id="gui-fuel" class="hidden">
+			<div id="gui-fuel-value"></div>
+		</div>
+		<div id="gui-health" class="hidden">
+			<div class="heartFilled"></div>
+			<div class="heartFilled"></div>
+			<div class="heartFilled"></div>
+			<div class="heartFilled"></div>
+		</div>
 		<div id="appearance-box" class="hidden">
 			<span id="playerBlue" class="playerSelect"></span>
 			<span id="playerBeige" class="playerSelect"></span>
@@ -24,6 +33,8 @@
 			<span id="playerPink" class="playerSelect"></span>
 			<span id="playerYellow" class="playerSelect"></span>
 		</div>
+		<div id="gui-chat" class="hidden"></div>
+		<div id="gui-bad-connection" class="hidden">Connection interrupted</div>
 	<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
 		<div id="info-box" class="info-box hidden">
@@ -54,28 +65,26 @@
 			<button id="disconnect" style="float: right;">Disconnect</button>
 			<button id="refresh-or-leave" style="float: right;">Refresh</button>
 			<button id="new-lobby" style="float: right;">Create New Lobby</button>
-			<h4 id="status">Waiting for other players...</h4>
+			<h3 id="status">Waiting for other players...</h3>
 			<ul class="loader" style="" id="multiplayer-loader"><li></li><li></li><li></li><li></li><li></li></ul>
-			<ul id="player-list">		
+			<ul id="player-list">
 			</ul>
-			<hr>			
+			<hr>
 			<div id="key-info">
-				<h3>Settings</h3>
+				<h3>Settings</h3><br/>
 				Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
 				Also you can't assign Mouse keys to the key settings!<br/><br/>
-				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.
+				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
+			</div>			
+			<div id="mobile-info" style="display: none">
+				<h3>Information</h3><br/>
+				To close the multiplayer box slide from it to the right border and open it by sliding it in from the right border to the center of the screen.<br/>
+				Also you can open and information box about this game project by sliding it in from the left border to the center of the screen.<br/>
+				The images for the controls explain their purpose by themselves but to sprint you can drag up the button for moving left or right.<br/><br/>
+				If you'll find a bug in the game please report it on the github page and please mark it whether the bug is on mobile only.
 			</div>
-			<div id="mobile-info">
-				<h3>Information</h3>
-				
-			</div>
-			<table id="key-settings">
-				<tr id="key-header">
-					<th id="key-action">Actions</th>
-					<th id="key-col">Primary Keys</th>
-					<th id="key-col-alt">Alternate Keys</th>
-				</tr>
-			</table>
+			<table id="key-settings"></table>
+			<button id="key-reset">Reset keymap to default</button>
 		</div>
 		<div id="dialog" class="hidden">
 			<div id="dialog-backdrop"></div>
@@ -93,6 +102,6 @@
 		<script src="canvas.js"></script>
 		<script src="message.js"></script>
 		<script src="websocket_client.js"></script>
-		<script src="controls.js"></script>		
+		<script src="controls.js"></script>
 	</body>
 </html>

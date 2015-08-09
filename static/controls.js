@@ -1,5 +1,20 @@
 const defaultKeymap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
-
+function sameObjects(a, b) {
+	var aProps = Object.getOwnPropertyNames(a);
+	var bProps = Object.getOwnPropertyNames(b);
+	console.log(aProps);
+	console.log(bProps);
+	if (aProps.length != bProps.length) {
+		return false;
+	}
+	for (var i = 0; i < aProps.length; i++) {
+		var propName = aProps[i];
+		if (a[propName] !== b[propName]) {
+			return false;
+		}
+	}
+	return true;
+};
 var isMobile = (navigator.userAgent.match(/Android/i)
 	|| navigator.userAgent.match(/webOS/i)
 	|| navigator.userAgent.match(/iPhone/i)
@@ -76,7 +91,7 @@ function handleInputMobile(e){
 	}
 }
 handleInputMobile.gesture = function (touch, type){	
-	var element = touch.target;
+	var element = touch.target, range = new Vector(120, 60);
 	if (type.indexOf("start") !== -1){
 		var targetId = element.id;
 		if (element.parentNode.id === "multiplayer-box" || element.parentNode.parentNode.id === "multiplayer-box") targetId = "multiplayer-box";
@@ -87,17 +102,17 @@ handleInputMobile.gesture = function (touch, type){
 	} else if (type.indexOf("end") !== -1){
 		console.log(this.currentGestures);
 		if (this.currentGestures.target === "info-box"){
-			if (this.currentGestures.start.x - 40 > touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+			if (this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById(this.currentGestures.target).classList.add("hidden");
 			}
 		} else if (this.currentGestures.target === "multiplayer-box"){
-			if (this.currentGestures.start.x + 40 < touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+			if (this.currentGestures.start.x + range.x < touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById(this.currentGestures.target).classList.add("hidden");
 			}
 		} else if (this.currentGestures.target === "canvas"){
-			if (this.currentGestures.start.x <= 80 && this.currentGestures.start.x + 40 < touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+			if (this.currentGestures.start.x <= range.x && this.currentGestures.start.x + range.x < touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById("info-box").classList.remove("hidden");
-			} else if (this.currentGestures.start.x >= canvas.clientWidth - 80 && this.currentGestures.start.x - 40 > touch.pageX && this.currentGestures.start.y + 40 > touch.pageY && this.currentGestures.start.y - 40 < touch.pageY) {
+			} else if (this.currentGestures.start.x >= canvas.clientWidth - range.x && this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById("multiplayer-box").classList.remove("hidden");
 			}
 		}
@@ -125,7 +140,8 @@ function handleInput(e){
 	if (document.getElementById("dialog").className !== "hidden") return;
 	var s = (e.type === "keydown") * 1,
 		triggered,
-		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1);
+		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1),
+		chatInUse = document.getElementById("chat-input").hasFocus;
 
 	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
@@ -136,7 +152,7 @@ function handleInput(e){
 			e.preventDefault();
 			triggered = e.target.id;
 		}
-		if (triggered == "menu" || triggered == "lobby" && !chat.enabled){
+		if (triggered == "menu" || triggered == "lobby" && !chatInUse){
 			e.preventDefault();
 			if (s == 1){
 				var box = document.getElementById((triggered == "menu") ? "info-box" : "multiplayer-box");
@@ -145,8 +161,8 @@ function handleInput(e){
 			}
 		} else if (triggered == "chat"){
 			e.preventDefault();
-			if (s == 1) chat.enabled = !chat.enabled;
-		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chat.enabled && framesClosed && document.activeElement !== document.getElementById("name")) {
+			if (s == 1) chatInUse = !chatInUse;
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && framesClosed && document.activeElement !== document.getElementById("name")) {
 			e.preventDefault();
 			player.controls[triggered] = s;
 			currentConnection.refreshControls(player.controls);
@@ -174,6 +190,51 @@ handleInput.updateKeyMap = function(){
 		}
 	}
 }
+handleInput.initKeymap = function(fromReversed){
+	if (fromReversed) handleInput.updateKeyMap();
+	else handleInput.updateReverseKeyMap();
+	
+	while (settingsEl.firstChild) {
+		settingsEl.removeChild(settingsEl.firstChild);
+	}
+	var tableTitles = ["Actions", "Primary Keys", "Alternate Keys"], firstRow = document.createElement("tr");
+	for (var i = 0; i < tableTitles; i++){
+		var tableHead = document.createElement("th");
+		tableHead.textContent = tableTitles[i];
+		firstRow.appendChild(tableHead);
+	}
+	settingsEl.appendChild(firstRow);
+	for (action in handleInput.reverseKeyMap) {
+		var rowEl = document.createElement("tr"),
+			actionEl = document.createElement("td"),
+			keyEl;
+
+		actionEl.textContent = action;
+		rowEl.appendChild(actionEl);
+
+		var slice = handleInput.reverseKeyMap[action];
+		for (var i = 0; i != 2; i++){
+			keyEl = document.createElement("td");
+			if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
+			else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
+			rowEl.appendChild(keyEl);
+		}
+		settingsEl.appendChild(rowEl);
+	}
+	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
+}
+handleInput.loadKeySettings = function(){
+	var presets = localStorage.getItem("settings.jumpsuit.keys");
+	if (presets != null){
+		try{
+			handleInput.reverseKeyMap = JSON.parse(presets);
+			handleInput.initKeymap(true);
+		} catch (e) {
+			handleInput.initKeymap(false);
+		}
+	}
+}
+
 function dragging (ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.drag.x = x;
@@ -201,6 +262,11 @@ document.getElementById("audio-icon").addEventListener("click", function(ev){
 		gain.gain.value = 0;
 	}
 });
+if (localStorage.getItem("settings.jumpsuit.mute") === "true"){
+	document.getElementById("audio-icon").setAttribute("src", "assets/images/controls/mute.svg");
+	gain.gain.value = 0;
+}
+
 
 function handleGamepad(){
 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
@@ -234,111 +300,73 @@ function handleGamepad(){
 		}
 	}
 }
-var changingKeys = false;
-function handleSettings(){
-	var settingsEl = document.getElementById("key-settings"),
-		presets = localStorage.getItem("settings.jumpsuit.keys"),
-		selectedRow = -1;
+var changingKeys = false,
+	settingsEl = document.getElementById("key-settings"),	
+	selectedRow = -1;
 
-	if (presets != null){
-		try{
-			handleInput.reverseKeyMap = JSON.parse(presets);
-			initKeymap(true);
-		} catch (e) {
-			initKeymap(false);
+settingsEl.addEventListener("click", function(e) {
+	function reselect(obj){
+		document.removeEventListener("keydown", wrap);
+		Array.prototype.forEach.call(settingsEl.childNodes, function (row){ row.classList.remove("selected") });		
+		if (typeof obj !== "undefined") {
+			obj.classList.add("selected");
+			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
+			if (nsr === selectedRow) reselect();
+			else selectedRow = nsr;
+		} else {
+			selectedRow = -1;
+			document.removeEventListener("keyup", wrap);
+			changingKeys = false;
 		}
 	}
-	
-	function initKeymap(fromReversed){
-		if (fromReversed) handleInput.updateKeyMap();
-		else handleInput.updateReverseKeyMap();
+	function handleChangeKey(e) {
+		console.log(selectedRow);
+		var keyName = e.key || convertToKey(e.keyCode),
+			action = settingsEl.childNodes[selectedRow].firstChild.textContent,
+			alreadyTaken = false;
 
-		while (settingsEl.firstChild) {
-			settingsEl.removeChild(settingsEl.firstChild);
+		for (key in handleInput.keyMap){
+			if (key !== keyName) continue;
+			alreadyTaken = true;
+			break;
 		}
-		var tableTitles = ["Actions", "Primary Keys", "Alternate Keys"];
-		for (var i = 0; i < tableTitles; i++){
-			var tableHead = document.createElement("th");
-			tableHead.textContent = tableTitles[i];
-			settingsEl.appendChild(tableHead);
-		}
-		for (action in handleInput.reverseKeyMap) {
-			var rowEl = document.createElement("tr"),
-				actionEl = document.createElement("td"),
-				keyEl;
-
-			actionEl.textContent = action;
-			rowEl.appendChild(actionEl);
-
-			var slice = handleInput.reverseKeyMap[action];
-			for (var i = 0; i != 2; i++){
-				keyEl = document.createElement("td");
-				if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
-				else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
-				rowEl.appendChild(keyEl);
-			}
-			settingsEl.appendChild(rowEl);
-		}
-	}	
-	settingsEl.addEventListener("click", function(e) {
-		function reselect(obj){
-			for (row in settingsEl.childNodes){
-				if (row === "length") break;
-				settingsEl.childNodes[row].classList.remove("selected");
+		if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
+		else handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
+		handleInput.reverseKeyMap[action][0] = keyName;			
+		handleInput.initKeymap(true);
+	}
+	function wrap(nE) {
+		nE.preventDefault();
+		switch(nE.type) {
+			case "keydown":
+				changingKeys = true;
 				document.removeEventListener("keydown", wrap);
-			}
-			if (typeof obj !== "undefined") {
-				obj.classList.add("selected");
-				var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
-				if (nsr === selectedRow) reselect();
-				else selectedRow = nsr;
-			} else {
-				selectedRow = -1;
-				document.removeEventListener("keyup", wrap);
-				changingKeys = false;
-			}
-		}
-		function handleChangeKey(e) {
-			var keyName = e.key || convertToKey(e.keyCode),
-				action = settingsEl.childNodes[selectedRow].firstChild.textContent,
-				alreadyTaken = false;
-
-			for (key in handleInput.keyMap){
-				if (key !== keyName) continue;
-				alreadyTaken = true;
+				document.addEventListener("keyup", wrap);
 				break;
-			}
-			if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
-			else handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
-			handleInput.reverseKeyMap[action][0] = keyName;			
-			initKeymap(true);
+			case "keyup":
+				handleChangeKey(nE);
+				reselect();
+				break;
 		}
-		function wrap(nE) {
-			nE.preventDefault();
-			switch(nE.type) {
-				case "keydown":
-					changingKeys = true;
-					document.removeEventListener("keydown", wrap);
-					document.addEventListener("keyup", wrap);
-					break;
-				case "keyup":
-					handleChangeKey(nE);
-					reselect();
-					break;
-			}
-		}
-		if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
-			reselect(e.target.parentNode);
-			document.addEventListener("keydown", wrap);
-		}
-	});
-}
+	}
+	if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
+		reselect(e.target.parentNode);
+		document.addEventListener("keydown", wrap);
+	}
+});
+
+document.getElementById("key-reset").addEventListener("click", function(){
+	handleInput.keyMap = defaultKeymap;
+	handleInput.updateReverseKeyMap();
+	handleInput.initKeymap();
+});
+
 if (isMobile){
 	document.getElementById("mobile-info").style["display"] = "initial";
 	document.getElementById("key-info").style["display"] = "none";
 	document.getElementById("key-settings").style["display"] = "none";
-	document.body.classList.add("mobile");
-} else handleSettings();
+	document.getElementById("key-reset").style["display"] = "none";
+} else handleInput.loadKeySettings()
 
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
@@ -352,10 +380,6 @@ window.addEventListener("keyup", handleInput);
 document.getElementById("chat-input").addEventListener("focus", function(){
 	document.getElementById("info-box").classList.add("hidden");
 	document.getElementById("multiplayer-box").classList.add("hidden");
-	chat.enabled = true;
-});
-document.getElementById("chat-input").addEventListener("blur", function(){
-	chat.enabled = false;
 });
 document.getElementById("chat-input").addEventListener("keydown", function(e){
 	if (e.keyCode == 13){
@@ -430,4 +454,5 @@ document.getElementById("badge").addEventListener("click", function() {
 window.onbeforeunload = function(){	
 	localStorage.setItem("settings.jumpsuit.name", player.name);
 	localStorage.setItem("settings.jumpsuit.keys", JSON.stringify(handleInput.reverseKeyMap));
+	localStorage.setItem("settings.jumpsuit.mute", document.getElementById("audio-icon").getAttribute("src") === "assets/images/controls/mute.svg")
 }
