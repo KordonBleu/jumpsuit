@@ -2,7 +2,6 @@
 "use strict";
 
 var resPaths = [
-	"background.png",
 	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
 	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg",
 	"heartFilled.svg", "heartHalfFilled.svg", "heartNotFilled.svg",

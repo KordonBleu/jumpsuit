@@ -169,11 +169,9 @@ function loop(){
 		context.restore();
 	}
 
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-	context.globalAlpha = 1;
 
-	//layer 1: meteors
+
+	//layer 0: meteors
 	if (Math.random() < 0.01){
 		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1", "meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
 			m_rand = Math.floor(1 / Math.random()) - 1,
@@ -201,7 +199,7 @@ function loop(){
 	context.globalAlpha = 1;
 
 
-	//layer 2: the game
+	//layer 1: the game
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
 		fadeMusic = false;
 
@@ -286,8 +284,9 @@ function loop(){
 		player.looksLeft);
 
 
-	//layer 3: HUD / GUI	
+	//layer 2: HUD / GUI	
 	if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
+
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
 		element.style["opacity"] = (0.3 + player.controls[element.id] * 0.7);
 	});
@@ -338,5 +337,4 @@ function loop(){
 	}
 	window.requestAnimationFrame(loop);
 }
-
 init();

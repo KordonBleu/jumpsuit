@@ -16,6 +16,7 @@ html, body {
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
+	-webkit-transform: translate3d(0, 0, 0);/*GPU boost*/
 }
 html {
 	background-image: url("assets/images/background.png");
@@ -479,40 +480,3 @@ button:disabled:hover{
 	margin-left: -250px;
 	color: #eee;
 }
-
-
-/*
-context.textAlign = "left";
-context.textBaseline = "hanging";
-context.fillStyle = "#eee";
-context.font = "20px Open Sans";
-context.fillText("Health: ", 8, 90);
-for(var i = 2; i !== 8 + 2; i += 2) {
-	if(i <= player.health) context.drawImage(resources["heartFilled"], 60 + i * 15, 90, 20.8, 18);
-	else if(i - 1 === player.health) context.drawImage(resources["heartHalfFilled"], 60 + i * 15, 90, 20.8, 18);
-	else context.drawImage(resources["heartNotFilled"], 60 + i * 15, 90, 20.8, 18);
-}
-context.fillText("Fuel: ", 8, 120);
-context.fillStyle = "#5493ce";
-context.fillRect(80, 126, player.fuel / 1.7, 8);
-
-
-	function drawChat(){
-		context.font = "14px Open Sans";
-		var y = 0;
-		for (var i = 0; i < chat.history.length; i++){
-			var text = wrapText((chat.history[i].pid !== -1 ? chat.history[i].name + ": " : "") + chat.history[i].content, 300);
-			if (y + text.length * 14 > canvas.height - 380){
-				if (chat.history.length > 48) chat.length = 48;
-				return;
-			}
-			for (var j = 0; j < text.length; j++) {
-				if (chat.history[i].pid === -1) context.fillStyle = "#fff37f";
-				else if (chat.history[i].pid === player.pid) context.fillStyle = "#56d7ff";
-				else context.fillStyle = "#eee";
-				context.fillText(text[j], 18, 150 + y + j * 17);				
-			}
-			y += text.length * 17 + 3;
-		}
-	}
-*/

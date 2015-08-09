@@ -7,43 +7,27 @@ var fs = require("fs"),
 	collisions = require("./static/collisions.js"),
 	engine = require("./static/engine.js");
 
-var serverParams = {
-	private: false,
-	name: "Another Jumpsuit Server",
-	port: 8080,
-	debug: false
-};
 
-if (fs.existsSync("config.json")) {
-	var content = fs.readFileSync("config.json", {encoding: ""}).toString(),
-		parameters;	
-	try {
-		parameters = JSON.parse(content);
-	} catch (e) {
-		console.log("[ERROR] Error occured while loading config file!");
-	}
-	serverParams.private = Boolean(parameters.private);
-	serverParams.name = parameters.name || "Another Jumpsuit Server";
-	serverParams.port = parseInt(parameters.port, 10) || 8080;
-	serverParams.debug = Boolean(parameters.debug);
-}
-for (param in serverParams)	console.log(param + " = '" + serverParams[param] + "'");
-
-if (serverParams.debug === true){
-	var rl = readline.createInterface({
-		input: process.stdin,
-		output: process.stdout
-	});
-
-	rl.on("line", function (cmd) {
-		//allowing to output variables on purpose
-		console.log(eval(cmd));
+var files = {};
+files.construct = function(path, oName) {
+	fs.readdirSync(path).forEach(function(pPath) {
+		var cPath = path + "/" + pPath,
+			stat = fs.statSync(cPath);
+		if(stat.isDirectory()) {//WE NEED TO GO DEEPER
+			files.construct(cPath, oName + pPath + "/");
+		} else {
+			files[oName + pPath] = fs.readFileSync(cPath);
+			files[oName + pPath].mtime = stat.mtime;
+		}
 	});
 }
+files.construct("./static", "/");//load everything under `./static` in RAM for fast access
 
-function createPlainConfigFile(){
-	fs.writeFile("config.json", JSON.stringify(serverParams));
-}
+var rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
+});
+
 
 //send static files
 var server = http.createServer(function (req, res){
@@ -69,21 +53,23 @@ var server = http.createServer(function (req, res){
 		default:
 			mime = "application/octet-stream";
 	}
-	fs.readFile(__dirname + "/static" + req.url, function (err, data){
-		if (err) {
-			if(err.code === "ENOENT"){
-				res.writeHead(404);
-				res.end("Error 404:\n" + JSON.stringify(err) + __dirname);
-			} else {
-				res.writeHead(500);
-				res.end("Error 500:\n" + JSON.stringify(err));
-			}
-			return;
+
+	console.log(req.url);
+	if(files[req.url] !== undefined) {
+			res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
+		if(req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).getTime() === files[req.url].mtime.getTime()) {
+			res.writeHead(304);
+			res.end();
+		} else {
+			res.setHeader("Content-Type", mime);
+			res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
+			res.writeHead(200);
+			res.end(files[req.url]);
 		}
-		res.setHeader("Content-Type", mime);
-		res.writeHead(200);
-		res.end(data);
-	});
+	} else {
+		res.writeHead(404);
+		res.end("Error 404:\nPage not found\n");
+	}
 });
 server.listen(8080);
 
