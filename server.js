@@ -183,7 +183,7 @@ function Lobby(name, maxPlayers){
 	this.enemies.getWorldData = function(){
 		var enemData = [];
 		for (var i = 0; i < this.length; i++){			
-			enemData.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance, angle: this[i].box.angle});
+			enemData.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance});
 		}
 		return enemData;
 	};
@@ -227,8 +227,23 @@ function Lobby(name, maxPlayers){
 			this.planets.push(new engine.Planet(x + px, y + py, radius));
 		}
 	}
-	this.enemies.push(new engine.Enemy(800, -600));
+	
+	var iterations = 0;
+	while (iterations < 250 && this.enemies.length < 15){
+		var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
+		this.enemies.forEach(function (enemy){
+			if (!wellPositioned) return;
+			if ((new collisions.Circle(new collisions.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175)).collision(new collisions.Circle(new collisions.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
+		});
+		this.planets.forEach(function (planet){
+			if (!wellPositioned) return;
+			if (newEnemy.aggroBox.collision(planet.box)) wellPositioned = false;
+		});
+		if (wellPositioned) this.enemies.push(newEnemy);
+		iterations++;
+	}
 
+	this.gameProgress = {ticks: 0, "alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
 	this.name = name || "Unnamed Lobby";
 	this.maxPlayers = maxPlayers || 8;
 }
@@ -243,7 +258,12 @@ Lobby.prototype.update = function() {
 	var oldDate = Date.now(), playerData = [];
 	engine.doPhysics(this.players, this.planets, this.enemies);
 	this.processTime = Date.now() - oldDate;
-
+	if (this.gameProgress.ticks++ === 50){
+		this.planets.forEach(function(planet){
+			if (planet.progress.value >= 80) this.gameProgress[planet.progress.team]++; 
+		}.bind(this));
+		this.gameProgress.ticks = 0;
+	}
 	this.players.forEach(function(player, i) {
 		function truncTo(number, decimalNbr) {
 			var lel = Math.pow(10, decimalNbr);
@@ -251,8 +271,8 @@ Lobby.prototype.update = function() {
 		}
 		playerData[i] = (player !== undefined) ? {x: truncTo(player.box.center.x, 5), y: truncTo(player.box.center.y, 5), attachedPlanet: player.attachedPlanet,
 			angle: truncTo(player.box.angle, 7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
-			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft
-		} : undefined;		
+			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft, jetpack: player.jetpack
+		} : null;
 	});
 	this.players.forEach(function(player, i) {
 		setTimeout(function() {
@@ -266,10 +286,11 @@ Lobby.prototype.update = function() {
 					msgType: MESSAGE.GAME_DATA,
 					data: {
 						planets: this.planets.getGameData(),
-						enemies: this.enemies.getGameData()
+						enemies: this.enemies.getGameData(),
+						gameProgress: this.gameProgress
 					}
 				}));
-			player.lastRefresh = Date.now();
+				player.lastRefresh = Date.now();
 			} catch(e) {/*Ignore errors*/}
 		}.bind(this), Math.max(16, Date.now() - player.lastRefresh + player.latency));
 	}.bind(this));
@@ -383,7 +404,7 @@ wss.on("connection", function(ws) {
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
 						i = msg.data.content;
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobby.players[msg.data.pid].name, pid: msg.data.pid}}));
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobby.players[msg.data.pid].name, pid: msg.data.pid, appearance: lobby.players[msg.data.pid].appearance}}));
 					}
 					break;
 				case MESSAGE.PLAYER_CONTROLS:

@@ -93,14 +93,13 @@ function handleInputMobile(e){
 handleInputMobile.gesture = function (touch, type){	
 	var element = touch.target, range = new Vector(120, 60);
 	if (type.indexOf("start") !== -1){
-		var targetId = element.id;
+		var targetId = (element === document.body) ? "canvas" : element.id;
 		if (element.parentNode.id === "multiplayer-box" || element.parentNode.parentNode.id === "multiplayer-box") targetId = "multiplayer-box";
 		else if (element.parentNode.id === "info-box" || element.parentNode.parentNode.id === "info-box") targetId = "info-box";
 		if (!(targetId === "multiplayer-box" || targetId === "info-box" || targetId === "canvas")) return false;
 		this.currentGestures.target = targetId;
 		this.currentGestures.start = new Point(touch.pageX, touch.pageY);		
 	} else if (type.indexOf("end") !== -1){
-		console.log(this.currentGestures);
 		if (this.currentGestures.target === "info-box"){
 			if (this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById(this.currentGestures.target).classList.add("hidden");
@@ -112,7 +111,7 @@ handleInputMobile.gesture = function (touch, type){
 		} else if (this.currentGestures.target === "canvas"){
 			if (this.currentGestures.start.x <= range.x && this.currentGestures.start.x + range.x < touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById("info-box").classList.remove("hidden");
-			} else if (this.currentGestures.start.x >= canvas.clientWidth - range.x && this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
+			} else if (this.currentGestures.start.x >= window.innerWidth - range.x && this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
 				document.getElementById("multiplayer-box").classList.remove("hidden");
 			}
 		}

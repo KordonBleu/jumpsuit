@@ -64,17 +64,21 @@ function connection(address){
 					});
 					break;
 				case MESSAGE.CHAT:
-					var element = document.createElement("p"), chatElement = document.getElementById("gui-chat");
+					var element = document.createElement("p"), nameElement = document.createElement("b"), textElement = document.createTextNode(msg.data.content), chatElement = document.getElementById("gui-chat");
 					if (msg.data.pid === -1) element.className = "server";
-					else if (msg.data.pid === pid) element.className = "own";
-					element.textContent = (msg.data.name !== undefined ? msg.data.name + ": " : "") + msg.data.content;
+					else {
+						nameElement.textContent = msg.data.name + ": ";
+						nameElement.className = msg.data.appearance;
+					}
+					element.appendChild(nameElement);
+					element.appendChild(textElement);
 					chatElement.appendChild(element);
 					while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.lastChild);
 					break;
 				case MESSAGE.PLAYER_DATA:
-					player.timestamps._old = player.timestamps._new || 0;
-					player.timestamps._new = Date.now();				
-					
+					player.timestamps._old = player.timestamps._new || Date.now();
+					player.timestamps._new = Date.now();
+
 					msg.data.forEach(function(_player, i){			
 						if (i === pid){
 							player.box.center.x = _player.x;
@@ -84,14 +88,15 @@ function connection(address){
 							player.health = _player.health;
 							player.fuel = _player.fuel;
 							player.walkFrame = _player.walkFrame;
+							player.jetpack = _player.jetpack;
 							game.offset.x = (Math.abs(game.offset.x - (player.box.center.x - canvas.width / 2)) > 2000) ? player.box.center.x - canvas.width / 2 : ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
 							game.offset.y = (Math.abs(game.offset.y - (player.box.center.y - canvas.height / 2)) > 2000) ? player.box.center.y - canvas.height / 2 : ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
 						} else {
+							console.log(_player);
 							if (_player === null){
 								delete otherPlayers[i];
 								return;	
 							}
-
 							if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
 							otherPlayers[i].timestamps._old = otherPlayers[i].timestamps._new || Date.now();
 							otherPlayers[i].timestamps._new = Date.now();
@@ -116,6 +121,7 @@ function connection(address){
 							otherPlayers[i].name = _player.name;
 							otherPlayers[i].appearance = _player.appearance;
 							otherPlayers[i].attachedPlanet = _player.attachedPlanet;
+							otherPlayers[i].jetpack = _player.jetpack;
 						}	
 					});				
 					break;
@@ -148,6 +154,10 @@ function connection(address){
 							enemies[i].shots[j].box.angle = msg.data.enemies[i].shots[j].angle;
 							enemies[i].shots[j].lt = msg.data.enemies[i].shots[j].lt;
 						}
+					}					
+					for (team in msg.data.gameProgress){
+						if (team === "ticks") continue;
+						document.getElementById("gui-points-" + team).textContent = msg.data.gameProgress[team];
 					}
 					break;
 				case MESSAGE.ERROR:

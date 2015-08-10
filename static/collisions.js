@@ -79,6 +79,9 @@ GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 		return projOne.max < projTwo.min || projTwo.max < projOne.min;//overlapp or not
 	});
 }
+GeometricObject.prototype.circleCircle = function(circleOne, circleTwo) {
+	return Math.sqrt(Math.pow(circleOne.center.x - circleTwo.center.x, 2) + Math.pow(circleOne.center.y - circleTwo.center.y, 2)) < circleOne.radius + circleTwo.radius;
+}
 GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
 	|| rectTwo.center.x + rectTwo.width/2 <= rectOne.center.x - rectOne.width/2
@@ -229,6 +232,8 @@ Object.defineProperty(Circle.prototype, "collision", {
 	value: function(geomObj) {
 		if(geomObj instanceof Rectangle) {
 			return this.circleObb(this, geomObj);
+		} else if (geomObj instanceof Circle){
+			return this.circleCircle(this, geomObj);
 		} else {
 			throw new TypeError("Not a valid geometric object");
 		}

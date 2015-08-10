@@ -132,7 +132,8 @@ button:disabled:hover{
 #appearance-box #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
 #appearance-box #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
 #appearance-box #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
-#name.hidden, #badge.hidden, #appearance-box.hidden, #gui-chat.hidden, #gui-health.hidden, #gui-fuel.hidden, #gui-bad-connection.hidden {
+#name.hidden, #badge.hidden, #appearance-box.hidden, #gui-chat.hidden, #gui-health.hidden,
+#gui-fuel.hidden, #gui-bad-connection.hidden, #gui-ping.hidden, #gui-points.hidden {
 	display: none;
 }
 .chat-input {
@@ -409,6 +410,20 @@ button:disabled:hover{
 	font-size: 22px;
 	margin-bottom: 20px
 }
+#gui-ping{
+	position: fixed;
+	top: 8px;
+	right: 30px;
+	left: calc(100% - 158px);
+	color: #eee;
+}
+#gui-ping:before{
+	line-height: 100%;
+	height: 22.5px;
+	content: "Latency: ";
+	width: 80px;
+	display: inline-block;
+}
 #gui-chat:empty:before{
 	cursor: inherit;
 	position: relative;
@@ -442,7 +457,11 @@ button:disabled:hover{
 	color: #eee;
 }
 #gui-chat p.server{	color: #fff37f; }
-#gui-chat p.own{ color: #56d7ff; }
+#gui-chat p b.alienBeige{ color: #e5d9be; }
+#gui-chat p b.alienBlue{ color: #a2c2ea; }
+#gui-chat p b.alienGreen{ color: #8aceb9; }
+#gui-chat p b.alienPink{ color: #f19cb7; }
+#gui-chat p b.alienYellow{ color: #fed532; }
 #gui-fuel {
 	position: fixed;
 	top: 98px;
@@ -493,3 +512,21 @@ button:disabled:hover{
 	margin-left: -250px;
 	color: #eee;
 }
+#gui-points{
+	position: fixed;
+	top: 4px;
+	left: 50%;
+	width: 440px;
+	margin-left: -220px;
+	color: #eee;
+	font-size: 32px;
+	background: rgba(0, 0, 0, 0.7);
+}
+#gui-points th{
+	width: 50px;
+}
+#gui-points-alienBeige{ color: #e5d9be; }
+#gui-points-alienBlue{ color: #a2c2ea; }
+#gui-points-alienGreen{ color: #8aceb9; }
+#gui-points-alienPink{ color: #f19cb7; }
+#gui-points-alienYellow{ color: #fed532; }

@@ -60,6 +60,7 @@ function Player(name, appearance, startx, starty, ws){
 		}
 	}
 	this.walkFrame = "_stand";
+	this.jetpack = false;
 	this.health = 8;
 	this.fuel = 400;
 	this.attachedPlanet = -1;
@@ -76,9 +77,9 @@ Planet.prototype.teamColours = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea",
 Planet.prototype.names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey", "X-Ray", "Yankee", "Zulu"];
 
 
-function Enemy(x, y) {
+function Enemy(x, y, appearance) {
 	this.box = new Rectangle(new Point(x, y), 0, 0);
-	this.appearance = "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
+	this.appearance = appearance || "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
 	this.aggroBox = new Circle(new Point(x, y), 350);
 	this.fireRate = 0;
 	this.shots = [];
@@ -108,18 +109,18 @@ function doPhysics(players, planets, enemies, isClient) {
 			enemy.box.angle += Math.PI/150;
 		} else {
 			enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - playerToHit.box.center.x, enemy.box.center.y - playerToHit.box.center.y);
-				if (++enemy.fireRate >= 20) {
-					playerToHit.lastlyAimedAt = Date.now();
-					enemy.fireRate = 0;
-					enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
-				}
+			if (++enemy.fireRate >= 20) {
+				playerToHit.lastlyAimedAt = Date.now();
+				enemy.fireRate = 0;
+				enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
+			}
 		}
 	});
 	players.forEach(function(player) {
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === "undefined") playersOnPlanets[player.attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;					
-
+			player.jetpack = false;
 			var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].box.radius);
 			if (player.controls["moveLeft"] > 0){
 				stepSize = stepSize * player.controls["moveLeft"];
@@ -146,6 +147,7 @@ function doPhysics(players, planets, enemies, isClient) {
 				player.box.center.y += player.velocity.y;
 			}
 		} else {	
+			player.jetpack = false;
 			for (var j = 0; j < planets.length; j++){
 				var deltaX = planets[j].box.center.x - player.box.center.x,
 					deltaY = planets[j].box.center.y - player.box.center.y,
@@ -160,6 +162,7 @@ function doPhysics(players, planets, enemies, isClient) {
 			}
 			if (player.controls["jetpack"] > 0 && player.fuel > 0 && player.controls["crouch"] < 1){
 				player.fuel -= player.controls["jetpack"];
+				player.jetpack = (player.controls["jetpack"] > 0);
 				player.velocity.x += (Math.sin(player.box.angle) / 10) * player.controls["jetpack"];
 				player.velocity.y += (-Math.cos(player.box.angle) / 10) * player.controls["jetpack"];
 			} else if (player.controls["crouch"] > 0){

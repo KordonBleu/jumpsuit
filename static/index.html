@@ -3,12 +3,12 @@
 	<head>
 		<title>JumpSuit</title>
 		<meta charset="utf-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<ul id="loader"><li></li><li></li><li></li><li></li><li></li></ul>
+		<ul id="loader" class="hidden"><li></li><li></li><li></li><li></li><li></li></ul>
 		<img src="assets/images/controls/unmute.svg" alt="mute icon" id="audio-icon"/>
 		<ul id="controls">
 			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
@@ -38,6 +38,15 @@
 		<div id="gui-bad-connection" class="hidden">Connection interrupted</div>
 	<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
+		<table id="gui-points" class="hidden">
+			<tr>
+				<th id="gui-points-alienBeige">60</th>
+				<th id="gui-points-alienBlue">15</th>
+				<th id="gui-points-alienGreen">73</th>
+				<th id="gui-points-alienPink">44</th>
+				<th id="gui-points-alienYellow">102</th>
+			</tr>
+		</table>
 		<div id="info-box" class="info-box hidden">
 			<h2>Information</h2>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
