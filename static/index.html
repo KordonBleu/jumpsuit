@@ -8,6 +8,7 @@
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
+		<ul id="loader"><li></li><li></li><li></li><li></li><li></li></ul>
 		<img src="assets/images/controls/unmute.svg" alt="mute icon" id="audio-icon"/>
 		<ul id="controls">
 			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
@@ -65,8 +66,7 @@
 			<button id="disconnect" style="float: right;">Disconnect</button>
 			<button id="refresh-or-leave" style="float: right;">Refresh</button>
 			<button id="new-lobby" style="float: right;">Create New Lobby</button>
-			<h3 id="status">Waiting for other players...</h3>
-			<ul class="loader" style="" id="multiplayer-loader"><li></li><li></li><li></li><li></li><li></li></ul>
+			<h3 id="status">Waiting for other players...</h3>		
 			<ul id="player-list">
 			</ul>
 			<hr>

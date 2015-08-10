@@ -137,7 +137,7 @@ function doPhysics(players, planets, enemies, isClient) {
 			player.box.angle = Math.PI - player.planet;
 			player.velocity.x = 0;
 			player.velocity.y = 0;
-			player.fuel = 300;
+			player.fuel = 400;
 			if (player.controls["jump"] > 0) {
 				player.attachedPlanet = -1;				
 				player.velocity.x = Math.sin(player.box.angle) * 6;
@@ -172,6 +172,9 @@ function doPhysics(players, planets, enemies, isClient) {
 
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
+
+			player.box.center.x = (6400 + player.box.center.x) % 6400;
+			player.box.center.y = (6400 + player.box.center.y) % 6400;
 		}
 		player.setWalkframe();
 	});

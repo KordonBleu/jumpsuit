@@ -209,7 +209,7 @@ function Lobby(name, maxPlayers){
 		var pltData = [];
 		for (var i = 0; i < this.length; i++){
 			//pltData.push(this[i].progress);
-			pltData.push({color: this[i].progress.color, value: this[i].progress.value});
+			pltData.push({color: this[i].progress.color, value: this[i].progress.value, team: this[i].progress.team});
 		}
 		return pltData;
 	};

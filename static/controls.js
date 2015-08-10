@@ -141,7 +141,7 @@ function handleInput(e){
 	var s = (e.type === "keydown") * 1,
 		triggered,
 		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1),
-		chatInUse = document.getElementById("chat-input").hasFocus;
+		chatInUse = document.getElementById("chat-input") === document.activeElement;
 
 	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
@@ -400,8 +400,8 @@ document.getElementById("chat-input").addEventListener("keydown", function(e){
 		}
 		
 		var filteredPlayerList = (player.name.indexOf(this.search) === 0) ? [player.name] : [];
-		for (pid in otherPlayers){
-			if (otherPlayers[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[pid].name);
+		for (_pid in otherPlayers){
+			if (otherPlayers[_pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[_pid].name);
 		}
 
 		if (filteredPlayerList.length !== 0){			

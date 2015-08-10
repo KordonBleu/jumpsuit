@@ -272,16 +272,23 @@ button:disabled:hover{
 	background: #178e3a;
 	color: #ddd;
 }
-.loader{
+#loader{
 	padding: 0;
 	font-size: 100px;
 	width: 1em;
 	height: 1em;
 	margin: 100px auto;
-	position: relative;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	margin-top: -50px;
+	margin-left: -50px;
 	list-style: none;
 }
-.loader:after{
+#loader.hidden{
+	display: none;
+}
+#loader:after{
 	position: relative;
 	display: block;
 	top: 35px;
@@ -292,7 +299,7 @@ button:disabled:hover{
 	background: rgb(80, 80, 80);
 	content: "";
 }
-.loader li {
+#loader li {
 	width: .2em;
 	height: .2em;
 	position: absolute;
@@ -300,7 +307,7 @@ button:disabled:hover{
 	left: 50%;
 	margin-left: -.1em;
 }
-.loader li:nth-child(1) {
+#loader li:nth-child(1) {
 	top: -25%;
 	background: #e5d9be;
 	transform-origin: 50% 375%;
@@ -309,7 +316,7 @@ button:disabled:hover{
 	-webkit-animation: rota 2.4s linear infinite;	
 }
 
-.loader li:nth-child(2) {
+#loader li:nth-child(2) {
 	transform-origin: 50% 250%;
 	top: 0;
 	background: #a2c2ea;
@@ -318,7 +325,7 @@ button:disabled:hover{
 	-webkit-animation: rota 1.86s linear infinite;	
 }
 
-.loader li:nth-child(3) {
+#loader li:nth-child(3) {
 	transform-origin: 50% -400%;
 	bottom: -50%;
 	background: #8aceb9;
@@ -327,7 +334,7 @@ button:disabled:hover{
 	-webkit-animation: rota 2.9s linear infinite;	
 }
 
-.loader li:nth-child(4) {
+#loader li:nth-child(4) {
 	transform-origin: 50% -150%;
 	background: #f19cb7;
 	bottom: 0;
@@ -335,7 +342,7 @@ button:disabled:hover{
 	-moz-animation: rota 1.32s linear infinite;
 	-webkit-animation: rota 1.32s linear infinite;	
 }
-.loader li:nth-child(5) {
+#loader li:nth-child(5) {
 	transform-origin: 50% -275%;
 	bottom: -25%;
 	background: #fed532;
@@ -422,6 +429,12 @@ button:disabled:hover{
 	-moz-user-select: initial;
 	-ms-user-select: initial;
 	user-select: initial;
+}
+#gui-chat.no-select{
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 #gui-chat p{
 	margin: 2px 0;

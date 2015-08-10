@@ -84,8 +84,8 @@ function connection(address){
 							player.health = _player.health;
 							player.fuel = _player.fuel;
 							player.walkFrame = _player.walkFrame;
-							game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
-							game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
+							game.offset.x = (Math.abs(game.offset.x - (player.box.center.x - canvas.width / 2)) > 2000) ? player.box.center.x - canvas.width / 2 : ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
+							game.offset.y = (Math.abs(game.offset.y - (player.box.center.y - canvas.height / 2)) > 2000) ? player.box.center.y - canvas.height / 2 : ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
 						} else {
 							if (_player === null){
 								delete otherPlayers[i];
@@ -100,7 +100,6 @@ function connection(address){
 							otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
 							otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
 
-							console.log(otherPlayers[i].predictedBox.center);
 							otherPlayers[i].box.center.x = parseFloat(_player.x, 10);
 							otherPlayers[i].box.center.y = parseFloat(_player.y, 10);
 							otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
@@ -132,11 +131,12 @@ function connection(address){
 						j = msg.data.enemies[i];
 						enemies.push(new Enemy(j.x, j.y, j.appearance));
 					}
+					game.start();
 					break;
 				case MESSAGE.GAME_DATA:
 					var i, j;
 					for (i = 0; i < msg.data.planets.length; i++){
-						planets[i].progress = msg.data.planets[i];				
+						planets[i].progress = msg.data.planets[i];
 					}
 					for (i = 0; i < msg.data.enemies.length; i++){
 						enemies[i].box.angle = msg.data.enemies[i].angle;
@@ -202,6 +202,7 @@ function connection(address){
 			data: {pid: pid, uid: location.hash.substr(3)}
 		}));
 		location.hash = "";
+		game.stop();
 	};
 	this.sendSettings = function (){
 		socket.send(JSON.stringify({
@@ -271,5 +272,4 @@ window.addEventListener("hashchange", hashChange);
 function settingsChanged(){
 	if (!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return; 
 	currentConnection.sendSettings();
-	//TODO: save parameters in a cookie
 }

@@ -13,15 +13,35 @@ var canvas = document.getElementById("canvas"),
 		dragStart: new Vector(0, 0),
 		drag: new Vector(0, 0),
 		offset: new Vector(0, 0),
-		connectionProblems: false
-	},
-	controls = {
-		jump: 0,
-		crouch: 0,
-		jetpack: 0,
-		moveLeft: 0,
-		moveRight: 0,
-		run: 0
+		connectionProblems: false,
+		animationFrameId: null,
+		start: function(){
+			document.getElementById("name").removeAttribute("class");
+			document.getElementById("badge").removeAttribute("class");
+			document.getElementById("gui-chat").removeAttribute("class");
+			document.getElementById("gui-health").removeAttribute("class");
+			document.getElementById("gui-fuel").removeAttribute("class");
+			document.getElementById("loader").className = "hidden";
+			loop();	
+		},
+		stop: function(){
+			document.getElementById("name").className = "hidden";
+			document.getElementById("badge").className = "hidden";
+			document.getElementById("gui-chat").className = "hidden";
+			document.getElementById("gui-health").className = "hidden";
+			document.getElementById("gui-fuel").className = "hidden";
+			document.getElementById("multiplayer-box").classList.remove("hidden");
+			document.getElementById("loader").removeAttribute("class");
+
+			player = null;
+			pid = -1;
+			otherPlayers.length = 0;
+			planets.length = 0;
+			enemies.length = 0;
+
+			window.cancelAnimationFrame(this.animationFrameId);
+			context.clearRect(0, 0, canvas.width, canvas.height);
+		}
 	},
 	onScreenMessage = {
 		style: "",
@@ -87,17 +107,9 @@ function init() {//init is done differently in the server
 		player = new Player("Unnamed Player", "alienGreen", 0, 0);
 		player.name = localStorage.getItem("settings.jumpsuit.name") || "Unnamed Player";
 		document.getElementById("name").value = player.name;
-
-		document.getElementById("multiplayer-box").classList.remove("hidden");
-		document.getElementById("name").removeAttribute("class");
-		document.getElementById("badge").removeAttribute("class");
-		document.getElementById("gui-chat").removeAttribute("class");
-		document.getElementById("gui-health").removeAttribute("class");
-		document.getElementById("gui-fuel").removeAttribute("class")
-		loop();
+		document.getElementById("multiplayer-box").classList.remove("hidden");		
 	});
 }
-
 function loop(){
 	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
@@ -169,7 +181,7 @@ function loop(){
 		context.restore();
 	}
 
-	if(canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
+	if (canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
 		canvas.width = window.innerWidth;
 		canvas.height = window.innerHeight;
 	} else context.clearRect(0, 0, canvas.width, canvas.height);
@@ -296,17 +308,25 @@ function loop(){
 
 	context.strokeStyle = "#fff";
 	context.fillStyle = "#fff";
-	context.lineWidth = 2;
+	context.lineWidth = 1;
 	planets.forEach(function (planet){
 		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (planet.box.center.x / 6400) * 150, 40 + (planet.box.center.y / 6400) * 150, 5, 0, 2 * Math.PI, false);
+		context.fillStyle = planet.progress.color;
+		context.arc(canvas.clientWidth - 158 + (planet.box.center.x / 6400) * 150, 40 + (planet.box.center.y / 6400) * 150, planet.box.radius / 250 * 4 + 2, 0, 2 * Math.PI, false);
+		context.fill();	
+	});
+	context.fillStyle = "#f33";
+	otherPlayers.forEach(function (otherPlayer){
+		if (otherPlayer.appearance !== player.appearance) return;
+		context.beginPath();
+		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x / 6400) * 150, 40 + (otherPlayer.box.center.y / 6400) * 150, 2.5, 0, 2 * Math.PI, false);
 		context.fill();
 	});
 
-	context.fillStyle = "#f33";
 	context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (player.box.center.x / 6400) * 150, 40 + (player.box.center.y / 6400) * 150, 5, 0, 2 * Math.PI, false);
-		context.fill();
+	context.arc(canvas.clientWidth - 158 + (player.box.center.x / 6400) * 150, 40 + (player.box.center.y / 6400) * 150, 2.5, 0, 2 * Math.PI, false);
+	context.fill();
+
 	context.strokeRect(canvas.clientWidth - 158, 40, 150, 150);
 
 	document.getElementById("gui-fuel-value").style["width"] = (player.fuel / 400 * 200) + "px";
@@ -338,6 +358,6 @@ function loop(){
 		context.fillStyle = "#eee";
 		context.fillText(onScreenMessage.content, canvas.clientWidth / 2, posY + 2);
 	}
-	window.requestAnimationFrame(loop);
+	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();
