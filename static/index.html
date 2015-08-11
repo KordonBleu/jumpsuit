@@ -3,12 +3,12 @@
 	<head>
 		<title>JumpSuit</title>
 		<meta charset="utf-8"/>
-		<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+		<meta name="viewport" content="user-scalable=no"/>
 		<link href="style.css" rel="stylesheet"/>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<ul id="loader" class="hidden"><li></li><li></li><li></li><li></li><li></li></ul>
+	  	<ul id="loader" class="hidden"><li></li><li></li><li></li><li></li><li></li></ul>
 		<img src="assets/images/controls/unmute.svg" alt="mute icon" id="audio-icon"/>
 		<ul id="controls">
 			<li><img src="assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
@@ -35,6 +35,7 @@
 			<span id="playerYellow" class="playerSelect"></span>
 		</div>
 		<div id="gui-chat" class="hidden"></div>
+		<div id="piano" class></div>
 		<div id="gui-bad-connection" class="hidden">Connection interrupted</div>
 	<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
@@ -109,6 +110,7 @@
 				<button id="dialog-abort">Nah</button>
 			</div>
 		</div>
+    <script src="intelxdk.js"></script>
 		<script src="dialogs.js"></script>
 		<script src="audio.js"></script>
 		<script src="engine.js"></script>
