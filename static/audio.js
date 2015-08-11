@@ -1,9 +1,12 @@
 "use strict";
 var audioContext = new (window.AudioContext || window.webkitAudioContext)(),
 	sounds = {},
-	gain = audioContext.createGain(),
+	soundEffectsGain = audioContext.createGain(),
+	musicGain = audioContext.createGain(),
 	canPlay = true;
-	gain.gain.value = 0.5;
+
+	soundEffectsGain.gain.value = 1;
+	musicGain.gain.value = 0.5;
 
 function loadSound(url, name, loop, callback) {
 	try {
@@ -33,8 +36,13 @@ function fadeBackground(filtered) {
 	}
 }
 
-function playSound(name, distance) {	
+function playSound(name, deltaPosX, deltaPosY) {
 	if(typeof sounds === "undefined" || sounds[name] === undefined || !canPlay) return;
+	if(Math.sqrt(Math.pow(deltaPosX, 2) + Math.pow(deltaPosY, 2)) < 200) {//if dist < 200
+		var ang = Math.atan2(deltaPosX, deltaPosY);//take it to 200
+		deltaPosX = Math.cos(ang) * 200;
+		deltaPosY = Math.sin(ang) * 200;
+	}
 	var sound = sounds[name];
 	sound.source = audioContext.createBufferSource();
 	sound.source.buffer = sound.buffer;
@@ -44,8 +52,12 @@ function playSound(name, distance) {
 		sound.source.loop = true;
 	}
 
-	sound.source.connect(gain);
-	gain.connect(audioContext.destination);
+	var panner = audioContext.createPanner();
+	panner.setPosition(deltaPosX, deltaPosY, 0);
+	panner.refDistance = 200;
+	sound.source.connect(panner);
+	panner.connect(soundEffectsGain);
+	soundEffectsGain.connect(audioContext.destination);
 
 	sound.source.start(0);
 }
@@ -68,8 +80,8 @@ loadSound("assets/audio/interstellar.ogg", "background", 110.256, function(sound
 	sound.filter.frequency.value = 4000;
 
 	sound.source.connect(sound.filter);
-	sound.filter.connect(gain);
-	gain.connect(audioContext.destination);
+	sound.filter.connect(musicGain);
+	musicGain.connect(audioContext.destination);
 
 	sound.source.start(0);
 });

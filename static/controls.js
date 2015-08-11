@@ -2,8 +2,6 @@ const defaultKeymap = {Tab: "lobby", Escape: "menu", Shift: "run", " ": "jump", 
 function sameObjects(a, b) {
 	var aProps = Object.getOwnPropertyNames(a);
 	var bProps = Object.getOwnPropertyNames(b);
-	console.log(aProps);
-	console.log(bProps);
 	if (aProps.length != bProps.length) {
 		return false;
 	}
@@ -252,18 +250,19 @@ function dragging (ev, x, y){
 }
 
 
-document.getElementById("audio-icon").addEventListener("click", function(ev){
-	if (ev.target.getAttribute("src") === "assets/images/controls/mute.svg") {
-		ev.target.setAttribute("src", "assets/images/controls/unmute.svg");
-		gain.gain.value = 0.5;
-	} else {
-		ev.target.setAttribute("src", "assets/images/controls/mute.svg");
-		gain.gain.value = 0;
-	}
+document.getElementById("music-volume").addEventListener("input", function(ev) {
+	musicGain.gain.value = ev.target.value/100;
 });
-if (localStorage.getItem("settings.jumpsuit.mute") === "true"){
-	document.getElementById("audio-icon").setAttribute("src", "assets/images/controls/mute.svg");
-	gain.gain.value = 0;
+document.getElementById("effects-volume").addEventListener("input", function(ev) {
+	soundEffectsGain.gain.value = ev.target.value/100;
+});
+var volMusic = localStorage.getItem("settings.volume.music"),
+	volEffects = localStorage.getItem("settings.volume.effects");
+if (volMusic !== null && volEffects !== null) {
+	document.getElementById("music-volume").value = volMusic;
+	document.getElementById("effects-volume").value = volEffects;
+	musicGain.gain.value = volMusic/100;
+	soundEffectsGain.gain.value = volEffects/100;
 }
 
 
@@ -451,7 +450,8 @@ document.getElementById("badge").addEventListener("click", function() {
 	else apEl.className = "hidden";
 });
 window.onbeforeunload = function(){	
-	localStorage.setItem("settings.jumpsuit.name", player.name);
-	localStorage.setItem("settings.jumpsuit.keys", JSON.stringify(handleInput.reverseKeyMap));
-	localStorage.setItem("settings.jumpsuit.mute", document.getElementById("audio-icon").getAttribute("src") === "assets/images/controls/mute.svg")
+	localStorage.setItem("settings.name", player.name);
+	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
+	localStorage.setItem("settings.volume.music", document.getElementById("music-volume").value);
+	localStorage.setItem("settings.volume.effects", document.getElementById("effects-volume").value);
 }

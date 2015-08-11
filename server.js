@@ -3,11 +3,12 @@ var fs = require("fs"),
 	WebSocketServer = require("ws").Server,
 	MESSAGE = require("./static/message.js").MESSAGE,
 	ERROR = require("./static/message.js").ERROR,
-	collisions = require("./static/collisions.js"),
-	engine = require("./static/engine.js");
+	engine = require("./static/engine.js")
+	vinage = require("./static/vinage/vinage.js");
 
 
 var configSkeleton = {
+	dev: false,
 	interactive: false,
 	monitor: false,
 	port: 8080
@@ -134,7 +135,17 @@ var server = http.createServer(function (req, res){
 	}
 
 	if(files[req.url] !== undefined) {
-			res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
+		res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
+		if(config.dev) {
+			try {
+				var path = "./static" + req.url,
+					mtime = fs.statSync(path).mtime;
+				if(mtime.getTime() !== files[req.url].mtime.getTime()) {
+					files[req.url] = fs.readFileSync(path);
+					files[req.url].mtime = mtime;
+				}
+			} catch(e) {/*Do nothing*/}
+		}
 		if(req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).getTime() === files[req.url].mtime.getTime()) {
 			res.writeHead(304);
 			res.end();
@@ -233,7 +244,7 @@ function Lobby(name, maxPlayers){
 		var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
 		this.enemies.forEach(function (enemy){
 			if (!wellPositioned) return;
-			if ((new collisions.Circle(new collisions.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175)).collision(new collisions.Circle(new collisions.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
+			if ((new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175)).collision(new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
 		});
 		this.planets.forEach(function (planet){
 			if (!wellPositioned) return;
@@ -255,8 +266,8 @@ Lobby.prototype.broadcast = function(message) {
 	});
 }
 Lobby.prototype.update = function() {
-	var oldDate = Date.now(), playerData = [];
-	engine.doPhysics(this.players, this.planets, this.enemies);
+	var oldDate = Date.now(), playerData = [],
+	sounds = engine.doPhysics(this.players, this.planets, this.enemies);
 	this.processTime = Date.now() - oldDate;
 	if (this.gameProgress.ticks++ === 50){
 		this.planets.forEach(function(planet){
@@ -264,6 +275,9 @@ Lobby.prototype.update = function() {
 		}.bind(this));
 		this.gameProgress.ticks = 0;
 	}
+
+	this.broadcast(JSON.stringify({msgType: MESSAGE.PLAY_SOUND, data: sounds}));
+
 	this.players.forEach(function(player, i) {
 		function truncTo(number, decimalNbr) {
 			var lel = Math.pow(10, decimalNbr);
@@ -279,12 +293,9 @@ Lobby.prototype.update = function() {
 			if (player === undefined) return;
 			try {
 				player.ws.send(JSON.stringify({
-					msgType: MESSAGE.PLAYER_DATA,
-					data: playerData
-				}));
-				player.ws.send(JSON.stringify({
 					msgType: MESSAGE.GAME_DATA,
 					data: {
+						players: playerData,
 						planets: this.planets.getGameData(),
 						enemies: this.enemies.getGameData(),
 						gameProgress: this.gameProgress
@@ -362,7 +373,7 @@ wss.on("connection", function(ws) {
 		var msg;
 		try {
 			msg = JSON.parse(message);
-			console.log("received: ", msg);
+			if(config.dev) console.log("received: ", msg);
 			switch(msg.msgType){
 				case MESSAGE.CONNECT:
 					var lobby = lobbies.getByUid(msg.data.uid);
@@ -372,8 +383,7 @@ wss.on("connection", function(ws) {
 					else {
 						var pid = lobby.players.firstEmpty();
 						lobby.players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));
-						ws.send(JSON.stringify({msgType: MESSAGE.CONNECT_SUCCESSFUL, data: {pid: pid}}));
-						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
+						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {pid: pid, planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
 						lobby.players[pid].lastRefresh = Date.now();
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
@@ -415,7 +425,6 @@ wss.on("connection", function(ws) {
 						}
 					}
 					break;
-				case MESSAGE.DISCONNECT:
 				case MESSAGE.LEAVE_LOBBY:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
@@ -434,8 +443,8 @@ wss.on("connection", function(ws) {
 					}
 					break;
 			}
-		} catch (e){
-			console.log("ERROR", e, msg);
+		} catch (err){
+			console.log("ERROR", err, msg);
 		}
 	});
 	ws.on("close", function(e){

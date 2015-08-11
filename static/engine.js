@@ -19,7 +19,7 @@ var resPaths = [
 	resources = {};
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-	var collisions = require("./collisions.js"),
+	var collisions = require("./vinage/vinage.js"),
 		Point = collisions.Point,
 		Rectangle = collisions.Rectangle,
 		Circle = collisions.Circle,
@@ -87,6 +87,7 @@ function Enemy(x, y, appearance) {
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
 function doPhysics(players, planets, enemies, isClient) {
+	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);
 	enemies.forEach(function(enemy) {
 		var playerToHit = null;
@@ -109,11 +110,12 @@ function doPhysics(players, planets, enemies, isClient) {
 			enemy.box.angle += Math.PI/150;
 		} else {
 			enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - playerToHit.box.center.x, enemy.box.center.y - playerToHit.box.center.y);
-			if (++enemy.fireRate >= 20) {
-				playerToHit.lastlyAimedAt = Date.now();
-				enemy.fireRate = 0;
-				enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
-			}
+				if (++enemy.fireRate >= 20) {
+					playerToHit.lastlyAimedAt = Date.now();
+					enemy.fireRate = 0;
+					enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
+					sounds.push({type: "laser", position: {x: enemy.box.center.x, y: enemy.box.center.y}});
+				}
 		}
 	});
 	players.forEach(function(player) {
@@ -181,7 +183,7 @@ function doPhysics(players, planets, enemies, isClient) {
 		}
 		player.setWalkframe();
 	});
-	if (isClient) return;
+	if (isClient) return sounds;
 	for (var i = 0; i < playersOnPlanets.length; i++){
 		if (typeof playersOnPlanets[i] === "undefined") continue;
 		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
@@ -195,7 +197,7 @@ function doPhysics(players, planets, enemies, isClient) {
 				b++;
 				toArray.splice(a, 1);
 			}
-			if (b >= 2) return; 
+			if (b >= 2) return sounds; 
 			team = teams[a];
 			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
 			else {
@@ -208,6 +210,7 @@ function doPhysics(players, planets, enemies, isClient) {
 			planets[i].progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
 		}
 	}
+	return sounds;
 }
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {

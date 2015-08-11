@@ -35,11 +35,6 @@ function connection(address){
 						list.appendChild(li);
 					}
 					break;
-				case MESSAGE.CONNECT_SUCCESSFUL:					
-					pid = msg.data.pid;
-					document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
-					document.getElementById("new-lobby").disabled = true;
-					break;
 				case MESSAGE.PING:
 					socket.send(JSON.stringify({
 						msgType: MESSAGE.PONG,
@@ -75,11 +70,45 @@ function connection(address){
 					chatElement.appendChild(element);
 					while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.lastChild);
 					break;
-				case MESSAGE.PLAYER_DATA:
-					player.timestamps._old = player.timestamps._new || Date.now();
-					player.timestamps._new = Date.now();
+				case MESSAGE.WORLD_DATA:
+					pid = msg.data.pid;
+					document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
+					document.getElementById("new-lobby").disabled = true;
 
-					msg.data.forEach(function(_player, i){			
+					var i, j;
+					planets.length = 0;
+					for (i = 0; i < msg.data.planets.length; i++){
+						j = msg.data.planets[i];
+						planets.push(new Planet(j.x, j.y, j.radius));
+					}
+					enemies.length = 0;
+					for (i = 0; i < msg.data.enemies.length; i++){
+						j = msg.data.enemies[i];
+						enemies.push(new Enemy(j.x, j.y, j.appearance));
+					}
+					game.start();
+					break;
+				case MESSAGE.GAME_DATA:
+					var i, j;
+					for (i = 0; i < msg.data.planets.length; i++){
+						planets[i].progress = msg.data.planets[i];
+					}
+					for (i = 0; i < msg.data.enemies.length; i++){
+						enemies[i].box.angle = msg.data.enemies[i].angle;
+						enemies[i].shots.length = msg.data.enemies[i].shots.length;
+						for (j = 0; j < msg.data.enemies[i].shots.length; j++){
+							if (typeof enemies[i].shots[j] === "undefined") enemies[i].shots[j] = {box: new Rectangle(new Point(0, 0), resources["laserBeam"].width, resources["laserBeam"].height, 0), lt: 0};
+							enemies[i].shots[j].box.center.x = msg.data.enemies[i].shots[j].x;
+							enemies[i].shots[j].box.center.y = msg.data.enemies[i].shots[j].y;
+							enemies[i].shots[j].box.angle = msg.data.enemies[i].shots[j].angle;
+							enemies[i].shots[j].lt = msg.data.enemies[i].shots[j].lt;
+						}
+					}
+
+					player.timestamps._old = player.timestamps._new || 0;
+					player.timestamps._new = Date.now();				
+					
+					msg.data.players.forEach(function(_player, i) {			
 						if (i === pid){
 							player.box.center.x = _player.x;
 							player.box.center.y = _player.y;
@@ -123,42 +152,8 @@ function connection(address){
 							otherPlayers[i].attachedPlanet = _player.attachedPlanet;
 							otherPlayers[i].jetpack = _player.jetpack;
 						}	
-					});				
-					break;
-				case MESSAGE.WORLD_DATA:
-					var i, j;
-					planets.length = 0;
-					for (i = 0; i < msg.data.planets.length; i++){
-						j = msg.data.planets[i];
-						planets.push(new Planet(j.x, j.y, j.radius));
-					}
-					enemies.length = 0;
-					for (i = 0; i < msg.data.enemies.length; i++){
-						j = msg.data.enemies[i];
-						enemies.push(new Enemy(j.x, j.y, j.appearance));
-					}
-					game.start();
-					break;
-				case MESSAGE.GAME_DATA:
-					var i, j;
-					for (i = 0; i < msg.data.planets.length; i++){
-						planets[i].progress = msg.data.planets[i];
-					}
-					for (i = 0; i < msg.data.enemies.length; i++){
-						enemies[i].box.angle = msg.data.enemies[i].angle;
-						enemies[i].shots.length = msg.data.enemies[i].shots.length;
-						for (j = 0; j < msg.data.enemies[i].shots.length; j++){
-							if (typeof enemies[i].shots[j] === "undefined") enemies[i].shots[j] = {box: new Rectangle(new Point(0, 0), resources["laserBeam"].width, resources["laserBeam"].height, 0), lt: 0};
-							enemies[i].shots[j].box.center.x = msg.data.enemies[i].shots[j].x;
-							enemies[i].shots[j].box.center.y = msg.data.enemies[i].shots[j].y;
-							enemies[i].shots[j].box.angle = msg.data.enemies[i].shots[j].angle;
-							enemies[i].shots[j].lt = msg.data.enemies[i].shots[j].lt;
-						}
-					}					
-					for (team in msg.data.gameProgress){
-						if (team === "ticks") continue;
-						document.getElementById("gui-points-" + team).textContent = msg.data.gameProgress[team];
-					}
+
+					});	
 					break;
 				case MESSAGE.ERROR:
 					var errDesc;
@@ -174,6 +169,11 @@ function connection(address){
 							break;
 					}
 					alert("Error " + msg.data.code + ":\n" + errDesc);
+					break;
+				case MESSAGE.PLAY_SOUND:
+					msg.data.forEach(function(sound) {
+						playSound(sound.type, sound.position.x - player.box.center.x, sound.position.y - player.box.center.y);
+					});
 					break;
 			}
 		} catch(err) {

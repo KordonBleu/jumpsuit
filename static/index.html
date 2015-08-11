@@ -80,7 +80,12 @@
 			</ul>
 			<hr>
 			<div id="key-info">
-				<h3>Settings</h3><br/>
+				<h3>Settings</h3>
+				<h4>Volume</h4>
+				<input type="range" value="50" id="music-volume"/>
+				<input type="range" value="100" id="effects-volume"/>
+
+				<h4>Key map</h4>
 				Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
 				Also you can't assign Mouse keys to the key settings!<br/><br/>
 				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
@@ -107,7 +112,7 @@
 		<script src="dialogs.js"></script>
 		<script src="audio.js"></script>
 		<script src="engine.js"></script>
-		<script src="collisions.js"></script>
+		<script src="vinage/vinage.js"></script>
 		<script src="canvas.js"></script>
 		<script src="message.js"></script>
 		<script src="websocket_client.js"></script>

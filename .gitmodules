@@ -1,3 +1,6 @@
 [submodule "static/assets/dialog-polyfill"]
 	path = static/assets/dialog-polyfill
 	url = https://github.com/GoogleChrome/dialog-polyfill.git
+[submodule "static/vinage"]
+	path = static/vinage
+	url = https://github.com/Getkey/vinage.git
