@@ -221,7 +221,7 @@ handleInput.initKeymap = function(fromReversed){
 	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
 }
 handleInput.loadKeySettings = function(){
-	var presets = localStorage.getItem("settings.jumpsuit.keys");
+	var presets = localStorage.getItem("settings.keys");
 	if (presets != null){
 		try{
 			handleInput.reverseKeyMap = JSON.parse(presets);

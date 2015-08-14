@@ -70,13 +70,6 @@ button:disabled:hover{
 	opacity: 0.3;
 	transition: opacity .15s;
 }
-#audio-icon {
-	position: fixed;
-	width: 24px;
-	height: 24px;
-	top: 8px;
-	right: 8px;
-}
 #name {
 	position: fixed;
 	top: 20px;

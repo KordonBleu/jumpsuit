@@ -43,7 +43,7 @@ In this file you can set the following parameters (note that most of them don't 
 
 Parameter | Explanation | Default | Value | Needs server restart
 --------- | ----------- | ------- | ----- | --------------------
-dev | Enable debug messages and the automatic reload of modified files (under `static/`) | false | boolean | no
+dev | Enable debug messages and the automatic reload of modified files (under `static/`). You'll have to restart the server if you create a new file | false | boolean | no
 interactive | Make it possible to enter Javascript commands while the server runs | false | boolean | no
 monitor | Displays a neat view of the lobbys in real-time | false | boolean | no
 port | Set the server's port | 8080 | integer | no
