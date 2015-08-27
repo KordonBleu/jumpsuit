@@ -23,12 +23,12 @@ var dialog = new function(){
 		dialog.close();
 	});
 	this.show = function(callback){
-		_callback = callback;
+		_callback = callback;//works fine with one or less dialog open at a time
 		textElement.value = "";
 		dialogElement.className = "";
-	}
+	};
 	this.close = function(result){
 		dialogElement.className = "hidden";
-		if (typeof result !== "undefined" && result !== "") _callback(result);		
-	}
-};
+		if (typeof result !== "undefined" && result !== "") _callback(result);
+	};
+}();

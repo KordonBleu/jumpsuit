@@ -45,7 +45,7 @@ button:disabled {
 }
 button:hover{
 	background: #ebedf4;
-	color: #AD3726;	
+	color: #AD3726;
 }
 button:disabled:hover{
 	background: #ebedf4;
@@ -176,7 +176,6 @@ button:disabled:hover{
 	color: #333;
 }
 .info-box.hidden {
-	
 	left: -50%;
 	opacity: 0;
 }
@@ -297,7 +296,7 @@ button:disabled:hover{
 	width: .2em;
 	height: .2em;
 	position: absolute;
-	border-radius: 50%;	
+	border-radius: 50%;
 	left: 50%;
 	margin-left: -.1em;
 }
@@ -307,7 +306,7 @@ button:disabled:hover{
 	transform-origin: 50% 375%;
 	animation: rota 2.4s linear infinite;
 	-moz-animation: rota 2.4s linear infinite;
-	-webkit-animation: rota 2.4s linear infinite;	
+	-webkit-animation: rota 2.4s linear infinite;
 }
 
 #loader li:nth-child(2) {
@@ -316,7 +315,7 @@ button:disabled:hover{
 	background: #a2c2ea;
 	animation: rota 1.86s linear infinite;
 	-moz-animation: rota 1.86s linear infinite;
-	-webkit-animation: rota 1.86s linear infinite;	
+	-webkit-animation: rota 1.86s linear infinite;
 }
 
 #loader li:nth-child(3) {
@@ -325,7 +324,7 @@ button:disabled:hover{
 	background: #8aceb9;
 	animation: rota 2.9s linear infinite;
 	-moz-animation: rota 2.9s linear infinite;
-	-webkit-animation: rota 2.9s linear infinite;	
+	-webkit-animation: rota 2.9s linear infinite;
 }
 
 #loader li:nth-child(4) {
@@ -334,7 +333,7 @@ button:disabled:hover{
 	bottom: 0;
 	animation: rota 1.32s linear infinite;
 	-moz-animation: rota 1.32s linear infinite;
-	-webkit-animation: rota 1.32s linear infinite;	
+	-webkit-animation: rota 1.32s linear infinite;
 }
 #loader li:nth-child(5) {
 	transform-origin: 50% -275%;
@@ -342,7 +341,7 @@ button:disabled:hover{
 	background: #fed532;
 	animation: rota 2s linear infinite;
 	-moz-animation: rota 2s linear infinite;
-	-webkit-animation: rota 2s linear infinite;	
+	-webkit-animation: rota 2s linear infinite;
 }
 @keyframes rota {
 	to { transform: rotate(360deg); }
@@ -376,7 +375,7 @@ button:disabled:hover{
 #dialog #dialog-backdrop {
 	position: absolute;
 	background: rgba(55, 58, 71, 0.9);
-	-webkit-backface-visibility: hidden;	
+	-webkit-backface-visibility: hidden;
 }
 #dialog .dialog-content {
 	width: 50%;

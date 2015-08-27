@@ -12,7 +12,7 @@ function sameObjects(a, b) {
 		}
 	}
 	return true;
-};
+}
 var isMobile = (navigator.userAgent.match(/Android/i)
 	|| navigator.userAgent.match(/webOS/i)
 	|| navigator.userAgent.match(/iPhone/i)
@@ -25,11 +25,11 @@ var isMobile = (navigator.userAgent.match(/Android/i)
 String.prototype.ucFirst = function (){
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
-}
+};
 function changeTab (obj){
 	var tab = obj.textContent;
 	document.getElementById("donate").setAttribute("style", "display: " + ((tab == "Donate") ? "block" : "none"));
-	document.getElementById("share").setAttribute("style", "display: " + ((tab == "Donate") ? "none" : "block"));	
+	document.getElementById("share").setAttribute("style", "display: " + ((tab == "Donate") ? "none" : "block"));
 }
 function convertToKey(keyCode) {
 	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
@@ -54,7 +54,7 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	38: "ArrowUp",
 	39: "ArrowRight",
 	40: "ArrowDown"
-}
+};
 function transformStyle(element, val){
 	var vendors = ["WebkitTransform", "MozTransform", "OTransform", "transform"],
 		correctVendor, obj;
@@ -74,7 +74,7 @@ function handleInputMobile(e){
 		handleInputMobile.gesture(touch, e.type);
 		if (touch.target.id === "canvas"){
 			dragging(e.type, touch.pageX, touch.pageY);
-		} else {		
+		} else {
 			var s = (e.type.indexOf("start") !== -1 && e.type.indexOf("end") === -1);
 			if (player.controls[touch.target.id] !== undefined) {
 				e.preventDefault();
@@ -88,7 +88,7 @@ function handleInputMobile(e){
 		}
 	}
 }
-handleInputMobile.gesture = function (touch, type){	
+handleInputMobile.gesture = function (touch, type){
 	var element = touch.target, range = new Vector(120, 60);
 	if (type.indexOf("start") !== -1){
 		var targetId = (element === document.body) ? "canvas" : element.id;
@@ -96,7 +96,7 @@ handleInputMobile.gesture = function (touch, type){
 		else if (element.parentNode.id === "info-box" || element.parentNode.parentNode.id === "info-box") targetId = "info-box";
 		if (!(targetId === "multiplayer-box" || targetId === "info-box" || targetId === "canvas")) return false;
 		this.currentGestures.target = targetId;
-		this.currentGestures.start = new Point(touch.pageX, touch.pageY);		
+		this.currentGestures.start = new Point(touch.pageX, touch.pageY);
 	} else if (type.indexOf("end") !== -1){
 		if (this.currentGestures.target === "info-box"){
 			if (this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
@@ -115,7 +115,7 @@ handleInputMobile.gesture = function (touch, type){
 		}
 	}
 	return true;
-}
+};
 handleInputMobile.currentGestures = {target: "", start: new Point(0, 0)};
 handleInputMobile.transform = function (touch, type){
 	var element = touch.target, ytransform;
@@ -131,7 +131,7 @@ handleInputMobile.transform = function (touch, type){
 	ytransform = -Math.max(0, Math.min(50, Math.floor(element.getAttribute("touchstart") - element.getAttribute("touchmove"))));
 	transformStyle(element, "translateY(" + ytransform + "px)");
 	return ytransform;
-}
+};
 
 function handleInput(e){
 	if (document.getElementById("dialog").className !== "hidden") return;
@@ -170,27 +170,27 @@ handleInput.keyMap = defaultKeymap;
 handleInput.reverseKeyMap = {};
 handleInput.updateReverseKeyMap = function(){
 	handleInput.reverseKeyMap = {};
-	for (key in handleInput.keyMap) {
+	for (var key in handleInput.keyMap) {
 		var action = handleInput.keyMap[key], index;
 		if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
 		if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
 		else index = 0;
 		handleInput.reverseKeyMap[action][index] = key;
 	}
-}
+};
 handleInput.updateKeyMap = function(){
 	handleInput.keyMap = {};
-	for (action in handleInput.reverseKeyMap){
+	for (var action in handleInput.reverseKeyMap){
 		var keys = handleInput.reverseKeyMap[action];
-		for (key in keys) {
+		for (var key in keys) {
 			if (keys[key] !== undefined || keys[key] !== null) handleInput.keyMap[keys[key]] = action;
 		}
 	}
-}
+};
 handleInput.initKeymap = function(fromReversed){
 	if (fromReversed) handleInput.updateKeyMap();
 	else handleInput.updateReverseKeyMap();
-	
+
 	while (settingsEl.firstChild) {
 		settingsEl.removeChild(settingsEl.firstChild);
 	}
@@ -201,7 +201,7 @@ handleInput.initKeymap = function(fromReversed){
 		firstRow.appendChild(tableHead);
 	}
 	settingsEl.appendChild(firstRow);
-	for (action in handleInput.reverseKeyMap) {
+	for (var action in handleInput.reverseKeyMap) {
 		var rowEl = document.createElement("tr"),
 			actionEl = document.createElement("td"),
 			keyEl;
@@ -212,17 +212,17 @@ handleInput.initKeymap = function(fromReversed){
 		var slice = handleInput.reverseKeyMap[action];
 		for (var i = 0; i != 2; i++){
 			keyEl = document.createElement("td");
-			if (typeof slice[i] === "undefined" || slice[i] == "") keyEl.textContent = " - ";
+			if (typeof slice[i] === "undefined" || slice[i] === "") keyEl.textContent = " - ";
 			else keyEl.textContent = slice[i].replace(" ", "Space").ucFirst();
 			rowEl.appendChild(keyEl);
 		}
 		settingsEl.appendChild(rowEl);
 	}
 	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
-}
+};
 handleInput.loadKeySettings = function(){
 	var presets = localStorage.getItem("settings.keys");
-	if (presets != null){
+	if (presets !== null){
 		try{
 			handleInput.reverseKeyMap = JSON.parse(presets);
 			handleInput.initKeymap(true);
@@ -230,7 +230,7 @@ handleInput.loadKeySettings = function(){
 			handleInput.initKeymap(false);
 		}
 	}
-}
+};
 
 function dragging (ev, x, y){
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
@@ -292,20 +292,20 @@ function handleGamepad(){
 			if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
 			else game.drag.y = 0;
 			currentConnection.refreshControls(player.controls);
-		} else {		
+		} else {
 			if (typeof this.usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (this.usingGamepad + 1).toString() + " disconnected");
 			this.usingGamepad = -1;
 		}
 	}
 }
 var changingKeys = false,
-	settingsEl = document.getElementById("key-settings"),	
+	settingsEl = document.getElementById("key-settings"),
 	selectedRow = -1;
 
 settingsEl.addEventListener("click", function(e) {
 	function reselect(obj){
 		document.removeEventListener("keydown", wrap);
-		Array.prototype.forEach.call(settingsEl.childNodes, function (row){ row.classList.remove("selected") });		
+		Array.prototype.forEach.call(settingsEl.childNodes, function (row){ row.classList.remove("selected"); });
 		if (typeof obj !== "undefined") {
 			obj.classList.add("selected");
 			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
@@ -323,14 +323,14 @@ settingsEl.addEventListener("click", function(e) {
 			action = settingsEl.childNodes[selectedRow].firstChild.textContent,
 			alreadyTaken = false;
 
-		for (key in handleInput.keyMap){
+		for (var key in handleInput.keyMap){
 			if (key !== keyName) continue;
 			alreadyTaken = true;
 			break;
 		}
 		if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
 		else handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
-		handleInput.reverseKeyMap[action][0] = keyName;			
+		handleInput.reverseKeyMap[action][0] = keyName;
 		handleInput.initKeymap(true);
 	}
 	function wrap(nE) {
@@ -359,12 +359,13 @@ document.getElementById("key-reset").addEventListener("click", function(){
 	handleInput.initKeymap();
 });
 
-if (isMobile){
+if (matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
+	//only supported by webkit as of today, returns false in other browsers
 	document.getElementById("mobile-info").style["display"] = "initial";
 	document.getElementById("key-info").style["display"] = "none";
 	document.getElementById("key-settings").style["display"] = "none";
 	document.getElementById("key-reset").style["display"] = "none";
-} else handleInput.loadKeySettings()
+} else handleInput.loadKeySettings();
 
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
@@ -386,27 +387,27 @@ document.getElementById("chat-input").addEventListener("keydown", function(e){
 		this.value = "";
 	} else if (e.keyCode == 9){
 		e.preventDefault();
-		
+
 		if (!this.playerSelection){
 			this.playerSelection = true;
 			this.cursor = this.selectionStart;
 			var text = (this.cursor === 0) ? "" : this.value.substr(0, this.cursor);
 			this.search = text.substr((text.lastIndexOf(" ") === -1) ? 0 : text.lastIndexOf(" ") + 1);
 
-			this.searchIndex = 0;		
+			this.searchIndex = 0;
 			this.textParts = [this.value.substr(0, this.cursor - this.search.length), this.value.substr(this.cursor)];
 		}
-		
+
 		var filteredPlayerList = (player.name.indexOf(this.search) === 0) ? [player.name] : [];
-		for (_pid in otherPlayers){
+		for (var _pid in otherPlayers){
 			if (otherPlayers[_pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[_pid].name);
 		}
 
-		if (filteredPlayerList.length !== 0){			
-			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];			
+		if (filteredPlayerList.length !== 0){
+			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];
 			this.searchIndex++;
-			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0; 
-		}			
+			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0;
+		}
 	} else {
 		this.playerSelection = false;
 	}
@@ -427,7 +428,7 @@ document.getElementById("disconnect").addEventListener("click", function(){
 		closeSocket();
 	} else {
 		this.textContent = "Disconnect";
-		openSocket();		
+		openSocket();
 	}
 });
 document.getElementById("refresh-or-leave").addEventListener("click", function(){
@@ -449,9 +450,9 @@ document.getElementById("badge").addEventListener("click", function() {
 	if (apEl.className === "hidden") apEl.removeAttribute("class");
 	else apEl.className = "hidden";
 });
-window.onbeforeunload = function(){	
+window.onbeforeunload = function(){
 	localStorage.setItem("settings.name", player.name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
 	localStorage.setItem("settings.volume.music", document.getElementById("music-volume").value);
 	localStorage.setItem("settings.volume.effects", document.getElementById("effects-volume").value);
-}
+};

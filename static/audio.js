@@ -18,7 +18,7 @@ function loadSound(url, name, loop, callback) {
 				sounds[name] = {source: null, filter: null, buffer: buffer, loop: loop};
 				if(callback !== undefined) callback(sounds[name]);
 			});
-		}
+		};
 		request.send();
 	} catch(e) {
 		canPlay = false;

@@ -1,11 +1,12 @@
+"use strict";
+
 var fs = require("fs"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
 	MESSAGE = require("./static/message.js").MESSAGE,
 	ERROR = require("./static/message.js").ERROR,
-	engine = require("./static/engine.js")
+	engine = require("./static/engine.js"),
 	vinage = require("./static/vinage/vinage.js");
-
 
 var configSkeleton = {
 	dev: false,
@@ -18,7 +19,7 @@ try {
 	fs.statSync(configPath);
 } catch(err) {
 	if(err.code === "ENOENT") {
-		console.log("No config file (\033[1m" + configPath + "\033[0m) found. Creating it.");
+		console.log("No config file (\u001b[1m" + configPath + "\u001b[0m) found. Creating it.");
 		fs.writeFileSync(configPath, JSON.stringify(configSkeleton, null, "\t"));
 	}
 }
@@ -40,12 +41,12 @@ function loadConfig(firstRun) {
 	}
 	try {
 		config = JSON.parse(fs.readFileSync(configPath));
-		for(key in config) {
+		for(var key in config) {
 			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
 		}
 		console.log("Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
 		var addedProp = [];
-		for(key in configSkeleton) {
+		for(var key in configSkeleton) {
 			if(!config.hasOwnProperty(key)) {
 				config[key] = configSkeleton[key];//all the properties must be listed in `config.json`
 				addedProp.push(key);
@@ -54,7 +55,7 @@ function loadConfig(firstRun) {
 		if(addedProp.length !== 0) {
 			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
 			loadConfig.selfModified = true;
-			console.log("New properties added to \033[1mconfig.json\033[0m file: \033[4m" + addedProp.join("\033[0m, \033[4m") + "\033[0m");
+			console.log("New properties added to \u001b[1mconfig.json\u001b[0m file: \u001b[4m" + addedProp.join("\u001b[0m, \u001b[4m") + "\u001b[0m");
 		}
 	} catch(err) {
 		console.log(err, "Unproper config file found. Loading default settings.");
@@ -68,7 +69,7 @@ function loadConfig(firstRun) {
 		if(config.monitor !== previousConfig.monitor) {
 			if(previousConfig.monitor) {
 				clearInterval(monitorTimerID);
-				process.stdout.write('\033c');
+				process.stdout.write('\u001bc');
 			} else monitorTimerID = setInterval(monitoring, 500);
 		}
 		if(config.interactive !== previousConfig.interactive) {
@@ -92,7 +93,7 @@ files.construct = function(path, oName) {
 			files[oName + pPath].mtime = stat.mtime;
 		}
 	});
-}
+};
 files.construct("./static", "/");//load everything under `./static` in RAM for fast access
 
 if(config.interactive) initRl();
@@ -170,6 +171,7 @@ function Lobby(name, maxPlayers){
 	this.players = new Array(maxPlayers || 8);
 	this.planets = [];
 	this.enemies = [];
+	this.shots = [];
 	this.processTime = 0;
 	this.players.firstEmpty = function(){
 		for (var i = 0; i < this.length; i++){
@@ -191,23 +193,26 @@ function Lobby(name, maxPlayers){
 		});
 		return plData;
 	};
-	this.enemies.getWorldData = function(){
+	this.enemies.getWorldData = function() {
 		var enemData = [];
-		for (var i = 0; i < this.length; i++){			
+		for (var i = 0; i < this.length; i++){
 			enemData.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance});
 		}
 		return enemData;
 	};
-	this.enemies.getGameData = function(){
+	this.enemies.getGameData = function() {
 		var enemData = [], enemShotData;
 		for (var i = 0; i < this.length; i++){
-			enemShotData = [];
-			for (var j = 0; j < this[i].shots.length; j++){
-				enemShotData.push({x: this[i].shots[j].box.center.x, y: this[i].shots[j].box.center.y, angle: this[i].shots[j].box.angle, lt: this[i].shots[j].lt});
-			}
-			enemData.push({angle: this[i].box.angle, shots: enemShotData});
+			enemData.push({angle: this[i].box.angle});
 		}
 		return enemData;
+	};
+	this.shots.getGameData = function() {
+		var shotData = [];
+		this.forEach(function(shot) {
+			shotData.push({x: shot.box.center.x, y: shot.box.center.y, angle: shot.box.angle, lt: shot.lt});
+		});
+		return shotData;
 	};
 	this.planets.getWorldData = function(){
 		var pltData = [];
@@ -216,16 +221,15 @@ function Lobby(name, maxPlayers){
 		}
 		return pltData;
 	};
-	this.planets.getGameData = function(){
+	this.planets.getGameData = function() {
 		var pltData = [];
 		for (var i = 0; i < this.length; i++){
-			//pltData.push(this[i].progress);
 			pltData.push({color: this[i].progress.color, value: this[i].progress.value, team: this[i].progress.team});
 		}
 		return pltData;
 	};
 
-	
+
 	//generate world structure
 	var areaSize = 6400,
 		chunkSize = 1600;
@@ -238,7 +242,7 @@ function Lobby(name, maxPlayers){
 			this.planets.push(new engine.Planet(x + px, y + py, radius));
 		}
 	}
-	
+
 	var iterations = 0;
 	while (iterations < 250 && this.enemies.length < 15){
 		var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
@@ -264,14 +268,14 @@ Lobby.prototype.broadcast = function(message) {
 			player.ws.send(message);
 		} catch(e) {/*Ignore errors*/}
 	});
-}
+};
 Lobby.prototype.update = function() {
 	var oldDate = Date.now(), playerData = [],
-	sounds = engine.doPhysics(this.players, this.planets, this.enemies);
+	sounds = engine.doPhysics(this.players, this.planets, this.enemies, this.shots);
 	this.processTime = Date.now() - oldDate;
 	if (this.gameProgress.ticks++ === 50){
 		this.planets.forEach(function(planet){
-			if (planet.progress.value >= 80) this.gameProgress[planet.progress.team]++; 
+			if (planet.progress.value >= 80) this.gameProgress[planet.progress.team]++;
 		}.bind(this));
 		this.gameProgress.ticks = 0;
 	}
@@ -298,6 +302,7 @@ Lobby.prototype.update = function() {
 						players: playerData,
 						planets: this.planets.getGameData(),
 						enemies: this.enemies.getGameData(),
+						shots: this.shots.getGameData(),
 						gameProgress: this.gameProgress
 					}
 				}));
@@ -306,7 +311,7 @@ Lobby.prototype.update = function() {
 		}.bind(this), Math.max(16, Date.now() - player.lastRefresh + player.latency));
 	}.bind(this));
 
-}
+};
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
 		player.lastPing = {};
@@ -320,19 +325,19 @@ Lobby.prototype.pingPlayers = function() {
 			}
 		}));
 	});
-}
+};
 lobbies.getUid = function(index) {
 	var uid = index.toString(16);
 	while(uid.length !== 6) {
 		uid = "0" + uid;
 	}
 	return uid;
-}
+};
 lobbies.getByUid = function(uid) {
 	var index = parseInt(uid, 16);
-	if(index === NaN || !isFinite(index) || index % 1 !== 0) return null;
+	if(isNaN(index) || !isFinite(index) || index % 1 !== 0) return null;
 	return this[index];
-}
+};
 
 setInterval(function() {
 	lobbies.forEach(function(lobby) {
@@ -347,24 +352,28 @@ setInterval(function() {
 }, 1000);
 
 function monitoring() {
-	process.stdout.write("\033c");
+	function genSpaces(amount) {
+		for(var spaces = ""; spaces.length !== amount; spaces += " ");
+		return spaces;
+	}
+	process.stdout.write("\u001bc");//maybe \u001B[2J\u001B[0;0f is better?
 	console.log("Jumpsuit Server [STATUS: RUNNING]");
 	console.log("\nMonitoring Lobbies:");
-	var headerSizes = [40, 10, 20],
-		headerNames = ["lobby name", "player", "process time", "lifetime"],
+	var headerSizes = [40, 10, 15],
+		headerNames = ["lobby name", "players", "process time", "lifetime"],
 		header = "";
-	for (var i = 0; i < headerSizes.length; i++){
-		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase() + Array(headerSizes[i] - headerNames[i].length).join(" ");
-	}
+	headerSizes.forEach(function(hSize, i) {
+		header += (i !== 0 ? " | " : "") + "\u001b[1m" + headerNames[i].toUpperCase() + "\u001b[0m" + genSpaces(hSize - headerNames[i].length);
+	});
 	console.log(header);
-	for (var i = 0; i < lobbies.length; i++){
-		var info = lobbies[i].name + Array(headerSizes[0] - lobbies[i].name.length).join(" "),
-			amount = lobbies[i].players.amount().toString(),
-			processTime = lobbies[i].processTime.toString();
-		info += " | " + amount + Array(headerSizes[1] - amount.length).join(" ");
-		info += " | " + processTime + Array(headerSizes[2] - processTime.length).join(" ");
+	lobbies.forEach(function(lobby) {
+		var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
+			amount = lobby.players.amount().toString(),
+			processTime = lobby.processTime.toString();
+		info += " | " + amount + genSpaces(headerSizes[1] - amount.length);
+		info += " | " + processTime;
 		console.log(info);
-	}
+	});
 }
 if(config.monitor) var monitorTimerID = setInterval(monitoring, 500);
 
@@ -420,7 +429,7 @@ wss.on("connection", function(ws) {
 				case MESSAGE.PLAYER_CONTROLS:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
-						for (i in msg.data.controls){
+						for (var i in msg.data.controls){
 							lobby.players[msg.data.pid].controls[i] = msg.data.controls[i];
 						}
 					}
@@ -429,7 +438,7 @@ wss.on("connection", function(ws) {
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
 						delete lobby.players[msg.data.pid];
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));						
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));
 					}
 					break;
 				case MESSAGE.PONG:
@@ -462,9 +471,5 @@ wss.on("connection", function(ws) {
 		});
 	});
 });
-
-Math.map = function(x, in_min, in_max, out_min, out_max) {
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
 
 lobbies.push(new Lobby("Lobby No. 1", 7));

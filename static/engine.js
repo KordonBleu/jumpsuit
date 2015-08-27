@@ -1,4 +1,3 @@
-//Game engine to be shared between the client and server
 "use strict";
 
 var resPaths = [
@@ -30,10 +29,6 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-Math.map = function(x, in_min, in_max, out_min, out_max) {
-	//mapping a value x from a range to another range to allow scaling or moving values easily
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-}
 function Player(name, appearance, startx, starty, ws){
 	this._walkCounter = 0;
 	this.name = name;
@@ -58,7 +53,7 @@ function Player(name, appearance, startx, starty, ws){
 			this.box.width = resources[this.appearance + this.walkFrame].width;
 			this.box.height = resources[this.appearance + this.walkFrame].height;
 		}
-	}
+	};
 	this.walkFrame = "_stand";
 	this.jetpack = false;
 	this.health = 8;
@@ -86,21 +81,18 @@ function Enemy(x, y, appearance) {
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
-function doPhysics(players, planets, enemies, isClient) {
+function doPhysics(players, planets, enemies, shots, isClient) {
 	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);
+
+	shots.forEach(function(shot, si) {
+		shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 11;
+		shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 11;
+		if(--shot.lt <= -20) shots.splice(si, 1);
+	});
 	enemies.forEach(function(enemy) {
 		var playerToHit = null;
 		players.forEach(function(player) {
-			enemy.shots.forEach(function(shot, si) {
-				shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 11;
-				shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 11;
-				if(--shot.lt <= -20) enemy.shots.splice(si, 1);
-				else if (shot.box.collision(player.box)) {
-					player.health -= (player.health = 0) ? 0 : 1;
-					enemy.shots.splice(si, 1);
-				}
-			});
 			if(enemy.aggroBox.collision(player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
 				playerToHit = player;
 			}
@@ -113,7 +105,7 @@ function doPhysics(players, planets, enemies, isClient) {
 				if (++enemy.fireRate >= 20) {
 					playerToHit.lastlyAimedAt = Date.now();
 					enemy.fireRate = 0;
-					enemy.shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
+					shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
 					sounds.push({type: "laser", position: {x: enemy.box.center.x, y: enemy.box.center.y}});
 				}
 		}
@@ -121,7 +113,7 @@ function doPhysics(players, planets, enemies, isClient) {
 	players.forEach(function(player) {
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === "undefined") playersOnPlanets[player.attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
-			playersOnPlanets[player.attachedPlanet][player.appearance]++;					
+			playersOnPlanets[player.attachedPlanet][player.appearance]++;
 			player.jetpack = false;
 			var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].box.radius);
 			if (player.controls["moveLeft"] > 0){
@@ -134,7 +126,7 @@ function doPhysics(players, planets, enemies, isClient) {
 				player.planet -= (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = false;
 			}
-		
+
 			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(player.planet) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(player.planet) * (planets[player.attachedPlanet].box.radius + player.box.height / 2)
 			player.box.angle = Math.PI - player.planet;
@@ -142,13 +134,13 @@ function doPhysics(players, planets, enemies, isClient) {
 			player.velocity.y = 0;
 			player.fuel = 400;
 			if (player.controls["jump"] > 0) {
-				player.attachedPlanet = -1;				
+				player.attachedPlanet = -1;
 				player.velocity.x = Math.sin(player.box.angle) * 6;
 				player.velocity.y = -Math.cos(player.box.angle) * 6;
 				player.box.center.x += player.velocity.x;
 				player.box.center.y += player.velocity.y;
 			}
-		} else {	
+		} else {
 			player.jetpack = false;
 			for (var j = 0; j < planets.length; j++){
 				var deltaX = planets[j].box.center.x - player.box.center.x,
@@ -182,6 +174,13 @@ function doPhysics(players, planets, enemies, isClient) {
 			player.box.center.y = (6400 + player.box.center.y) % 6400;
 		}
 		player.setWalkframe();
+
+		shots.forEach(function(shot, si) {
+			if (shot.box.collision(player.box)) {
+				player.health -= (player.health = 0) ? 0 : 1;
+				shots.splice(si, 1);
+			}
+		});
 	});
 	if (isClient) return sounds;
 	for (var i = 0; i < playersOnPlanets.length; i++){
@@ -197,14 +196,14 @@ function doPhysics(players, planets, enemies, isClient) {
 				b++;
 				toArray.splice(a, 1);
 			}
-			if (b >= 2) return sounds; 
+			if (b >= 2) return sounds;
 			team = teams[a];
 			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
 			else {
 				planets[i].progress.value -= max / 3;
 				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
 			}
-			var fadeRGB = [];   
+			var fadeRGB = [];
 			for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.floor(planets[i].progress.value / 100 * (parseInt(Planet.prototype.teamColours[planets[i].progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
 
 			planets[i].progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
@@ -218,4 +217,4 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") modu
 	Player: Player,
 	Planet: Planet,
 	Enemy: Enemy
-}
+};

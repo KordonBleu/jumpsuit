@@ -55,12 +55,12 @@ Connection.prototype.sendChat = function(content) {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CHAT,
 		data: {pid: pid, uid: location.hash.substr(3), content: content}
-	}));	
-}
+	}));
+};
 Connection.prototype.refreshControls = function(controls) {
 	if (typeof lastControls === "undefined") lastControls = {};
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
-	for (c in player.controls){
+	for (var c in player.controls){
 		b++;
 		if (lastControls[c] === player.controls[c]) accordance++;
 		else lastControls[c] = player.controls[c];
@@ -70,18 +70,18 @@ Connection.prototype.refreshControls = function(controls) {
 		msgType: MESSAGE.PLAYER_CONTROLS,
 		data: {pid: pid, uid: location.hash.substr(3), controls: controls}
 	}));
-}
+};
 Connection.prototype.errorHandler = function() {
 	document.getElementById("new-lobby").disabled = true;
 	document.getElementById("refresh-or-leave").disabled = true;
 	this.close();
-}
+};
 Connection.prototype.openHandler = function() {
 	this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
 	document.getElementById("new-lobby").disabled = false;
 	document.getElementById("refresh-or-leave").textContent = "Refresh";
 	document.getElementById("refresh-or-leave").disabled = false;
-}
+};
 Connection.prototype.messageHandler = function(message) {
 	try{
 		msg = JSON.parse(message.data);
@@ -162,20 +162,20 @@ Connection.prototype.messageHandler = function(message) {
 				}
 				for(i = 0; i < msg.data.enemies.length; i++) {
 					enemies[i].box.angle = msg.data.enemies[i].angle;
-					enemies[i].shots.length = msg.data.enemies[i].shots.length;
-					for (j = 0; j < msg.data.enemies[i].shots.length; j++){
-						if (typeof enemies[i].shots[j] === "undefined") enemies[i].shots[j] = {box: new Rectangle(new Point(0, 0), resources["laserBeam"].width, resources["laserBeam"].height, 0), lt: 0};
-						enemies[i].shots[j].box.center.x = msg.data.enemies[i].shots[j].x;
-						enemies[i].shots[j].box.center.y = msg.data.enemies[i].shots[j].y;
-						enemies[i].shots[j].box.angle = msg.data.enemies[i].shots[j].angle;
-						enemies[i].shots[j].lt = msg.data.enemies[i].shots[j].lt;
-					}
+				}
+				shots.length = msg.data.shots.length;
+				for (j = 0; j < msg.data.shots.length; j++){
+					if (typeof shots[j] === "undefined") shots[j] = {box: new Rectangle(new Point(0, 0), resources["laserBeam"].width, resources["laserBeam"].height, 0), lt: 0};
+					shots[j].box.center.x = msg.data.shots[j].x;
+					shots[j].box.center.y = msg.data.shots[j].y;
+					shots[j].box.angle = msg.data.shots[j].angle;
+					shots[j].lt = msg.data.shots[j].lt;
 				}
 
 				player.timestamps._old = player.timestamps._new || 0;
-				player.timestamps._new = Date.now();				
-				
-				msg.data.players.forEach(function(_player, i) {			
+				player.timestamps._new = Date.now();
+
+				msg.data.players.forEach(function(_player, i) {
 					if (i === pid){
 						player.box.center.x = _player.x;
 						player.box.center.y = _player.y;
@@ -190,12 +190,12 @@ Connection.prototype.messageHandler = function(message) {
 					} else {
 						if (_player === null){
 							delete otherPlayers[i];
-							return;	
+							return;
 						}
 						if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
 						otherPlayers[i].timestamps._old = otherPlayers[i].timestamps._new || Date.now();
 						otherPlayers[i].timestamps._new = Date.now();
-						
+
 						otherPlayers[i].lastBox.center.x = otherPlayers[i].box.center.x;
 						otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
 						otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
@@ -210,16 +210,16 @@ Connection.prototype.messageHandler = function(message) {
 						otherPlayers[i].predictedBox.center.x = otherPlayers[i].box.center.x;
 						otherPlayers[i].predictedBox.center.y = otherPlayers[i].box.center.y;
 						otherPlayers[i].predictedBox.angle = otherPlayers[i].box.angle;
-										
+
 						otherPlayers[i].looksLeft = _player.looksLeft;
 						otherPlayers[i].walkFrame = _player.walkFrame;
 						otherPlayers[i].name = _player.name;
 						otherPlayers[i].appearance = _player.appearance;
 						otherPlayers[i].attachedPlanet = _player.attachedPlanet;
 						otherPlayers[i].jetpack = _player.jetpack;
-					}	
+					}
 
-				});	
+				});
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;
@@ -248,7 +248,7 @@ Connection.prototype.messageHandler = function(message) {
 		console.log("Badly formated JSON message received:", err);
 		console.log("'" + message.data + "'");
 	}
-}
+};
 
 var currentConnection = new Connection();
 function autoConnect() {
@@ -290,6 +290,6 @@ function leaveLobby() {
 window.addEventListener("hashchange", function(){ currentConnection.connectLobby(); });
 
 function settingsChanged() {
-	if (!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return; 
+	if (!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return;
 	currentConnection.sendSettings();
 }

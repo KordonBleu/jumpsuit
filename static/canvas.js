@@ -1,5 +1,9 @@
 "use strict";
 
+Math.map = function(x, in_min, in_max, out_min, out_max) {
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+};
+
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
 	meteors = [],
@@ -8,6 +12,7 @@ var canvas = document.getElementById("canvas"),
 	otherPlayers = [],
 	planets = [],
 	enemies = [],
+	shots = [],
 	game = {
 		muted: false,
 		dragStart: new Vector(0, 0),
@@ -21,7 +26,7 @@ var canvas = document.getElementById("canvas"),
 			document.getElementById("gui-fuel").removeAttribute("class");
 			document.getElementById("gui-points").removeAttribute("class");
 			document.getElementById("loader").className = "hidden";
-			loop();	
+			loop();
 		},
 		stop: function(){
 			document.getElementById("gui-chat").className = "hidden";
@@ -53,12 +58,18 @@ var canvas = document.getElementById("canvas"),
 		}
 	};
 
+function resizeCanvas() {
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+};
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+
+
 function init() {//init is done differently in the server
 	function loadProcess() {
 		function resizeHandler() {
-			canvas.width = window.innerWidth;
-			canvas.height = window.innerHeight;
-
 			context.textBaseline = "top";
 			context.textAlign = "center";
 
@@ -182,10 +193,8 @@ function loop(){
 		context.restore();
 	}
 
-	if (!isMobile && canvas.width !== window.innerWidth || canvas.height !== window.innerHeight) {
-		canvas.width = window.innerWidth;
-		canvas.height = window.innerHeight;
-	} else context.clearRect(0, 0, canvas.width, canvas.height);
+
+	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//layer 0: meteors
 	if (Math.random() < 0.01){
@@ -226,7 +235,6 @@ function loop(){
 	//atmosphere
 	planets.forEach(function(planet) {
 		context.fillStyle = planet.progress.color;
-		if (windowBox.collision(planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
 	});
 
 	//jetpack
@@ -248,18 +256,23 @@ function loop(){
 		if (windowBox.collision(planet.box)) {
 			fillPlanet(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
 			drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
-		}		
+		}
+		if (windowBox.collision(planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
+
 		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
+
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		context.fillStyle = "rgba(0, 0, 0, 0.2)";
-		context.fillText(Planet.prototype.names[pi].substr(0, 1), planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y);
-		if (planet.atmosBox.collision(player.box)) fadeMusic = true;		
+		context.fillText(planet.names[pi].substr(0, 1), planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y);
 	});
 
+	//shots
+	shots.forEach(function (shot){
+		if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
+	});
+
+	//enemies
 	enemies.forEach(function (enemy, ei) {
-		enemy.shots.forEach(function (shot){
-			if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
-		});
 		context.fillStyle = "#aaa";
 		if (windowBox.collision(enemy.aggroBox)) strokeAtmos(enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, 350, 4);
 		if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, enemy.box.angle, false);
@@ -270,16 +283,16 @@ function loop(){
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer){
 		var intensity = Math.max(1, 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000);
-		
-		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;	
-		if (otherPlayer.attachedPlanet === -1){	
+
+		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;
+		if (otherPlayer.attachedPlanet === -1){
 			otherPlayer.predictedBox.center.x += (parseFloat(otherPlayer.box.center.x, 10) - parseFloat(otherPlayer.lastBox.center.x, 10)) / intensity;
 			otherPlayer.predictedBox.center.y += (parseFloat(otherPlayer.box.center.y, 10) - parseFloat(otherPlayer.lastBox.center.y, 10)) / intensity;
 		} else {
 			otherPlayer.predictedBox.center.x = planets[otherPlayer.attachedPlanet].box.center.x + Math.sin(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 		}
-		
+
 		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 		context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
@@ -300,7 +313,7 @@ function loop(){
 		player.looksLeft);
 
 
-	//layer 2: HUD / GUI	
+	//layer 2: HUD / GUI
 	if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
