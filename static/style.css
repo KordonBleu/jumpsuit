@@ -5,7 +5,7 @@
 	font-family: "Open Sans";
 	font-style: normal;
 	font-weight: 400;
-	src: local('Open Sans'), local('OpenSans'), url("assets/fonts/open_sans.woff2") format("woff2"), url("assets/fonts/open_sans.woff") format("woff");
+	src: local('Open Sans'), local('OpenSans'), url("/assets/fonts/open_sans.woff2") format("woff2"), url("/assets/fonts/open_sans.woff") format("woff");
 }
 html, body {
 	margin: 0;
@@ -19,7 +19,7 @@ html, body {
 	-webkit-transform: translate3d(0, 0, 0);/*GPU boost*/
 }
 html {
-	background-image: url("assets/images/background.png");
+	background-image: url("/assets/images/background.png");
 }
 button {
 	outline-color: #702318;
@@ -120,11 +120,11 @@ button:disabled:hover{
 #appearance-box .playerSelect:hover {
 	background-size: 85px 85px;
 }
-#appearance-box #playerBlue {background-image: url("assets/images/alienBlue_badge.svg");}
-#appearance-box #playerBeige {background-image: url("assets/images/alienBeige_badge.svg");}
-#appearance-box #playerGreen {background-image: url("assets/images/alienGreen_badge.svg");}
-#appearance-box #playerPink {background-image: url("assets/images/alienPink_badge.svg");}
-#appearance-box #playerYellow {background-image: url("assets/images/alienYellow_badge.svg");}
+#appearance-box #playerBlue {background-image: url("/assets/images/alienBlue_badge.svg");}
+#appearance-box #playerBeige {background-image: url("/assets/images/alienBeige_badge.svg");}
+#appearance-box #playerGreen {background-image: url("/assets/images/alienGreen_badge.svg");}
+#appearance-box #playerPink {background-image: url("/assets/images/alienPink_badge.svg");}
+#appearance-box #playerYellow {background-image: url("/assets/images/alienYellow_badge.svg");}
 #name.hidden, #badge.hidden, #appearance-box.hidden, #gui-chat.hidden, #gui-health.hidden,
 #gui-fuel.hidden, #gui-bad-connection.hidden, #gui-ping.hidden, #gui-points.hidden {
 	display: none;
@@ -170,7 +170,7 @@ button:disabled:hover{
 }
 
 .info-box .gh-image {
-	background: url("assets/images/github.svg") top left no-repeat;
+	background: url("/assets/images/github.svg") top left no-repeat;
 	padding-left: 38px;
 	line-height: 2;
 	color: #333;
@@ -480,9 +480,9 @@ button:disabled:hover{
 	width: 26px;
 	height: 22.5px;
 }
-#gui-health div.heartFilled { background-image: url("assets/images/heartFilled.svg"); }
-#gui-health div.heartHalfFilled { background-image: url("assets/images/heartHalfFilled.svg"); }
-#gui-health div.heartNotFilled { background-image: url("assets/images/heartNotFilled.svg"); }
+#gui-health div.heartFilled { background-image: url("/assets/images/heartFilled.svg"); }
+#gui-health div.heartHalfFilled { background-image: url("/assets/images/heartHalfFilled.svg"); }
+#gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
 
 #gui-fuel:before {
 	content: "Fuel:";
@@ -527,7 +527,7 @@ button:disabled:hover{
 	position: fixed;
 	top: 100%;
 	left: 50%;
-	background-image: url("assets/images/piano.png");
+	background-image: url("/assets/images/piano.png");
 	width: 250px;
 	height: 143px;
 	margin-left: -125px;
@@ -539,10 +539,10 @@ button:disabled:hover{
 }
 
 @keyframes piano-playing {
-	0% {background-image: url("assets/images/piano.png"); }
-	10% {background-image: url("assets/images/piano2.png"); }
-	60% {background-image: url("assets/images/piano2.png"); }
-	70% {background-image: url("assets/images/piano3.png"); }
-	90% {background-image: url("assets/images/piano3.png"); }
-	100% {background-image: url("assets/images/piano.png"); }
+	0% {background-image: url("/assets/images/piano.png"); }
+	10% {background-image: url("/assets/images/piano2.png"); }
+	60% {background-image: url("/assets/images/piano2.png"); }
+	70% {background-image: url("/assets/images/piano3.png"); }
+	90% {background-image: url("/assets/images/piano3.png"); }
+	100% {background-image: url("/assets/images/piano.png"); }
 }

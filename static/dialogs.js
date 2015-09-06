@@ -1,4 +1,4 @@
-var dialog = new function(){
+var dialog = new function() {
 	var dialogElement = document.getElementById("dialog"),
 		textElement = document.getElementById("dialog-text"),
 		buttonConfirm = document.getElementById("dialog-confirm"),
@@ -6,7 +6,6 @@ var dialog = new function(){
 		_callback;
 
 	textElement.addEventListener("input", function(){
-		console.log("asd");
 		buttonConfirm.disabled = (textElement.value === "");
 	});
 

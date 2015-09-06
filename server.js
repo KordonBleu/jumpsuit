@@ -112,7 +112,13 @@ function initRl(){
 
 //send static files
 var server = http.createServer(function (req, res){
+	var lobbyUid = /^\/lobbies\/([0-9a-f]+)\/$/.exec(req.url);
 	if(req.url === "/") req.url = "/index.html";
+	else if(lobbyUid !== null) {
+		if(lobbies.getByUid(lobbyUid[1]) !== undefined) req.url = "/index.html";
+		else res.end("This lobby doesn't exist (anymore)!\n");
+	}
+
 	var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1),
 		mime;
 	switch(extension) {
@@ -335,8 +341,7 @@ lobbies.getUid = function(index) {
 };
 lobbies.getByUid = function(uid) {
 	var index = parseInt(uid, 16);
-	if(isNaN(index) || !isFinite(index) || index % 1 !== 0) return null;
-	return this[index];
+	if(!isNaN(index) && isFinite(index) && index % 1 === 0 && index >= 0 && this[index] !== undefined) return this[index];
 };
 
 setInterval(function() {
@@ -383,7 +388,7 @@ wss.on("connection", function(ws) {
 		try {
 			msg = JSON.parse(message);
 			if(config.dev) console.log("received: ", msg);
-			switch(msg.msgType){
+			switch(msg.msgType) {
 				case MESSAGE.CONNECT:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if(lobby.players.amount() === lobby.maxPlayers) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NO_SLOT}}));
@@ -437,8 +442,8 @@ wss.on("connection", function(ws) {
 				case MESSAGE.LEAVE_LOBBY:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
-						delete lobby.players[msg.data.pid];
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));
+						delete lobby.players[msg.data.pid];
 					}
 					break;
 				case MESSAGE.PONG:
@@ -461,8 +466,8 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function (lobby){
 			lobby.players.forEach(function (player, i){
 				if (player.ws == ws){
-					delete lobby.players[i];
 					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game", pid: -1}}));
+					delete lobby.players[i];
 					found = true;
 					return;
 				}

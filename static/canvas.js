@@ -8,7 +8,7 @@ var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
 	meteors = [],
 	player,
-	pid,
+	pid = -1,
 	otherPlayers = [],
 	planets = [],
 	enemies = [],
@@ -36,7 +36,6 @@ var canvas = document.getElementById("canvas"),
 			document.getElementById("multiplayer-box").classList.remove("hidden");
 			document.getElementById("loader").removeAttribute("class");
 
-			player = null;
 			pid = -1;
 			otherPlayers.length = 0;
 			planets.length = 0;
@@ -108,7 +107,7 @@ function init() {//init is done differently in the server
 		drawBar();
 		var img = new Image();
 		img.addEventListener("load", eHandler);
-		img.src = "assets/images/" + resPaths[loadProcess.progress];
+		img.src = "/assets/images/" + resPaths[loadProcess.progress];
 		resources[resPaths[loadProcess.progress].slice(0, resPaths[loadProcess.progress].lastIndexOf("."))] = img;
 	}
 

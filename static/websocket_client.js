@@ -5,26 +5,24 @@ function Connection(address) {
 
 	this.alive = function() { return this.socket.readyState === 1; };
 
+	this.lobbyUid = null;
+
 	this.socket.addEventListener("open", this.openHandler);
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
 }
 Connection.prototype.close = function() {
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.DISCONNECT,
-		data: {uid: location.hash.substr(3), pid: pid}
-	}));
-	location.hash = "";
-	pid = -1;
+	this.leaveLobby();
 	this.socket.close();
 };
-Connection.prototype.connectLobby = function() {
-	if(!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return;
+Connection.prototype.connectLobby = function(uid) {
+	if(!currentConnection.alive()) return;
 
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CONNECT,
-		data: {	uid: location.hash.substr(3), name: player.name, appearance: player.appearance }
+		data: { uid: uid, name: player.name, appearance: player.appearance }
 	}));
+	this.lobbyUid = uid;
 	document.getElementById("multiplayer-box").classList.add("hidden");
 };
 Connection.prototype.createLobby = function(n) {
@@ -40,21 +38,20 @@ Connection.prototype.refreshLobbies = function() {
 Connection.prototype.leaveLobby = function() {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.LEAVE_LOBBY,
-		data: {pid: pid, uid: location.hash.substr(3)}
+		data: {pid: pid, uid: this.lobbyUid}
 	}));
-	location.hash = "";
 	game.stop();
 };
 Connection.prototype.sendSettings = function() {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.PLAYER_SETTINGS,
-		data: {pid: pid, uid: location.hash.substr(3), name: player.name, appearance: player.appearance}
+		data: {pid: pid, uid: this.lobbyUid, name: player.name, appearance: player.appearance}
 	}));
 };
 Connection.prototype.sendChat = function(content) {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CHAT,
-		data: {pid: pid, uid: location.hash.substr(3), content: content}
+		data: {pid: pid, uid: this.lobbyUid, content: content}
 	}));
 };
 Connection.prototype.refreshControls = function(controls) {
@@ -68,7 +65,7 @@ Connection.prototype.refreshControls = function(controls) {
 	if (accordance === b) return;
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.PLAYER_CONTROLS,
-		data: {pid: pid, uid: location.hash.substr(3), controls: controls}
+		data: {pid: pid, uid: this.lobbyUid, controls: controls}
 	}));
 };
 Connection.prototype.errorHandler = function() {
@@ -83,9 +80,9 @@ Connection.prototype.openHandler = function() {
 	document.getElementById("refresh-or-leave").disabled = false;
 };
 Connection.prototype.messageHandler = function(message) {
-	try{
+	try {
 		msg = JSON.parse(message.data);
-		switch(msg.msgType){
+		switch(msg.msgType) {
 			case MESSAGE.SENT_LOBBIES:
 				document.getElementById("new-lobby").disabled = false;
 				document.getElementById("status").textContent = "Choose a lobby";
@@ -93,10 +90,10 @@ Connection.prototype.messageHandler = function(message) {
 				while (list.firstChild) {
 					list.removeChild(list.firstChild);
 				}
-				for (var i = 0, el, li; i != msg.data.length; i++){
+				for(var i = 0, el, li; i != msg.data.length; i++) {
 					li = document.createElement("li");
 					el = document.createElement("a");
-					el.href = "#c:" + msg.data[i].uid;
+					el.href = "/lobbies/" + msg.data[i].uid + "/";
 					el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxPlayers + ")";
 					li.appendChild(el);
 					list.appendChild(li);
@@ -108,7 +105,7 @@ Connection.prototype.messageHandler = function(message) {
 					data: {
 						pid: pid,
 						key: msg.data.key,
-						uid: location.hash.substr(3)
+						uid: currentConnection.lobbyUid
 					}
 				}));
 				break;
@@ -156,21 +153,22 @@ Connection.prototype.messageHandler = function(message) {
 				game.start();
 				break;
 			case MESSAGE.GAME_DATA:
-				var i, j;
-				for (i = 0; i < msg.data.planets.length; i++){
-					planets[i].progress = msg.data.planets[i];
-				}
-				for(i = 0; i < msg.data.enemies.length; i++) {
-					enemies[i].box.angle = msg.data.enemies[i].angle;
-				}
+				msg.data.planets.forEach(function(planet, i) {
+					planets[i].progress = planet;
+				});
+				msg.data.enemies.forEach(function(enemy, i) {
+					enemies[i].box.angle = enemy.angle;
+				});
 				shots.length = msg.data.shots.length;
-				for (j = 0; j < msg.data.shots.length; j++){
-					if (typeof shots[j] === "undefined") shots[j] = {box: new Rectangle(new Point(0, 0), resources["laserBeam"].width, resources["laserBeam"].height, 0), lt: 0};
-					shots[j].box.center.x = msg.data.shots[j].x;
-					shots[j].box.center.y = msg.data.shots[j].y;
-					shots[j].box.angle = msg.data.shots[j].angle;
-					shots[j].lt = msg.data.shots[j].lt;
-				}
+				msg.data.shots.forEach(function(shot, i) {
+					if (typeof shots[j] === "undefined") shots[i] = {box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: shot.lt};
+					else {
+						shots[i].box.center.x = shot.x;
+						shots[i].box.center.y = shot.y;
+						shots[i].box.angle = shot.angle;
+						shots[i].lt = shot.lt;
+					}
+				});
 
 				player.timestamps._old = player.timestamps._new || 0;
 				player.timestamps._new = Date.now();
@@ -235,7 +233,7 @@ Connection.prototype.messageHandler = function(message) {
 						break;
 				}
 				document.getElementById("multiplayer-box").classList.remove("hidden");
-				location.hash = "";
+				history.pushState(null, "Main menu", "/");
 				alert("Error " + msg.data.code + ":\n" + errDesc);
 				break;
 			case MESSAGE.PLAY_SOUND:
@@ -252,7 +250,10 @@ Connection.prototype.messageHandler = function(message) {
 
 var currentConnection = new Connection();
 function autoConnect() {
-	if(autoConnect.counter === 1) currentConnection.connectLobby();//resources loaded & socket open
+	if(autoConnect.counter === 1) {//resources loaded & socket open
+		var lobbyUid = location.pathname.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
+		if(location.pathname !== lobbyUid) currentConnection.connectLobby(lobbyUid);
+	}
 	else autoConnect.counter += 1;
 }
 autoConnect.counter = 0;
@@ -287,9 +288,24 @@ function leaveLobby() {
 }
 
 
-window.addEventListener("hashchange", function(){ currentConnection.connectLobby(); });
+document.getElementById("player-list").addEventListener("click", function(e) {
+	if(e.target.tagName == "A") {
+		e.preventDefault();
+		var lobbyUid = e.target.getAttribute("href").replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
+		currentConnection.connectLobby(lobbyUid);
+		history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");
+	}
+});
+window.addEventListener("popstate", function(e) {
+	console.log(e, location);
+	if(location.pathname === "/") leaveLobby();
+	else {
+		var lobbyUid = location.pathname.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
+		if(lobbyUid !== null && lobbyUid[0] !== undefined) currentConnection.connectLobby(lobbyUid[0]);
+	}
+});
 
 function settingsChanged() {
-	if (!currentConnection.alive() || location.hash.indexOf("c:") !== 1) return;
+	if (!currentConnection.alive() || currentConnection.lobbyUid === null) return;
 	currentConnection.sendSettings();
 }

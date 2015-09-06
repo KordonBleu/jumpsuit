@@ -66,8 +66,8 @@ function stopSound(name) {
 	sounds[name].source.stop();
 }
 
-loadSound("assets/audio/laserTest.ogg", "laser");
-loadSound("assets/audio/interstellar.ogg", "background", 110.256, function(sound) {
+loadSound("/assets/audio/laserTest.ogg", "laser");
+loadSound("/assets/audio/interstellar.ogg", "background", 110.256, function(sound) {
 	sound.source = audioContext.createBufferSource();
 	sound.source.buffer = sound.buffer;
 
@@ -85,4 +85,4 @@ loadSound("assets/audio/interstellar.ogg", "background", 110.256, function(sound
 
 	sound.source.start(0);
 });
-loadSound("assets/audio/jetpack.ogg", "jetpack", 1);
+loadSound("/assets/audio/jetpack.ogg", "jetpack", 1);

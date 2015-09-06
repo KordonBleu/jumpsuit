@@ -417,7 +417,7 @@ var chosenAppearance = "alienBlue";
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
 		player.appearance = this.id.replace("player", "alien");
-		document.getElementById("badge").setAttribute("src", "assets/images/" + player.appearance + "_badge.svg");
+		document.getElementById("badge").setAttribute("src", "/assets/images/" + player.appearance + "_badge.svg");
 		document.getElementById("appearance-box").classList.add("hidden");
 		settingsChanged();
 	});
@@ -432,7 +432,10 @@ document.getElementById("disconnect").addEventListener("click", function(){
 	}
 });
 document.getElementById("refresh-or-leave").addEventListener("click", function(){
-	if (this.textContent === "Leave Lobby")	leaveLobby();
+	if (this.textContent === "Leave Lobby") {
+		leaveLobby();
+		history.pushState(null, "Main menu", "/");
+	}
 	else refreshLobbies();
 });
 document.getElementById("new-lobby").addEventListener("click", function(){
