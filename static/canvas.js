@@ -1,5 +1,22 @@
 "use strict";
 
+var chatElement = document.getElementById("gui-chat"),
+	chatFirstElement = document.getElementById("gui-chat-first"),
+	healthElement = document.getElementById("gui-health"),
+	fuelElement = document.getElementById("gui-fuel"),
+	pointsElement = document.getElementById("gui-points"),
+	multiplayerBox = document.getElementById("multiplayer-box"),
+	badgeElement = document.getElementById("badge"),
+	nameElement = document.getElementById("name"),
+	statusElement = document.getElementById("status"),
+	refreshOrLeaveElement = document.getElementById("refresh-or-leave"),
+	newLobbyElement = document.getElementById("new-lobby"),
+	playerListElement = document.getElementById("player-list"),
+	appearanceBox = document.getElementById("appearance-box"),
+	disconnectElement = document.getElementById("disconnect"),
+	infoBox = document.getElementById("info-box"),
+	chatInput = document.getElementById("chat-input");
+
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
@@ -21,19 +38,20 @@ var canvas = document.getElementById("canvas"),
 		connectionProblems: false,
 		animationFrameId: null,
 		start: function(){
-			document.getElementById("gui-chat").removeAttribute("class");
-			document.getElementById("gui-health").removeAttribute("class");
-			document.getElementById("gui-fuel").removeAttribute("class");
-			document.getElementById("gui-points").removeAttribute("class");
+			chatElement.removeAttribute("class");
+			healthElement.removeAttribute("class");
+			fuelElement.removeAttribute("class");
+			pointsElement.removeAttribute("class");
+			multiplayerBox.classList.add("hidden");
 			document.getElementById("loader").className = "hidden";
 			loop();
 		},
 		stop: function(){
-			document.getElementById("gui-chat").className = "hidden";
-			document.getElementById("gui-health").className = "hidden";
-			document.getElementById("gui-fuel").className = "hidden";
-			document.getElementById("gui-points").className = "hidden";
-			document.getElementById("multiplayer-box").classList.remove("hidden");
+			chatElement.className = "hidden";
+			healthElement.className = "hidden";
+			fuelElement.className = "hidden";
+			pointsElement.className = "hidden";
+			multiplayerBox.classList.remove("hidden");
 			document.getElementById("loader").removeAttribute("class");
 
 			pid = -1;
@@ -44,17 +62,6 @@ var canvas = document.getElementById("canvas"),
 			window.cancelAnimationFrame(this.animationFrameId);
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		}
-	},
-	onScreenMessage = {
-		style: "",
-		content: "",
-		lifetime: 0,
-		visible: false,
-		show: function(c){
-			this.content = c;
-			this.lifetime = 500;
-			this.visible = true;
-		}
 	};
 
 function resizeCanvas() {
@@ -63,7 +70,6 @@ function resizeCanvas() {
 };
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
-
 
 
 function init() {//init is done differently in the server
@@ -114,10 +120,9 @@ function init() {//init is done differently in the server
 	document.addEventListener("res loaded", function() {//gets called once every resource is loaded
 		game.stop(); //for clearing
 		player = new Player(localStorage.getItem("settings.name") || "Unnamed Player", "alienGreen", 0, 0);
-		document.getElementById("name").value = player.name;
-		document.getElementById("multiplayer-box").classList.remove("hidden");
-		document.getElementById("name").removeAttribute("class");
-		document.getElementById("badge").removeAttribute("class");
+		nameElement.value = player.name;
+		nameElement.removeAttribute("class");
+		badgeElement.removeAttribute("class");
 	});
 	loadProcess();
 }
@@ -364,28 +369,8 @@ function loop(){
 		else if (index * 2 + 1 === player.health) state = "heartHalfFilled";
 		else state = "heartNotFilled";
 		element.className = state;
-	});
-
-	if (onScreenMessage.visible === true){
-		context.font = "22px Open Sans";
-		context.textAlign = "center";
-		context.textBaseline = "hanging";
-
-		var posY, posX, boxWidth;
-		if (onScreenMessage.lifetime-- >= 490) posY = 36 * (500 - onScreenMessage.lifetime) / 10 - 31;
-		else if (onScreenMessage.lifetime-- <= 10) posY = 36 * (onScreenMessage.lifetime) / 10 - 31;
-		else posY = 5;
-
-		boxWidth = context.measureText(onScreenMessage.content).width + 16 * 2;
-		posX = canvas.clientWidth / 2 - boxWidth / 2;
-
-		if (onScreenMessage.lifetime === 0) onScreenMessage.visible = false;
-
-		context.fillStyle = "rgba(0, 0, 0, 0.4)";
-		context.fillRect(posX, posY, boxWidth, 31);
-		context.fillStyle = "#eee";
-		context.fillText(onScreenMessage.content, canvas.clientWidth / 2, posY + 2);
-	}
+	});	
+	chatElement.style.clip = "rect(0px," + chatElement.clientWidth + "px," + chatElement.clientHeight + "px,0px)";
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();

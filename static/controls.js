@@ -108,9 +108,9 @@ handleInputMobile.gesture = function (touch, type){
 			}
 		} else if (this.currentGestures.target === "canvas"){
 			if (this.currentGestures.start.x <= range.x && this.currentGestures.start.x + range.x < touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
-				document.getElementById("info-box").classList.remove("hidden");
+				infoBox.classList.remove("hidden");
 			} else if (this.currentGestures.start.x >= window.innerWidth - range.x && this.currentGestures.start.x - range.x > touch.pageX && this.currentGestures.start.y + range.y > touch.pageY && this.currentGestures.start.y - range.y < touch.pageY) {
-				document.getElementById("multiplayer-box").classList.remove("hidden");
+				multiplayerBox.classList.remove("hidden");
 			}
 		}
 	}
@@ -137,8 +137,8 @@ function handleInput(e){
 	if (document.getElementById("dialog").className !== "hidden") return;
 	var s = (e.type === "keydown") * 1,
 		triggered,
-		framesClosed = (document.getElementById("info-box").className.indexOf("hidden") !== -1 && document.getElementById("multiplayer-box").className.indexOf("hidden") !== -1),
-		chatInUse = document.getElementById("chat-input") === document.activeElement;
+		framesClosed = (infoBox.className.indexOf("hidden") !== -1 && multiplayerBox.className.indexOf("hidden") !== -1),
+		chatInUse = chatInput === document.activeElement;
 
 	if (e.target.id === "canvas"){
 		dragging(e.type, e.pageX, e.pageY);
@@ -152,14 +152,14 @@ function handleInput(e){
 		if (triggered == "menu" || triggered == "lobby" && !chatInUse){
 			e.preventDefault();
 			if (s == 1){
-				var box = document.getElementById((triggered == "menu") ? "info-box" : "multiplayer-box");
+				var box = (triggered == "menu") ? infoBox : multiplayerBox;
 				if (box.className.indexOf("hidden") !== -1) box.classList.remove("hidden");
 				else box.classList.add("hidden");
 			}
 		} else if (triggered == "chat"){
 			e.preventDefault();
 			if (s == 1) chatInUse = !chatInUse;
-		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && framesClosed && document.activeElement !== document.getElementById("name")) {
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && framesClosed && document.activeElement !== nameElement) {
 			e.preventDefault();
 			player.controls[triggered] = s;
 			currentConnection.refreshControls(player.controls);
@@ -376,11 +376,11 @@ window.addEventListener("mouseup", handleInput);
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 
-document.getElementById("chat-input").addEventListener("focus", function(){
-	document.getElementById("info-box").classList.add("hidden");
-	document.getElementById("multiplayer-box").classList.add("hidden");
+chatInput.addEventListener("focus", function(){
+	infoBox.classList.add("hidden");
+	multiplayerBox.classList.add("hidden");
 });
-document.getElementById("chat-input").addEventListener("keydown", function(e){
+chatInput.addEventListener("keydown", function(e){
 	if (e.keyCode == 13){
 		if (!currentConnection.alive()) return;
 		currentConnection.sendChat(this.value);
@@ -417,12 +417,12 @@ var chosenAppearance = "alienBlue";
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
 		player.appearance = this.id.replace("player", "alien");
-		document.getElementById("badge").setAttribute("src", "/assets/images/" + player.appearance + "_badge.svg");
-		document.getElementById("appearance-box").classList.add("hidden");
+		badgeElement.setAttribute("src", "/assets/images/" + player.appearance + "_badge.svg");
+		appearanceBox.classList.add("hidden");
 		settingsChanged();
 	});
 });
-document.getElementById("disconnect").addEventListener("click", function(){
+disconnectElement.addEventListener("click", function(){
 	if (this.textContent == "Disconnect"){
 		this.textContent = "Connect";
 		closeSocket();
@@ -431,27 +431,26 @@ document.getElementById("disconnect").addEventListener("click", function(){
 		openSocket();
 	}
 });
-document.getElementById("refresh-or-leave").addEventListener("click", function(){
+refreshOrLeaveElement.addEventListener("click", function(){
 	if (this.textContent === "Leave Lobby") {
 		leaveLobby();
 		history.pushState(null, "Main menu", "/");
 	}
 	else refreshLobbies();
 });
-document.getElementById("new-lobby").addEventListener("click", function(){
+newLobbyElement.addEventListener("click", function(){
 	dialog.show(newLobby);
 });
-document.getElementById("name").addEventListener("keydown", function(e) {
+nameElement.addEventListener("keydown", function(e) {
 	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
 		player.name = this.value;
 		e.target.blur();
 		settingsChanged();
 	}
 });
-document.getElementById("badge").addEventListener("click", function() {
-	var apEl = document.getElementById("appearance-box");
-	if (apEl.className === "hidden") apEl.removeAttribute("class");
-	else apEl.className = "hidden";
+badgeElement.addEventListener("click", function() {
+	if (appearanceBox.className === "hidden") appearanceBox.removeAttribute("class");
+	else appearanceBox.className = "hidden";
 });
 window.onbeforeunload = function(){
 	localStorage.setItem("settings.name", player.name);

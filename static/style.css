@@ -186,6 +186,13 @@ input[type=range]::-ms-track {
 #gui-fuel.hidden, #gui-bad-connection.hidden, #gui-ping.hidden, #gui-points.hidden {
 	display: none;
 }
+#gui-chat-first{
+	height: 1px;
+}
+#gui-chat{
+	height: 60%;
+	clip: rect(0, 0, auto, auto);
+}
 .chat-input {
 	position: fixed;
 	bottom: 20px;

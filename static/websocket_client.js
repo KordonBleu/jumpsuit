@@ -23,7 +23,7 @@ Connection.prototype.connectLobby = function(uid) {
 		data: { uid: uid, name: player.name, appearance: player.appearance }
 	}));
 	this.lobbyUid = uid;
-	document.getElementById("multiplayer-box").classList.add("hidden");
+	multiplayerBox.classList.add("hidden");
 };
 Connection.prototype.createLobby = function(n) {
 	this.socket.send(JSON.stringify({
@@ -69,34 +69,31 @@ Connection.prototype.refreshControls = function(controls) {
 	}));
 };
 Connection.prototype.errorHandler = function() {
-	document.getElementById("new-lobby").disabled = true;
-	document.getElementById("refresh-or-leave").disabled = true;
+	newLobbyElement.disabled = true;
+	refreshOrLeaveElement.disabled = true;
 	this.close();
 };
 Connection.prototype.openHandler = function() {
 	this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
-	document.getElementById("new-lobby").disabled = false;
-	document.getElementById("refresh-or-leave").textContent = "Refresh";
-	document.getElementById("refresh-or-leave").disabled = false;
+	newLobbyElement.disabled = false;
+	refreshOrLeaveElement.textContent = "Refresh";
+	refreshOrLeaveElement.disabled = false;
 };
 Connection.prototype.messageHandler = function(message) {
 	try {
 		msg = JSON.parse(message.data);
 		switch(msg.msgType) {
 			case MESSAGE.SENT_LOBBIES:
-				document.getElementById("new-lobby").disabled = false;
-				document.getElementById("status").textContent = "Choose a lobby";
-				var list = document.getElementById("player-list");
-				while (list.firstChild) {
-					list.removeChild(list.firstChild);
-				}
+				newLobbyElement.disabled = false;
+				statusElement.textContent = "Choose a lobby";
+				while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 				for(var i = 0, el, li; i != msg.data.length; i++) {
 					li = document.createElement("li");
 					el = document.createElement("a");
 					el.href = "/lobbies/" + msg.data[i].uid + "/";
 					el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxPlayers + ")";
 					li.appendChild(el);
-					list.appendChild(li);
+					playerListElement.appendChild(li);
 				}
 				break;
 			case MESSAGE.PING:
@@ -110,20 +107,17 @@ Connection.prototype.messageHandler = function(message) {
 				}));
 				break;
 			case MESSAGE.PLAYER_SETTINGS:
-				var list = document.getElementById("player-list");
-				document.getElementById("status").textContent = "Connected to a lobby";
-				while (list.firstChild) {
-					list.removeChild(list.firstChild);
-				}
+				statusElement.textContent = "Connected to a lobby";
+				while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 				msg.data.forEach(function(player, index) {
 					li = document.createElement("li");
 					li.textContent = player.name;
 					if (index === pid) li.style.color = "#f33";
-					list.appendChild(li);
+					playerListElement.appendChild(li);
 				});
 				break;
 			case MESSAGE.CHAT:
-				var element = document.createElement("p"), nameElement = document.createElement("b"), textElement = document.createTextNode(msg.data.content), chatElement = document.getElementById("gui-chat");
+				var element = document.createElement("p"), nameElement = document.createElement("b"), textElement = document.createTextNode(msg.data.content);
 				if (msg.data.pid === -1) element.className = "server";
 				else {
 					nameElement.textContent = msg.data.name + ": ";
@@ -132,12 +126,17 @@ Connection.prototype.messageHandler = function(message) {
 				element.appendChild(nameElement);
 				element.appendChild(textElement);
 				chatElement.appendChild(element);
-				while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.lastChild);
+				while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
+				var messageHeight = 0;
+				[].forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
+					messageHeight += element.clientHeight + 2;
+				});	
+				chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 				break;
 			case MESSAGE.WORLD_DATA:
 				pid = msg.data.pid;
-				document.getElementById("refresh-or-leave").textContent = "Leave Lobby";
-				document.getElementById("new-lobby").disabled = true;
+				refreshOrLeaveElement.textContent = "Leave Lobby";
+				newLobbyElement.disabled = true;
 
 				var i, j;
 				planets.length = 0;
@@ -232,7 +231,7 @@ Connection.prototype.messageHandler = function(message) {
 						errDesc = "The name " + player.name + " is already taken";
 						break;
 				}
-				document.getElementById("multiplayer-box").classList.remove("hidden");
+				multiplayerBox.classList.remove("hidden");
 				history.pushState(null, "Main menu", "/");
 				alert("Error " + msg.data.code + ":\n" + errDesc);
 				break;
@@ -261,10 +260,10 @@ currentConnection.socket.addEventListener("open", autoConnect);
 document.addEventListener("res loaded", autoConnect);
 
 function closeSocket() {
-	document.getElementById("new-lobby").disabled = true;
-	document.getElementById("refresh-or-leave").textContent = "Refresh";
-	document.getElementById("refresh-or-leave").disabled = true;
-	document.getElementById("gui-chat").innerHTML = "";
+	newLobbyElement.disabled = true;
+	refreshOrLeaveElement.textContent = "Refresh";
+	refreshOrLeaveElement.disabled = true;
+	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 	currentConnection.close();
 }
 function openSocket() {
@@ -283,12 +282,12 @@ function leaveLobby() {
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
 	currentConnection.refreshLobbies();
-	document.getElementById("gui-chat").innerHTML = "";
-	document.getElementById("refresh-or-leave").textContent = "Refresh";
+	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
+	refreshOrLeaveElement.textContent = "Refresh";
 }
 
 
-document.getElementById("player-list").addEventListener("click", function(e) {
+playerListElement.addEventListener("click", function(e) {
 	if(e.target.tagName == "A") {
 		e.preventDefault();
 		var lobbyUid = e.target.getAttribute("href").replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
