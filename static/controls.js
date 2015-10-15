@@ -254,7 +254,7 @@ document.getElementById("music-volume").addEventListener("input", function(ev) {
 	musicGain.gain.value = ev.target.value/100;
 });
 document.getElementById("effects-volume").addEventListener("input", function(ev) {
-	soundEffectsGain.gain.value = ev.target.value/100;
+	soundEffectGain.gain.value = ev.target.value/100;
 });
 var volMusic = localStorage.getItem("settings.volume.music"),
 	volEffects = localStorage.getItem("settings.volume.effects");
@@ -262,7 +262,7 @@ if (volMusic !== null && volEffects !== null) {
 	document.getElementById("music-volume").value = volMusic;
 	document.getElementById("effects-volume").value = volEffects;
 	musicGain.gain.value = volMusic/100;
-	soundEffectsGain.gain.value = volEffects/100;
+	soundEffectGain.gain.value = volEffects/100;
 }
 
 

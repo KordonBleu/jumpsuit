@@ -130,7 +130,7 @@ Connection.prototype.messageHandler = function(message) {
 				var messageHeight = 0;
 				[].forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
 					messageHeight += element.clientHeight + 2;
-				});	
+				});
 				chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 				break;
 			case MESSAGE.WORLD_DATA:
@@ -181,6 +181,12 @@ Connection.prototype.messageHandler = function(message) {
 						player.health = _player.health;
 						player.fuel = _player.fuel;
 						player.walkFrame = _player.walkFrame;
+						if(!player.jetpack && _player.jetpack) {
+							player.jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+							player.jetpackSound.start(0);
+						} else if(player.jetpack && !_player.jetpack) {
+							if(player.jetpackSound !== undefined) player.jetpackSound.stop();
+						}
 						player.jetpack = _player.jetpack;
 						game.offset.x = (Math.abs(game.offset.x - (player.box.center.x - canvas.width / 2)) > 2000) ? player.box.center.x - canvas.width / 2 : ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
 						game.offset.y = (Math.abs(game.offset.y - (player.box.center.y - canvas.height / 2)) > 2000) ? player.box.center.y - canvas.height / 2 : ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
@@ -213,6 +219,13 @@ Connection.prototype.messageHandler = function(message) {
 						otherPlayers[i].name = _player.name;
 						otherPlayers[i].appearance = _player.appearance;
 						otherPlayers[i].attachedPlanet = _player.attachedPlanet;
+						if(!otherPlayers[i].jetpack && _player.jetpack) {
+							setPanner(otherPlayers[i].panner, otherPlayers[i].box.center.x - player.box.center.x, otherPlayers[i].box.center.y - player.box.center.y);
+							otherPlayers[i].jetpackSound = jetpackModel.makeSound(otherPlayers[i].panner, 1);
+							otherPlayers[i].jetpackSound.start(0);
+						} else if(otherPlayers[i].jetpack && !_player.jetpack) {
+							if(otherPlayers[i].jetpackSound !== undefined) otherPlayers[i].jetpackSound.stop();
+						}
 						otherPlayers[i].jetpack = _player.jetpack;
 					}
 
@@ -237,13 +250,16 @@ Connection.prototype.messageHandler = function(message) {
 				break;
 			case MESSAGE.PLAY_SOUND:
 				msg.data.forEach(function(sound) {
-					playSound(sound.type, sound.position.x - player.box.center.x, sound.position.y - player.box.center.y);
+					switch(sound.type) {
+						case "laser":
+							laserModel.makeSound(makePanner(sound.position.x - player.box.center.x, sound.position.y - player.box.center.y)).start(0);
+							break;
+					}
 				});
 				break;
 		}
 	} catch(err) {
-		console.log("Badly formated JSON message received:", err);
-		console.log("'" + message.data + "'");
+		console.error("Badly formated JSON message received:", err, "\n", message.data);
 	}
 };
 

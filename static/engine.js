@@ -61,6 +61,10 @@ function Player(name, appearance, startx, starty, ws){
 	this.attachedPlanet = -1;
 	this.planet = 0;
 	this.lastlyAimedAt = Date.now();
+
+	if ((typeof module === "undefined" || typeof module.exports === "undefined") && typeof player !== "undefined") {//need to pan only the other players
+			this.panner = makePanner(startx - player.box.center.x, starty - player.box.center.y);
+	}
 }
 
 function Planet(x, y, radius) {

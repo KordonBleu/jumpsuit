@@ -31,13 +31,12 @@ var canvas = document.getElementById("canvas"),
 	enemies = [],
 	shots = [],
 	game = {
-		muted: false,
 		dragStart: new Vector(0, 0),
 		drag: new Vector(0, 0),
 		offset: new Vector(0, 0),
 		connectionProblems: false,
 		animationFrameId: null,
-		start: function(){
+		start: function() {
 			chatElement.removeAttribute("class");
 			healthElement.removeAttribute("class");
 			fuelElement.removeAttribute("class");
@@ -46,7 +45,7 @@ var canvas = document.getElementById("canvas"),
 			document.getElementById("loader").className = "hidden";
 			loop();
 		},
-		stop: function(){
+		stop: function() {
 			chatElement.className = "hidden";
 			healthElement.className = "hidden";
 			fuelElement.className = "hidden";
@@ -126,7 +125,7 @@ function init() {//init is done differently in the server
 	});
 	loadProcess();
 }
-function loop(){
+function loop() {
 	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
 		context.translate(x, y);
@@ -137,7 +136,7 @@ function loop(){
 		context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 		context.resetTransform();
 	}
-	function fillPlanet(cx, cy, r){
+	function fillPlanet(cx, cy, r) {
 		context.save();
 
 		context.beginPath();
@@ -161,7 +160,7 @@ function loop(){
 		context.restore();
 	}
 
-	function strokeAtmos(cx, cy, r, sw){
+	function strokeAtmos(cx, cy, r, sw) {
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.globalAlpha = 0.1;
@@ -173,7 +172,7 @@ function loop(){
 		context.closePath();
 	}
 
-	function drawArrow(fromx, fromy, ang, dist, col){
+	function drawArrow(fromx, fromy, ang, dist, col) {
 		var len = (dist > 200) ? 200 : (dist < 70) ? 70 : dist;
 
 		var tox = fromx + Math.sin(Math.PI - ang) * len,
@@ -186,7 +185,7 @@ function loop(){
 		context.stroke();
 	}
 
-	function drawCircleBar(x, y, val){
+	function drawCircleBar(x, y, val) {
 		context.save();
 		context.beginPath();
 		context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
@@ -217,7 +216,7 @@ function loop(){
 			depth: Math.map(Math.random(), 0, 1, 0.2, 0.6)
 		};
 	}
-	meteors.forEach(function(m, i){
+	meteors.forEach(function(m, i) {
 		m.x += Math.sin(m.ang) * m.speed;
 		m.y += Math.cos(m.ang) * m.speed;
 		context.globalAlpha = m.depth;
@@ -229,8 +228,7 @@ function loop(){
 
 
 	//layer 1: the game
-	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth),
-		fadeMusic = false;
+	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
 
 	context.textAlign = "center";
 	context.textBaseline = "middle";
@@ -242,18 +240,25 @@ function loop(){
 	});
 
 	//jetpack
-	var shift = player.looksLeft === true ? -14 : 14,
-		jetpackX = player.box.center.x - game.offset.x -shift*Math.sin(player.box.angle + Math.PI/2),
-		jetpackY = player.box.center.y - game.offset.y + shift*Math.cos(player.box.angle + Math.PI/2);
-	drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
-	if (player.jetpack) {
-		context.globalAlpha = 0.8;
-		drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
-		drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(player.box.angle + Math.PI/11), player.box.angle);
+	function drawJetpack(_player) {
+		var shift = _player.looksLeft === true ? -14 : 14,
+			jetpackX = _player.box.center.x - game.offset.x -shift*Math.sin(_player.box.angle + Math.PI/2),
+			jetpackY = _player.box.center.y - game.offset.y + shift*Math.cos(_player.box.angle + Math.PI/2);
+		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, _player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+		if (_player.jetpack) {
+			if(_player.panner !== undefined) setPanner(_player.panner, _player.box.center.x - player.box.center.x, _player.box.center.y - player.box.center.y);
+			context.globalAlpha = 0.8;
+			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle - Math.PI/11), _player.box.angle);
+			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle + Math.PI/11), _player.box.angle);
+		}
 	}
+	otherPlayers.forEach(drawJetpack);
+	drawJetpack(player);
+
 	context.globalAlpha = 1;
 
 	//planet
+	var playerInAtmos = false;
 	planets.forEach(function (planet, pi) {
 		context.fillStyle = planet.progress.color;
 
@@ -263,15 +268,17 @@ function loop(){
 		}
 		if (windowBox.collision(planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
 
-		if (planet.atmosBox.collision(player.box)) fadeMusic = true;
+		if (playerInAtmos || planet.atmosBox.collision(player.box)) playerInAtmos = true;
 
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		context.fillStyle = "rgba(0, 0, 0, 0.2)";
 		context.fillText(planet.names[pi].substr(0, 1), planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y);
 	});
+	if(playerInAtmos) bgFilter.frequency.value = bgFilter.frequency.value >= 4000 ? 4000 : bgFilter.frequency.value * 1.05;
+	else bgFilter.frequency.value = bgFilter.frequency.value <= 200 ? 200 : bgFilter.frequency.value * 0.95;
 
 	//shots
-	shots.forEach(function (shot){
+	shots.forEach(function (shot) {
 		if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 	});
 
@@ -308,8 +315,6 @@ function loop(){
 			otherPlayer.looksLeft);
 	});
 
-	fadeBackground(fadeMusic);
-
 	drawRotatedImage(resources[player.appearance + player.walkFrame],
 		player.box.center.x - game.offset.x,
 		player.box.center.y - game.offset.y,
@@ -320,7 +325,7 @@ function loop(){
 	//layer 2: HUD / GUI
 	if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 
-	[].forEach.call(document.querySelectorAll("#controls img"), function (element){
+	[].forEach.call(document.querySelectorAll("#controls img"), function (element) {
 		element.style["opacity"] = (0.3 + player.controls[element.id] * 0.7);
 	});
 
@@ -338,7 +343,7 @@ function loop(){
 	context.save();
 	context.clip();
 
-	planets.forEach(function (planet){
+	planets.forEach(function (planet) {
 		context.beginPath();
 		context.arc(canvas.clientWidth - 158 + (planet.box.center.x*150/6400 - player.box.center.x*150/6400 + 225) % 150, 8 + (planet.box.center.y*150/6400 - player.box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
 		context.closePath();
@@ -347,7 +352,7 @@ function loop(){
 	});
 
 	context.fillStyle = "#f33";
-	otherPlayers.forEach(function (otherPlayer){
+	otherPlayers.forEach(function (otherPlayer) {
 		if (otherPlayer.appearance !== player.appearance) return;
 		context.beginPath();
 		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x*150/6400 - player.box.center.x*150/6400 + 225) % 150, 8 + (otherPlayer.box.center.y*150/6400 - player.box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);

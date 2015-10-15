@@ -1,88 +1,82 @@
 "use strict";
-var audioContext = new (window.AudioContext || window.webkitAudioContext)(),
-	sounds = {},
-	soundEffectsGain = audioContext.createGain(),
-	musicGain = audioContext.createGain(),
-	canPlay = true;
 
-	soundEffectsGain.gain.value = 1;
-	musicGain.gain.value = 0.5;
+var audioContext = new AudioContext,
+	soundEffectGain = audioContext.createGain(),
+	musicGain = audioContext.createGain();
 
-function loadSound(url, name, loop, callback) {
-	try {
+soundEffectGain.gain.value = 1;
+soundEffectGain.connect(audioContext.destination);
+
+musicGain.gain.value = 0.5;
+musicGain.connect(audioContext.destination);
+
+function loadSound(url) {
+	return new Promise(function(resolve, reject) {
 		var request = new XMLHttpRequest();
 		request.open("GET", url, true);
 		request.responseType = "arraybuffer";
-		request.onload = function() {
-			audioContext.decodeAudioData(request.response, function (buffer) {
-				sounds[name] = {source: null, filter: null, buffer: buffer, loop: loop};
-				if(callback !== undefined) callback(sounds[name]);
-			});
-		};
+		try {
+			request.onload = function() {
+				audioContext.decodeAudioData(request.response, function(buffer) {
+					resolve(buffer);
+				});
+			};
+		} catch(e) {
+			reject(e);
+		}
 		request.send();
-	} catch(e) {
-		canPlay = false;
-	}
+	});
 }
 
-function fadeBackground(filtered) {
-	if(typeof sounds === "undefined" || !sounds["background"]) return;
+function SoundModel(url, callback) {
+	loadSound(url).then(function(buffer) {
+		this.buffer = buffer;
+		if(typeof callback === "function") callback.bind(this)();
+	}.bind(this)).catch(function(err) {
+		console.error(err);
+	});
+}
+SoundModel.prototype.makeSound = function(nextNode, loop) {//fails silenciously if this.buffer isn't loaded (yet)
+	var sound = audioContext.createBufferSource();
+	sound.buffer = this.buffer;
 
-	var fv = sounds["background"].filter.frequency.value;
-	if(filtered) {
-		sounds["background"].filter.frequency.value = (fv <= 200) ? 200 : fv * 0.95;
-	} else {
-		sounds["background"].filter.frequency.value = (fv >= 4000) ? 4000 : fv * 1.05;
+	if(typeof loop === "number") {
+		sound.loopStart = loop;
+		sound.loop = true;
 	}
+	sound.connect(nextNode);
+
+	return sound;
 }
 
-function playSound(name, deltaPosX, deltaPosY) {
-	if(typeof sounds === "undefined" || sounds[name] === undefined || !canPlay) return;
+function makePanner(deltaPosX, deltaPosY) {
+	var panner = audioContext.createPanner();
+	setPanner(panner, deltaPosX, deltaPosY);
+	panner.connect(soundEffectGain);
+
+	return panner;
+}
+function setPanner(panner, deltaPosX, deltaPosY) {
 	if(Math.sqrt(Math.pow(deltaPosX, 2) + Math.pow(deltaPosY, 2)) < 200) {//if dist < 200
 		var ang = Math.atan2(deltaPosX, deltaPosY);//take it to 200
 		deltaPosX = Math.cos(ang) * 200;
 		deltaPosY = Math.sin(ang) * 200;
 	}
-	var sound = sounds[name];
-	sound.source = audioContext.createBufferSource();
-	sound.source.buffer = sound.buffer;
 
-	if(sound.loop !== undefined && sound.loop !== null) {
-		sound.source.loopStart = sounds[name].loop;
-		sound.source.loop = true;
-	}
-
-	var panner = audioContext.createPanner();
 	panner.setPosition(deltaPosX, deltaPosY, 0);
 	panner.refDistance = 200;
-	sound.source.connect(panner);
-	panner.connect(soundEffectsGain);
-	soundEffectsGain.connect(audioContext.destination);
-
-	sound.source.start(0);
-}
-function stopSound(name) {
-	if(sounds[name] === undefined) return;
-	sounds[name].source.stop();
 }
 
-loadSound("/assets/audio/laserTest.ogg", "laser");
-loadSound("/assets/audio/interstellar.ogg", "background", 110.256, function(sound) {
-	sound.source = audioContext.createBufferSource();
-	sound.source.buffer = sound.buffer;
 
-	sound.source.loop = true;
-	sound.source.loopStart = sound.loop;
+var bgFilter = audioContext.createBiquadFilter();
+	bgFilter.type = "lowpass";
+	bgFilter.Q.value = 2;
+	bgFilter.frequency.value = 4000;
 
-	sound.filter = audioContext.createBiquadFilter();
-	sound.filter.type = "lowpass";
-	sound.filter.Q.value = 2;
-	sound.filter.frequency.value = 4000;
+	bgFilter.connect(musicGain);
 
-	sound.source.connect(sound.filter);
-	sound.filter.connect(musicGain);
-	musicGain.connect(audioContext.destination);
-
-	sound.source.start(0);
-});
-loadSound("/assets/audio/jetpack.ogg", "jetpack", 1);
+var laserModel = new SoundModel("/assets/audio/laserTest.ogg"),
+	jetpackModel = new SoundModel("/assets/audio/jetpack.ogg"),
+	backgroundModel = new SoundModel("/assets/audio/interstellar.ogg", function() {
+		this.makeSound(bgFilter, 110.256).start(0);
+	});
