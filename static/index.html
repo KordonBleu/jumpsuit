@@ -8,7 +8,6 @@
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-	  	<ul id="loader" class="hidden"><li></li><li></li><li></li><li></li><li></li></ul>
 		<ul id="controls">
 			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
 				<img src="/assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
@@ -16,7 +15,7 @@
 			<li><img src="/assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"/>
 			<img src="/assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/></li>
 		</ul>
-		<img src="/assets/images/alienGreen_badge.svg" alt="alien badge" id="badge" class="hidden"/>
+
 		<div id="gui-fuel" class="hidden">
 			<div id="gui-fuel-value"></div>
 		</div>
@@ -36,7 +35,6 @@
 		<div id="gui-chat" class="hidden"><p id="gui-chat-first"></p></div>
 		<div id="piano" class></div>
 		<div id="gui-bad-connection" class="hidden">Connection interrupted</div>
-	<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
 		<table id="gui-points" class="hidden">
 			<tr>
@@ -47,57 +45,75 @@
 				<th id="gui-points-alienYellow">102</th>
 			</tr>
 		</table>
-		<div id="info-box" class="info-box hidden">
-			<h2>Information</h2>
-			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
-			<p>Music &amp; sound effects by Arnaud Poyeton (except the laser sound from Kenney)<br/>
-			Assets by <a href="http://kenney.nl">Kenney Vleugels</a><br/>
-			Open Sans font by Steve Matteson</p>
-			<a class="button" onclick="changeTab(this);">Share</a><a class="button" onclick="changeTab(this);">Donate</a>
-			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
-			<div class="container">
-				<div id="donate" style="display: none;">
-					<h3>Donate</h3>
-					<p>This game is free software: you can fork it and edit it.<br/>
-						Despite that we would appreciate it if you'd donate to us by simply clicking the link below.<br/><br/>
-						We also so hope you're enjoying the game right now,<br/>
-						Greetings, Getkey &amp; Fju (:
-					</p>
+		<div id="menu-box" class="menu-box">
+			<div id="menu-head" class="menu-head">
+				<ul>
+					<li><button class="menu-tabs">Information</button></li>
+					<li><button class="menu-tabs">Connection</button></li>
+					<li><button class="menu-tabs">Settings</button></li>
+				</ul>
+				<div id="close-menu">X</div>
+			</div>
+			<div id="tabSettings" class="menu-box-tab">
+				<div class="splitContainer">
+					<h3>Team</h3>
+					<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
+					<div id="appearance-box" class="hidden">
+						<span id="playerBlue" class="playerSelect"></span>
+						<span id="playerBeige" class="playerSelect"></span>
+						<span id="playerGreen" class="playerSelect"></span>
+						<span id="playerPink" class="playerSelect"></span>
+						<span id="playerYellow" class="playerSelect"></span>
+					</div>
+					<br/>
+					<h3>Volume</h3>
+					<label>Background Music</label><input type="range" value="50" id="music-volume"/><br/>
+					<label>Sound Effects</label><input type="range" value="100" id="effects-volume"/>
+					<h3>Graphic</h3>
+					<input type="checkbox" id="option-fullscreen" /><label for="option-fullscreen" class="checkbox-label">Fullscreen</label>
+					<input type="checkbox" id="option-moblur" /><label for="option-moblur" class="checkbox-label">Motion Blur</label>
+					<p>maybe there will be filter</p>
 				</div>
-				<div id="share">
-					<h3>Share</h3>
-					<p>Maybe you don't want to donate? That's totally fine, I understand!<br/>
-					But if you like it, could you recommend it to your friends?</p>
+				<div class="splitContainer">
+					<h3>Key map</h3>
+					Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
+					Also you can't assign Mouse keys to the key settings!<br/><br/>
+					You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
+					<table id="key-settings"></table>
+					<button id="key-reset">Reset keymap to default</button><br/>
+					<h3>Mobile Information</h3>
+					To close the multiplayer box slide from it to the right border and open it by sliding it in from the right border to the center of the screen.<br/>
+					Also you can open and information box about this game project by sliding it in from the left border to the center of the screen.<br/>
+					The images for the controls explain their purpose by themselves but to sprint you can drag up the button for moving left or right.<br/><br/>
+					If you'll find a bug in the game please report it on the github page and please mark it whether the bug is on mobile only.
 				</div>
 			</div>
-		</div>
-		<div id="multiplayer-box" class="multiplayer-box hidden">
-			<button id="disconnect" style="float: right;">Disconnect</button>
-			<button id="refresh-or-leave" style="float: right;">Refresh</button>
-			<button id="new-lobby" style="float: right;">Create New Lobby</button>
-			<h3 id="status">Waiting for other players...</h3>
-			<ul id="player-list">
-			</ul>
-			<hr>
-			<div id="key-info">
-				<h3>Settings</h3>
-				<h4>Volume</h4>
-				<input type="range" value="50" id="music-volume"/>
-				<input type="range" value="100" id="effects-volume"/>
-				<h4>Key map</h4>
-				Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
-				Also you can't assign Mouse keys to the key settings!<br/><br/>
-				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
+			<div id="tabServer" class="menu-box-tab">
+				<button id="disconnect" style="float: right;">Disconnect</button>
+				<button id="refresh-or-leave" style="float: right;">Refresh</button>
+				<button id="new-lobby" style="float: right;">Create New Lobby</button>
+				<h3 id="status">Waiting for other players...</h3>
+				<ul id="player-list">
+				</ul>			
 			</div>
-			<div id="mobile-info" style="display: none">
-				<h3>Information</h3><br/>
-				To close the multiplayer box slide from it to the right border and open it by sliding it in from the right border to the center of the screen.<br/>
-				Also you can open and information box about this game project by sliding it in from the left border to the center of the screen.<br/>
-				The images for the controls explain their purpose by themselves but to sprint you can drag up the button for moving left or right.<br/><br/>
-				If you'll find a bug in the game please report it on the github page and please mark it whether the bug is on mobile only.
+			<div id="tabInfo" class="menu-box-tab">
+				<h2>Information</h2>
+				<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
+				<p>Music &amp; sound effects by Arnaud Poyeton (except the laser sound from Kenney)<br/>
+				Assets by <a href="http://kenney.nl">Kenney Vleugels</a><br/>
+				Open Sans font by Steve Matteson</p>
+				<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
+				<h3>Donate</h3>
+				<p>This game is free software: you can fork it and edit it.<br/>
+					Despite that we would appreciate you donating to support us by simply clicking the link below.<br/><br/>
+					We also hope you're enjoying the game right now<br/>
+					Greetings, Getkey &amp; Fju (:
+				</p>
+				<h3>Share</h3>
+				<p>Maybe you don't want to donate? That's totally fine, I understand!<br/>
+					But if you like it, could you recommend it to your friends?
+				</p>
 			</div>
-			<table id="key-settings"></table>
-			<button id="key-reset">Reset keymap to default</button>
 		</div>
 		<div id="dialog" class="hidden">
 			<div id="dialog-backdrop"></div>

@@ -1,3 +1,4 @@
+
 function Connection(address) {
 	var lastControls;
 
@@ -23,7 +24,6 @@ Connection.prototype.connectLobby = function(uid) {
 		data: { uid: uid, name: player.name, appearance: player.appearance }
 	}));
 	this.lobbyUid = uid;
-	multiplayerBox.classList.add("hidden");
 };
 Connection.prototype.createLobby = function(n) {
 	this.socket.send(JSON.stringify({
@@ -169,66 +169,51 @@ Connection.prototype.messageHandler = function(message) {
 					}
 				});
 
-				player.timestamps._old = player.timestamps._new || 0;
-				player.timestamps._new = Date.now();
-
 				msg.data.players.forEach(function(_player, i) {
-					if (i === pid){
-						player.box.center.x = _player.x;
-						player.box.center.y = _player.y;
-						player.looksLeft = _player.looksLeft;
-						player.box.angle = _player.angle;
-						player.health = _player.health;
-						player.fuel = _player.fuel;
-						player.walkFrame = _player.walkFrame;
-						if(!player.jetpack && _player.jetpack) {
-							player.jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
-							player.jetpackSound.start(0);
-						} else if(player.jetpack && !_player.jetpack) {
-							if(player.jetpackSound !== undefined) player.jetpackSound.stop();
-						}
-						player.jetpack = _player.jetpack;
-						game.offset.x = (Math.abs(game.offset.x - (player.box.center.x - canvas.width / 2)) > 2000) ? player.box.center.x - canvas.width / 2 : ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
-						game.offset.y = (Math.abs(game.offset.y - (player.box.center.y - canvas.height / 2)) > 2000) ? player.box.center.y - canvas.height / 2 : ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
-					} else {
-						if (_player === null){
-							delete otherPlayers[i];
-							return;
-						}
-						if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
-						otherPlayers[i].timestamps._old = otherPlayers[i].timestamps._new || Date.now();
-						otherPlayers[i].timestamps._new = Date.now();
+					if (_player === null){
+						delete otherPlayers[i];
+						return;
+					}
+					if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
 
-						otherPlayers[i].lastBox.center.x = otherPlayers[i].box.center.x;
-						otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
-						otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
+					if (otherPlayers[i].predictionTicks === undefined || otherPlayers[i].predictionTicks === 1) otherPlayers[i].predictionTicks = 0;
+					
+					otherPlayers[i].timestamps._old = otherPlayers[i].timestamps._new || Date.now();
+					otherPlayers[i].timestamps._new = Date.now();
 
-						otherPlayers[i].box.center.x = parseFloat(_player.x, 10);
-						otherPlayers[i].box.center.y = parseFloat(_player.y, 10);
-						otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
-						otherPlayers[i].box.height = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].height;
+					otherPlayers[i].lastBox.center.x = otherPlayers[i].box.center.x;
+					otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
+					otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
 
-						otherPlayers[i].box.angle = parseFloat(_player.angle, 10);
+					otherPlayers[i].box.center.x = parseFloat(_player.x, 10);
+					otherPlayers[i].box.center.y = parseFloat(_player.y, 10);
+					otherPlayers[i].box.angle = parseFloat(_player.angle, 10);
 
-						otherPlayers[i].predictedBox.center.x = otherPlayers[i].box.center.x;
-						otherPlayers[i].predictedBox.center.y = otherPlayers[i].box.center.y;
-						otherPlayers[i].predictedBox.angle = otherPlayers[i].box.angle;
+					otherPlayers[i].predictedBox.center.x = otherPlayers[i].box.center.x;
+					otherPlayers[i].predictedBox.center.y = otherPlayers[i].box.center.y;
+					otherPlayers[i].predictedBox.angle = otherPlayers[i].box.angle;			
 
-						otherPlayers[i].looksLeft = _player.looksLeft;
-						otherPlayers[i].walkFrame = _player.walkFrame;
-						otherPlayers[i].name = _player.name;
-						otherPlayers[i].appearance = _player.appearance;
-						otherPlayers[i].attachedPlanet = _player.attachedPlanet;
-						if(!otherPlayers[i].jetpack && _player.jetpack) {
+					otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
+					otherPlayers[i].box.height = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].height;
+					otherPlayers[i].looksLeft = _player.looksLeft;
+					otherPlayers[i].walkFrame = _player.walkFrame;
+					otherPlayers[i].name = _player.name;
+					otherPlayers[i].appearance = _player.appearance;
+					otherPlayers[i].attachedPlanet = _player.attachedPlanet;
+					otherPlayers[i].jetpack = _player.jetpack;
+					
+					if (i === pid) for (var prop in otherPlayers[i]) player[prop] = otherPlayers[i][prop]; //apply everything to the player shortcut
+
+					if (!otherPlayers[i].jetpack && _player.jetpack) {
+						if (i === pid) otherPlayers[i].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+						else {
 							setPanner(otherPlayers[i].panner, otherPlayers[i].box.center.x - player.box.center.x, otherPlayers[i].box.center.y - player.box.center.y);
 							otherPlayers[i].jetpackSound = jetpackModel.makeSound(otherPlayers[i].panner, 1);
-							otherPlayers[i].jetpackSound.start(0);
-						} else if(otherPlayers[i].jetpack && !_player.jetpack) {
-							if(otherPlayers[i].jetpackSound !== undefined) otherPlayers[i].jetpackSound.stop();
 						}
-						otherPlayers[i].jetpack = _player.jetpack;
-					}
-
+						otherPlayers[i].jetpackSound.start(0);
+					} else if(otherPlayers[i].jetpack && !_player.jetpack) {
+						if (otherPlayers[i].jetpackSound !== undefined) otherPlayers[i].jetpackSound.stop();
+					}				
 				});
 				break;
 			case MESSAGE.ERROR:
@@ -244,7 +229,7 @@ Connection.prototype.messageHandler = function(message) {
 						errDesc = "The name " + player.name + " is already taken";
 						break;
 				}
-				multiplayerBox.classList.remove("hidden");
+
 				history.pushState(null, "Main menu", "/");
 				alert("Error " + msg.data.code + ":\n" + errDesc);
 				break;

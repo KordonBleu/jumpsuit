@@ -5,8 +5,8 @@ var chatElement = document.getElementById("gui-chat"),
 	healthElement = document.getElementById("gui-health"),
 	fuelElement = document.getElementById("gui-fuel"),
 	pointsElement = document.getElementById("gui-points"),
-	multiplayerBox = document.getElementById("multiplayer-box"),
-	badgeElement = document.getElementById("badge"),
+	menuBox = document.getElementById("menu-box"),
+	menuCloseElement = document.getElementById("close-menu"),
 	nameElement = document.getElementById("name"),
 	statusElement = document.getElementById("status"),
 	refreshOrLeaveElement = document.getElementById("refresh-or-leave"),
@@ -14,7 +14,7 @@ var chatElement = document.getElementById("gui-chat"),
 	playerListElement = document.getElementById("player-list"),
 	appearanceBox = document.getElementById("appearance-box"),
 	disconnectElement = document.getElementById("disconnect"),
-	infoBox = document.getElementById("info-box"),
+	dialogElement = document.getElementById("dialog"),
 	chatInput = document.getElementById("chat-input");
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
@@ -41,8 +41,7 @@ var canvas = document.getElementById("canvas"),
 			healthElement.removeAttribute("class");
 			fuelElement.removeAttribute("class");
 			pointsElement.removeAttribute("class");
-			multiplayerBox.classList.add("hidden");
-			document.getElementById("loader").className = "hidden";
+			menuBox.classList.add("hidden");
 			loop();
 		},
 		stop: function() {
@@ -50,8 +49,7 @@ var canvas = document.getElementById("canvas"),
 			healthElement.className = "hidden";
 			fuelElement.className = "hidden";
 			pointsElement.className = "hidden";
-			multiplayerBox.classList.remove("hidden");
-			document.getElementById("loader").removeAttribute("class");
+			menuBox.classList.remove("hidden");
 
 			pid = -1;
 			otherPlayers.length = 0;
@@ -121,7 +119,6 @@ function init() {//init is done differently in the server
 		player = new Player(localStorage.getItem("settings.name") || "Unnamed Player", "alienGreen", 0, 0);
 		nameElement.value = player.name;
 		nameElement.removeAttribute("class");
-		badgeElement.removeAttribute("class");
 	});
 	loadProcess();
 }
@@ -229,7 +226,8 @@ function loop() {
 
 	//layer 1: the game
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
-
+	game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
+	game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
 	context.textAlign = "center";
 	context.textBaseline = "middle";
 	context.font = "50px Open Sans";
@@ -292,7 +290,7 @@ function loop() {
 	context.fillStyle = "#eee";
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
-	otherPlayers.forEach(function (otherPlayer){
+	otherPlayers.forEach(function (otherPlayer, i){
 		var intensity = Math.max(1, 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000);
 
 		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;
@@ -304,22 +302,17 @@ function loop() {
 			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
 		}
 
-		var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
-			distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
-		context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
-
+		if (i !== pid){
+			var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
+				distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
+			context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
+		}
 		drawRotatedImage(resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			otherPlayer.predictedBox.center.x - game.offset.x,
 			otherPlayer.predictedBox.center.y - game.offset.y,
 			otherPlayer.predictedBox.angle,
 			otherPlayer.looksLeft);
 	});
-
-	drawRotatedImage(resources[player.appearance + player.walkFrame],
-		player.box.center.x - game.offset.x,
-		player.box.center.y - game.offset.y,
-		player.box.angle,
-		player.looksLeft);
 
 
 	//layer 2: HUD / GUI
