@@ -21,6 +21,10 @@ html, body {
 html {
 	background-image: url("/assets/images/background.png");
 }
+canvas.motionBlur{
+	filter: url("#MotionBlur");
+	-webkit-filter: url("#MotionBlur");
+}
 button {
 	outline-color: #702318;
 	box-sizing: border-box;
@@ -91,7 +95,6 @@ input[type=range]::-ms-thumb {
 	background: #fff;
 	margin-top: -7px;
 }
-
 input[type=range]::-webkit-slider-runnable-track {
 	width: 100%;
 	height: 2.4px;
@@ -112,7 +115,41 @@ input[type=range]:active{
 	cursor: -moz-grabbing;
 	cursor: grabbing;
 }
-
+input[type=checkbox]:before{
+	content: " ";
+	height: 14px;
+	width: 14px;
+	display: block;
+	border-radius: 50%;
+	border: 2px solid #AD3726;
+	background: #fff;
+	position: relative;
+	top: -3px;
+	left: -3px;		
+	cursor: pointer;
+}
+input[type=checkbox]:after{
+	content: " ";
+	transition: transform .15s .1s, opacity .2s;
+	transform: scale(0.4);
+	opacity: 0;
+	display: block;
+	width: 10px;
+	height: 10px;
+	background: #AD3726;
+	border-radius: 50%;
+	position: relative;
+	top: -17px;
+	left: 1px;
+}
+input[type=checkbox]:checked:after{
+	transform: scale(1);
+	opacity: 1;
+} 
+label.checkbox-label{
+	margin-left: 5px;
+	cursor: pointer;
+}
 #controls {
 	position: fixed;
 	bottom: 0;
@@ -195,6 +232,9 @@ input[type=range]:active{
 	padding: 20px;
 	bottom: 0;
 	right: 0;
+}
+.menu-box.hidden{
+	display: none;
 }
 .menu-head{
 	display: block;
@@ -419,14 +459,14 @@ input[type=range]:active{
 #gui-chat p b.alienYellow{ color: #fed532; }
 #gui-fuel {
 	position: fixed;
-	top: 98px;
+	top: 58px;
 	left: 8px;
 	color: #eee;
 }
 #gui-health {
 	height: 22.5px;
 	position: fixed;
-	top: 70px;
+	top: 20px;
 	left: 8px;
 	color: #eee;
 }

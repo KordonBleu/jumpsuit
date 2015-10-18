@@ -421,6 +421,30 @@ nameElement.addEventListener("keydown", function(e) {
 menuCloseElement.addEventListener("click", function(){
 	menuBox.classList.add("hidden");	
 });
+document.getElementById("option-fullscreen").addEventListener("change", function(){
+	if (!this.checked){
+		if (document.exitFullscreen) {
+			document.exitFullscreen();
+		} else if(document.mozCancelFullScreen) {
+			document.mozCancelFullScreen();
+		} else if(document.webkitExitFullscreen) {
+			document.webkitExitFullscreen();
+		}
+	} else {
+		if (document.documentElement.requestFullscreen) {
+    		document.documentElement.requestFullscreen();
+		} else if (document.documentElement.mozRequestFullScreen) {
+			document.documentElement.mozRequestFullScreen();
+		} else if (document.documentElement.webkitRequestFullscreen) {
+			document.documentElement.webkitRequestFullscreen();
+		}
+	}
+});
+document.getElementById("option-moblur").addEventListener("change", function(){
+	graphicFilters.motionBlur.enabled = this.checked; 
+	if (this.checked) canvas.classList.add("motionBlur");
+	else canvas.classList.remove("motionBlur");
+});
 window.onbeforeunload = function(){
 	localStorage.setItem("settings.name", player.name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));

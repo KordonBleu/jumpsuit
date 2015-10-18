@@ -35,9 +35,7 @@ function Player(name, appearance, startx, starty, ws){
 	this.appearance = appearance;
 	this.ws = ws;
 	this.box = new Rectangle(new Point(startx, starty), resources[this.appearance + "_stand"].width, resources[this.appearance + "_stand"].height);
-	this.lastBox = new Rectangle(new Point(startx, starty), 0, 0);
-	this.predictedBox = new Rectangle(new Point(startx, starty), 0, 0);
-	this.timestamps = {_old: null, _new: null};
+	this.boxInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
 	this.setWalkframe = function(){

@@ -59,6 +59,14 @@ var canvas = document.getElementById("canvas"),
 			window.cancelAnimationFrame(this.animationFrameId);
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		}
+	},
+	graphicFilters = {
+		motionBlur: {x: 0, y: 0, enabled: false, updateBlur: function(){
+			graphicFilters.getFilter("MotionBlur").firstElementChild.setAttribute("stdDeviation", Math.min(4, Math.abs((this.x.toFixed(2)))) + ", " + Math.min(4, Math.abs(this.y.toFixed(2))));
+		}},
+		getFilter: function(type){
+			return document.querySelector(".filters").getElementById(type);
+		}
 	};
 
 function resizeCanvas() {
@@ -251,7 +259,6 @@ function loop() {
 		}
 	}
 	otherPlayers.forEach(drawJetpack);
-	drawJetpack(player);
 
 	context.globalAlpha = 1;
 
@@ -291,32 +298,34 @@ function loop() {
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer, i){
-		var intensity = Math.max(1, 60 * (otherPlayer.timestamps._new - otherPlayer.timestamps._old) / 1000);
-
-		otherPlayer.predictedBox.angle += (parseFloat(otherPlayer.box.angle, 10) - parseFloat(otherPlayer.lastBox.angle, 10)) / intensity;
-		if (otherPlayer.attachedPlanet === -1){
-			otherPlayer.predictedBox.center.x += (parseFloat(otherPlayer.box.center.x, 10) - parseFloat(otherPlayer.lastBox.center.x, 10)) / intensity;
-			otherPlayer.predictedBox.center.y += (parseFloat(otherPlayer.box.center.y, 10) - parseFloat(otherPlayer.lastBox.center.y, 10)) / intensity;
-		} else {
-			otherPlayer.predictedBox.center.x = planets[otherPlayer.attachedPlanet].box.center.x + Math.sin(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
-			otherPlayer.predictedBox.center.y = planets[otherPlayer.attachedPlanet].box.center.y + Math.cos(Math.PI - otherPlayer.predictedBox.angle) * (planets[otherPlayer.attachedPlanet].box.radius + otherPlayer.box.height / 2);
+		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
+			//TODO: make a non-linear prediction for moving around on planets
+			var intensity = 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000;
+			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
+			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
+			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
 		}
-
 		if (i !== pid){
 			var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 				distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 			context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
 		}
 		drawRotatedImage(resources[otherPlayer.appearance + otherPlayer.walkFrame],
-			otherPlayer.predictedBox.center.x - game.offset.x,
-			otherPlayer.predictedBox.center.y - game.offset.y,
-			otherPlayer.predictedBox.angle,
+			otherPlayer.box.center.x - game.offset.x,
+			otherPlayer.box.center.y - game.offset.y,
+			otherPlayer.box.angle,
 			otherPlayer.looksLeft);
 	});
-
-
+	
+	if (player.boxInformations[1] !== undefined){
+		graphicFilters.motionBlur.x = (player.boxInformations[1].box.center.x - player.boxInformations[0].box.center.x) / 40;
+		graphicFilters.motionBlur.y = (player.boxInformations[1].box.center.y - player.boxInformations[0].box.center.y) / 40;
+		if (graphicFilters.motionBlur.enabled){
+			graphicFilters.motionBlur.updateBlur();		
+		}
+	}
 	//layer 2: HUD / GUI
-	if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
+	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element) {
 		element.style["opacity"] = (0.3 + player.controls[element.id] * 0.7);
@@ -358,7 +367,6 @@ function loop() {
 	context.closePath();
 
 	context.restore();
-
 
 	document.getElementById("gui-fuel-value").style["width"] = (player.fuel / 400 * 200) + "px";
 	[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){

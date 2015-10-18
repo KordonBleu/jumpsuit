@@ -1,4 +1,3 @@
-
 function Connection(address) {
 	var lastControls;
 
@@ -175,24 +174,21 @@ Connection.prototype.messageHandler = function(message) {
 						return;
 					}
 					if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
-
-					if (otherPlayers[i].predictionTicks === undefined || otherPlayers[i].predictionTicks === 1) otherPlayers[i].predictionTicks = 0;
 					
-					otherPlayers[i].timestamps._old = otherPlayers[i].timestamps._new || Date.now();
-					otherPlayers[i].timestamps._new = Date.now();
+					_player.x = parseFloat(_player.x);
+					_player.y = parseFloat(_player.y);
+					_player.angle = parseFloat(_player.angle);
 
-					otherPlayers[i].lastBox.center.x = otherPlayers[i].box.center.x;
-					otherPlayers[i].lastBox.center.y = otherPlayers[i].box.center.y;
-					otherPlayers[i].lastBox.angle = otherPlayers[i].box.angle;
-
-					otherPlayers[i].box.center.x = parseFloat(_player.x, 10);
-					otherPlayers[i].box.center.y = parseFloat(_player.y, 10);
-					otherPlayers[i].box.angle = parseFloat(_player.angle, 10);
-
-					otherPlayers[i].predictedBox.center.x = otherPlayers[i].box.center.x;
-					otherPlayers[i].predictedBox.center.y = otherPlayers[i].box.center.y;
-					otherPlayers[i].predictedBox.angle = otherPlayers[i].box.angle;			
-
+					var p = 1;
+					if (otherPlayers[i].boxInformations[0] === undefined) p = 0;
+					if (p === 1){
+						otherPlayers[i].boxInformations[0].box.center.x = otherPlayers[i].box.center.x;
+						otherPlayers[i].boxInformations[0].box.center.y = otherPlayers[i].box.center.y;
+						otherPlayers[i].boxInformations[0].box.angle = otherPlayers[i].box.angle;
+						otherPlayers[i].boxInformations[0].timestamp += (typeof otherPlayers[i].boxInformations[1] !== "undefined") ? (Date.now() - otherPlayers[i].boxInformations[1].timestamp) : 0;
+					}
+					otherPlayers[i].boxInformations[p] = {box: new Rectangle(new Point(_player.x, _player.y), 0, 0, _player.angle), timestamp: Date.now()};
+			
 					otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
 					otherPlayers[i].box.height = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].height;
 					otherPlayers[i].looksLeft = _player.looksLeft;
@@ -244,7 +240,7 @@ Connection.prototype.messageHandler = function(message) {
 				break;
 		}
 	} catch(err) {
-		console.error("Badly formated JSON message received:", err, "\n", message.data);
+		console.error(err, err.stack);
 	}
 };
 
