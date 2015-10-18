@@ -142,29 +142,12 @@ function loop() {
 		context.resetTransform();
 	}
 	function fillPlanet(cx, cy, r) {
-		context.save();
-
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.closePath();
 		context.fill();
-
-		context.clip();
-
-		context.lineWidth = 12;
-		context.shadowColor = "black";
-		context.shadowBlur = 30;
-		context.shadowOffsetX = -10;
-		context.shadowOffsetY = -10;
-
-		context.beginPath();
-		context.arc(cx, cy + 1, r + 7, -1/7 * Math.PI, 3/5 * Math.PI);
-		context.stroke();
-		context.closePath();
-
-		context.restore();
+		drawRotatedImage(resources["planet"], cx, cy, r / 200 * Math.PI, false, 2*r, 2*r);
 	}
-
 	function strokeAtmos(cx, cy, r, sw) {
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
@@ -176,29 +159,14 @@ function loop() {
 		context.stroke();
 		context.closePath();
 	}
-
-	function drawArrow(fromx, fromy, ang, dist, col) {
-		var len = (dist > 200) ? 200 : (dist < 70) ? 70 : dist;
-
-		var tox = fromx + Math.sin(Math.PI - ang) * len,
-			toy = fromy - Math.cos(Math.PI - ang) * len;
-		context.beginPath();
-		context.moveTo(fromx, fromy);
-		context.lineTo(tox, toy);
-		context.lineWidth = 5;
-		context.strokeStyle = col;
-		context.stroke();
-	}
-
 	function drawCircleBar(x, y, val) {
-		context.save();
 		context.beginPath();
 		context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
 		context.lineWidth = 8;
-		context.strokeStyle = "#000";
-		context.globalAlpha = 0.2;
+		context.strokeStyle = "rgba(0, 0, 0, 0.2)";
 		context.stroke();
-		context.restore();
+		context.closePath();
+		
 	}
 
 
@@ -233,9 +201,19 @@ function loop() {
 
 
 	//layer 1: the game
-	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
+	otherPlayers.forEach(function(otherPlayer){
+		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
+			//TODO: make a non-linear prediction for moving around on planets
+			var intensity = 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000;
+			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
+			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
+			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
+		}
+	});
 	game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
 	game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
+	
+	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
 	context.textAlign = "center";
 	context.textBaseline = "middle";
 	context.font = "50px Open Sans";
@@ -246,6 +224,7 @@ function loop() {
 	});
 
 	//jetpack
+	context.globalAlpha = 0.8;
 	function drawJetpack(_player) {
 		var shift = _player.looksLeft === true ? -14 : 14,
 			jetpackX = _player.box.center.x - game.offset.x -shift*Math.sin(_player.box.angle + Math.PI/2),
@@ -253,13 +232,12 @@ function loop() {
 		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, _player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 		if (_player.jetpack) {
 			if(_player.panner !== undefined) setPanner(_player.panner, _player.box.center.x - player.box.center.x, _player.box.center.y - player.box.center.y);
-			context.globalAlpha = 0.8;
+			
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle - Math.PI/11), _player.box.angle);
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle + Math.PI/11), _player.box.angle);
 		}
 	}
 	otherPlayers.forEach(drawJetpack);
-
 	context.globalAlpha = 1;
 
 	//planet
@@ -298,17 +276,10 @@ function loop() {
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
 	otherPlayers.forEach(function (otherPlayer, i){
-		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
-			//TODO: make a non-linear prediction for moving around on planets
-			var intensity = 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000;
-			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
-			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
-			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
-		}
 		if (i !== pid){
 			var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 				distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
-			context.fillText(otherPlayer.name, otherPlayer.predictedBox.center.x - game.offset.x, otherPlayer.predictedBox.center.y - game.offset.y - distance);
+			context.fillText(otherPlayer.name, otherPlayer.box.center.x - game.offset.x, otherPlayer.box.center.y - game.offset.y - distance);
 		}
 		drawRotatedImage(resources[otherPlayer.appearance + otherPlayer.walkFrame],
 			otherPlayer.box.center.x - game.offset.x,
@@ -380,3 +351,4 @@ function loop() {
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();
+

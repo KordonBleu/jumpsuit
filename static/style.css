@@ -205,10 +205,6 @@ label.checkbox-label{
 #gui-chat-first{
 	height: 1px;
 }
-#gui-chat{
-	height: 60%;
-	clip: rect(0, 0, auto, auto);
-}
 .chat-input {
 	position: fixed;
 	bottom: 20px;
@@ -241,28 +237,6 @@ label.checkbox-label{
 	width: 100%;
 	height: 34px;
 	border-bottom: 3px solid #AD3726;
-	color: #fff;
-}
-.info-box .button{
-	box-sizing: border-box;
-	float: left;
-	display: block;
-	margin-top: 0.6em;
-	padding: 0.6em 18px;
-	text-transform: uppercase;
-	font-size: 0.75em;
-	color: #ebedf4;
-	background: #AD3726;
-	font-weight: normal;
-	border: 2px solid transparent;
-	width: 50%;
-	text-align: center;
-	cursor: pointer;
-}
-.info-box .button:hover{
-	transition: border .2s, background .2s, color .2s;
-	border: 2px solid #AD3726;
-	background: transparent;
 	color: #fff;
 }
 .menu-head ul{
@@ -310,6 +284,14 @@ label.checkbox-label{
 	display: block;
 	font-size: 22px;
 }
+.menu-box-tab a{
+	color: #333; /*AD3726*/
+	text-decoration: none;
+	font-weight: bold;
+}
+.menu-box-tab a:active{
+	color: #AD3726;
+}
 .menu-box-tab label{
 	display: inline-block;
 	margin-right: 8px;
@@ -321,14 +303,13 @@ label.checkbox-label{
 	padding: 0 5px;	
 	box-sizing: border-box;
 }
-.info-box .gh-image {
+.gh-image {
 	background: url("/assets/images/github.svg") top left no-repeat;
 	padding-left: 38px;
 	line-height: 2;
-	color: #333;
+	height: 38px;
+	display: inline-block;
 }
-
-
 #player-list {
 	font-size: 24px;
 	list-style-type: none;
@@ -431,10 +412,11 @@ label.checkbox-label{
 }
 #gui-chat{
 	position: fixed;
-	top: 135px;
+	top: 95px;
 	left: 18px;
 	font-size: 14px;
 	width: 300px;
+	height: 60%;
 	-webkit-user-select: initial;
 	-moz-user-select: initial;
 	-ms-user-select: initial;
@@ -549,3 +531,4 @@ label.checkbox-label{
 	90% {background-image: url("/assets/images/piano3.png"); }
 	100% {background-image: url("/assets/images/piano.png"); }
 }
+

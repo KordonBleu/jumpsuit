@@ -121,11 +121,14 @@ function handleInput(e){
 	} else if (!changingKeys) {
 		if(e.type.substring(0, 3) === "key"){
 			triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
+			if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
 		} else if (player.controls[e.target.id] !== undefined){
 			e.preventDefault();
 			triggered = e.target.id;
 		}
-		if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement])) {
+		if (triggered === "menu" && !chatInUse && objInvisible(dialogElement)){
+			if (s == 1) menuBox.classList.toggle("hidden");
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement])) {
 			e.preventDefault();
 			player.controls[triggered] = s;
 			currentConnection.refreshControls(player.controls);
@@ -227,7 +230,6 @@ if (volMusic !== null && volEffects !== null) {
 	musicGain.gain.value = volMusic/100;
 	soundEffectGain.gain.value = volEffects/100;
 }
-
 
 function handleGamepad(){
 	if (isMobile) return;
@@ -376,7 +378,6 @@ chatInput.addEventListener("keydown", function(e){
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
 		player.appearance = this.id.replace("player", "alien");
-		badgeElement.setAttribute("src", "/assets/images/" + player.appearance + "_badge.svg");
 		appearanceBox.classList.add("hidden");
 		settingsChanged();
 	});
