@@ -5,7 +5,13 @@
 	font-family: "Open Sans";
 	font-style: normal;
 	font-weight: 400;
-	src: local('Open Sans'), local('OpenSans'), url("/assets/fonts/open_sans.woff2") format("woff2"), url("/assets/fonts/open_sans.woff") format("woff");
+	src: local('Open Sans'), local('OpenSans'), url("/assets/fonts/open_sans_400.woff2") format("woff2"), url("/assets/fonts/open_sans_400.woff") format("woff");
+}
+@font-face {
+	font-family: 'Open Sans';
+	font-style: normal;
+	font-weight: 300;
+	src: local('Open Sans Light'), local('OpenSans-Light'), url("/assets/fonts/open_sans_300.woff2") format('woff2');
 }
 html, body {
 	margin: 0;
@@ -223,49 +229,59 @@ label.checkbox-label{
 	position: fixed;
 	top: 0;
 	left: 0;
-	background: #ebedf4;
-	color: #333;
-	padding: 20px;
 	bottom: 0;
 	right: 0;
+	background: #ebedf4;
+	color: #333;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
 }
 .menu-box.hidden{
 	display: none;
 }
-.menu-head{
+.menu-head {
 	display: block;
 	width: 100%;
-	height: 34px;
-	border-bottom: 3px solid #AD3726;
+	height: 7%;
+	background-color: #AD3726;
 	color: #fff;
 }
-.menu-head ul{
+.menu-head ul {
 	float: left;
 	display: block;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 	max-width: calc(100% - 50px);
+	height: 100%;
 }
-.menu-head ul li{
+.menu-head ul li {
 	float: left;
+	height: 100%;
 }
-.menu-head ul li button{
-	margin: 0;	
-	outline: none;
-}
-.menu-head #close-menu{
-	float: right;
-	width: 35px;
-	height: 35px;
+.menu-head ul li button, #close-menu {
+	height: 100%;
 	margin: 0;
-	border-radius: 50%;
-	border: 2px solid #AD3726;
-	text-align: center;
-	background: transparent;
-	color: #AD3726;
+	padding: 0 1ch;
+	outline: none;
+	border: none;
+	border-radius: 2px 2px 0 0;
+	font-size: 1.9rem;
+	font-weight: 300;
 }
-.menu-box-tab{
+.menu-head ul li button:disabled {
+	background-color: #EBEDF4;
+	color: #555555;
+}
+.menu-head ul li button:disabled + .menu-head ul li button {
+	border-radius: 0 0 0 2px;
+}
+.menu-head #close-menu {
+	float: right;
+}
+.menu-box-tab {
 	transition: left .3s;
 	width: 100%;
 	height: 100%;
@@ -276,26 +292,28 @@ label.checkbox-label{
 	left: 0;
 	padding: 8px;
 }
-.menu-box-tab.hidden{
+.menu-box-tab.hidden {
 	display: none;
 }
-.menu-box-tab h3{
-	color: #000;	
-	display: block;
-	font-size: 22px;
-}
-.menu-box-tab a{
-	color: #333; /*AD3726*/
+.menu-box-tab a {
+	color: #AD3726;
 	text-decoration: none;
 	font-weight: bold;
 }
-.menu-box-tab a:active{
+.menu-box-tab a:active {
 	color: #AD3726;
 }
-.menu-box-tab label{
+.menu-box-tab a.gh-image {
+	color: black;
+}
+.menu-box-tab label {
 	display: inline-block;
 	margin-right: 8px;
 	min-width: 150px;
+}
+#tabInfo div {
+	display: inline-block;
+	vertical-align:top;
 }
 .splitContainer{
 	float: left;

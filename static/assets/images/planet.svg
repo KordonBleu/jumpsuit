@@ -1,78 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="250"
-   height="250"
-   viewBox="0 0 250 250"
-   version="1.1"
-   id="svg2"
-   inkscape:version="0.91 r"
-   sodipodi:docname="planet.svg">
-  <metadata
-     id="metadata26">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <defs
-     id="defs24" />
-  <sodipodi:namedview
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1"
-     objecttolerance="10"
-     gridtolerance="10"
-     guidetolerance="10"
-     inkscape:pageopacity="0"
-     inkscape:pageshadow="2"
-     inkscape:window-width="1680"
-     inkscape:window-height="998"
-     id="namedview22"
-     showgrid="false"
-     inkscape:zoom="1.3350176"
-     inkscape:cx="-22.690692"
-     inkscape:cy="89.72088"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="svg2" />
-  <path
-     d="M36.552734 36.789062A125 125 0 0 0 13.960938 67.849609l15.912109 0.992188 25.65625-27.425781-18.976563-4.626954z"
-     style="fill-opacity:0.2;fill:#fff"
-     id="path6" />
-  <path
-     d="m174.44336 198.95703-21.58008 22.44922-30.54492 11.07422 3.88281 17.47656a125 125 0 0 0 85.95899-35.36328l-37.7168-15.63672z"
-     style="fill-opacity:0.43000004;fill:#000"
-     id="path8" />
-  <path
-     d="m187.47656 45.533203-5.70117 27.066406-41.17773 36.621091-3.36328 9.53321L117.42969 104.1875 116.00586 70.363281 72.228516 60.917969 50.439453 73.009766 48.505859 93.269531 0.15039062 129.26172a125 125 0 0 0 60.13476538 102.5l13.277344-10.21484 15.880859-11.94727 14.751951-10.84375 24 1.98047 10.46875-2.73438 22.54492-61.61328L143.80469 123.58789 189 94.017578l41.69336-13.863281 9.10352-4.265625a125 125 0 0 0-15.74805-27.00586l-36.57227-3.349609z"
-     style="fill-opacity:0.5;fill:#000"
-     id="path10" />
-  <path
-     d="m 162.24805,5.6953125 -33.59375,5.2734375 -2.82813,10.587891 -28.654295,6.957031 10.230465,16.101562 87.6836,-5.152343 13.125,-7.56836 A 125,125 0 0 0 162.24805,5.6953125 Z"
-     id="path12"
-     inkscape:connector-curvature="0"
-     style="fill:#000000;fill-opacity:0.3" />
-  <path
-     style="fill:#ffffff;fill-opacity:0.33000004"
-     d="m 155.20604,79.315075 -13.44761,-13.207781 -11.46138,1.622727 6.47343,16.619395 z"
-     id="path14"
-     inkscape:connector-curvature="0" />
-  <path
-     d="m 213.46339,155.83869 -33.26055,11.11566 -6.65216,-18.33341 17.49799,-24.10788 z"
-     id="path16"
-     inkscape:connector-curvature="0"
-     style="fill:#000000;fill-opacity:0.3" />
+<svg id="svg2" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="250" width="250" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 250 250">
+ <path id="path6" fill-opacity=".2" fill="#fff" d="m36.553 36.789a125 125 0 0 0 -22.592 31.061l15.912 0.99219 25.656-27.426-18.977-4.627z"/>
+ <path id="path8" fill-opacity="0.43" d="m174.44 198.96-21.58 22.449-30.545 11.074 3.8828 17.477a125 125 0 0 0 85.959 -35.363l-37.717-15.637z"/>
+ <path id="path10" fill-opacity=".5" d="m187.48 45.533-5.7012 27.066-41.178 36.621-3.3633 9.5332l-19.81-14.56-1.42-33.827-43.781-9.445-21.79 12.092-1.933 20.26-48.356 35.99a125 125 0 0 0 60.135 102.5l13.277-10.215 15.881-11.947 14.752-10.844 24 1.9805 10.469-2.7344 22.545-61.613-17.4-12.8 45.2-29.572 41.693-13.863 9.1035-4.2656a125 125 0 0 0 -15.748 -27.006l-36.572-3.3496z"/>
+ <path id="path12" fill-opacity=".3" d="m162.25 5.6953-33.594 5.2734-2.8281 10.588-28.654 6.957 10.23 16.102 87.684-5.1523 13.125-7.5684a125 125 0 0 0 -45.97 -26.201z"/>
+ <path id="path14" fill-opacity="0.33" fill="#fff" d="m155.21 79.315-13.448-13.208-11.461 1.6227 6.4734 16.619z"/>
+ <path id="path16" fill-opacity=".3" d="m213.46 155.84-33.261 11.116-6.6522-18.333 17.498-24.108z"/>
 </svg>

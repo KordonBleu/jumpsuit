@@ -1,8 +1,8 @@
 # JumpSuit
-A sweet canvas game.
+A sweet 2D canvas game.
 With your awesome suit, you can jump from planet to planet to the exit!
 
-Try it [here](https://getkey.eu/jumpsuit)!
+Try it [here](http://getkey.eu:8000/)!
 
 ## Why the name?
 ```
@@ -38,12 +38,13 @@ The server needs a configuration file. The default file is `config.json`, but it
 $ node server.js path/to/your/config.json
 ```
 In any case, if it doesn't exists, it will be created.
+You can modify settings without having to restart the server.
 
-In this file you can set the following parameters (note that most of them don't need the server to be restarted):
+In this file you can set the following parameters:
 
-Parameter | Explanation | Default | Value | Needs server restart
---------- | ----------- | ------- | ----- | --------------------
-dev | Enable debug messages and the automatic reload of modified files (under `static/`). You'll have to restart the server if you create a new file | false | boolean | no
-interactive | Make it possible to enter Javascript commands while the server runs | false | boolean | no
-monitor | Displays a neat view of the lobbys in real-time | false | boolean | no
-port | Set the server's port | 8080 | integer | no
+Parameter | Explanation | Default | Value
+--------- | ----------- | ------- | -----
+dev | Enable debug messages and the automatic reload of modified files (under `static/`). You'll have to restart the server if you create a new file | false | boolean
+interactive | Make it possible to enter Javascript commands while the server runs | false | boolean
+monitor | Displays a neat view of the lobbys in real-time | false | boolean
+port | Set the server's port | 8080 | integer

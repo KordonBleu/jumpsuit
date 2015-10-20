@@ -212,7 +212,7 @@ function loop() {
 	});
 	game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
 	game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
-	
+
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
 	context.textAlign = "center";
 	context.textBaseline = "middle";
@@ -232,7 +232,7 @@ function loop() {
 		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, _player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 		if (_player.jetpack) {
 			if(_player.panner !== undefined) setPanner(_player.panner, _player.box.center.x - player.box.center.x, _player.box.center.y - player.box.center.y);
-			
+
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle - Math.PI/11), _player.box.angle);
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle + Math.PI/11), _player.box.angle);
 		}

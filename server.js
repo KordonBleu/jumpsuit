@@ -23,8 +23,17 @@ try {
 		fs.writeFileSync(configPath, JSON.stringify(configSkeleton, null, "\t"));
 	}
 }
+
+function cleanup() {
+	if(config.monitor) process.stdout.write("\u001b[?1049l");
+	process.exit();
+};
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup);
+
 var config,
 	previousConfig;
+
 function loadConfig(firstRun) {
 	function clone(obj) {
 		var target = {};
@@ -69,8 +78,11 @@ function loadConfig(firstRun) {
 		if(config.monitor !== previousConfig.monitor) {
 			if(previousConfig.monitor) {
 				clearInterval(monitorTimerID);
-				process.stdout.write('\u001bc');
-			} else monitorTimerID = setInterval(monitoring, 500);
+				process.stdout.write("\u001b[?1049l")
+			} else {
+				process.stdout.write("\u001b[?1049h\u001b[H");
+				monitorTimerID = setInterval(monitoring, 500);
+			}
 		}
 		if(config.interactive !== previousConfig.interactive) {
 			if(previousConfig.interactive) rl.close();
@@ -361,7 +373,7 @@ function monitoring() {
 		for(var spaces = ""; spaces.length !== amount; spaces += " ");
 		return spaces;
 	}
-	process.stdout.write("\u001bc");//maybe \u001B[2J\u001B[0;0f is better?
+	process.stdout.write("\u001B[2J\u001B[0;0f");
 	console.log("Jumpsuit Server [STATUS: RUNNING]");
 	console.log("\nMonitoring Lobbies:");
 	var headerSizes = [40, 10, 15],
@@ -380,7 +392,10 @@ function monitoring() {
 		console.log(info);
 	});
 }
-if(config.monitor) var monitorTimerID = setInterval(monitoring, 500);
+if(config.monitor) {
+	process.stdout.write("\u001b[?1049h\u001b[H");
+	var monitorTimerID = setInterval(monitoring, 500);
+}
 
 wss.on("connection", function(ws) {
 	ws.on("message", function(message) {
