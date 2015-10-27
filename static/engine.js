@@ -18,11 +18,11 @@ var resPaths = [
 	resources = {};
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-	var collisions = require("./vinage/vinage.js"),
-		Point = collisions.Point,
-		Rectangle = collisions.Rectangle,
-		Circle = collisions.Circle,
-		Vector = collisions.Vector,
+	var vinage = require("./vinage/vinage.js"),
+		Point = vinage.Point,
+		Rectangle = vinage.Rectangle,
+		Circle = vinage.Circle,
+		Vector = vinage.Vector,
 		sizeOf = require("image-size");
 		resPaths.forEach(function(path) {
 			resources[path.slice(0, path.lastIndexOf("."))] = sizeOf("./static/assets/images/" + path);
@@ -75,15 +75,15 @@ Planet.prototype.names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot
 
 
 function Enemy(x, y, appearance) {
-	this.box = new Rectangle(new Point(x, y), 0, 0);
 	this.appearance = appearance || "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
+	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
 	this.aggroBox = new Circle(new Point(x, y), 350);
 	this.fireRate = 0;
 	this.shots = [];
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
-function doPhysics(players, planets, enemies, shots, isClient) {
+function doPhysics(universe, players, planets, enemies, shots, isClient) {
 	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);
 
@@ -95,7 +95,7 @@ function doPhysics(players, planets, enemies, shots, isClient) {
 	enemies.forEach(function(enemy) {
 		var playerToHit = null;
 		players.forEach(function(player) {
-			if(enemy.aggroBox.collision(player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
+			if(universe.collide(enemy.aggroBox, player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
 				playerToHit = player;
 			}
 		});
@@ -151,7 +151,7 @@ function doPhysics(players, planets, enemies, shots, isClient) {
 
 				player.velocity.x += 9000 * planets[j].box.radius * deltaX / distPowFour;
 				player.velocity.y += 9000 * planets[j].box.radius * deltaY / distPowFour;
-				if (planets[j].box.collision(player.box)) {
+				if (universe.collide(planets[j].box, player.box)) {
 					player.attachedPlanet = j;
 					player.planet = Math.atan2(deltaX, deltaY) + Math.PI;
 				}
@@ -178,7 +178,7 @@ function doPhysics(players, planets, enemies, shots, isClient) {
 		player.setWalkframe();
 
 		shots.forEach(function(shot, si) {
-			if (shot.box.collision(player.box)) {
+			if (universe.collide(shot.box, player.box)) {
 				player.health -= (player.health = 0) ? 0 : 1;
 				shots.splice(si, 1);
 			}

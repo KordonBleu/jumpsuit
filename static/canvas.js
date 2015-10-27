@@ -30,6 +30,7 @@ var canvas = document.getElementById("canvas"),
 	planets = [],
 	enemies = [],
 	shots = [],
+	universe = new Rectangle(new Point(0, 0), Infinity, Infinity),//the universe defined here is the same size as every lobby's universe
 	game = {
 		dragStart: new Vector(0, 0),
 		drag: new Vector(0, 0),
@@ -166,7 +167,6 @@ function loop() {
 		context.strokeStyle = "rgba(0, 0, 0, 0.2)";
 		context.stroke();
 		context.closePath();
-		
 	}
 
 
@@ -245,13 +245,13 @@ function loop() {
 	planets.forEach(function (planet, pi) {
 		context.fillStyle = planet.progress.color;
 
-		if (windowBox.collision(planet.box)) {
+		if (universe.collide(windowBox, planet.box)) {
 			fillPlanet(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
 			drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		}
-		if (windowBox.collision(planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
+		if (universe.collide(windowBox, planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
 
-		if (playerInAtmos || planet.atmosBox.collision(player.box)) playerInAtmos = true;
+		if (!playerInAtmos && universe.collide(planet.atmosBox, player.box)) playerInAtmos = true;
 
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		context.fillStyle = "rgba(0, 0, 0, 0.2)";
@@ -262,14 +262,14 @@ function loop() {
 
 	//shots
 	shots.forEach(function (shot) {
-		if (windowBox.collision(shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
+		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 	});
 
 	//enemies
 	enemies.forEach(function (enemy, ei) {
 		context.fillStyle = "#aaa";
-		if (windowBox.collision(enemy.aggroBox)) strokeAtmos(enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, 350, 4);
-		if (windowBox.collision(enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, enemy.box.angle, false);
+		if (universe.collide(windowBox, enemy.aggroBox)) strokeAtmos(enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, 350, 4);
+		if (universe.collide(windowBox, enemy.box)) drawRotatedImage(resources[enemy.appearance], enemy.box.center.x - game.offset.x, enemy.box.center.y - game.offset.y, enemy.box.angle, false);
 	});
 
 	context.fillStyle = "#eee";
@@ -287,12 +287,12 @@ function loop() {
 			otherPlayer.box.angle,
 			otherPlayer.looksLeft);
 	});
-	
+
 	if (player.boxInformations[1] !== undefined){
 		graphicFilters.motionBlur.x = (player.boxInformations[1].box.center.x - player.boxInformations[0].box.center.x) / 40;
 		graphicFilters.motionBlur.y = (player.boxInformations[1].box.center.y - player.boxInformations[0].box.center.y) / 40;
 		if (graphicFilters.motionBlur.enabled){
-			graphicFilters.motionBlur.updateBlur();		
+			graphicFilters.motionBlur.updateBlur();
 		}
 	}
 	//layer 2: HUD / GUI
@@ -339,16 +339,15 @@ function loop() {
 
 	context.restore();
 
-	document.getElementById("gui-fuel-value").style["width"] = (player.fuel / 400 * 200) + "px";
+	fuelElement.value = player.fuel;
 	[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
 		var state = "heartFilled";
 		if (index * 2 + 2 <= player.health) state = "heartFilled";
 		else if (index * 2 + 1 === player.health) state = "heartHalfFilled";
 		else state = "heartNotFilled";
 		element.className = state;
-	});	
+	});
 	chatElement.style.clip = "rect(0px," + chatElement.clientWidth + "px," + chatElement.clientHeight + "px,0px)";
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();
-

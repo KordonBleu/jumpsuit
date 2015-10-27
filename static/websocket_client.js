@@ -174,21 +174,42 @@ Connection.prototype.messageHandler = function(message) {
 						return;
 					}
 					if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
-					
+
+
+					if (i === pid) {
+						if(!player.jetpack && _player.jetpack) {
+							player.jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+							player.jetpackSound.start(0);
+						} else if(player.jetpack && !_player.jetpack && player.jetpackSound !== undefined) {
+							player.jetpackSound.stop();
+						}
+					} else {
+						if(!otherPlayers[i].jetpack && _player.jetpack) {
+							console.log("bam");
+							setPanner(otherPlayers[i].panner, otherPlayers[i].box.center.x - player.box.center.x, otherPlayers[i].box.center.y - player.box.center.y);
+							otherPlayers[i].jetpackSound = jetpackModel.makeSound(otherPlayers[i].panner, 1);
+							otherPlayers[i].jetpackSound.start(0);
+						} else if(otherPlayers[i].jetpack && !_player.jetpack && otherPlayers[i].jetpackSound !== undefined) {
+							console.log("bim");
+							otherPlayers[i].jetpackSound.stop();
+						}
+					}
+
+
 					_player.x = parseFloat(_player.x);
 					_player.y = parseFloat(_player.y);
 					_player.angle = parseFloat(_player.angle);
 
 					var p = 1;
 					if (otherPlayers[i].boxInformations[0] === undefined) p = 0;
-					if (p === 1){
+					if (p === 1) {
 						otherPlayers[i].boxInformations[0].box.center.x = otherPlayers[i].box.center.x;
 						otherPlayers[i].boxInformations[0].box.center.y = otherPlayers[i].box.center.y;
 						otherPlayers[i].boxInformations[0].box.angle = otherPlayers[i].box.angle;
 						otherPlayers[i].boxInformations[0].timestamp += (typeof otherPlayers[i].boxInformations[1] !== "undefined") ? (Date.now() - otherPlayers[i].boxInformations[1].timestamp) : 0;
 					}
 					otherPlayers[i].boxInformations[p] = {box: new Rectangle(new Point(_player.x, _player.y), 0, 0, _player.angle), timestamp: Date.now()};
-			
+
 					otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
 					otherPlayers[i].box.height = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].height;
 					otherPlayers[i].looksLeft = _player.looksLeft;
@@ -197,19 +218,9 @@ Connection.prototype.messageHandler = function(message) {
 					otherPlayers[i].appearance = _player.appearance;
 					otherPlayers[i].attachedPlanet = _player.attachedPlanet;
 					otherPlayers[i].jetpack = _player.jetpack;
-					
-					if (i === pid) for (var prop in otherPlayers[i]) player[prop] = otherPlayers[i][prop]; //apply everything to the player shortcut
+					otherPlayers[i].fuel = _player.fuel;
 
-					if (!otherPlayers[i].jetpack && _player.jetpack) {
-						if (i === pid) otherPlayers[i].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
-						else {
-							setPanner(otherPlayers[i].panner, otherPlayers[i].box.center.x - player.box.center.x, otherPlayers[i].box.center.y - player.box.center.y);
-							otherPlayers[i].jetpackSound = jetpackModel.makeSound(otherPlayers[i].panner, 1);
-						}
-						otherPlayers[i].jetpackSound.start(0);
-					} else if(otherPlayers[i].jetpack && !_player.jetpack) {
-						if (otherPlayers[i].jetpackSound !== undefined) otherPlayers[i].jetpackSound.stop();
-					}				
+					if (i === pid) for (var prop in otherPlayers[i]) player[prop] = otherPlayers[i][prop]; //apply everything to the player shortcut
 				});
 				break;
 			case MESSAGE.ERROR:

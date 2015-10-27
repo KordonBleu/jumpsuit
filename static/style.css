@@ -461,7 +461,24 @@ label.checkbox-label{
 	position: fixed;
 	top: 58px;
 	left: 8px;
-	color: #eee;
+	display: inline-block;
+	height: 10px;
+	width: 200px;
+	background: transparent;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	appearance: none;
+}
+#gui-fuel::-moz-meter-bar {
+	background: #5493ce;
+}
+#gui-fuel::-webkit-meter-bar {
+	background: #5493ce;
+}
+#gui-fuel:before {
+	content: "Fuel:";
+	width: 77px;
+	display: inline-block;
 }
 #gui-health {
 	height: 22.5px;
@@ -487,16 +504,6 @@ label.checkbox-label{
 #gui-health div.heartHalfFilled { background-image: url("/assets/images/heartHalfFilled.svg"); }
 #gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
 
-#gui-fuel:before {
-	content: "Fuel:";
-	width: 77px;
-	display: inline-block;
-}
-#gui-fuel #gui-fuel-value{
-	display: inline-block;
-	height: 10px;
-	background: #5493ce;
-}
 #gui-bad-connection{
 	font-size: 44px;
 	position: fixed;

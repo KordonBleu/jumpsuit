@@ -191,20 +191,20 @@ function Lobby(name, maxPlayers){
 	this.enemies = [];
 	this.shots = [];
 	this.processTime = 0;
-	this.players.firstEmpty = function(){
+	this.players.firstEmpty = function() {
 		for (var i = 0; i < this.length; i++){
 			if (this[i] === undefined) return i;
 		}
 		return -1;
 	};
-	this.players.amount = function(){
+	this.players.amount = function() {
 		var amount = 0;
 		this.forEach(function(player) {
 			amount += 1;
 		});
 		return amount;
 	};
-	this.players.getData = function(){
+	this.players.getData = function() {
 		var plData = [];
 		this.forEach(function(player) {
 			plData.push({name: player.name, appearance: player.appearance});
@@ -232,7 +232,7 @@ function Lobby(name, maxPlayers){
 		});
 		return shotData;
 	};
-	this.planets.getWorldData = function(){
+	this.planets.getWorldData = function() {
 		var pltData = [];
 		for (var i = 0; i < this.length; i++){
 			pltData.push({x: this[i].box.center.x, y: this[i].box.center.y, radius: this[i].box.radius});
@@ -248,6 +248,10 @@ function Lobby(name, maxPlayers){
 	};
 
 
+	this.universe =  new vinage.Rectangle(new vinage.Point(0, 0), Infinity, Infinity);
+	this.universe.getWorldData = function() {
+		return {x: this.universe.center.x, y: this.universe.center.y, width: this.universe.width, height: this.universe.height};
+	}
 	//generate world structure
 	var areaSize = 6400,
 		chunkSize = 1600;
@@ -266,12 +270,12 @@ function Lobby(name, maxPlayers){
 		var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
 		this.enemies.forEach(function (enemy){
 			if (!wellPositioned) return;
-			if ((new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175)).collision(new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
-		});
+			if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
+		}.bind(this));
 		this.planets.forEach(function (planet){
 			if (!wellPositioned) return;
-			if (newEnemy.aggroBox.collision(planet.box)) wellPositioned = false;
-		});
+			if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
+		}.bind(this));
 		if (wellPositioned) this.enemies.push(newEnemy);
 		iterations++;
 	}
@@ -289,7 +293,7 @@ Lobby.prototype.broadcast = function(message) {
 };
 Lobby.prototype.update = function() {
 	var oldDate = Date.now(), playerData = [],
-	sounds = engine.doPhysics(this.players, this.planets, this.enemies, this.shots);
+	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots);
 	this.processTime = Date.now() - oldDate;
 	if (this.gameProgress.ticks++ === 50){
 		this.planets.forEach(function(planet){
@@ -336,12 +340,14 @@ Lobby.prototype.pingPlayers = function() {
 		player.lastPing.timestamp = Date.now();
 		player.lastPing.key = Math.floor(Math.random()*65536);
 
-		player.ws.send(JSON.stringify({
-			msgType: MESSAGE.PING,
-			data: {
-				key: player.lastPing.key
-			}
-		}));
+		try {
+			player.ws.send(JSON.stringify({
+				msgType: MESSAGE.PING,
+				data: {
+					key: player.lastPing.key
+				}
+			}));
+		} catch(e) {/*Ignore errors*/}
 	});
 };
 lobbies.getUid = function(index) {
@@ -477,17 +483,14 @@ wss.on("connection", function(ws) {
 		}
 	});
 	ws.on("close", function(e){
-		var found = false;
 		lobbies.forEach(function (lobby){
-			lobby.players.forEach(function (player, i){
-				if (player.ws == ws){
+			lobby.players.some(function (player, i){
+				if (player.ws == ws) {
 					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game", pid: -1}}));
 					delete lobby.players[i];
-					found = true;
-					return;
+					return true;
 				}
 			});
-			if (found) return;
 		});
 	});
 });
