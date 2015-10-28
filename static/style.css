@@ -27,6 +27,7 @@ html, body {
 html {
 	background-image: url("/assets/images/background.png");
 }
+
 canvas.motionBlur{
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
@@ -156,6 +157,22 @@ label.checkbox-label{
 	margin-left: 5px;
 	cursor: pointer;
 }
+::-webkit-scrollbar {
+	width: 8px;	
+} 
+::-webkit-scrollbar-track {
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+	margin: 4px 0; 
+} 
+/* Handle */
+::-webkit-scrollbar-thumb {
+	-webkit-border-radius: 4px;
+	border-radius: 4px;
+	background: #555; 
+}
+
 #controls {
 	position: fixed;
 	bottom: 0;
@@ -226,27 +243,26 @@ label.checkbox-label{
 	width: 60%;
 }
 .menu-box{
+	transition: transform .5s, opacity .2s;
+	transform: scale(1);
 	position: fixed;
+	opacity: 1;
 	top: 0;
 	left: 0;
 	bottom: 0;
 	right: 0;
 	background: #ebedf4;
-	color: #333;
-	-webkit-user-select: text;
-	-moz-user-select: text;
-	-ms-user-select: text;
-	user-select: text;
+	color: #333;	
 }
 .menu-box.hidden{
-	display: none;
+	transform: scale(0);
+	opacity: 0;
 }
 .menu-head {
-	display: block;
 	width: 100%;
-	height: 7%;
-	background-color: #AD3726;
-	color: #fff;
+	height: 44px;
+	color: #333;
+	box-shadow: 0 1px 6px rgba(0,0,0,0.6);
 }
 .menu-head ul {
 	float: left;
@@ -261,36 +277,60 @@ label.checkbox-label{
 	float: left;
 	height: 100%;
 }
-.menu-head ul li button, #close-menu {
-	height: 100%;
+.menu-head ul li .menu-tabs {
 	margin: 0;
-	padding: 0 1ch;
+	padding: 8px 12px; 
 	outline: none;
 	border: none;
-	border-radius: 2px 2px 0 0;
-	font-size: 1.9rem;
-	font-weight: 300;
+	font-size: 21px;
+	color: #000;
+	background: none;
+	cursor: pointer;
 }
-.menu-head ul li button:disabled {
-	background-color: #EBEDF4;
-	color: #555555;
+.menu-head ul li .menu-tabs img{
+	display: inline-block;
+	width: 28px;
+	height: 28px;
+	margin-right: 3px;
+	vertical-align: bottom;
 }
-.menu-head ul li button:disabled + .menu-head ul li button {
-	border-radius: 0 0 0 2px;
+.menu-head ul li .menu-tabs:disabled {
+	color: #45d33a;
 }
 .menu-head #close-menu {
 	float: right;
+	display: block;
+	width: 34px;
+	height: 34px;
+	margin: 5px;
+	background-image: url("assets/images/close.svg");
+	background-size: 100% 100%; 
+	transition: transform .2s;
+	transform: rotate(0deg);
+}
+.menu-head #close-menu:hover{
+	transform: rotate(90deg);
+}
+.menu-head ul li .menu-spacing {
+	font-size: 20px;
+	padding: 8px 6px;
+	color: #888;
 }
 .menu-box-tab {
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-ms-user-select: text;
+	user-select: text;
 	transition: left .3s;
-	width: 100%;
-	height: 100%;
+	width: calc(100% - 3px);
+	height: calc(100% - 44px);
 	overflow-x: hidden;
 	overflow-y: scroll;
 	position: relative;
 	top: 0;
 	left: 0;
 	padding: 8px;
+	box-sizing: border-box;
 }
 .menu-box-tab.hidden {
 	display: none;
@@ -311,14 +351,10 @@ label.checkbox-label{
 	margin-right: 8px;
 	min-width: 150px;
 }
-#tabInfo div {
-	display: inline-block;
-	vertical-align:top;
-}
 .splitContainer{
 	float: left;
 	max-width: 50%;
-	padding: 0 5px;	
+	padding: 0 8px;	
 	box-sizing: border-box;
 }
 .gh-image {
@@ -334,7 +370,7 @@ label.checkbox-label{
 	width: 100%;
 }
 #player-list a {
-	color: #f33;
+	color: #AD3726;
 	text-decoration: none;
 }
 #key-settings {

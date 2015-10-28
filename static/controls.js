@@ -78,7 +78,6 @@ function transformStyle(element, val){
 function handleInputMobile(e){
 	for (var t = 0; t < e.changedTouches.length; t++){
 		var touch = e.changedTouches[t];
-		handleInputMobile.gesture(touch, e.type);
 		if (touch.target.id === "canvas"){
 			dragging(e.type, touch.pageX, touch.pageY);
 		} else {
@@ -313,7 +312,7 @@ settingsEl.addEventListener("click", function(e) {
 				break;
 		}
 	}
-	if (e.target.previousElementSibling !== null && e.target.nodeName === "TD") {//not action collumn, not th
+	if (e.target.nodeName === "TD") {
 		reselect(e.target.parentNode);
 		document.addEventListener("keydown", wrap);
 	}

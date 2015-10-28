@@ -34,6 +34,7 @@ var canvas = document.getElementById("canvas"),
 	game = {
 		dragStart: new Vector(0, 0),
 		drag: new Vector(0, 0),
+		dragSmoothed: new Vector(0,0),
 		offset: new Vector(0, 0),
 		connectionProblems: false,
 		animationFrameId: null,
@@ -169,7 +170,6 @@ function loop() {
 		context.closePath();
 	}
 
-
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//layer 0: meteors
@@ -204,24 +204,27 @@ function loop() {
 	otherPlayers.forEach(function(otherPlayer){
 		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
 			//TODO: make a non-linear prediction for moving around on planets
+			//TODO: current frame rate needs to influent the intensity
 			var intensity = 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000;
 			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
 			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
 			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
 		}
 	});
-	game.offset.x = ((player.box.center.x - canvas.width / 2 + (game.dragStart.x - game.drag.x)) + 19 * game.offset.x) / 20;
-	game.offset.y = ((player.box.center.y - canvas.height / 2 + (game.dragStart.y - game.drag.y)) + 19 * game.offset.y) / 20;
-
+	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) + game.dragSmoothed.x * 4) / 5;
+	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) + game.dragSmoothed.y * 4) / 5;
+	game.offset.x = (player.box.center.x - canvas.width / 2 + game.dragSmoothed.x);
+	game.offset.y = (player.box.center.y - canvas.height / 2 + game.dragSmoothed.y);
+	
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
 	context.textAlign = "center";
 	context.textBaseline = "middle";
 	context.font = "50px Open Sans";
 
 	//atmosphere
-	planets.forEach(function(planet) {
+	/*planets.forEach(function(planet) {
 		context.fillStyle = planet.progress.color;
-	});
+	});*/
 
 	//jetpack
 	context.globalAlpha = 0.8;
@@ -303,7 +306,7 @@ function loop() {
 	});
 
 	context.beginPath();
-	context.rect(canvas.clientWidth - 158, 8, 150, 150);
+	context.rect(canvas.width - 158, 8, 150, 150);
 	context.closePath();
 
 	context.fillStyle = "rgba(0, 0, 0, 0.7)";

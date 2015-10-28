@@ -293,7 +293,8 @@ Lobby.prototype.broadcast = function(message) {
 };
 Lobby.prototype.update = function() {
 	var oldDate = Date.now(), playerData = [],
-	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots);
+	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.gameProgress);
+
 	this.processTime = Date.now() - oldDate;
 	if (this.gameProgress.ticks++ === 50){
 		this.planets.forEach(function(planet){

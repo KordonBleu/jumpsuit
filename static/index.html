@@ -46,11 +46,13 @@
 		<div id="menu-box" class="menu-box hidden">
 			<div id="menu-head" class="menu-head">
 				<ul>
-					<li><button class="menu-tabs">Information</button></li>
-					<li><button class="menu-tabs">Connection</button></li>
-					<li><button class="menu-tabs">Settings</button></li>
+					<li><div class="menu-tabs"><img src="/assets/images/information.svg" />Information</div></li>
+					<li><div class="menu-spacing">|</div></li>
+					<li><div class="menu-tabs"><img src="/assets/images/connection.svg" />Connection</div></li>
+					<li><div class="menu-spacing">|</div></li>
+					<li><div class="menu-tabs"><img src="/assets/images/settings.svg" />Settings</div></li>
 				</ul>
-				<button id="close-menu">Close menu</button>
+				<div id="close-menu"></div>
 			</div>
 			<div id="tabSettings" class="menu-box-tab">
 				<div class="splitContainer">
@@ -78,12 +80,14 @@
 					Also you can't assign Mouse keys to the key settings!<br/><br/>
 					You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
 					<table id="key-settings"></table>
-					<button id="key-reset">Reset keymap to default</button><br/>
+					<button id="key-reset">Reset keymap to default</button>
+					<!--
 					<h3>Mobile Information</h3>
 					To close the multiplayer box slide from it to the right border and open it by sliding it in from the right border to the center of the screen.<br/>
 					Also you can open and information box about this game project by sliding it in from the left border to the center of the screen.<br/>
 					The images for the controls explain their purpose by themselves but to sprint you can drag up the button for moving left or right.<br/><br/>
 					If you'll find a bug in the game please report it on the github page and please mark it whether the bug is on mobile only.
+					-->
 				</div>
 			</div>
 			<div id="tabServer" class="menu-box-tab">
@@ -95,29 +99,34 @@
 				</ul>
 			</div>
 			<div id="tabInfo" class="menu-box-tab">
-				<div>
+				<div class="splitContainer">
 					<h2>Information</h2>
 					<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
-					<p><i>And the credits go to...</i><br>Music &amp; sound effects by Arnaud Poyeton (except the laser sound from Kenney)<br/>
-					Assets by <a href="http://kenney.nl">Kenney Vleugels</a><br/>
-					Open Sans font by Steve Matteson</p>
+					<p>And the credits go to...
+						<ul>
+							<li>Music &amp; sound effects: Arnaud Poyeton, <a href="http://kenney.nl">Kenney.nl</a></li>
+							<li>Assets: <a href="http://kenney.nl">Kenney.nl</a></li>
+							<li>Icons: Lemon Liu, <a href="https://thenounproject.com/grega.cresnar/">Gregor Črešnar</a>, 
+								<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>
+							</li>
+							<li>Font: <a href="">Open Sans</a> by Steve Matteson</li>
+						</ul>
+					</p>
 				</div>
-
-				<div>
+				<div class="splitContainer">
 					<h2>Support us</h2>
 					<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do!</p>
-
 					<h3>Help us code it!</h3>
 					<p>This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
 					If you ever plan to do this - tell us.</p>
 					<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
-
 					<h3>Buy us a coffee or pizza!</h3>
 					<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
 					Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”.<br/>
 					<b>TL;DR:</b> share your knowledge. Delicious crusty knowledge. Yum!<br/><br/>
 					<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height=64 width=64 /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height=64 width=64 /></p>
 				</div>
+			</div>
 		</div>
 		<div id="dialog" class="hidden">
 			<div id="dialog-backdrop"></div>
@@ -130,7 +139,7 @@
 		</div>
 		<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="filters" shape-rendering="optimizeSpeed">
 			<filter id="Sharpen">
-				<feConvolveMatrix order="3 3" preserveAlpha="true" kernelMatrix="0 -1 0 -1 5 -1 0 -1 0"/>
+				<feConvolveMatrix order="3 3" preserveAlpha="true" kernelMatrix="0 -1 0 -1 4 -1 0 -1 0"/>
 			</filter>
 			<filter id="MotionBlur">
 				<feGaussianBlur in="SourceGraphic" stdDeviation="0,0" />

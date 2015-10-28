@@ -218,10 +218,16 @@ Connection.prototype.messageHandler = function(message) {
 					otherPlayers[i].appearance = _player.appearance;
 					otherPlayers[i].attachedPlanet = _player.attachedPlanet;
 					otherPlayers[i].jetpack = _player.jetpack;
-					otherPlayers[i].fuel = _player.fuel;
-
-					if (i === pid) for (var prop in otherPlayers[i]) player[prop] = otherPlayers[i][prop]; //apply everything to the player shortcut
+					
+					if (i === pid) {
+						for (var prop in otherPlayers[i]) player[prop] = otherPlayers[i][prop]; //apply everything to the player shortcut
+						player.health = _player.health;
+						player.fuel = _player.fuel;
+					}
 				});
+				for (var i in msg.data.gameProgress){
+					if (i.indexOf("alien") === 0) document.getElementById("gui-points-" + i).textContent = msg.data.gameProgress[i];	
+				}
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;
