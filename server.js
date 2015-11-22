@@ -405,6 +405,19 @@ if(config.monitor) {
 }
 
 wss.on("connection", function(ws) {
+	function cleanup() {
+		lobbies.forEach(function(lobby) {
+			lobby.players.some(function(player, i) {
+				if (player.ws === ws) {
+					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}));
+					delete lobby.players[i];
+					return true;
+				}
+			});
+		});
+	}
+	var player;
+
 	ws.on("message", function(message) {
 		var msg;
 		try {
@@ -417,12 +430,13 @@ wss.on("connection", function(ws) {
 					else if(lobby.players.some(function(player) { return player.name === msg.data.name; })) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NAME_TAKEN}}));
 					else if(lobby === null) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NO_LOBBY}}));
 					else {
+						player = new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this);
 						var pid = lobby.players.firstEmpty();
-						lobby.players.splice(pid, 1, new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this));
-						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {pid: pid, planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
-						lobby.players[pid].lastRefresh = Date.now();
+						lobby.players.splice(pid, 1, player);
+						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {index: pid, planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
+						player.lastRefresh = Date.now();
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected", pid: -1}}));
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
 					}
 					break;
 				case MESSAGE.GET_LOBBIES:
@@ -439,61 +453,46 @@ wss.on("connection", function(ws) {
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby === null) ws.send(JSON.stringify({msgType: MESSAGE.ERROR, data: {code: ERROR.NO_LOBBY}}));
 					else {
-						var oldName = lobby.players[msg.data.pid].name;
-						lobby.players[msg.data.pid].name = msg.data.name;
-						lobby.players[msg.data.pid].appearance = msg.data.appearance;
+						var oldName = player.name;
+						player.name = msg.data.name;
+						player.appearance = msg.data.appearance;
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
-						if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'", pid: -1}}));
+						if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'"}}));
 					}
 					break;
 				case MESSAGE.CHAT:
 					var lobby = lobbies.getByUid(msg.data.uid);
-					if (lobby !== null){
+					if (lobby !== null) {
 						i = msg.data.content;
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: lobby.players[msg.data.pid].name, pid: msg.data.pid, appearance: lobby.players[msg.data.pid].appearance}}));
+						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: player.name, appearance: player.appearance}}));
 					}
 					break;
 				case MESSAGE.PLAYER_CONTROLS:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null){
-						for (var i in msg.data.controls){
-							lobby.players[msg.data.pid].controls[i] = msg.data.controls[i];
+						for (var i in msg.data.controls) {
+							player.controls[i] = msg.data.controls[i];
 						}
 					}
 					break;
 				case MESSAGE.LEAVE_LOBBY:
-					var lobby = lobbies.getByUid(msg.data.uid);
-					if (lobby !== null){
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + lobby.players[msg.data.pid].name + "' has left the game", pid: -1}}));
-						delete lobby.players[msg.data.pid];
-					}
+					cleanup();
 					break;
 				case MESSAGE.PONG:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if(lobby !== null) {
-						var thisPlayer = lobby.players[msg.data.pid];
-						if(thisPlayer.lastPing.key === msg.data.key) {
-							thisPlayer.latency = (Date.now() - thisPlayer.lastPing.timestamp) / 2;
+						if(player.lastPing.key === msg.data.key) {
+							player.latency = (Date.now() - player.lastPing.timestamp) / 2;
 							//up speed is usually faster than down speed so we can send world data at `thisPlayer.latency` pace
 						}
 					}
 					break;
 			}
-		} catch (err){
+		} catch (err) {
 			console.log("ERROR", err, msg);
 		}
 	});
-	ws.on("close", function(e){
-		lobbies.forEach(function (lobby){
-			lobby.players.some(function (player, i){
-				if (player.ws == ws) {
-					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game", pid: -1}}));
-					delete lobby.players[i];
-					return true;
-				}
-			});
-		});
-	});
+	ws.on("close", cleanup);
 });
 
 lobbies.push(new Lobby("Lobby No. 1", 7));

@@ -82,14 +82,14 @@ function handleInputMobile(e){
 			dragging(e.type, touch.pageX, touch.pageY);
 		} else {
 			var s = (e.type.indexOf("start") !== -1 && e.type.indexOf("end") === -1);
-			if (player.controls[touch.target.id] !== undefined) {
+			if (players[ownIdx].controls[touch.target.id] !== undefined) {
 				e.preventDefault();
 				if (touch.target.id === "moveLeft" || touch.target.id === "moveRight"){
 					var value = handleInputMobile.transform(touch, e.type);
-					player.controls["run"] = (-value >= 38) * 1;
+					players[ownIdx].controls["run"] = (-value >= 38) * 1;
 				}
-				if (e.type.indexOf("move") === -1) player.controls[touch.target.id] = s * 1;
-				currentConnection.refreshControls(player.controls);
+				if (e.type.indexOf("move") === -1) players[ownIdx].controls[touch.target.id] = s * 1;
+				currentConnection.refreshControls(players[ownIdx].controls);
 			}
 		}
 	}
@@ -110,27 +110,27 @@ handleInputMobile.transform = function (touch, type){
 	return ytransform;
 };
 
-function handleInput(e){
+function handleInput(e) {
 	var s = (e.type === "keydown") * 1,
 		triggered,
 		chatInUse = chatInput === document.activeElement;
 
-	if (e.target.id === "canvas"){
+	if (e.target.id === "canvas") {
 		dragging(e.type, e.pageX, e.pageY);
 	} else if (!changingKeys) {
 		if(e.type.substring(0, 3) === "key"){
 			triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
 			if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
-		} else if (player.controls[e.target.id] !== undefined){
+		} else if (players[ownIdx].controls[e.target.id] !== undefined) {
 			e.preventDefault();
 			triggered = e.target.id;
 		}
-		if (triggered === "menu" && !chatInUse && objInvisible(dialogElement)){
+		if (triggered === "menu" && !chatInUse && objInvisible(dialogElement)) {
 			if (s == 1) menuBox.classList.toggle("hidden");
 		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement])) {
 			e.preventDefault();
-			player.controls[triggered] = s;
-			currentConnection.refreshControls(player.controls);
+			players[ownIdx].controls[triggered] = s;
+			currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	}
 }
@@ -244,19 +244,19 @@ function handleGamepad(){
 	} else {
 		var g = gamepads[this.usingGamepad];
 		if (typeof(g) !== "undefined"){
-			player.controls["jump"] = g.buttons[0].value;
-			player.controls["run"] = g.buttons[1].value;
-			player.controls["crouch"] = g.buttons[4].value;
-			player.controls["jetpack"] = g.buttons[7].value;
+			players[ownIdx].controls["jump"] = g.buttons[0].value;
+			players[ownIdx].controls["run"] = g.buttons[1].value;
+			players[ownIdx].controls["crouch"] = g.buttons[4].value;
+			players[ownIdx].controls["jetpack"] = g.buttons[7].value;
 
-			player.controls["moveLeft"] = 0;
-			player.controls["moveRight"] = 0;
-			if (g.axes[0] < -0.2 || g.axes[0] > 0.2) player.controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
+			players[ownIdx].controls["moveLeft"] = 0;
+			players[ownIdx].controls["moveRight"] = 0;
+			if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
 			if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
 			else game.drag.x = 0;
 			if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
 			else game.drag.y = 0;
-			currentConnection.refreshControls(player.controls);
+			currentConnection.refreshControls(players[ownIdx].controls);
 		} else {
 			if (typeof this.usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (this.usingGamepad + 1).toString() + " disconnected");
 			this.usingGamepad = -1;
@@ -359,9 +359,9 @@ chatInput.addEventListener("keydown", function(e){
 			this.textParts = [this.value.substr(0, this.cursor - this.search.length), this.value.substr(this.cursor)];
 		}
 
-		var filteredPlayerList = (player.name.indexOf(this.search) === 0) ? [player.name] : [];
-		for (var _pid in otherPlayers){
-			if (otherPlayers[_pid].name.indexOf(this.search) === 0) filteredPlayerList.push(otherPlayers[_pid].name);
+		var filteredPlayerList = (players[ownIdx].name.indexOf(this.search) === 0) ? [players[ownIdx].name] : [];
+		for (var pid in players){
+			if (players[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(players[pid].name);
 		}
 
 		if (filteredPlayerList.length !== 0){
@@ -376,7 +376,7 @@ chatInput.addEventListener("keydown", function(e){
 
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
-		player.appearance = this.id.replace("player", "alien");
+		players[ownIdx].appearance = this.id.replace("player", "alien");
 		appearanceBox.classList.add("hidden");
 		settingsChanged();
 	});
@@ -413,13 +413,13 @@ newLobbyElement.addEventListener("click", function(){
 });
 nameElement.addEventListener("keydown", function(e) {
 	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
-		player.name = this.value;
+		localStorage.setItem("settings.name", this.value);
 		e.target.blur();
 		settingsChanged();
 	}
 });
 menuCloseElement.addEventListener("click", function(){
-	menuBox.classList.add("hidden");	
+	menuBox.classList.add("hidden");
 });
 document.getElementById("option-fullscreen").addEventListener("change", function(){
 	if (!this.checked){
@@ -441,12 +441,12 @@ document.getElementById("option-fullscreen").addEventListener("change", function
 	}
 });
 document.getElementById("option-moblur").addEventListener("change", function(){
-	graphicFilters.motionBlur.enabled = this.checked; 
+	graphicFilters.motionBlur.enabled = this.checked;
 	if (this.checked) canvas.classList.add("motionBlur");
 	else canvas.classList.remove("motionBlur");
 });
-window.onbeforeunload = function(){
-	localStorage.setItem("settings.name", player.name);
+window.onbeforeunload = function() {
+	//localStorage.setItem("settings.name", players[ownIdx].name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
 	localStorage.setItem("settings.volume.music", document.getElementById("music-volume").value);
 	localStorage.setItem("settings.volume.effects", document.getElementById("effects-volume").value);

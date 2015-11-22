@@ -33,7 +33,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-function Player(name, appearance, startx, starty, ws){
+function Player(name, appearance, startx, starty, ws) {
 	this._walkCounter = 0;
 	this.name = name;
 	this.appearance = appearance;
@@ -64,8 +64,8 @@ function Player(name, appearance, startx, starty, ws){
 	this.planet = 0;
 	this.lastlyAimedAt = Date.now();
 
-	if ((typeof module === "undefined" || typeof module.exports === "undefined") && typeof player !== "undefined") {//need to pan only the other players
-			this.panner = makePanner(startx - player.box.center.x, starty - player.box.center.y);
+	if (typeof module === "undefined" || typeof module.exports === "undefined") {
+			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
 }
 
@@ -172,7 +172,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 			var runMultiplicator = player.controls["run"] ? 1.7 : 1;
 			if (player.controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 140) * player.controls["moveLeft"] * runMultiplicator;
 			if (player.controls["moveRight"] > 0) player.box.angle += (Math.PI / 140) * player.controls["moveRight"] * runMultiplicator;
-						
+
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
 

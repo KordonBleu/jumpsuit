@@ -1,3 +1,5 @@
+var ownIdx = null;
+
 function Connection(address) {
 	var lastControls;
 
@@ -20,7 +22,7 @@ Connection.prototype.connectLobby = function(uid) {
 
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CONNECT,
-		data: { uid: uid, name: player.name, appearance: player.appearance }
+		data: { uid: uid, name: localStorage.getItem("settings.name") || "Unnamed Player", appearance: "alienGreen" }
 	}));
 	this.lobbyUid = uid;
 };
@@ -37,34 +39,34 @@ Connection.prototype.refreshLobbies = function() {
 Connection.prototype.leaveLobby = function() {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.LEAVE_LOBBY,
-		data: {pid: pid, uid: this.lobbyUid}
+		data: {uid: this.lobbyUid}
 	}));
 	game.stop();
 };
 Connection.prototype.sendSettings = function() {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.PLAYER_SETTINGS,
-		data: {pid: pid, uid: this.lobbyUid, name: player.name, appearance: player.appearance}
+		data: {uid: this.lobbyUid, name: players[ownIdx].name, appearance: players[ownIdx].appearance}
 	}));
 };
 Connection.prototype.sendChat = function(content) {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CHAT,
-		data: {pid: pid, uid: this.lobbyUid, content: content}
+		data: {uid: this.lobbyUid, content: content}
 	}));
 };
 Connection.prototype.refreshControls = function(controls) {
 	if (typeof lastControls === "undefined") lastControls = {};
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
-	for (var c in player.controls){
+	for (var c in players[ownIdx].controls){
 		b++;
-		if (lastControls[c] === player.controls[c]) accordance++;
-		else lastControls[c] = player.controls[c];
+		if (lastControls[c] === players[ownIdx].controls[c]) accordance++;
+		else lastControls[c] = players[ownIdx].controls[c];
 	}
 	if (accordance === b) return;
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.PLAYER_CONTROLS,
-		data: {pid: pid, uid: this.lobbyUid, controls: controls}
+		data: {uid: this.lobbyUid, controls: controls}
 	}));
 };
 Connection.prototype.errorHandler = function() {
@@ -86,20 +88,19 @@ Connection.prototype.messageHandler = function(message) {
 				newLobbyElement.disabled = false;
 				statusElement.textContent = "Choose a lobby";
 				while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-				for(var i = 0, el, li; i != msg.data.length; i++) {
-					li = document.createElement("li");
-					el = document.createElement("a");
-					el.href = "/lobbies/" + msg.data[i].uid + "/";
-					el.textContent = msg.data[i].name + " | (" + msg.data[i].players + " of " + msg.data[i].maxPlayers + ")";
+				msg.data.forEach(function(lobby) {
+					var li = document.createElement("li"),
+						el = document.createElement("a");
+					el.href = "/lobbies/" + lobby.uid + "/";
+					el.textContent = lobby.name + " | (" + lobby.players + " of " + lobby.maxPlayers + ")";
 					li.appendChild(el);
 					playerListElement.appendChild(li);
-				}
+				});
 				break;
 			case MESSAGE.PING:
 				this.send(JSON.stringify({
 					msgType: MESSAGE.PONG,
 					data: {
-						pid: pid,
 						key: msg.data.key,
 						uid: currentConnection.lobbyUid
 					}
@@ -111,13 +112,13 @@ Connection.prototype.messageHandler = function(message) {
 				msg.data.forEach(function(player, index) {
 					li = document.createElement("li");
 					li.textContent = player.name;
-					if (index === pid) li.style.color = "#f33";
+					if (index === ownIdx) li.style.color = "#f33";
 					playerListElement.appendChild(li);
 				});
 				break;
 			case MESSAGE.CHAT:
 				var element = document.createElement("p"), nameElement = document.createElement("b"), textElement = document.createTextNode(msg.data.content);
-				if (msg.data.pid === -1) element.className = "server";
+				if (msg.data.name === undefined) element.className = "server";
 				else {
 					nameElement.textContent = msg.data.name + ": ";
 					nameElement.className = msg.data.appearance;
@@ -133,22 +134,19 @@ Connection.prototype.messageHandler = function(message) {
 				chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 				break;
 			case MESSAGE.WORLD_DATA:
-				pid = msg.data.pid;
+				ownIdx = msg.data.index;
 				refreshOrLeaveElement.textContent = "Leave Lobby";
 				newLobbyElement.disabled = true;
 
 				var i, j;
 				planets.length = 0;
-				for (i = 0; i < msg.data.planets.length; i++){
-					j = msg.data.planets[i];
-					planets.push(new Planet(j.x, j.y, j.radius));
-				}
+				msg.data.planets.forEach(function(planet) {
+					planets.push(new Planet(planet.x, planet.y, planet.radius));
+				});
 				enemies.length = 0;
-				for (i = 0; i < msg.data.enemies.length; i++){
-					j = msg.data.enemies[i];
-					enemies.push(new Enemy(j.x, j.y, j.appearance));
-				}
-				game.start();
+				msg.data.enemies.forEach(function(enemy) {
+					enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));
+				});
 				break;
 			case MESSAGE.GAME_DATA:
 				msg.data.planets.forEach(function(planet, i) {
@@ -168,66 +166,76 @@ Connection.prototype.messageHandler = function(message) {
 					}
 				});
 
-				msg.data.players.forEach(function(_player, i) {
-					if (_player === null){
-						delete otherPlayers[i];
-						return;
+				for (var i = 0; i !== Math.max(msg.data.players.length, players.length); i++) {
+					if (msg.data.players[i] === undefined && players[i] !== undefined) {
+						delete players[i];
+						continue;
 					}
-					if (otherPlayers[i] === undefined) otherPlayers[i] = new Player(_player.name, _player.appearance, _player.x, _player.y);
+					if (players[i] === undefined) {
+						if (msg.data.players[i] !== undefined) players[i] = new Player(msg.data.players[i].name, msg.data.players[i].appearance, msg.data.players[i].x, msg.data.players[i].y);
+						else continue;
+					}
 
-
-					if (i === pid) {
-						if(!player.jetpack && _player.jetpack) {
-							player.jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
-							player.jetpackSound.start(0);
-						} else if(player.jetpack && !_player.jetpack && player.jetpackSound !== undefined) {
-							player.jetpackSound.stop();
+					if (i === ownIdx) {
+						if(!players[i].jetpack && msg.data.players[i].jetpack) {
+							players[i].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+							players[i].jetpackSound.start(0);
+						} else if(players[i].jetpack && !msg.data.players[i].jetpack && players[ownIdx].jetpackSound !== undefined) {
+							players[i].jetpackSound.stop();
 						}
 					} else {
-						if(!otherPlayers[i].jetpack && _player.jetpack) {
-							console.log("bam");
-							setPanner(otherPlayers[i].panner, otherPlayers[i].box.center.x - player.box.center.x, otherPlayers[i].box.center.y - player.box.center.y);
-							otherPlayers[i].jetpackSound = jetpackModel.makeSound(otherPlayers[i].panner, 1);
-							otherPlayers[i].jetpackSound.start(0);
-						} else if(otherPlayers[i].jetpack && !_player.jetpack && otherPlayers[i].jetpackSound !== undefined) {
-							console.log("bim");
-							otherPlayers[i].jetpackSound.stop();
+						if(!players[i].jetpack && msg.data.players[i].jetpack) {
+							console.log(players[i].panner);
+							setPanner(players[i].panner, players[i].box.center.x - players[ownIdx].box.center.x, players[i].box.center.y - players[ownIdx].box.center.y);
+							players[i].jetpackSound = jetpackModel.makeSound(players[i].panner, 1);
+							players[i].jetpackSound.start(0);
+						} else if(players[i].jetpack && !msg.data.players[i].jetpack && players[i].jetpackSound !== undefined) {
+							players[i].jetpackSound.stop();
 						}
 					}
 
 
-					_player.x = parseFloat(_player.x);
-					_player.y = parseFloat(_player.y);
-					_player.angle = parseFloat(_player.angle);
+					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
+					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
+					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
 
 					var p = 1;
-					if (otherPlayers[i].boxInformations[0] === undefined) p = 0;
+					if (players[i].boxInformations[0] === undefined) p = 0;
 					if (p === 1) {
-						otherPlayers[i].boxInformations[0].box.center.x = otherPlayers[i].box.center.x;
-						otherPlayers[i].boxInformations[0].box.center.y = otherPlayers[i].box.center.y;
-						otherPlayers[i].boxInformations[0].box.angle = otherPlayers[i].box.angle;
-						otherPlayers[i].boxInformations[0].timestamp += (typeof otherPlayers[i].boxInformations[1] !== "undefined") ? (Date.now() - otherPlayers[i].boxInformations[1].timestamp) : 0;
+						players[i].boxInformations[0].box.center.x = players[i].box.center.x;
+						players[i].boxInformations[0].box.center.y = players[i].box.center.y;
+						players[i].boxInformations[0].box.angle = players[i].box.angle;
+						players[i].boxInformations[0].timestamp += (typeof players[i].boxInformations[1] !== "undefined") ? (Date.now() - players[i].boxInformations[1].timestamp) : 0;
 					}
-					otherPlayers[i].boxInformations[p] = {box: new Rectangle(new Point(_player.x, _player.y), 0, 0, _player.angle), timestamp: Date.now()};
+					players[i].boxInformations[p] = {box: new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle), timestamp: Date.now()};
 
-					otherPlayers[i].box.width = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].width;
-					otherPlayers[i].box.height = resources[otherPlayers[i].appearance + otherPlayers[i].walkFrame].height;
-					otherPlayers[i].looksLeft = _player.looksLeft;
-					otherPlayers[i].walkFrame = _player.walkFrame;
-					otherPlayers[i].name = _player.name;
-					otherPlayers[i].appearance = _player.appearance;
-					otherPlayers[i].attachedPlanet = _player.attachedPlanet;
-					otherPlayers[i].jetpack = _player.jetpack;
-					
-					if (i === pid) {
-						for (var prop in otherPlayers[i]) player[prop] = otherPlayers[i][prop]; //apply everything to the player shortcut
-						player.health = _player.health;
-						player.fuel = _player.fuel;
+					players[i].box.width = resources[players[i].appearance + players[i].walkFrame].width;
+					players[i].box.height = resources[players[i].appearance + players[i].walkFrame].height;
+					players[i].looksLeft = msg.data.players[i].looksLeft;
+					players[i].walkFrame = msg.data.players[i].walkFrame;
+					players[i].name = msg.data.players[i].name;
+					players[i].appearance = msg.data.players[i].appearance;
+					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
+					players[i].jetpack = msg.data.players[i].jetpack;
+
+					if (i === ownIdx) {
+						players[ownIdx].health = msg.data.players[i].health;
+						[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
+							var state = "heartFilled";
+							if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
+							else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";
+							else state = "heartNotFilled";
+							element.className = state;
+						});
+
+						players[ownIdx].fuel = msg.data.players[i].fuel;
+						fuelElement.value = msg.data.players[i].fuel;
 					}
-				});
-				for (var i in msg.data.gameProgress){
-					if (i.indexOf("alien") === 0) document.getElementById("gui-points-" + i).textContent = msg.data.gameProgress[i];	
 				}
+				for (var i in msg.data.gameProgress){
+					if (i.indexOf("alien") === 0) document.getElementById("gui-points-" + i).textContent = msg.data.gameProgress[i];
+				}
+				if (!game.started) game.start();
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;
@@ -239,7 +247,7 @@ Connection.prototype.messageHandler = function(message) {
 						errDesc = "There's no slot left in the lobby";
 						break;
 					case ERROR.NAME_TAKEN:
-						errDesc = "The name " + player.name + " is already taken";
+						errDesc = "The name " + localStorage.getItem("settings.name")  + " is already taken";
 						break;
 				}
 
@@ -250,7 +258,7 @@ Connection.prototype.messageHandler = function(message) {
 				msg.data.forEach(function(sound) {
 					switch(sound.type) {
 						case "laser":
-							laserModel.makeSound(makePanner(sound.position.x - player.box.center.x, sound.position.y - player.box.center.y)).start(0);
+							laserModel.makeSound(makePanner(sound.position.x - players[ownIdx].box.center.x, sound.position.y - players[ownIdx].box.center.y)).start(0);
 							break;
 					}
 				});

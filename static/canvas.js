@@ -24,9 +24,7 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
 	meteors = [],
-	player,
-	pid = -1,
-	otherPlayers = [],
+	players = [],
 	planets = [],
 	enemies = [],
 	shots = [],
@@ -39,6 +37,7 @@ var canvas = document.getElementById("canvas"),
 		connectionProblems: false,
 		animationFrameId: null,
 		start: function() {
+			game.started = true;
 			chatElement.removeAttribute("class");
 			healthElement.removeAttribute("class");
 			fuelElement.removeAttribute("class");
@@ -53,8 +52,7 @@ var canvas = document.getElementById("canvas"),
 			pointsElement.className = "hidden";
 			menuBox.classList.remove("hidden");
 
-			pid = -1;
-			otherPlayers.length = 0;
+			players.length = 0;
 			planets.length = 0;
 			enemies.length = 0;
 
@@ -126,8 +124,7 @@ function init() {//init is done differently in the server
 
 	document.addEventListener("res loaded", function() {//gets called once every resource is loaded
 		game.stop(); //for clearing
-		player = new Player(localStorage.getItem("settings.name") || "Unnamed Player", "alienGreen", 0, 0);
-		nameElement.value = player.name;
+		nameElement.value = localStorage.getItem("settings.name") || "Unnamed Player";
 		nameElement.removeAttribute("class");
 	});
 	loadProcess();
@@ -201,7 +198,7 @@ function loop() {
 
 
 	//layer 1: the game
-	otherPlayers.forEach(function(otherPlayer){
+	players.forEach(function(otherPlayer) {
 		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
 			//TODO: make a non-linear prediction for moving around on planets
 			//TODO: current frame rate needs to influent the intensity
@@ -213,34 +210,28 @@ function loop() {
 	});
 	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) + game.dragSmoothed.x * 4) / 5;
 	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) + game.dragSmoothed.y * 4) / 5;
-	game.offset.x = (player.box.center.x - canvas.width / 2 + game.dragSmoothed.x);
-	game.offset.y = (player.box.center.y - canvas.height / 2 + game.dragSmoothed.y);
-	
+	game.offset.x = (players[ownIdx].box.center.x - canvas.width / 2 + game.dragSmoothed.x);
+	game.offset.y = (players[ownIdx].box.center.y - canvas.height / 2 + game.dragSmoothed.y);
+
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
 	context.textAlign = "center";
 	context.textBaseline = "middle";
 	context.font = "50px Open Sans";
 
-	//atmosphere
-	/*planets.forEach(function(planet) {
-		context.fillStyle = planet.progress.color;
-	});*/
-
 	//jetpack
 	context.globalAlpha = 0.8;
-	function drawJetpack(_player) {
-		var shift = _player.looksLeft === true ? -14 : 14,
-			jetpackX = _player.box.center.x - game.offset.x -shift*Math.sin(_player.box.angle + Math.PI/2),
-			jetpackY = _player.box.center.y - game.offset.y + shift*Math.cos(_player.box.angle + Math.PI/2);
-		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, _player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
-		if (_player.jetpack) {
-			if(_player.panner !== undefined) setPanner(_player.panner, _player.box.center.x - player.box.center.x, _player.box.center.y - player.box.center.y);
+	players.forEach(function(player) {
+		var shift = player.looksLeft === true ? -14 : 14,
+			jetpackX = player.box.center.x - game.offset.x -shift*Math.sin(player.box.angle + Math.PI/2),
+			jetpackY = player.box.center.y - game.offset.y + shift*Math.cos(player.box.angle + Math.PI/2);
+		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+		if (player.jetpack) {
+			if(player.panner !== undefined) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 
-			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle - Math.PI/11), _player.box.angle);
-			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(_player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(_player.box.angle + Math.PI/11), _player.box.angle);
+			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
+			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(player.box.angle + Math.PI/11), player.box.angle);
 		}
-	}
-	otherPlayers.forEach(drawJetpack);
+	});
 	context.globalAlpha = 1;
 
 	//planet
@@ -254,7 +245,7 @@ function loop() {
 		}
 		if (universe.collide(windowBox, planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
 
-		if (!playerInAtmos && universe.collide(planet.atmosBox, player.box)) playerInAtmos = true;
+		if (!playerInAtmos && universe.collide(planet.atmosBox, players[ownIdx].box)) playerInAtmos = true;
 
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		context.fillStyle = "rgba(0, 0, 0, 0.2)";
@@ -278,8 +269,8 @@ function loop() {
 	context.fillStyle = "#eee";
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
-	otherPlayers.forEach(function (otherPlayer, i){
-		if (i !== pid){
+	players.forEach(function (otherPlayer, i){
+		if (i !== ownIdx){
 			var res = resources[otherPlayer.appearance + otherPlayer.walkFrame],
 				distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 			context.fillText(otherPlayer.name, otherPlayer.box.center.x - game.offset.x, otherPlayer.box.center.y - game.offset.y - distance);
@@ -291,10 +282,10 @@ function loop() {
 			otherPlayer.looksLeft);
 	});
 
-	if (player.boxInformations[1] !== undefined){
-		graphicFilters.motionBlur.x = (player.boxInformations[1].box.center.x - player.boxInformations[0].box.center.x) / 40;
-		graphicFilters.motionBlur.y = (player.boxInformations[1].box.center.y - player.boxInformations[0].box.center.y) / 40;
-		if (graphicFilters.motionBlur.enabled){
+	if (players[ownIdx].boxInformations[1] !== undefined) {
+		graphicFilters.motionBlur.x = (players[ownIdx].boxInformations[1].box.center.x - players[ownIdx].boxInformations[0].box.center.x) / 40;
+		graphicFilters.motionBlur.y = (players[ownIdx].boxInformations[1].box.center.y - players[ownIdx].boxInformations[0].box.center.y) / 40;
+		if (graphicFilters.motionBlur.enabled) {
 			graphicFilters.motionBlur.updateBlur();
 		}
 	}
@@ -302,7 +293,7 @@ function loop() {
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 
 	[].forEach.call(document.querySelectorAll("#controls img"), function (element) {
-		element.style["opacity"] = (0.3 + player.controls[element.id] * 0.7);
+		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
 	});
 
 	context.beginPath();
@@ -321,17 +312,17 @@ function loop() {
 
 	planets.forEach(function (planet) {
 		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (planet.box.center.x*150/6400 - player.box.center.x*150/6400 + 225) % 150, 8 + (planet.box.center.y*150/6400 - player.box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
+		context.arc(canvas.clientWidth - 158 + (planet.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, 8 + (planet.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
 		context.closePath();
 		context.fillStyle = planet.progress.color;
 		context.fill();
 	});
 
 	context.fillStyle = "#f33";
-	otherPlayers.forEach(function (otherPlayer) {
-		if (otherPlayer.appearance !== player.appearance) return;
+	players.forEach(function (otherPlayer) {
+		if (otherPlayer.appearance !== players[ownIdx].appearance) return;
 		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x*150/6400 - player.box.center.x*150/6400 + 225) % 150, 8 + (otherPlayer.box.center.y*150/6400 - player.box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
+		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, 8 + (otherPlayer.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
 		context.closePath();
 		context.fill();
 	});
@@ -342,14 +333,6 @@ function loop() {
 
 	context.restore();
 
-	fuelElement.value = player.fuel;
-	[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
-		var state = "heartFilled";
-		if (index * 2 + 2 <= player.health) state = "heartFilled";
-		else if (index * 2 + 1 === player.health) state = "heartHalfFilled";
-		else state = "heartNotFilled";
-		element.className = state;
-	});
 	chatElement.style.clip = "rect(0px," + chatElement.clientWidth + "px," + chatElement.clientHeight + "px,0px)";
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
