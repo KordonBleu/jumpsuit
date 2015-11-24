@@ -12,7 +12,8 @@ const MESSAGE = {
 	PLAY_SOUND: 10,
 	GAME_DATA: 11,
 	PING: 12,
-	PONG: 13
+	PONG: 13,
+	LOBBY_STATE: 14
 },
 ERROR = {
 	NO_LOBBY: 0,

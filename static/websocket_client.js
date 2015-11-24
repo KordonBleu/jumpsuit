@@ -41,7 +41,7 @@ Connection.prototype.leaveLobby = function() {
 		msgType: MESSAGE.LEAVE_LOBBY,
 		data: {uid: this.lobbyUid}
 	}));
-	game.stop();
+	game.stop();	
 };
 Connection.prototype.sendSettings = function() {
 	this.socket.send(JSON.stringify({
@@ -144,6 +144,7 @@ Connection.prototype.messageHandler = function(message) {
 					planets.push(new Planet(planet.x, planet.y, planet.radius));
 				});
 				enemies.length = 0;
+
 				msg.data.enemies.forEach(function(enemy) {
 					enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));
 				});
@@ -205,7 +206,7 @@ Connection.prototype.messageHandler = function(message) {
 						players[i].boxInformations[0].box.center.x = players[i].box.center.x;
 						players[i].boxInformations[0].box.center.y = players[i].box.center.y;
 						players[i].boxInformations[0].box.angle = players[i].box.angle;
-						players[i].boxInformations[0].timestamp += (typeof players[i].boxInformations[1] !== "undefined") ? (Date.now() - players[i].boxInformations[1].timestamp) : 0;
+						players[i].boxInformations[0].timestamp = (players[i].boxInformations[1] !== undefined) ? players[i].boxInformations[1].timestamp : Date.now();
 					}
 					players[i].boxInformations[p] = {box: new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle), timestamp: Date.now()};
 
@@ -236,6 +237,18 @@ Connection.prototype.messageHandler = function(message) {
 					if (i.indexOf("alien") === 0) document.getElementById("gui-points-" + i).textContent = msg.data.gameProgress[i];
 				}
 				if (!game.started) game.start();
+				break;
+			case MESSAGE.LOBBY_STATE:
+				msg.data.timer = (msg.data.timer).toFixed(1);
+				if (msg.data.state === 0){
+					statusElement.textContent = "Waiting for players... " + msg.data.timer;
+				} else if (msg.data.state === 1){
+					if (game.stopped && pid !== -1) game.start();
+					statusElement.textContent = "Match is running " + msg.data.timer;
+				} else if (msg.data.state === 2){
+					if (!game.stopped) game.stop();
+					statusElement.textContent = "Match is over " + msg.data.timer;
+				}
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;

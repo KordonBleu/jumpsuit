@@ -27,7 +27,10 @@ html, body {
 html {
 	background-image: url("/assets/images/background.png");
 }
-
+canvas.boosted{
+	transform: scale3d(2, 2, 1);
+	transform-origin: 0 0;
+}
 canvas.motionBlur{
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
@@ -152,6 +155,15 @@ input[type=checkbox]:after{
 input[type=checkbox]:checked:after{
 	transform: scale(1);
 	opacity: 1;
+}
+label.checkbox-label[beta]:after{
+	font-size: 10px;
+	content: "BETA";
+	display: inline-block;
+	color: #666;
+	position: relative;
+	left: 3px;
+	top: -10px;
 } 
 label.checkbox-label{
 	margin-left: 5px;
@@ -277,6 +289,9 @@ label.checkbox-label{
 	float: left;
 	height: 100%;
 }
+.menu-head ul li .menu-tabs:hover{
+	color: #AD3726;
+}	
 .menu-head ul li .menu-tabs {
 	margin: 0;
 	padding: 8px 12px; 
@@ -286,6 +301,7 @@ label.checkbox-label{
 	color: #000;
 	background: none;
 	cursor: pointer;
+	transition: color .2s;
 }
 .menu-head ul li .menu-tabs img{
 	display: inline-block;
@@ -497,7 +513,6 @@ label.checkbox-label{
 	position: fixed;
 	top: 58px;
 	left: 8px;
-	display: inline-block;
 	height: 10px;
 	width: 200px;
 	background: transparent;
@@ -513,6 +528,7 @@ label.checkbox-label{
 }
 #gui-fuel:before {
 	content: "Fuel:";
+	color: #fff;
 	width: 77px;
 	display: inline-block;
 }

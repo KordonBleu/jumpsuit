@@ -46,6 +46,7 @@ var canvas = document.getElementById("canvas"),
 			loop();
 		},
 		stop: function() {
+			game.started = false;
 			chatElement.className = "hidden";
 			healthElement.className = "hidden";
 			fuelElement.className = "hidden";
@@ -58,7 +59,9 @@ var canvas = document.getElementById("canvas"),
 
 			window.cancelAnimationFrame(this.animationFrameId);
 			context.clearRect(0, 0, canvas.width, canvas.height);
-		}
+		},
+		started: false,
+		scaleFactor: 1
 	},
 	graphicFilters = {
 		motionBlur: {x: 0, y: 0, enabled: false, updateBlur: function(){
@@ -70,8 +73,9 @@ var canvas = document.getElementById("canvas"),
 	};
 
 function resizeCanvas() {
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
+	game.scaleFactor = 1 / (canvas.className.indexOf("boosted") !== -1 ? 2 : 1);
+	canvas.width = window.innerWidth * game.scaleFactor;
+	canvas.height = window.innerHeight * game.scaleFactor;
 };
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -130,38 +134,40 @@ function init() {//init is done differently in the server
 	loadProcess();
 }
 function loop() {
+	game.scaleFactor = 1 / (canvas.className.indexOf("boosted") !== -1 ? 2 : 1);
 	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
-		context.translate(x, y);
+		context.translate(x * game.scaleFactor, y * game.scaleFactor);
 		context.rotate(angle);
 		if (mirror === true) context.scale(-1, 1);
-		var wdt = sizeX !== undefined ? sizeX : image.width,
-			hgt = sizeY !== undefined ? sizeY : image.height;
+		var wdt = (sizeX !== undefined ? sizeX : image.width) * game.scaleFactor,
+			hgt = (sizeY !== undefined ? sizeY : image.height) * game.scaleFactor;
 		context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 		context.resetTransform();
 	}
 	function fillPlanet(cx, cy, r) {
 		context.beginPath();
-		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
+		context.arc(cx * game.scaleFactor, cy * game.scaleFactor, r * game.scaleFactor, 0, 2 * Math.PI, false);
 		context.closePath();
 		context.fill();
 		drawRotatedImage(resources["planet"], cx, cy, r / 200 * Math.PI, false, 2*r, 2*r);
 	}
 	function strokeAtmos(cx, cy, r, sw) {
+		r = r * game.scaleFactor;
 		context.beginPath();
-		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
+		context.arc(cx * game.scaleFactor, cy * game.scaleFactor, r, 0, 2 * Math.PI, false);
 		context.globalAlpha = 0.1;
 		context.fill();
 		context.globalAlpha = 1;
 		context.strokeStyle = context.fillStyle;
-		context.lineWidth = sw;
+		context.lineWidth = sw * game.scaleFactor;
 		context.stroke();
 		context.closePath();
 	}
 	function drawCircleBar(x, y, val) {
 		context.beginPath();
-		context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
-		context.lineWidth = 8;
+		context.arc(x * game.scaleFactor, y * game.scaleFactor, 50 * game.scaleFactor, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
+		context.lineWidth = 8 * game.scaleFactor;
 		context.strokeStyle = "rgba(0, 0, 0, 0.2)";
 		context.stroke();
 		context.closePath();
@@ -202,7 +208,8 @@ function loop() {
 		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
 			//TODO: make a non-linear prediction for moving around on planets
 			//TODO: current frame rate needs to influent the intensity
-			var intensity = 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000;
+			var intensity = Math.max(1, 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000);
+			console.log(intensity);
 			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
 			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
 			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
@@ -210,9 +217,9 @@ function loop() {
 	});
 	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) + game.dragSmoothed.x * 4) / 5;
 	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) + game.dragSmoothed.y * 4) / 5;
+
 	game.offset.x = (players[ownIdx].box.center.x - canvas.width / 2 + game.dragSmoothed.x);
 	game.offset.y = (players[ownIdx].box.center.y - canvas.height / 2 + game.dragSmoothed.y);
-
 	var windowBox = new Rectangle(new Point(canvas.clientWidth/2 + game.offset.x, canvas.clientHeight/2 + game.offset.y), canvas.clientWidth, canvas.clientWidth);
 	context.textAlign = "center";
 	context.textBaseline = "middle";
@@ -233,7 +240,7 @@ function loop() {
 		}
 	});
 	context.globalAlpha = 1;
-
+	
 	//planet
 	var playerInAtmos = false;
 	planets.forEach(function (planet, pi) {
@@ -247,9 +254,7 @@ function loop() {
 
 		if (!playerInAtmos && universe.collide(planet.atmosBox, players[ownIdx].box)) playerInAtmos = true;
 
-		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
-		context.fillStyle = "rgba(0, 0, 0, 0.2)";
-		context.fillText(planet.names[pi].substr(0, 1), planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y);
+		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);		
 	});
 	if(playerInAtmos) bgFilter.frequency.value = bgFilter.frequency.value >= 4000 ? 4000 : bgFilter.frequency.value * 1.05;
 	else bgFilter.frequency.value = bgFilter.frequency.value <= 200 ? 200 : bgFilter.frequency.value * 0.95;
@@ -258,7 +263,7 @@ function loop() {
 	shots.forEach(function (shot) {
 		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 	});
-
+	
 	//enemies
 	enemies.forEach(function (enemy, ei) {
 		context.fillStyle = "#aaa";
@@ -337,3 +342,4 @@ function loop() {
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();
+

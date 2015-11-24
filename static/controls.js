@@ -326,10 +326,10 @@ document.getElementById("key-reset").addEventListener("click", function(){
 
 if (matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
 	//only supported by webkit as of today, returns false in other browsers
-	document.getElementById("mobile-info").style["display"] = "initial";
+	/*document.getElementById("mobile-info").style["display"] = "initial";
 	document.getElementById("key-info").style["display"] = "none";
 	document.getElementById("key-settings").style["display"] = "none";
-	document.getElementById("key-reset").style["display"] = "none";
+	document.getElementById("key-reset").style["display"] = "none";*/
 } else handleInput.loadKeySettings();
 
 window.addEventListener("touchstart", handleInputMobile);
@@ -445,8 +445,15 @@ document.getElementById("option-moblur").addEventListener("change", function(){
 	if (this.checked) canvas.classList.add("motionBlur");
 	else canvas.classList.remove("motionBlur");
 });
-window.onbeforeunload = function() {
-	//localStorage.setItem("settings.name", players[ownIdx].name);
+
+
+document.getElementById("option-performance").addEventListener("change", function(){
+	if (this.checked) canvas.classList.add("boosted");
+	else canvas.classList.remove("boosted");
+	resizeCanvas();
+});
+window.onbeforeunload = function(){
+	localStorage.setItem("settings.name", player.name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
 	localStorage.setItem("settings.volume.music", document.getElementById("music-volume").value);
 	localStorage.setItem("settings.volume.effects", document.getElementById("effects-volume").value);
