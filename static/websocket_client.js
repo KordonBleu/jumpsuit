@@ -134,17 +134,13 @@ Connection.prototype.messageHandler = function(message) {
 				chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 				break;
 			case MESSAGE.WORLD_DATA:
-				ownIdx = msg.data.index;
-				refreshOrLeaveElement.textContent = "Leave Lobby";
-				newLobbyElement.disabled = true;
 
-				var i, j;
 				planets.length = 0;
 				msg.data.planets.forEach(function(planet) {
 					planets.push(new Planet(planet.x, planet.y, planet.radius));
 				});
-				enemies.length = 0;
 
+				enemies.length = 0;
 				msg.data.enemies.forEach(function(enemy) {
 					enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));
 				});
@@ -158,7 +154,7 @@ Connection.prototype.messageHandler = function(message) {
 				});
 				shots.length = msg.data.shots.length;
 				msg.data.shots.forEach(function(shot, i) {
-					if (typeof shots[j] === "undefined") shots[i] = {box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: shot.lt};
+					if (typeof shots[i] === "undefined") shots[i] = {box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: shot.lt};
 					else {
 						shots[i].box.center.x = shot.x;
 						shots[i].box.center.y = shot.y;
@@ -218,9 +214,10 @@ Connection.prototype.messageHandler = function(message) {
 					players[i].appearance = msg.data.players[i].appearance;
 					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
 					players[i].jetpack = msg.data.players[i].jetpack;
+					
 
 					if (i === ownIdx) {
-						players[ownIdx].health = msg.data.players[i].health;
+						players[i].health = msg.data.players[i].health;
 						[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
 							var state = "heartFilled";
 							if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
@@ -229,7 +226,7 @@ Connection.prototype.messageHandler = function(message) {
 							element.className = state;
 						});
 
-						players[ownIdx].fuel = msg.data.players[i].fuel;
+						players[i].fuel = msg.data.players[i].fuel;
 						fuelElement.value = msg.data.players[i].fuel;
 					}
 				}
@@ -239,16 +236,21 @@ Connection.prototype.messageHandler = function(message) {
 				if (!game.started) game.start();
 				break;
 			case MESSAGE.LOBBY_STATE:
-				msg.data.timer = (msg.data.timer).toFixed(1);
+				msg.data.timer = Math.floor(msg.data.timer);
 				if (msg.data.state === 0){
 					statusElement.textContent = "Waiting for players... " + msg.data.timer;
 				} else if (msg.data.state === 1){
-					if (game.stopped && pid !== -1) game.start();
+					if (!game.started && players.length !== 0) game.start();
 					statusElement.textContent = "Match is running " + msg.data.timer;
 				} else if (msg.data.state === 2){
-					if (!game.stopped) game.stop();
+					if (game.started) game.stop();
 					statusElement.textContent = "Match is over " + msg.data.timer;
 				}
+				break;
+			case MESSAGE.PLAYER_CONNECTED:
+				ownIdx = msg.data;
+				refreshOrLeaveElement.textContent = "Leave Lobby";
+				newLobbyElement.disabled = true;
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;

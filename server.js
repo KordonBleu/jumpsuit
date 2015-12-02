@@ -190,9 +190,9 @@ function Lobby(name, maxPlayers){
 	this.planets = [];
 	this.enemies = [];
 	this.shots = [];
-	this.processTime = 0;
+	this.processTime = 2;
 	this.state = 0; //waiting for players, currently playing, end
-	this.stateTimer = 60;
+	this.stateTimer = 30;
 	this.players.firstEmpty = function() {
 		for (var i = 0; i < this.length; i++){
 			if (this[i] === undefined) return i;
@@ -248,6 +248,12 @@ function Lobby(name, maxPlayers){
 		}
 		return pltData;
 	};
+	this.getScores = function(){
+		//TODO: send player scores too
+		var i = {}, a;
+		for (a in this.gameProgress) if (a.indexOf("alien") !== -1) i[a] = this.gameProgress[a];
+		return i;			
+	};
 
 
 	this.universe =  new vinage.Rectangle(new vinage.Point(0, 0), Infinity, Infinity);
@@ -294,25 +300,29 @@ Lobby.prototype.broadcast = function(message) {
 	});
 };
 Lobby.prototype.update = function() {
-	if (this.players.amount() !== 0) this.stateTimer -= 0.1;
+	if (this.players.amount() !== 0) this.stateTimer -= (16 / 1000);
 	if (this.state === 0){
 		this.broadcast(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: this.state, timer: this.stateTimer}}));
 		if (this.stateTimer <= 0) {
+			this.broadcast(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: this.planets.getWorldData(), enemies: this.enemies.getWorldData()}}));
 			this.state = 1;
-			this.stateTimer = 80;
+			this.stateTimer = 60;
 		}
 		return;
 	} else if (this.state === 2){
 		this.broadcast(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: this.state, timer: this.stateTimer}}));
 		if (this.stateTimer <= 0){
 			this.state = 0;
-			this.stateTimer = 80;
+			this.stateTimer = 30;
+			//TODO: if there are too less players, keep waiting until certain amount is reached - otherwise close the lobby(?)
 		}
 		return;		
 	} else {
 		if (this.stateTimer <= 0){
 			this.state = 2;
-			this.stateTimer = 80;
+			this.stateTimer = 10;
+			this.broadcast(JSON.stringify({msgType: MESSAGE.SCORES, data: this.getScores()}));
+			//TODO: display the scores
 		}
 	}
 	
@@ -341,6 +351,13 @@ Lobby.prototype.update = function() {
 	});
 	this.players.forEach(function(player) {
 		if (player === undefined) return;
+		player.ws.send(JSON.stringify({
+			msgType: MESSAGE.LOBBY_STATE,
+			data: {
+				state: this.state,
+				timer: this.stateTimer
+			}
+		}));
 		if (player.needsUpdate || player.needsUpdate === undefined) {
 			player.needsUpdate = false;
 			setTimeout(function() {
@@ -355,17 +372,11 @@ Lobby.prototype.update = function() {
 							gameProgress: this.gameProgress
 						}
 					}));
-					player.ws.send(JSON.stringify({
-						msgType: MESSAGE.LOBBY_STATE,
-						data: {
-							state: this.state,
-							timer: this.stateTimer
-						}
-					}));
+					
 					player.lastRefresh = Date.now();
 					player.needsUpdate = true;
 				} catch(e) {/*Ignore errors*/}
-			}.bind(this), Math.max(40, Date.now() - player.lastRefresh + player.latency));
+			}.bind(this), Math.min(90, Math.max(33, Date.now() - player.lastRefresh + player.latency)));
 		}
 	}.bind(this));
 };
@@ -451,7 +462,6 @@ wss.on("connection", function(ws) {
 		});
 	}
 	var player;
-
 	ws.on("message", function(message) {
 		var msg;
 		try {
@@ -467,10 +477,11 @@ wss.on("connection", function(ws) {
 						player = new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this);
 						var pid = lobby.players.firstEmpty();
 						lobby.players.splice(pid, 1, player);
-						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {index: pid, planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
-						player.lastRefresh = Date.now();
+						ws.send(JSON.stringify({msgType: MESSAGE.PLAYER_CONNECTED, data: pid}));
+						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
+						player.lastRefresh = Date.now();
 						ws.send(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: lobby.state}}));
 					}
 					break;
@@ -531,3 +542,4 @@ wss.on("connection", function(ws) {
 });
 
 lobbies.push(new Lobby("Lobby No. 1", 7));
+

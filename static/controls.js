@@ -121,13 +121,14 @@ function handleInput(e) {
 		if(e.type.substring(0, 3) === "key"){
 			triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
 			if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
-		} else if (players[ownIdx].controls[e.target.id] !== undefined) {
+		} else if (players[ownIdx] !== undefined && players[ownIdx].controls[e.target.id] !== undefined) {
 			e.preventDefault();
 			triggered = e.target.id;
 		}
 		if (triggered === "menu" && !chatInUse && objInvisible(dialogElement)) {
 			if (s == 1) menuBox.classList.toggle("hidden");
-		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement])) {
+		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement]) && players[ownIdx] !== undefined) {
+			//oh boy, this statement is fucked up :D
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);

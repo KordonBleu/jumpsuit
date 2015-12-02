@@ -92,8 +92,9 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 	var playersOnPlanets = new Array(planets.length);
 
 	shots.forEach(function(shot, si) {
-		shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 11;
-		shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 11;
+		shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 18;
+		shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 18;
+		console.log(shot);
 		if(--shot.lt <= -20) shots.splice(si, 1);
 	});
 	enemies.forEach(function(enemy) {
