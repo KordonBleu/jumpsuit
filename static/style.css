@@ -383,11 +383,34 @@ label.checkbox-label{
 #player-list {
 	font-size: 24px;
 	list-style-type: none;
-	width: 100%;
+	width: 100%; 	
 }
 #player-list a {
 	color: #AD3726;
 	text-decoration: none;
+}
+#player-list.hidden{
+	display: none;
+}
+#team-list{
+	list-style-type: none;
+	font-size: 18px;
+	padding: 0;
+	width: 565px;
+	margin: 0 auto;
+}
+#team-list.hidden{
+	display: none;
+}
+#team-list li{
+	display: inline-block;
+	margin: 10px;
+	width: 88px;
+	text-align: center;
+}
+#team-list li img{
+	width: 88px;
+	height: 88px;
 }
 #key-settings {
 	width: 100%;

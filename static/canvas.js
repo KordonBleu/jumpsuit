@@ -62,20 +62,11 @@ var canvas = document.getElementById("canvas"),
 		},
 		started: false,
 		scaleFactor: 1
-	},
-	graphicFilters = {
-		motionBlur: {x: 0, y: 0, enabled: false, updateBlur: function(){
-			graphicFilters.getFilter("MotionBlur").firstElementChild.setAttribute("stdDeviation", Math.min(4, Math.abs((this.x.toFixed(2)))) + ", " + Math.min(4, Math.abs(this.y.toFixed(2))));
-		}},
-		getFilter: function(type){
-			return document.querySelector(".filters").getElementById(type);
-		}
 	};
 
 function resizeCanvas() {
-	game.scaleFactor = 1 / (canvas.className.indexOf("boosted") !== -1 ? 2 : 1);
-	canvas.width = window.innerWidth * game.scaleFactor;
-	canvas.height = window.innerHeight * game.scaleFactor;
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
 };
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -133,41 +124,39 @@ function init() {//init is done differently in the server
 	});
 	loadProcess();
 }
-function loop() {
-	game.scaleFactor = 1 / (canvas.className.indexOf("boosted") !== -1 ? 2 : 1);
+function loop() {	
 	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
-		context.translate(x * game.scaleFactor, y * game.scaleFactor);
+		context.translate(x, y);
 		context.rotate(angle);
 		if (mirror === true) context.scale(-1, 1);
-		var wdt = (sizeX !== undefined ? sizeX : image.width) * game.scaleFactor,
-			hgt = (sizeY !== undefined ? sizeY : image.height) * game.scaleFactor;
+		var wdt = (sizeX !== undefined ? sizeX : image.width),
+			hgt = (sizeY !== undefined ? sizeY : image.height);
 		context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 		context.resetTransform();
 	}
 	function fillPlanet(cx, cy, r) {
 		context.beginPath();
-		context.arc(cx * game.scaleFactor, cy * game.scaleFactor, r * game.scaleFactor, 0, 2 * Math.PI, false);
+		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.closePath();
 		context.fill();
 		drawRotatedImage(resources["planet"], cx, cy, r / 200 * Math.PI, false, 2*r, 2*r);
 	}
 	function strokeAtmos(cx, cy, r, sw) {
-		r = r * game.scaleFactor;
 		context.beginPath();
-		context.arc(cx * game.scaleFactor, cy * game.scaleFactor, r, 0, 2 * Math.PI, false);
+		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.globalAlpha = 0.1;
 		context.fill();
 		context.globalAlpha = 1;
 		context.strokeStyle = context.fillStyle;
-		context.lineWidth = sw * game.scaleFactor;
+		context.lineWidth = sw;
 		context.stroke();
 		context.closePath();
 	}
 	function drawCircleBar(x, y, val) {
 		context.beginPath();
-		context.arc(x * game.scaleFactor, y * game.scaleFactor, 50 * game.scaleFactor, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
-		context.lineWidth = 8 * game.scaleFactor;
+		context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
+		context.lineWidth = 10;
 		context.strokeStyle = "rgba(0, 0, 0, 0.2)";
 		context.stroke();
 		context.closePath();
@@ -234,7 +223,6 @@ function loop() {
 		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 		if (player.jetpack) {
 			if(player.panner !== undefined) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
-
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(player.box.angle + Math.PI/11), player.box.angle);
 		}
@@ -261,6 +249,8 @@ function loop() {
 
 	//shots
 	shots.forEach(function (shot) {
+		shot.box.center.x += 18 * Math.sin(shot.box.angle);
+		shot.box.center.y += 18 * -Math.cos(shot.box.angle);
 		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 	});
 	
@@ -286,14 +276,6 @@ function loop() {
 			otherPlayer.box.angle,
 			otherPlayer.looksLeft);
 	});
-
-	if (players[ownIdx].boxInformations[1] !== undefined) {
-		graphicFilters.motionBlur.x = (players[ownIdx].boxInformations[1].box.center.x - players[ownIdx].boxInformations[0].box.center.x) / 40;
-		graphicFilters.motionBlur.y = (players[ownIdx].boxInformations[1].box.center.y - players[ownIdx].boxInformations[0].box.center.y) / 40;
-		if (graphicFilters.motionBlur.enabled) {
-			graphicFilters.motionBlur.updateBlur();
-		}
-	}
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 

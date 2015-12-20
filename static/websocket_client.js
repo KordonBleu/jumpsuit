@@ -239,11 +239,17 @@ Connection.prototype.messageHandler = function(message) {
 				msg.data.timer = Math.floor(msg.data.timer);
 				if (msg.data.state === 0){
 					statusElement.textContent = "Waiting for players... " + msg.data.timer;
+					document.getElementById("player-list").className = "";
+					document.getElementById("team-list").className = "hidden";
 				} else if (msg.data.state === 1){
 					if (!game.started && players.length !== 0) game.start();
+					document.getElementById("player-list").className = "";
+					document.getElementById("team-list").className = "hidden";					
 					statusElement.textContent = "Match is running " + msg.data.timer;
 				} else if (msg.data.state === 2){
 					if (game.started) game.stop();
+					document.getElementById("player-list").className = "hidden";
+					document.getElementById("team-list").className = "";
 					statusElement.textContent = "Match is over " + msg.data.timer;
 				}
 				break;
@@ -276,6 +282,14 @@ Connection.prototype.messageHandler = function(message) {
 							laserModel.makeSound(makePanner(sound.position.x - players[ownIdx].box.center.x, sound.position.y - players[ownIdx].box.center.y)).start(0);
 							break;
 					}
+				});
+				break;
+			case MESSAGE.SCORES:
+				var b = [];
+				for (a in msg.data) b.push([a, msg.data[a]]);
+				b.sort(function(a, c){ return a[1]-c[1]; });	
+				b.forEach(function(a, i){
+					if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
 				});
 				break;
 		}

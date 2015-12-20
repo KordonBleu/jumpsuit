@@ -422,6 +422,7 @@ nameElement.addEventListener("keydown", function(e) {
 menuCloseElement.addEventListener("click", function(){
 	menuBox.classList.add("hidden");
 });
+
 document.getElementById("option-fullscreen").addEventListener("change", function(){
 	if (!this.checked){
 		if (document.exitFullscreen) {

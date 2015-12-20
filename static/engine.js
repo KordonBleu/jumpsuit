@@ -94,7 +94,6 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 	shots.forEach(function(shot, si) {
 		shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 18;
 		shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 18;
-		console.log(shot);
 		if(--shot.lt <= -20) shots.splice(si, 1);
 	});
 	enemies.forEach(function(enemy) {
@@ -183,7 +182,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 		player.setWalkframe();
 
 		shots.forEach(function(shot, si) {
-			if (universe.collide(shot.box, player.box)) {
+			if (universe.collide(new Circle(shot.box.center, 40), player.box)) {
 				player.health -= (player.health = 0) ? 0 : 1;
 				if (player.health <= 0){
 					var suitablePlanets = [];
