@@ -28,6 +28,7 @@ var isMobile = (navigator.userAgent.match(/Android/i)
 	|| navigator.userAgent.match(/BlackBerry/i)
 	|| navigator.userAgent.match(/Windows Phone/i));
 
+var settings = {name: "", appearance: ""};
 
 String.prototype.ucFirst = function (){
 	//uppercasing the first letter
@@ -377,7 +378,7 @@ chatInput.addEventListener("keydown", function(e){
 
 [].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
 	element.addEventListener("mousedown", function(){
-		players[ownIdx].appearance = this.id.replace("player", "alien");
+		settings.appearance = this.id.replace("player", "alien");
 		appearanceBox.classList.add("hidden");
 		settingsChanged();
 	});
@@ -415,6 +416,7 @@ newLobbyElement.addEventListener("click", function(){
 nameElement.addEventListener("keydown", function(e) {
 	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
 		localStorage.setItem("settings.name", this.value);
+		settings.name = this.value;
 		e.target.blur();
 		settingsChanged();
 	}
@@ -422,6 +424,9 @@ nameElement.addEventListener("keydown", function(e) {
 menuCloseElement.addEventListener("click", function(){
 	menuBox.classList.add("hidden");
 });
+settings.name = localStorage.getItem("settings.name");
+nameElement.value = settings.name;
+settings.appearance = "alien" + (["Blue", "Beige", "Green", "Yellow", "Pink"])[Math.floor(Math.random() * 5)];
 
 document.getElementById("option-fullscreen").addEventListener("change", function(){
 	if (!this.checked){

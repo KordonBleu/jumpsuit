@@ -261,34 +261,47 @@ function Lobby(name, maxPlayers){
 		return {x: this.universe.center.x, y: this.universe.center.y, width: this.universe.width, height: this.universe.height};
 	}
 	//generate world structure
-	var areaSize = 6400,
-		chunkSize = 1600;
+	this.resetWorld = function(){
+		this.gameProgress = {ticks: 0, "alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
 
-	for (var y = 0; y < areaSize; y += chunkSize){
-		for (var x = 0; x < areaSize; x += chunkSize){
-			var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
-				py = Math.floor(Math.random() * (chunkSize - 400) + 200),
-				radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
-			this.planets.push(new engine.Planet(x + px, y + py, radius));
+		this.planets.length = 0;
+		this.enemies.length = 0;
+
+		var areaSize = 6400,
+			chunkSize = 1600;
+		for (var y = 0; y < areaSize; y += chunkSize){
+			for (var x = 0; x < areaSize; x += chunkSize){
+				var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
+					py = Math.floor(Math.random() * (chunkSize - 400) + 200),
+					radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
+				this.planets.push(new engine.Planet(x + px, y + py, radius));
+			}
 		}
-	}
+		var iterations = 0;
+		while (iterations < 250 && this.enemies.length < 15){
+			var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
+			this.enemies.forEach(function (enemy){
+				if (!wellPositioned) return;
+				if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
+			}.bind(this));
+			this.planets.forEach(function (planet){
+				if (!wellPositioned) return;
+				if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
+			}.bind(this));
+			if (wellPositioned) this.enemies.push(newEnemy);
+			iterations++;
+		}
+		this.players.forEach(function(player){
+			if (player !== undefined){ 
+				player.attachedPlanet = -1;
+				player.box.center.x = 0;
+				player.box.center.y = 0;
+				player.box.angle = Math.random() * Math.PI;
+			}
+		});
+	};
 
-	var iterations = 0;
-	while (iterations < 250 && this.enemies.length < 15){
-		var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
-		this.enemies.forEach(function (enemy){
-			if (!wellPositioned) return;
-			if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
-		}.bind(this));
-		this.planets.forEach(function (planet){
-			if (!wellPositioned) return;
-			if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
-		}.bind(this));
-		if (wellPositioned) this.enemies.push(newEnemy);
-		iterations++;
-	}
-
-	this.gameProgress = {ticks: 0, "alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
+	this.resetWorld();
 	this.name = name || "Unnamed Lobby";
 	this.maxPlayers = maxPlayers || 8;
 }
@@ -304,6 +317,7 @@ Lobby.prototype.update = function() {
 	if (this.state === 0){
 		this.broadcast(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: this.state, timer: this.stateTimer}}));
 		if (this.stateTimer <= 0) {
+			this.resetWorld();
 			this.broadcast(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: this.planets.getWorldData(), enemies: this.enemies.getWorldData()}}));
 			this.state = 1;
 			this.stateTimer = 60;

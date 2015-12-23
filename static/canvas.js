@@ -52,7 +52,11 @@ var canvas = document.getElementById("canvas"),
 			fuelElement.className = "hidden";
 			pointsElement.className = "hidden";
 			menuBox.classList.remove("hidden");
-
+			
+			document.getElementById("tabSettings").classList.add("hidden");
+			document.getElementById("tabInfo").classList.add("hidden");
+			document.getElementById("tabServer").classList.remove("hidden");
+					
 			players.length = 0;
 			planets.length = 0;
 			enemies.length = 0;
@@ -117,11 +121,7 @@ function init() {//init is done differently in the server
 		resources[resPaths[loadProcess.progress].slice(0, resPaths[loadProcess.progress].lastIndexOf("."))] = img;
 	}
 
-	document.addEventListener("res loaded", function() {//gets called once every resource is loaded
-		game.stop(); //for clearing
-		nameElement.value = localStorage.getItem("settings.name") || "Unnamed Player";
-		nameElement.removeAttribute("class");
-	});
+	document.addEventListener("res loaded", game.stop);
 	loadProcess();
 }
 function loop() {	

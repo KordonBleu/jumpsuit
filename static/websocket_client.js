@@ -46,7 +46,7 @@ Connection.prototype.leaveLobby = function() {
 Connection.prototype.sendSettings = function() {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.PLAYER_SETTINGS,
-		data: {uid: this.lobbyUid, name: players[ownIdx].name, appearance: players[ownIdx].appearance}
+		data: {uid: this.lobbyUid, name: settings.name, appearance: settings.appearance}
 	}));
 };
 Connection.prototype.sendChat = function(content) {
@@ -134,7 +134,6 @@ Connection.prototype.messageHandler = function(message) {
 				chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 				break;
 			case MESSAGE.WORLD_DATA:
-
 				planets.length = 0;
 				msg.data.planets.forEach(function(planet) {
 					planets.push(new Planet(planet.x, planet.y, planet.radius));
@@ -191,7 +190,6 @@ Connection.prototype.messageHandler = function(message) {
 						}
 					}
 
-
 					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
 					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
 					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
@@ -215,7 +213,6 @@ Connection.prototype.messageHandler = function(message) {
 					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
 					players[i].jetpack = msg.data.players[i].jetpack;
 					
-
 					if (i === ownIdx) {
 						players[i].health = msg.data.players[i].health;
 						[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
