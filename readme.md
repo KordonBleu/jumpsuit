@@ -1,6 +1,6 @@
 # JumpSuit
 A sweet 2D canvas game.
-With your awesome suit, you can jump from planet to planet to the exit!
+With your awesome suit, you can jump from planet to planet to conquer them!
 
 Try it [here](http://getkey.eu:8000/)!
 
@@ -21,7 +21,6 @@ Flowi: :OOO
 Getkey: #OMG
 Flowi: #epic
 ```
-Another suggestion was "DontLookAtIt" - DLAI (pronounced Delay), but we thought this might be not the proper name to publish it.
 
 ## How to run
 ```sh
@@ -44,7 +43,7 @@ In this file you can set the following parameters:
 
 Parameter | Explanation | Default | Value
 --------- | ----------- | ------- | -----
-dev | Enable debug messages and the automatic reload of modified files (under `static/`). You'll have to restart the server if you create a new file | false | boolean
+dev | Disable the countdown before joining a lobby, enable debug messages and enable the automatic reload of modified files (under `static/`). You'll have to restart the server if you create a new file | false | boolean
 interactive | Make it possible to enter Javascript commands while the server runs | false | boolean
 monitor | Displays a neat view of the lobbys in real-time | false | boolean
 port | Set the server's port | 8080 | integer

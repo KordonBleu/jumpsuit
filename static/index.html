@@ -36,100 +36,102 @@
 				<th id="gui-points-alienYellow">102</th>
 			</tr>
 		</table>
-		<div id="menu-box" class="menu-box hidden">
-			<div id="menu-head" class="menu-head">
-				<ul>
-					<li><div class="menu-tabs"><img src="/assets/images/information.svg" />Information</div></li>
-					<li><div class="menu-spacing">|</div></li>
-					<li><div class="menu-tabs"><img src="/assets/images/connection.svg" />Connection</div></li>
-					<li><div class="menu-spacing">|</div></li>
-					<li><div class="menu-tabs"><img src="/assets/images/settings.svg" />Settings</div></li>
-				</ul>
-				<div id="close-menu"></div>
+
+		<div id="gui-options">
+			<button id="leave-button">Leave</button><!--perhaps add an icon here-->
+			<button id="infos-button">Infos</button><!--perhaps add an icon here-->
+			<button id="settings-button">Settings</button><!--perhaps add an icon here-->
+		</div>
+
+
+		<div id="menu-box" class="hidden">
+			<button id="disconnect" style="float: right;">Disconnect</button>
+			<button id="new-lobby" style="float: right;">Create New Lobby</button>
+			<button id="menu-box-infos-button" style="float: right;">Infos</button>
+			<button id="menu-box-settings-button" style="float: right;">Settings</button>
+			<div id="status-plus-refresh">
+				<h3 id="status">Waiting for other players...</h3> <img id="refresh" src="/assets/images/refresh.svg" alt="Refresh" title="Refresh"/>
 			</div>
-			<div id="tabSettings" class="menu-box-tab hidden">
+			<ul id="player-list">
+			</ul>
+			<ul id="team-list" class="hidden">
+				<li><img src="/assets/images/alienBlue_badge.svg"/><span id="teamBlue">-</span></li>
+				<li><img src="/assets/images/alienBeige_badge.svg"/><span id="teamBeige">-</span></li>
+				<li><img src="/assets/images/alienGreen_badge.svg"/><span id="teamGreen">-</span></li>
+				<li><img src="/assets/images/alienPink_badge.svg"/><span id="teamPink">-</span></li>
+				<li><img src="/assets/images/alienYellow_badge.svg"/><span id="teamYellow">-</span></li>
+			</ul>
+		</div>
+
+		<div id="info-box" class="hidden">
+			<h2>Informations</h2><button id="close-info-box">Close</button>
+			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
+			<p>And the credits go to...</p>
+				<ul>
+					<li>Music &amp; sound effects: Arnaud Poyeton, <a href="http://kenney.nl">Kenney.nl</a></li>
+					<li>Assets: <a href="http://kenney.nl">Kenney.nl</a></li>
+					<li>Icons: Lemon Liu, <a href="https://thenounproject.com/grega.cresnar/">Gregor Črešnar</a>,
+						<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>, <a href="https://thenounproject.com/term/refresh/24732/">Alexey Sohrin</a>
+					</li>
+					<li>Font: <a href="https://www.google.com/fonts/specimen/Open+Sans">Open Sans</a> by Steve Matteson</li>
+				</ul>
+			<h2>Support us</h2>
+			<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do!</p>
+			<h3>Help us code it!</h3>
+			<p>This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
+			If you ever plan to do this - tell us.</p>
+			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
+			<h3>Buy us a coffee or pizza!</h3>
+			<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
+			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where honestly we couldnt agree more<br/>
+			<b>TL;DR:</b> share your knowledge. Delicious crusty knowledge. Yum!<br/><br/>
+			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height=64 width=64 /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height=64 width=64 /></p>
+		</div>
+
+		<div id="settings-box" class="hidden">
+			<h2>Settings</h2><button id="close-settings-box">Close</button>
+			<div>
 				<div class="splitContainer">
 					<h3>Team</h3>
 					<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
-					<div id="appearance-box" class="hidden">
-						<span id="playerBlue" class="playerSelect"></span>
-						<span id="playerBeige" class="playerSelect"></span>
-						<span id="playerGreen" class="playerSelect"></span>
-						<span id="playerPink" class="playerSelect"></span>
-						<span id="playerYellow" class="playerSelect"></span>
-					</div>
-					<br/>
+					<label>
+						<input type="radio" name="playerSelect" value="playerBlue"/><span></span>
+					</label>
+					<label>
+						<input type="radio" name="playerSelect" value="playerBeige"/><span></span>
+					</label>
+					<label>
+						<input type="radio" name="playerSelect" value="playerGreen"/><span></span>
+					</label>
+					<label>
+						<input type="radio" name="playerSelect" value="playerPink"/><span></span>
+					</label>
+					<label>
+						<input type="radio" name="playerSelect" value="playerYellow"/><span></span>
+					</label>
+
 					<h3>Volume</h3>
 					<label>Background Music</label><input type="range" value="50" id="music-volume"/><br/>
 					<label>Sound Effects</label><input type="range" value="100" id="effects-volume"/>
+
 					<h3>Graphic</h3>
-					<input type="checkbox" id="option-fullscreen" /><label for="option-fullscreen" class="checkbox-label">Fullscreen</label>
-					<input type="checkbox" id="option-moblur"/><label for="option-moblur" class="checkbox-label" beta>Motion Blur</label>
-					<input type="checkbox" id="option-performance"><label for="option-performance" class="checkbox-label">Performance-boost</label>
-					<p>On mobile devices canvas rendering is pretty slow. This option resizes the canvas to the half but scales it up again, the resolution will be slightly poorer but performance will increas pretty surely</p>
-					<p>maybe there will be more filters...</p>
+					<label class="checkbox-label"><input type="checkbox" id="option-fullscreen" />Fullscreen</label>
+					<label class="checkbox-label" data-beta><input type="checkbox" id="option-moblur"/>Motion Blur</label>
+					<label class="checkbox-label"><input type="checkbox" id="option-performance">Performance-boost</label>
+					<p>Poorer resolution, better performances</p>
 				</div>
 				<div class="splitContainer">
 					<h3>Key map</h3>
 					Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
-					Also you can't assign Mouse keys to the key settings!<br/><br/>
+					Also you can't assign Mouse keys to the key settings!<br/><br/><!--TODO: tell this to the user only when trying to assign mouse key-->
 					You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
 					<table id="key-settings"></table>
 					<button id="key-reset">Reset keymap to default</button>
-					<!--
-					<h3>Mobile Information</h3>
-					To close the multiplayer box slide from it to the right border and open it by sliding it in from the right border to the center of the screen.<br/>
-					Also you can open and information box about this game project by sliding it in from the left border to the center of the screen.<br/>
-					The images for the controls explain their purpose by themselves but to sprint you can drag up the button for moving left or right.<br/><br/>
-					If you'll find a bug in the game please report it on the github page and please mark it whether the bug is on mobile only.
-					-->
-				</div>
-			</div>
-			<div id="tabServer" class="menu-box-tab hidden">
-				<button id="disconnect" style="float: right;">Disconnect</button>
-				<button id="refresh-or-leave" style="float: right;">Refresh</button>
-				<button id="new-lobby" style="float: right;">Create New Lobby</button>
-				<h3 id="status">Waiting for other players...</h3>
-				<ul id="player-list">
-				</ul>
-				<ul id="team-list" class="hidden">
-					<li><img src="/assets/images/alienBlue_badge.svg" /><span id="teamBlue">-</span></li>
-					<li><img src="/assets/images/alienBeige_badge.svg" /><span id="teamBeige">-</span></li>
-					<li><img src="/assets/images/alienGreen_badge.svg" /><span id="teamGreen">-</span></li>
-					<li><img src="/assets/images/alienPink_badge.svg" /><span id="teamPink">-</span></li>
-					<li><img src="/assets/images/alienYellow_badge.svg" /><span id="teamYellow">-</span></li>
-				</ul>
-			</div>
-			<div id="tabInfo" class="menu-box-tab">
-				<div class="splitContainer">
-					<h2>Information</h2>
-					<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
-					<p>And the credits go to...
-						<ul>
-							<li>Music &amp; sound effects: Arnaud Poyeton, <a href="http://kenney.nl">Kenney.nl</a></li>
-							<li>Assets: <a href="http://kenney.nl">Kenney.nl</a></li>
-							<li>Icons: Lemon Liu, <a href="https://thenounproject.com/grega.cresnar/">Gregor Črešnar</a>, 
-								<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>
-							</li>
-							<li>Font: <a href="">Open Sans</a> by Steve Matteson</li>
-						</ul>
-					</p>
-				</div>
-				<div class="splitContainer">
-					<h2>Support us</h2>
-					<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do!</p>
-					<h3>Help us code it!</h3>
-					<p>This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
-					If you ever plan to do this - tell us.</p>
-					<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
-					<h3>Buy us a coffee or pizza!</h3>
-					<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
-					Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where honestly we couldnt agree more<br/>
-					<b>TL;DR:</b> share your knowledge. Delicious crusty knowledge. Yum!<br/><br/>
-					<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height=64 width=64 /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height=64 width=64 /></p>
 				</div>
 			</div>
 		</div>
+
+
 		<div id="dialog" class="hidden">
 			<div id="dialog-backdrop"></div>
 			<div class="dialog-content">

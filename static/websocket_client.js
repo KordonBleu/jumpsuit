@@ -71,17 +71,14 @@ Connection.prototype.refreshControls = function(controls) {
 };
 Connection.prototype.errorHandler = function() {
 	newLobbyElement.disabled = true;
-	refreshOrLeaveElement.disabled = true;
 	this.close();
 };
 Connection.prototype.openHandler = function() {
 	this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
 	newLobbyElement.disabled = false;
-	refreshOrLeaveElement.textContent = "Refresh";
-	refreshOrLeaveElement.disabled = false;
 };
 Connection.prototype.messageHandler = function(message) {
-	try {
+	//try {
 		msg = JSON.parse(message.data);
 		switch(msg.msgType) {
 			case MESSAGE.SENT_LOBBIES:
@@ -241,7 +238,7 @@ Connection.prototype.messageHandler = function(message) {
 				} else if (msg.data.state === 1){
 					if (!game.started && players.length !== 0) game.start();
 					document.getElementById("player-list").className = "";
-					document.getElementById("team-list").className = "hidden";					
+					document.getElementById("team-list").className = "hidden";
 					statusElement.textContent = "Match is running " + msg.data.timer;
 				} else if (msg.data.state === 2){
 					if (game.started) game.stop();
@@ -252,7 +249,6 @@ Connection.prototype.messageHandler = function(message) {
 				break;
 			case MESSAGE.PLAYER_CONNECTED:
 				ownIdx = msg.data;
-				refreshOrLeaveElement.textContent = "Leave Lobby";
 				newLobbyElement.disabled = true;
 				break;
 			case MESSAGE.ERROR:
@@ -284,15 +280,15 @@ Connection.prototype.messageHandler = function(message) {
 			case MESSAGE.SCORES:
 				var b = [];
 				for (a in msg.data) b.push([a, msg.data[a]]);
-				b.sort(function(a, c){ return a[1]-c[1]; });	
+				b.sort(function(a, c){ return a[1]-c[1]; });
 				b.forEach(function(a, i){
 					if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
 				});
 				break;
 		}
-	} catch(err) {
+	/*} catch(err) {
 		console.error(err, err.stack);
-	}
+	}*/
 };
 
 var currentConnection = new Connection();
@@ -309,8 +305,6 @@ document.addEventListener("res loaded", autoConnect);
 
 function closeSocket() {
 	newLobbyElement.disabled = true;
-	refreshOrLeaveElement.textContent = "Refresh";
-	refreshOrLeaveElement.disabled = true;
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 	currentConnection.close();
 }
@@ -329,9 +323,9 @@ function refreshLobbies() {
 function leaveLobby() {
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
+	history.pushState(null, "Main menu", "/");
 	currentConnection.refreshLobbies();
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
-	refreshOrLeaveElement.textContent = "Refresh";
 }
 
 

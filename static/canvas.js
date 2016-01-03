@@ -6,10 +6,12 @@ var chatElement = document.getElementById("gui-chat"),
 	fuelElement = document.getElementById("gui-fuel"),
 	pointsElement = document.getElementById("gui-points"),
 	menuBox = document.getElementById("menu-box"),
-	menuCloseElement = document.getElementById("close-menu"),
+	closeSettingsElement = document.getElementById("close-settings-box"),
+	settingsBox = document.getElementById("settings-box"),
+	closeInfoElement = document.getElementById("close-info-box"),
+	infoBox = document.getElementById("info-box"),
 	nameElement = document.getElementById("name"),
 	statusElement = document.getElementById("status"),
-	refreshOrLeaveElement = document.getElementById("refresh-or-leave"),
 	newLobbyElement = document.getElementById("new-lobby"),
 	playerListElement = document.getElementById("player-list"),
 	appearanceBox = document.getElementById("appearance-box"),
@@ -52,11 +54,7 @@ var canvas = document.getElementById("canvas"),
 			fuelElement.className = "hidden";
 			pointsElement.className = "hidden";
 			menuBox.classList.remove("hidden");
-			
-			document.getElementById("tabSettings").classList.add("hidden");
-			document.getElementById("tabInfo").classList.add("hidden");
-			document.getElementById("tabServer").classList.remove("hidden");
-					
+
 			players.length = 0;
 			planets.length = 0;
 			enemies.length = 0;
@@ -124,7 +122,7 @@ function init() {//init is done differently in the server
 	document.addEventListener("res loaded", game.stop);
 	loadProcess();
 }
-function loop() {	
+function loop() {
 	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
 		context.translate(x, y);
@@ -198,7 +196,6 @@ function loop() {
 			//TODO: make a non-linear prediction for moving around on planets
 			//TODO: current frame rate needs to influent the intensity
 			var intensity = Math.max(1, 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000);
-			console.log(intensity);
 			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
 			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
 			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
@@ -228,7 +225,7 @@ function loop() {
 		}
 	});
 	context.globalAlpha = 1;
-	
+
 	//planet
 	var playerInAtmos = false;
 	planets.forEach(function (planet, pi) {
@@ -324,4 +321,3 @@ function loop() {
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();
-

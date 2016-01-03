@@ -1,4 +1,6 @@
-const defaultKeymap = {Escape: "menu", Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
+"use strict";
+
+const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
 function sameObjects(a, b) {
 	var aProps = Object.getOwnPropertyNames(a);
 	var bProps = Object.getOwnPropertyNames(b);
@@ -34,11 +36,6 @@ String.prototype.ucFirst = function (){
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
-function changeTab (obj){
-	var tab = obj.textContent;
-	document.getElementById("donate").setAttribute("style", "display: " + ((tab == "Donate") ? "block" : "none"));
-	document.getElementById("share").setAttribute("style", "display: " + ((tab == "Donate") ? "none" : "block"));
-}
 function convertToKey(keyCode) {
 	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
 	else if (keyCode > 95 && keyCode < 106) return keyCode - 96;//numpad
@@ -126,9 +123,7 @@ function handleInput(e) {
 			e.preventDefault();
 			triggered = e.target.id;
 		}
-		if (triggered === "menu" && !chatInUse && objInvisible(dialogElement)) {
-			if (s == 1) menuBox.classList.toggle("hidden");
-		} else if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement]) && players[ownIdx] !== undefined) {
+		if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement]) && players[ownIdx] !== undefined) {
 			//oh boy, this statement is fucked up :D
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
@@ -192,7 +187,7 @@ handleInput.initKeymap = function(fromReversed){
 };
 handleInput.loadKeySettings = function(){
 	var presets = localStorage.getItem("settings.keys");
-	try{
+	try {
 		handleInput.reverseKeyMap = JSON.parse(presets);
 		handleInput.initKeymap(true);
 	} catch (e) {
@@ -232,19 +227,20 @@ if (volMusic !== null && volEffects !== null) {
 	soundEffectGain.gain.value = volEffects/100;
 }
 
-function handleGamepad(){
+var usingGamepad;
+function handleGamepad() {
 	if (isMobile) return;
 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
-	if (this.usingGamepad == -1){
+	if (usingGamepad == -1){
 		for (var i = 0; i < gamepads.length; i++) {
 			var gp = gamepads[i];
 			if (gp) {
 				onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
-				this.usingGamepad = gp.index;
+				usingGamepad = gp.index;
 			}
 		}
 	} else {
-		var g = gamepads[this.usingGamepad];
+		var g = gamepads[usingGamepad];
 		if (typeof(g) !== "undefined"){
 			players[ownIdx].controls["jump"] = g.buttons[0].value;
 			players[ownIdx].controls["run"] = g.buttons[1].value;
@@ -260,8 +256,8 @@ function handleGamepad(){
 			else game.drag.y = 0;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		} else {
-			if (typeof this.usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (this.usingGamepad + 1).toString() + " disconnected");
-			this.usingGamepad = -1;
+			if (typeof usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (usingGamepad + 1).toString() + " disconnected");
+			usingGamepad = -1;
 		}
 	}
 }
@@ -376,22 +372,10 @@ chatInput.addEventListener("keydown", function(e){
 	}
 });
 
-[].forEach.call(document.querySelectorAll(".playerSelect"), function (element){
-	element.addEventListener("mousedown", function(){
+[].forEach.call(document.querySelectorAll(".playerSelect"), function(element) {
+	element.addEventListener("onchange", function() {
 		settings.appearance = this.id.replace("player", "alien");
-		appearanceBox.classList.add("hidden");
 		settingsChanged();
-	});
-});
-[].forEach.call(document.querySelectorAll(".menu-tabs"), function (element){
-	element.addEventListener("click", function(){
-		[].forEach.call(document.querySelectorAll(".menu-tabs"), function (obj){ obj.disabled = false; });
-		this.disabled = true;
-		var tabs = {"Information": "tabInfo", "Connection": "tabServer", "Settings": "tabSettings"};
-		for (var i in tabs){
-			if (this.textContent === i) document.getElementById(tabs[i]).classList.remove("hidden");
-			else document.getElementById(tabs[i]).classList.add("hidden");
-		}
 	});
 });
 disconnectElement.addEventListener("click", function(){
@@ -403,13 +387,9 @@ disconnectElement.addEventListener("click", function(){
 		openSocket();
 	}
 });
-refreshOrLeaveElement.addEventListener("click", function(){
-	if (this.textContent === "Leave Lobby") {
-		leaveLobby();
-		history.pushState(null, "Main menu", "/");
-	}
-	else refreshLobbies();
-});
+document.getElementById("refresh").addEventListener("click", refreshLobbies);
+document.getElementById("leave-button").addEventListener("click", leaveLobby);
+
 newLobbyElement.addEventListener("click", function(){
 	dialog.show(newLobby);
 });
@@ -421,9 +401,18 @@ nameElement.addEventListener("keydown", function(e) {
 		settingsChanged();
 	}
 });
-menuCloseElement.addEventListener("click", function(){
-	menuBox.classList.add("hidden");
-});
+function addToogleListener(button, element) {
+	button.addEventListener("click", function() {
+		element.classList.toggle("hidden");
+	});
+}
+addToogleListener(closeSettingsElement, settingsBox);
+addToogleListener(document.getElementById("settings-button"), settingsBox);
+addToogleListener(document.getElementById("menu-box-settings-button"), settingsBox);
+addToogleListener(closeInfoElement, infoBox);
+addToogleListener(document.getElementById("infos-button"), infoBox);
+addToogleListener(document.getElementById("menu-box-infos-button"), infoBox);
+
 settings.name = localStorage.getItem("settings.name");
 nameElement.value = settings.name;
 settings.appearance = "alien" + (["Blue", "Beige", "Green", "Yellow", "Pink"])[Math.floor(Math.random() * 5)];
@@ -439,7 +428,7 @@ document.getElementById("option-fullscreen").addEventListener("change", function
 		}
 	} else {
 		if (document.documentElement.requestFullscreen) {
-    		document.documentElement.requestFullscreen();
+			document.documentElement.requestFullscreen();
 		} else if (document.documentElement.mozRequestFullScreen) {
 			document.documentElement.mozRequestFullScreen();
 		} else if (document.documentElement.webkitRequestFullscreen) {
@@ -459,10 +448,9 @@ document.getElementById("option-performance").addEventListener("change", functio
 	else canvas.classList.remove("boosted");
 	resizeCanvas();
 });
-window.onbeforeunload = function(){
+window.onbeforeunload = function() {
 	localStorage.setItem("settings.name", player.name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
 	localStorage.setItem("settings.volume.music", document.getElementById("music-volume").value);
 	localStorage.setItem("settings.volume.effects", document.getElementById("effects-volume").value);
 };
-

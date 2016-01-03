@@ -191,8 +191,8 @@ function Lobby(name, maxPlayers){
 	this.enemies = [];
 	this.shots = [];
 	this.processTime = 2;
-	this.state = 0; //waiting for players, currently playing, end
-	this.stateTimer = 30;
+	this.state = this.stateEnum.WAITING;
+	this.stateTimer = config.dev ? 0 : 30;
 	this.players.firstEmpty = function() {
 		for (var i = 0; i < this.length; i++){
 			if (this[i] === undefined) return i;
@@ -252,7 +252,7 @@ function Lobby(name, maxPlayers){
 		//TODO: send player scores too
 		var i = {}, a;
 		for (a in this.gameProgress) if (a.indexOf("alien") !== -1) i[a] = this.gameProgress[a];
-		return i;			
+		return i;
 	};
 
 
@@ -292,7 +292,7 @@ function Lobby(name, maxPlayers){
 			iterations++;
 		}
 		this.players.forEach(function(player){
-			if (player !== undefined){ 
+			if (player !== undefined){
 				player.attachedPlanet = -1;
 				player.box.center.x = 0;
 				player.box.center.y = 0;
@@ -305,6 +305,11 @@ function Lobby(name, maxPlayers){
 	this.name = name || "Unnamed Lobby";
 	this.maxPlayers = maxPlayers || 8;
 }
+Lobby.prototype.stateEnum = {
+	WAITING: 0,
+	PLAYING: 1,
+	END: 2
+};
 Lobby.prototype.broadcast = function(message) {
 	this.players.forEach(function(player) {
 		try {
@@ -313,33 +318,33 @@ Lobby.prototype.broadcast = function(message) {
 	});
 };
 Lobby.prototype.update = function() {
-	if (this.players.amount() !== 0) this.stateTimer -= (16 / 1000);
-	if (this.state === 0){
+	if (this.players.amount() !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
+	if (this.state === this.stateEnum.WAITING){
 		this.broadcast(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: this.state, timer: this.stateTimer}}));
 		if (this.stateTimer <= 0) {
 			this.resetWorld();
 			this.broadcast(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: this.planets.getWorldData(), enemies: this.enemies.getWorldData()}}));
-			this.state = 1;
+			this.state = this.stateEnum.PLAYING;
 			this.stateTimer = 60;
 		}
 		return;
-	} else if (this.state === 2){
+	} else if (this.state === this.stateEnum.END) {
 		this.broadcast(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: this.state, timer: this.stateTimer}}));
 		if (this.stateTimer <= 0){
-			this.state = 0;
+			this.state = this.stateEnum.WAITING;
 			this.stateTimer = 30;
-			//TODO: if there are too less players, keep waiting until certain amount is reached - otherwise close the lobby(?)
+			//TODO: if there are too few players, keep waiting until certain amount is reached - otherwise close the lobby(?)
 		}
-		return;		
+		return;
 	} else {
 		if (this.stateTimer <= 0){
-			this.state = 2;
+			this.state = this.stateEnum.END;
 			this.stateTimer = 10;
 			this.broadcast(JSON.stringify({msgType: MESSAGE.SCORES, data: this.getScores()}));
 			//TODO: display the scores
 		}
 	}
-	
+
 	var oldDate = Date.now(), playerData = [],
 	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.gameProgress);
 
@@ -365,13 +370,15 @@ Lobby.prototype.update = function() {
 	});
 	this.players.forEach(function(player) {
 		if (player === undefined) return;
-		player.ws.send(JSON.stringify({
-			msgType: MESSAGE.LOBBY_STATE,
-			data: {
-				state: this.state,
-				timer: this.stateTimer
-			}
-		}));
+		try {
+			player.ws.send(JSON.stringify({
+				msgType: MESSAGE.LOBBY_STATE,
+				data: {
+					state: this.state,
+					timer: this.stateTimer
+				}
+			}));
+		} catch(e) {/*Ignore errors*/}
 		if (player.needsUpdate || player.needsUpdate === undefined) {
 			player.needsUpdate = false;
 			setTimeout(function() {
@@ -386,7 +393,7 @@ Lobby.prototype.update = function() {
 							gameProgress: this.gameProgress
 						}
 					}));
-					
+
 					player.lastRefresh = Date.now();
 					player.needsUpdate = true;
 				} catch(e) {/*Ignore errors*/}
