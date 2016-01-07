@@ -1,24 +1,5 @@
 "use strict";
 
-var chatElement = document.getElementById("gui-chat"),
-	chatFirstElement = document.getElementById("gui-chat-first"),
-	healthElement = document.getElementById("gui-health"),
-	fuelElement = document.getElementById("gui-fuel"),
-	pointsElement = document.getElementById("gui-points"),
-	menuBox = document.getElementById("menu-box"),
-	closeSettingsElement = document.getElementById("close-settings-box"),
-	settingsBox = document.getElementById("settings-box"),
-	closeInfoElement = document.getElementById("close-info-box"),
-	infoBox = document.getElementById("info-box"),
-	nameElement = document.getElementById("name"),
-	statusElement = document.getElementById("status"),
-	newLobbyElement = document.getElementById("new-lobby"),
-	playerListElement = document.getElementById("player-list"),
-	appearanceBox = document.getElementById("appearance-box"),
-	disconnectElement = document.getElementById("disconnect"),
-	dialogElement = document.getElementById("dialog"),
-	chatInput = document.getElementById("chat-input");
-
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
@@ -239,7 +220,7 @@ function loop() {
 
 		if (!playerInAtmos && universe.collide(planet.atmosBox, players[ownIdx].box)) playerInAtmos = true;
 
-		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);		
+		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 	});
 	if(playerInAtmos) bgFilter.frequency.value = bgFilter.frequency.value >= 4000 ? 4000 : bgFilter.frequency.value * 1.05;
 	else bgFilter.frequency.value = bgFilter.frequency.value <= 200 ? 200 : bgFilter.frequency.value * 0.95;
@@ -250,7 +231,7 @@ function loop() {
 		shot.box.center.y += 18 * -Math.cos(shot.box.angle);
 		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 	});
-	
+
 	//enemies
 	enemies.forEach(function (enemy, ei) {
 		context.fillStyle = "#aaa";
@@ -280,6 +261,7 @@ function loop() {
 		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
 	});
 
+	//minimap
 	context.beginPath();
 	context.rect(canvas.width - 158, 8, 150, 150);
 	context.closePath();

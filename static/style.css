@@ -270,11 +270,11 @@ label > input[type="radio"]:hover + span {
 	filter: grayscale(50%);
 	background-size: 85px 85px;
 }
-label > input[type="radio"][value="playerBlue"] + span {background-image: url("/assets/images/alienBlue_badge.svg");}
-label > input[type="radio"][value="playerBeige"] + span {background-image: url("/assets/images/alienBeige_badge.svg");}
-label > input[type="radio"][value="playerGreen"] + span {background-image: url("/assets/images/alienGreen_badge.svg");}
-label > input[type="radio"][value="playerPink"] + span {background-image: url("/assets/images/alienPink_badge.svg");}
-label > input[type="radio"][value="playerYellow"] + span {background-image: url("/assets/images/alienYellow_badge.svg");}
+label > input[type="radio"][value="alienBlue"] + span {background-image: url("/assets/images/alienBlue_badge.svg");}
+label > input[type="radio"][value="alienBeige"] + span {background-image: url("/assets/images/alienBeige_badge.svg");}
+label > input[type="radio"][value="alienGreen"] + span {background-image: url("/assets/images/alienGreen_badge.svg");}
+label > input[type="radio"][value="alienPink"] + span {background-image: url("/assets/images/alienPink_badge.svg");}
+label > input[type="radio"][value="alienYellow"] + span {background-image: url("/assets/images/alienYellow_badge.svg");}
 
 #gui-chat.hidden, #gui-health.hidden, #gui-fuel.hidden, #gui-bad-connection.hidden, #gui-ping.hidden, #gui-points.hidden {
 	display: none;

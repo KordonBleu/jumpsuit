@@ -15,24 +15,15 @@ function sameObjects(a, b) {
 	}
 	return true;
 }
-function objInvisible(obj){
+function objInvisible(obj) {
 	if (typeof(obj.length) === "undefined") return (obj.className.indexOf("hidden") !== -1);
 	for (var i = 0; i < obj.length; i++){
 		if (obj[i].className.indexOf("hidden") === -1) return false;
 	}
 	return true;
 }
-var isMobile = (navigator.userAgent.match(/Android/i)
-	|| navigator.userAgent.match(/webOS/i)
-	|| navigator.userAgent.match(/iPhone/i)
-	|| navigator.userAgent.match(/iPad/i)
-	|| navigator.userAgent.match(/iPod/i)
-	|| navigator.userAgent.match(/BlackBerry/i)
-	|| navigator.userAgent.match(/Windows Phone/i));
 
-var settings = {name: "", appearance: ""};
-
-String.prototype.ucFirst = function (){
+String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
@@ -60,7 +51,7 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	39: "ArrowRight",
 	40: "ArrowDown"
 };
-function transformStyle(element, val){
+function transformStyle(element, val) {
 	var vendors = ["WebkitTransform", "MozTransform", "OTransform", "transform"],
 		correctVendor, obj;
 	for (var i = 0; i < vendors.length; i++){
@@ -73,7 +64,7 @@ function transformStyle(element, val){
 	console.log(correctVendor, val);
 }
 
-function handleInputMobile(e){
+function handleInputMobile(e) {
 	for (var t = 0; t < e.changedTouches.length; t++){
 		var touch = e.changedTouches[t];
 		if (touch.target.id === "canvas"){
@@ -92,7 +83,7 @@ function handleInputMobile(e){
 		}
 	}
 }
-handleInputMobile.transform = function (touch, type){
+handleInputMobile.transform = function (touch, type) {
 	var element = touch.target, ytransform;
 	if (type.indexOf("start") !== -1){
 		element.setAttribute("touchstart", touch.pageY);
@@ -133,7 +124,7 @@ function handleInput(e) {
 }
 handleInput.keyMap = defaultKeymap;
 handleInput.reverseKeyMap = {};
-handleInput.updateReverseKeyMap = function(){
+handleInput.updateReverseKeyMap = function() {
 	handleInput.reverseKeyMap = {};
 	for (var key in handleInput.keyMap) {
 		var action = handleInput.keyMap[key], index;
@@ -143,7 +134,7 @@ handleInput.updateReverseKeyMap = function(){
 		handleInput.reverseKeyMap[action][index] = key;
 	}
 };
-handleInput.updateKeyMap = function(){
+handleInput.updateKeyMap = function() {
 	handleInput.keyMap = {};
 	for (var action in handleInput.reverseKeyMap){
 		var keys = handleInput.reverseKeyMap[action];
@@ -152,12 +143,12 @@ handleInput.updateKeyMap = function(){
 		}
 	}
 };
-handleInput.initKeymap = function(fromReversed){
+handleInput.initKeymap = function(fromReversed) {
 	if (fromReversed) handleInput.updateKeyMap();
 	else handleInput.updateReverseKeyMap();
 
-	while (settingsEl.firstChild) {
-		settingsEl.removeChild(settingsEl.firstChild);
+	while (keySettingsElement.firstChild) {
+		keySettingsElement.removeChild(keySettingsElement.firstChild);
 	}
 	var tableTitles = ["Actions", "Primary Keys", "Alternate Keys"], firstRow = document.createElement("tr");
 	for (var i = 0; i < tableTitles; i++){
@@ -165,7 +156,7 @@ handleInput.initKeymap = function(fromReversed){
 		tableHead.textContent = tableTitles[i];
 		firstRow.appendChild(tableHead);
 	}
-	settingsEl.appendChild(firstRow);
+	keySettingsElement.appendChild(firstRow);
 	for (var action in handleInput.reverseKeyMap) {
 		var rowEl = document.createElement("tr"),
 			actionEl = document.createElement("td"),
@@ -181,11 +172,11 @@ handleInput.initKeymap = function(fromReversed){
 			else keyEl.textContent = slice[i].toString().replace(" ", "Space").ucFirst(); //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
 			rowEl.appendChild(keyEl);
 		}
-		settingsEl.appendChild(rowEl);
+		keySettingsElement.appendChild(rowEl);
 	}
 	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
 };
-handleInput.loadKeySettings = function(){
+handleInput.loadKeySettings = function() {
 	var presets = localStorage.getItem("settings.keys");
 	try {
 		handleInput.reverseKeyMap = JSON.parse(presets);
@@ -195,7 +186,7 @@ handleInput.loadKeySettings = function(){
 	}
 };
 
-function dragging(ev, x, y){
+function dragging(ev, x, y) {
 	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
 		game.drag.x = x;
 		game.drag.y = y;
@@ -212,24 +203,8 @@ function dragging(ev, x, y){
 	}
 }
 
-document.getElementById("music-volume").addEventListener("input", function(ev) {
-	musicGain.gain.value = ev.target.value/100;
-});
-document.getElementById("effects-volume").addEventListener("input", function(ev) {
-	soundEffectGain.gain.value = ev.target.value/100;
-});
-var volMusic = localStorage.getItem("settings.volume.music"),
-	volEffects = localStorage.getItem("settings.volume.effects");
-if (volMusic !== null && volEffects !== null) {
-	document.getElementById("music-volume").value = volMusic;
-	document.getElementById("effects-volume").value = volEffects;
-	musicGain.gain.value = volMusic/100;
-	soundEffectGain.gain.value = volEffects/100;
-}
-
 var usingGamepad;
 function handleGamepad() {
-	if (isMobile) return;
 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
 	if (usingGamepad == -1){
 		for (var i = 0; i < gamepads.length; i++) {
@@ -261,75 +236,11 @@ function handleGamepad() {
 		}
 	}
 }
-var changingKeys = false,
-	settingsEl = document.getElementById("key-settings"),
-	selectedRow = -1;
 
-settingsEl.addEventListener("click", function(e) {
-	function reselect(obj){
-		document.removeEventListener("keydown", wrap);
-		Array.prototype.forEach.call(settingsEl.childNodes, function (row){ row.classList.remove("selected"); });
-		if (typeof obj !== "undefined") {
-			obj.classList.add("selected");
-			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
-			if (nsr === selectedRow) reselect();
-			else selectedRow = nsr;
-		} else {
-			selectedRow = -1;
-			document.removeEventListener("keyup", wrap);
-			changingKeys = false;
-		}
-	}
-	function handleChangeKey(e) {
-		console.log(selectedRow);
-		var keyName = e.key || convertToKey(e.keyCode),
-			action = settingsEl.childNodes[selectedRow].firstChild.textContent,
-			alreadyTaken = false;
-
-		for (var key in handleInput.keyMap){
-			if (key !== keyName) continue;
-			alreadyTaken = true;
-			break;
-		}
-		if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
-		else handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
-		handleInput.reverseKeyMap[action][0] = keyName;
-		handleInput.initKeymap(true);
-	}
-	function wrap(nE) {
-		nE.preventDefault();
-		switch(nE.type) {
-			case "keydown":
-				changingKeys = true;
-				document.removeEventListener("keydown", wrap);
-				document.addEventListener("keyup", wrap);
-				break;
-			case "keyup":
-				handleChangeKey(nE);
-				reselect();
-				break;
-		}
-	}
-	if (e.target.nodeName === "TD") {
-		reselect(e.target.parentNode);
-		document.addEventListener("keydown", wrap);
-	}
-});
-
-document.getElementById("key-reset").addEventListener("click", function(){
-	handleInput.keyMap = defaultKeymap;
-	handleInput.updateReverseKeyMap();
-	handleInput.initKeymap();
-});
-
-if (matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
-	//only supported by webkit as of today, returns false in other browsers
-	/*document.getElementById("mobile-info").style["display"] = "initial";
-	document.getElementById("key-info").style["display"] = "none";
-	document.getElementById("key-settings").style["display"] = "none";
-	document.getElementById("key-reset").style["display"] = "none";*/
-} else handleInput.loadKeySettings();
-
+if (!matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
+	//only supported by webkit as of today, the whole statement returns true in other browsers
+	handleInput.loadKeySettings();
+}
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
 window.addEventListener("touchend", handleInputMobile);
@@ -338,119 +249,3 @@ window.addEventListener("mousemove", handleInput);
 window.addEventListener("mouseup", handleInput);
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
-
-chatInput.addEventListener("keydown", function(e){
-	if (e.keyCode == 13){
-		if (!currentConnection.alive()) return;
-		currentConnection.sendChat(this.value);
-		this.value = "";
-	} else if (e.keyCode == 9){
-		e.preventDefault();
-
-		if (!this.playerSelection){
-			this.playerSelection = true;
-			this.cursor = this.selectionStart;
-			var text = (this.cursor === 0) ? "" : this.value.substr(0, this.cursor);
-			this.search = text.substr((text.lastIndexOf(" ") === -1) ? 0 : text.lastIndexOf(" ") + 1);
-
-			this.searchIndex = 0;
-			this.textParts = [this.value.substr(0, this.cursor - this.search.length), this.value.substr(this.cursor)];
-		}
-
-		var filteredPlayerList = (players[ownIdx].name.indexOf(this.search) === 0) ? [players[ownIdx].name] : [];
-		for (var pid in players){
-			if (players[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(players[pid].name);
-		}
-
-		if (filteredPlayerList.length !== 0){
-			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];
-			this.searchIndex++;
-			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0;
-		}
-	} else {
-		this.playerSelection = false;
-	}
-});
-
-[].forEach.call(document.querySelectorAll(".playerSelect"), function(element) {
-	element.addEventListener("onchange", function() {
-		settings.appearance = this.id.replace("player", "alien");
-		settingsChanged();
-	});
-});
-disconnectElement.addEventListener("click", function(){
-	if (this.textContent == "Disconnect"){
-		this.textContent = "Connect";
-		closeSocket();
-	} else {
-		this.textContent = "Disconnect";
-		openSocket();
-	}
-});
-document.getElementById("refresh").addEventListener("click", refreshLobbies);
-document.getElementById("leave-button").addEventListener("click", leaveLobby);
-
-newLobbyElement.addEventListener("click", function(){
-	dialog.show(newLobby);
-});
-nameElement.addEventListener("keydown", function(e) {
-	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
-		localStorage.setItem("settings.name", this.value);
-		settings.name = this.value;
-		e.target.blur();
-		settingsChanged();
-	}
-});
-function addToogleListener(button, element) {
-	button.addEventListener("click", function() {
-		element.classList.toggle("hidden");
-	});
-}
-addToogleListener(closeSettingsElement, settingsBox);
-addToogleListener(document.getElementById("settings-button"), settingsBox);
-addToogleListener(document.getElementById("menu-box-settings-button"), settingsBox);
-addToogleListener(closeInfoElement, infoBox);
-addToogleListener(document.getElementById("infos-button"), infoBox);
-addToogleListener(document.getElementById("menu-box-infos-button"), infoBox);
-
-settings.name = localStorage.getItem("settings.name");
-nameElement.value = settings.name;
-settings.appearance = "alien" + (["Blue", "Beige", "Green", "Yellow", "Pink"])[Math.floor(Math.random() * 5)];
-
-document.getElementById("option-fullscreen").addEventListener("change", function(){
-	if (!this.checked){
-		if (document.exitFullscreen) {
-			document.exitFullscreen();
-		} else if(document.mozCancelFullScreen) {
-			document.mozCancelFullScreen();
-		} else if(document.webkitExitFullscreen) {
-			document.webkitExitFullscreen();
-		}
-	} else {
-		if (document.documentElement.requestFullscreen) {
-			document.documentElement.requestFullscreen();
-		} else if (document.documentElement.mozRequestFullScreen) {
-			document.documentElement.mozRequestFullScreen();
-		} else if (document.documentElement.webkitRequestFullscreen) {
-			document.documentElement.webkitRequestFullscreen();
-		}
-	}
-});
-document.getElementById("option-moblur").addEventListener("change", function(){
-	graphicFilters.motionBlur.enabled = this.checked;
-	if (this.checked) canvas.classList.add("motionBlur");
-	else canvas.classList.remove("motionBlur");
-});
-
-
-document.getElementById("option-performance").addEventListener("change", function(){
-	if (this.checked) canvas.classList.add("boosted");
-	else canvas.classList.remove("boosted");
-	resizeCanvas();
-});
-window.onbeforeunload = function() {
-	localStorage.setItem("settings.name", player.name);
-	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
-	localStorage.setItem("settings.volume.music", document.getElementById("music-volume").value);
-	localStorage.setItem("settings.volume.effects", document.getElementById("effects-volume").value);
-};

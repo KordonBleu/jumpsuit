@@ -41,7 +41,7 @@ Connection.prototype.leaveLobby = function() {
 		msgType: MESSAGE.LEAVE_LOBBY,
 		data: {uid: this.lobbyUid}
 	}));
-	game.stop();	
+	game.stop();
 };
 Connection.prototype.sendSettings = function() {
 	this.socket.send(JSON.stringify({
@@ -78,21 +78,11 @@ Connection.prototype.openHandler = function() {
 	newLobbyElement.disabled = false;
 };
 Connection.prototype.messageHandler = function(message) {
-	//try {
+	try {
 		msg = JSON.parse(message.data);
 		switch(msg.msgType) {
 			case MESSAGE.SENT_LOBBIES:
-				newLobbyElement.disabled = false;
-				statusElement.textContent = "Choose a lobby";
-				while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-				msg.data.forEach(function(lobby) {
-					var li = document.createElement("li"),
-						el = document.createElement("a");
-					el.href = "/lobbies/" + lobby.uid + "/";
-					el.textContent = lobby.name + " | (" + lobby.players + " of " + lobby.maxPlayers + ")";
-					li.appendChild(el);
-					playerListElement.appendChild(li);
-				});
+				printLobbies(msg.data);
 				break;
 			case MESSAGE.PING:
 				this.send(JSON.stringify({
@@ -104,31 +94,10 @@ Connection.prototype.messageHandler = function(message) {
 				}));
 				break;
 			case MESSAGE.PLAYER_SETTINGS:
-				statusElement.textContent = "Connected to a lobby";
-				while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-				msg.data.forEach(function(player, index) {
-					li = document.createElement("li");
-					li.textContent = player.name;
-					if (index === ownIdx) li.style.color = "#f33";
-					playerListElement.appendChild(li);
-				});
+				printPlayerList(msg.data);
 				break;
 			case MESSAGE.CHAT:
-				var element = document.createElement("p"), nameElement = document.createElement("b"), textElement = document.createTextNode(msg.data.content);
-				if (msg.data.name === undefined) element.className = "server";
-				else {
-					nameElement.textContent = msg.data.name + ": ";
-					nameElement.className = msg.data.appearance;
-				}
-				element.appendChild(nameElement);
-				element.appendChild(textElement);
-				chatElement.appendChild(element);
-				while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
-				var messageHeight = 0;
-				[].forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
-					messageHeight += element.clientHeight + 2;
-				});
-				chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
+				printChatMessage(msg.data.name, msg.data.appearance, msg.data.content);
 				break;
 			case MESSAGE.WORLD_DATA:
 				planets.length = 0;
@@ -209,7 +178,7 @@ Connection.prototype.messageHandler = function(message) {
 					players[i].appearance = msg.data.players[i].appearance;
 					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
 					players[i].jetpack = msg.data.players[i].jetpack;
-					
+
 					if (i === ownIdx) {
 						players[i].health = msg.data.players[i].health;
 						[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
@@ -233,17 +202,17 @@ Connection.prototype.messageHandler = function(message) {
 				msg.data.timer = Math.floor(msg.data.timer);
 				if (msg.data.state === 0){
 					statusElement.textContent = "Waiting for players... " + msg.data.timer;
-					document.getElementById("player-list").className = "";
-					document.getElementById("team-list").className = "hidden";
+					playerListElement.className = "";
+					teamListElement.className = "hidden";
 				} else if (msg.data.state === 1){
 					if (!game.started && players.length !== 0) game.start();
-					document.getElementById("player-list").className = "";
-					document.getElementById("team-list").className = "hidden";
+					playerListElement.className = "";
+					teamListElement.className = "hidden";
 					statusElement.textContent = "Match is running " + msg.data.timer;
 				} else if (msg.data.state === 2){
 					if (game.started) game.stop();
-					document.getElementById("player-list").className = "hidden";
-					document.getElementById("team-list").className = "";
+					playerListElement.className = "hidden";
+					teamListElement.className = "";
 					statusElement.textContent = "Match is over " + msg.data.timer;
 				}
 				break;
@@ -261,7 +230,7 @@ Connection.prototype.messageHandler = function(message) {
 						errDesc = "There's no slot left in the lobby";
 						break;
 					case ERROR.NAME_TAKEN:
-						errDesc = "The name " + localStorage.getItem("settings.name")  + " is already taken";
+						errDesc = "The name " + localStorage.getItem("settings.name") + " is already taken";
 						break;
 				}
 
@@ -286,9 +255,9 @@ Connection.prototype.messageHandler = function(message) {
 				});
 				break;
 		}
-	/*} catch(err) {
+	} catch(err) {
 		console.error(err, err.stack);
-	}*/
+	}
 };
 
 var currentConnection = new Connection();
@@ -338,7 +307,6 @@ playerListElement.addEventListener("click", function(e) {
 	}
 });
 window.addEventListener("popstate", function(e) {
-	console.log(e, location);
 	if(location.pathname === "/") leaveLobby();
 	else {
 		var lobbyUid = location.pathname.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");

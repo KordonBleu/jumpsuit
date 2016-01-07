@@ -95,19 +95,19 @@
 					<h3>Team</h3>
 					<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 					<label>
-						<input type="radio" name="playerSelect" value="playerBlue"/><span></span>
+						<input type="radio" name="playerSelect" value="alienBlue"/><span></span>
 					</label>
 					<label>
-						<input type="radio" name="playerSelect" value="playerBeige"/><span></span>
+						<input type="radio" name="playerSelect" value="alienBeige"/><span></span>
 					</label>
 					<label>
-						<input type="radio" name="playerSelect" value="playerGreen"/><span></span>
+						<input type="radio" name="playerSelect" value="alienGreen"/><span></span>
 					</label>
 					<label>
-						<input type="radio" name="playerSelect" value="playerPink"/><span></span>
+						<input type="radio" name="playerSelect" value="alienPink"/><span></span>
 					</label>
 					<label>
-						<input type="radio" name="playerSelect" value="playerYellow"/><span></span>
+						<input type="radio" name="playerSelect" value="alienYellow"/><span></span>
 					</label>
 
 					<h3>Volume</h3>
@@ -117,8 +117,7 @@
 					<h3>Graphic</h3>
 					<label class="checkbox-label"><input type="checkbox" id="option-fullscreen" />Fullscreen</label>
 					<label class="checkbox-label" data-beta><input type="checkbox" id="option-moblur"/>Motion Blur</label>
-					<label class="checkbox-label"><input type="checkbox" id="option-performance">Performance-boost</label>
-					<p>Poorer resolution, better performances</p>
+					<label class="checkbox-label"><input type="checkbox" id="option-performance">Performance-boost (poorer resolution)</label>
 				</div>
 				<div class="splitContainer">
 					<h3>Key map</h3>
@@ -149,10 +148,10 @@
 				<feGaussianBlur in="SourceGraphic" stdDeviation="0,0" />
 			</filter>
 		</svg>
-		<script src="/dialogs.js"></script>
 		<script src="/audio.js"></script>
 		<script src="/engine.js"></script>
 		<script src="/vinage/vinage.js"></script>
+		<script src="/ui.js"></script>
 		<script src="/canvas.js"></script>
 		<script src="/message.js"></script>
 		<script src="/websocket_client.js"></script>

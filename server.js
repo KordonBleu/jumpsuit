@@ -522,7 +522,9 @@ wss.on("connection", function(ws) {
 					else {
 						var oldName = player.name;
 						player.name = msg.data.name;
-						player.appearance = msg.data.appearance;
+						if (engine.Planet.prototype.teamColors[msg.data.appearance] !== undefined) {//prevent malicious players from crashing the server
+							player.appearance = msg.data.appearance;
+						}
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
 						if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'"}}));
 					}

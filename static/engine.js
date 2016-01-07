@@ -74,7 +74,7 @@ function Planet(x, y, radius) {
 	this.atmosBox = new Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
 	this.progress = {team: "neutral", value: 0, color: "rgb(80,80,80)"};
 }
-Planet.prototype.teamColours = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
+Planet.prototype.teamColors = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
 Planet.prototype.names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey", "X-Ray", "Yankee", "Zulu"];
 
 
@@ -222,7 +222,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
 			}
 			var fadeRGB = [];
-			for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.floor(planets[i].progress.value / 100 * (parseInt(Planet.prototype.teamColours[planets[i].progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
+			for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.floor(planets[i].progress.value / 100 * (parseInt(Planet.prototype.teamColors[planets[i].progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
 
 			planets[i].progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
 		}
