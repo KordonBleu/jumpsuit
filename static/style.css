@@ -41,6 +41,9 @@ canvas.motionBlur {
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
 }
+.hidden {
+	display: none;
+}
 a {
 	color: #AD3726;
 	text-decoration: none;
@@ -276,25 +279,40 @@ label > input[type="radio"][value="alienGreen"] + span {background-image: url("/
 label > input[type="radio"][value="alienPink"] + span {background-image: url("/assets/images/alienPink_badge.svg");}
 label > input[type="radio"][value="alienYellow"] + span {background-image: url("/assets/images/alienYellow_badge.svg");}
 
-#gui-chat.hidden, #gui-health.hidden, #gui-fuel.hidden, #gui-bad-connection.hidden, #gui-ping.hidden, #gui-points.hidden {
-	display: none;
-}
 #gui-chat-first{
 	height: 1px;
 }
-.chat-input {
+#chat-input-container {
 	position: fixed;
 	bottom: 20px;
 	left: 20%;
+	width: 60%;
+}
+#chat-input {
+	width: 98.8%;/* 100% minus twice the padding */
+	padding: 0.6%;
 	font-size: 22px;
 	background: none;
-	padding: 10px;
 	border: none;
 	border-bottom: solid 2px #c9c9c9;
 	color: #c9c9c9;
 	outline: none;
 	font-family: inherit;
-	width: 60%;
+}
+#player-list {
+	background: rgba(235, 237, 244, 0.2);
+	border-radius: 2px;
+	list-style-type: none;
+	position: relative;
+	padding: 1%;
+}
+#player-list:after {/* CSS arrow trick */
+	content: " ";
+    position: absolute;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid rgba(235, 237, 244, 0.2);
+	top: 100%;
 }
 #settings-box, #info-box {
 	padding: 0.5%;
@@ -311,7 +329,8 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	max-height: 90vh;
 	overflow-y: auto;
 }
-#settings-box.hidden, #info-box.hidden {
+#settings-box.hidden, #info-box.hidden, #menu-box.hidden {
+	display: block;
 	transform: scale(0);
 	opacity: 0;
 }
@@ -336,11 +355,6 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	right: 0;
 	background: #ebedf4;
 	color: #333;
-	overflow-y: auto;
-}
-#menu-box.hidden {
-	transform: scale(0);
-	opacity: 0;
 }
 .splitContainer {
 	float: left;
@@ -348,17 +362,14 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	padding: 0 8px;	
 	box-sizing: border-box;
 }
-#player-list {
+#lobby-list {
 	font-size: 24px;
 	list-style-type: none;
 	width: 100%; 	
 }
-#player-list a {
+#lobby-list a {
 	color: #AD3726;
 	text-decoration: none;
-}
-#player-list.hidden{
-	display: none;
 }
 #team-list {
 	list-style-type: none;
@@ -366,9 +377,6 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	padding: 0;
 	width: 565px;
 	margin: 0 auto;
-}
-#team-list.hidden{
-	display: none;
 }
 #team-list li{
 	display: inline-block;
@@ -441,27 +449,27 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	font-size: 2em;
 	margin-bottom: 50px;
 }
-#dialog input[type="text"]{
+#dialog input[type="text"] {
 	padding: 8px;
 	width: calc(100% - 20px); /*substract padding and border*/
 	font-size: 22px;
 	margin-bottom: 20px
 }
-#gui-ping{
+#gui-ping {
 	position: fixed;
 	top: 8px;
 	right: 30px;
 	left: calc(100% - 158px);
 	color: #eee;
 }
-#gui-ping:before{
+#gui-ping:before {
 	line-height: 100%;
 	height: 22.5px;
 	content: "Latency: ";
 	width: 80px;
 	display: inline-block;
 }
-#gui-chat:empty:before{
+#gui-chat:empty:before {
 	cursor: inherit;
 	position: relative;
 	left: 50%;
@@ -471,7 +479,7 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	width: 120px;
 	margin-left: -60px;
 }
-#gui-chat{
+#gui-chat {
 	position: fixed;
 	top: 95px;
 	left: 18px;
@@ -483,13 +491,13 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	-ms-user-select: initial;
 	user-select: initial;
 }
-#gui-chat.no-select{
+#gui-chat.no-select {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
 }
-#gui-chat p{
+#gui-chat p {
 	margin: 2px 0;
 	display: block;
 	color: #eee;

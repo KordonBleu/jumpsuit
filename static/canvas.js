@@ -21,19 +21,17 @@ var canvas = document.getElementById("canvas"),
 		animationFrameId: null,
 		start: function() {
 			game.started = true;
-			chatElement.removeAttribute("class");
-			healthElement.removeAttribute("class");
-			fuelElement.removeAttribute("class");
-			pointsElement.removeAttribute("class");
+			chatElement.classList.remove("hidden");
+			chatInputContainer.classList.remove("hidden");
+			guiOptionElement.classList.remove("hidden");
+			healthElement.classList.remove("hidden");
+			fuelElement.classList.remove("hidden");
+			pointsElement.classList.remove("hidden");
 			menuBox.classList.add("hidden");
 			loop();
 		},
 		stop: function() {
 			game.started = false;
-			chatElement.className = "hidden";
-			healthElement.className = "hidden";
-			fuelElement.className = "hidden";
-			pointsElement.className = "hidden";
 			menuBox.classList.remove("hidden");
 
 			players.length = 0;
@@ -262,8 +260,9 @@ function loop() {
 	});
 
 	//minimap
+	var minimapMarginTopOffset = guiOptionElement.offsetHeight + 8;
 	context.beginPath();
-	context.rect(canvas.width - 158, 8, 150, 150);
+	context.rect(canvas.width - 158, minimapMarginTopOffset, 150, 150);
 	context.closePath();
 
 	context.fillStyle = "rgba(0, 0, 0, 0.7)";
@@ -278,7 +277,7 @@ function loop() {
 
 	planets.forEach(function (planet) {
 		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (planet.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, 8 + (planet.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
+		context.arc(canvas.clientWidth - 158 + (planet.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, minimapMarginTopOffset + (planet.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
 		context.closePath();
 		context.fillStyle = planet.progress.color;
 		context.fill();
@@ -288,12 +287,12 @@ function loop() {
 	players.forEach(function (otherPlayer) {
 		if (otherPlayer.appearance !== players[ownIdx].appearance) return;
 		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, 8 + (otherPlayer.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
+		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, minimapMarginTopOffset + (otherPlayer.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
 		context.closePath();
 		context.fill();
 	});
 	context.beginPath();
-	context.arc(canvas.clientWidth - 158 + 75, 8 + 75, 2.5, 0, 2*Math.PI);
+	context.arc(canvas.clientWidth - 158 + 75, minimapMarginTopOffset + 75, 2.5, 0, 2*Math.PI);//your character
 	context.fill();
 	context.closePath();
 

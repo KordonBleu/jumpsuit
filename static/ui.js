@@ -2,7 +2,9 @@
 
 var chatElement = document.getElementById("gui-chat"),
 	chatFirstElement = document.getElementById("gui-chat-first"),
+	chatInputContainer = document.getElementById("chat-input-container"),
 	chatInput = document.getElementById("chat-input"),
+	playerListElement = document.getElementById("player-list"),
 
 	healthElement = document.getElementById("gui-health"),
 	fuelElement = document.getElementById("gui-fuel"),
@@ -12,23 +14,28 @@ var chatElement = document.getElementById("gui-chat"),
 	infoBox = document.getElementById("info-box"),
 	settingsBox = document.getElementById("settings-box"),
 
-	closeSettingsElement = document.getElementById("close-settings-box"),
-	closeInfoElement = document.getElementById("close-info-box"),
-
 	/* inside menu-box */
 	statusElement = document.getElementById("status"),
-	playerListElement = document.getElementById("player-list"),
+	lobbyListElement = document.getElementById("lobby-list"),
 	teamListElement = document.getElementById("team-list"),
-	newLobbyElement = document.getElementById("new-lobby"),//button
-	disconnectElement = document.getElementById("disconnect"),//button
+	newLobbyButton = document.getElementById("new-lobby"),
+	menuBoxSettingsButton = document.getElementById("menu-box-settings-button"),
+	menuBoxInfoButton = document.getElementById("menu-box-info-button"),
 	/* inside settings-box */
+	closeSettingsButton = document.getElementById("close-settings-box"),
 	nameElement = document.getElementById("name"),
 	musicVolumeElement = document.getElementById("music-volume"),
 	effectsVolumeElement = document.getElementById("effects-volume"),
 	keySettingsElement = document.getElementById("key-settings"),
 	keyResetElement = document.getElementById("key-reset"),
-
-	dialogElement = document.getElementById("dialog"),//prompts for new lobby
+	/* inside info-box */
+	closeInfoButton = document.getElementById("close-info-box"),
+	/* In-game buttons */
+	guiOptionElement = document.getElementById("gui-options"),//contains the following buttons
+	settingsButton = document.getElementById("settings-button"),
+	infoButton = document.getElementById("info-button"),
+	/* New lobby dialog */
+	dialogElement = document.getElementById("dialog"),
 
 
 	settings = {
@@ -69,17 +76,18 @@ var dialog = new function() {
 	};
 }();
 
+/* Buttons */
 function addToogleListener(button, element) {
 	button.addEventListener("click", function() {
 		element.classList.toggle("hidden");
 	});
 }
-addToogleListener(closeSettingsElement, settingsBox);
-addToogleListener(document.getElementById("settings-button"), settingsBox);
-addToogleListener(document.getElementById("menu-box-settings-button"), settingsBox);
-addToogleListener(closeInfoElement, infoBox);
-addToogleListener(document.getElementById("infos-button"), infoBox);
-addToogleListener(document.getElementById("menu-box-infos-button"), infoBox);
+addToogleListener(closeSettingsButton, settingsBox);
+addToogleListener(settingsButton, settingsBox);
+addToogleListener(menuBoxSettingsButton, settingsBox);
+addToogleListener(closeInfoButton, infoBox);
+addToogleListener(infoButton, infoBox);
+addToogleListener(menuBoxInfoButton, infoBox);
 
 /* Graphic settings */
 document.getElementById("option-fullscreen").addEventListener("change", function() {
@@ -213,22 +221,13 @@ nameElement.addEventListener("blur", function(e) {
 });
 
 /* Buttons */
-disconnectElement.addEventListener("click", function(){
-	if (this.textContent == "Disconnect"){
-		this.textContent = "Connect";
-		closeSocket();
-	} else {
-		this.textContent = "Disconnect";
-		openSocket();
-	}
-});
 document.getElementById("refresh").addEventListener("click", function() {//not called directly because
 	refreshLobbies();
 });
 document.getElementById("leave-button").addEventListener("click", function() {//refreshLobbies and leaveLobby are not yet loaded
 	leaveLobby();
 });
-newLobbyElement.addEventListener("click", function() {
+newLobbyButton.addEventListener("click", function() {
 	dialog.show(newLobby);
 });
 
@@ -289,27 +288,34 @@ function printChatMessage(name, appearance, content) {
 
 /* Lobby list */
 function printLobbies(lobbies) {
-	console.log(lobbies);
-	newLobbyElement.disabled = false;
+	newLobbyButton.disabled = false;
 	statusElement.textContent = "Choose a lobby";
-	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
+	while (lobbyListElement.firstChild) lobbyListElement.removeChild(lobbyListElement.firstChild);
 	lobbies.forEach(function(lobby) {
 		var li = document.createElement("li"),
 			el = document.createElement("a");
 		el.href = "/lobbies/" + lobby.uid + "/";
 		el.textContent = lobby.name + " | (" + lobby.players + " of " + lobby.maxPlayers + ")";
 		li.appendChild(el);
-		playerListElement.appendChild(li);//TODO: make a separate lobby and player list
+		lobbyListElement.appendChild(li);
 	});
 }
 
 /* Player list */
+chatInputContainer.addEventListener("mouseover", function() {
+	playerListElement.classList.remove("hidden");
+});
+chatInputContainer.addEventListener("mouseout", function() {
+	playerListElement.classList.add("hidden");
+});
 function printPlayerList() {//TODO: a new playerlist design
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	msg.data.forEach(function(player, index) {
-		li = document.createElement("li");
+		console.log(player);
+		var li = document.createElement("li");
 		li.textContent = player.name;
-		if (index === ownIdx) li.style.color = "#f33";
+		li.style.color = Planet.prototype.teamColors[player.appearance];
+		if (index === ownIdx) li.style.fontWeight = "bold";
 		playerListElement.appendChild(li);
 	});
 }

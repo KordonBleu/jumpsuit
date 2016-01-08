@@ -70,12 +70,12 @@ Connection.prototype.refreshControls = function(controls) {
 	}));
 };
 Connection.prototype.errorHandler = function() {
-	newLobbyElement.disabled = true;
+	newLobbyButton.disabled = true;
 	this.close();
 };
 Connection.prototype.openHandler = function() {
 	this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
-	newLobbyElement.disabled = false;
+	newLobbyButton.disabled = false;
 };
 Connection.prototype.messageHandler = function(message) {
 	try {
@@ -202,23 +202,20 @@ Connection.prototype.messageHandler = function(message) {
 				msg.data.timer = Math.floor(msg.data.timer);
 				if (msg.data.state === 0){
 					statusElement.textContent = "Waiting for players... " + msg.data.timer;
-					playerListElement.className = "";
 					teamListElement.className = "hidden";
 				} else if (msg.data.state === 1){
 					if (!game.started && players.length !== 0) game.start();
-					playerListElement.className = "";
 					teamListElement.className = "hidden";
 					statusElement.textContent = "Match is running " + msg.data.timer;
 				} else if (msg.data.state === 2){
 					if (game.started) game.stop();
-					playerListElement.className = "hidden";
 					teamListElement.className = "";
 					statusElement.textContent = "Match is over " + msg.data.timer;
 				}
 				break;
 			case MESSAGE.PLAYER_CONNECTED:
 				ownIdx = msg.data;
-				newLobbyElement.disabled = true;
+				newLobbyButton.disabled = true;
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;
@@ -272,14 +269,6 @@ autoConnect.counter = 0;
 currentConnection.socket.addEventListener("open", autoConnect);
 document.addEventListener("res loaded", autoConnect);
 
-function closeSocket() {
-	newLobbyElement.disabled = true;
-	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
-	currentConnection.close();
-}
-function openSocket() {
-	currentConnection = new Connection();
-}
 function newLobby(name) {
 	if (!currentConnection.alive()) return;
 	currentConnection.createLobby(name);
@@ -298,7 +287,7 @@ function leaveLobby() {
 }
 
 
-playerListElement.addEventListener("click", function(e) {
+lobbyListElement.addEventListener("click", function(e) {
 	if(e.target.tagName == "A") {
 		e.preventDefault();
 		var lobbyUid = e.target.getAttribute("href").replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");

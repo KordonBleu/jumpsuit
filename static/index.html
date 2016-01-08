@@ -26,7 +26,10 @@
 		<div id="gui-chat" class="hidden"><p id="gui-chat-first"></p></div>
 		<div id="piano" class></div>
 		<div id="gui-bad-connection" class="hidden">Connection interrupted</div>
-		<input type="text" class="chat-input hidden" id="chat-input" maxlength=150/>
+		<div id="chat-input-container" class="hidden">
+			<ul id="player-list" class="hidden"></ul>
+			<input type="text" id="chat-input" maxlength=150/>
+		</div>
 		<table id="gui-points" class="hidden">
 			<tr>
 				<th id="gui-points-alienBeige">60</th>
@@ -37,22 +40,21 @@
 			</tr>
 		</table>
 
-		<div id="gui-options">
+		<div id="gui-options" class="hidden">
 			<button id="leave-button">Leave</button><!--perhaps add an icon here-->
-			<button id="infos-button">Infos</button><!--perhaps add an icon here-->
+			<button id="info-button">Infos</button><!--perhaps add an icon here-->
 			<button id="settings-button">Settings</button><!--perhaps add an icon here-->
 		</div>
 
 
 		<div id="menu-box" class="hidden">
-			<button id="disconnect" style="float: right;">Disconnect</button>
 			<button id="new-lobby" style="float: right;">Create New Lobby</button>
-			<button id="menu-box-infos-button" style="float: right;">Infos</button>
+			<button id="menu-box-info-button" style="float: right;">Infos</button>
 			<button id="menu-box-settings-button" style="float: right;">Settings</button>
 			<div id="status-plus-refresh">
 				<h3 id="status">Waiting for other players...</h3> <img id="refresh" src="/assets/images/refresh.svg" alt="Refresh" title="Refresh"/>
 			</div>
-			<ul id="player-list">
+			<ul id="lobby-list">
 			</ul>
 			<ul id="team-list" class="hidden">
 				<li><img src="/assets/images/alienBlue_badge.svg"/><span id="teamBlue">-</span></li>
