@@ -514,7 +514,9 @@ wss.on("connection", function(ws) {
 					ws.send(JSON.stringify({msgType: MESSAGE.SENT_LOBBIES, data: lobbyList}));
 					break;
 				case MESSAGE.CREATE_LOBBY:
-					lobbies.push(new Lobby(msg.data.name, 8));
+					console.log(msg.data.name, msg.data.playerAmount)
+					var playerAmount = parseInt(msg.data.playerAmount, 10);
+					if (!isNaN(playerAmount) && playerAmount >= 1 && playerAmount <= 16 && msg.data.name.length <= 32) lobbies.push(new Lobby(msg.data.name, playerAmount));
 					break;
 				case MESSAGE.PLAYER_SETTINGS:
 					var lobby = lobbies.getByUid(msg.data.uid);

@@ -29,6 +29,7 @@ html, body {
 	-moz-user-select: text;
 	-ms-user-select: text;
 	user-select: text;
+	overflow-y: auto;
 }
 html {
 	background-image: url("/assets/images/background.png");
@@ -41,7 +42,7 @@ canvas.motionBlur {
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
 }
-.hidden {
+.hidden, #player-list.hidden {
 	display: none;
 }
 a {
@@ -81,11 +82,11 @@ button:disabled {
 	cursor: not-allowed;
 	border-color: #555;
 }
-button:hover{
+button:hover {
 	background: #ebedf4;
 	color: #AD3726;
 }
-button:disabled:hover{
+button:disabled:hover {
 	background: #ebedf4;
 	color: #555;
 }
@@ -305,6 +306,9 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	list-style-type: none;
 	position: relative;
 	padding: 1%;
+	
+	display: flex;
+	flex-wrap: wrap;
 }
 #player-list:after {/* CSS arrow trick */
 	content: " ";
@@ -313,6 +317,13 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
     border-right: 8px solid transparent;
     border-top: 8px solid rgba(235, 237, 244, 0.2);
 	top: 100%;
+}
+#player-list li {
+	min-width: 11.5%;/* 12.5 minus padding */
+	max-width: 24%;/* 25 minus padding */
+	overflow: hidden;
+	padding-left: 1%;
+	cursor: pointer;
 }
 #settings-box, #info-box {
 	padding: 0.5%;
@@ -327,7 +338,6 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	color: #333;
 	box-shadow: 0 0 3px 0 black;
 	max-height: 90vh;
-	overflow-y: auto;
 }
 #settings-box.hidden, #info-box.hidden, #menu-box.hidden {
 	display: block;
@@ -362,14 +372,61 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	padding: 0 8px;	
 	box-sizing: border-box;
 }
-#lobby-list {
-	font-size: 24px;
-	list-style-type: none;
-	width: 100%; 	
+#lobby-table {
+	font-size: 1.6rem;
+	width: 80%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	display: inline-table;
+	vertical-align: top;
 }
-#lobby-list a {
-	color: #AD3726;
-	text-decoration: none;
+#lobby-table thead {
+	color: #ebedf4;
+	background-color: #AD3726;
+}
+#lobby-table th {
+	padding: 0.5rem;
+	text-transform: uppercase;
+}
+#lobby-table th img {
+	width: 1.6rem;
+	height: 1.6rem;
+}
+#lobby-list tr {
+	font-weight: 600;
+}
+#lobby-list tr:nth-child(even) {
+	background-color: rgba(0, 0, 0, 0.1);
+}
+#lobby-list td {
+	text-align: center;
+	word-wrap: break-word;
+}
+#lobby-list button {
+	text-transform: none;
+}
+#lobby-list input {
+	font-size: 1.6rem;
+}
+#lobby-list input[type=text] {
+	width: 100%;
+	text-align: center;
+	max-width: 100%;
+}
+#lobby-list input[type=number] {
+	width: 3.5ex;
+	font-weight: 600;
+}
+#search-filter {
+	display: inline-block;
+	width: 18%;
+	padding: 0 1%;
+}
+#search-filter label {
+	display: block;
+	font-size: 1rem;
+	font-weight: normal;
+	margin: 0.5em 0px;
 }
 #team-list {
 	list-style-type: none;
@@ -398,16 +455,21 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 #key-settings #key-action {
 	width: 140px;
 }
-#key-settings tr{
-	transition: background .2s, color .2s;
+#key-settings tr {
+	transition: background .2s, color .2s, border-color .2s;
 }
-#key-settings tr:not(#key-header):not(.selected):hover{
+#key-settings td {
+	padding: 3px;
+}
+#key-settings tr:not(.selected):hover{
 	background: #AD3726;
 	color: #ddd;
 }
 #key-settings tr.selected {
-	background: #178e3a;
-	color: #ddd;
+	border: 2px dashed #AD3726;
+}
+#key-settings tr.selected td {
+	padding: 2px 2px;
 }
 #dialog,
 #dialog-backdrop {
@@ -519,13 +581,21 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	-webkit-appearance: none;
 	appearance: none;
 }
+#gui-fuel::-webkit-meter-bar {
+	background: transparent;
+	-webkit-appearance: none;
+	display: inline-block;
+	position: relative;/*shitty hack*/
+	bottom: 20px;
+	left: 77px;
+}
 #gui-fuel::-moz-meter-bar {
 	background: #5493ce;
 }
-#gui-fuel::-webkit-meter-bar {
+#gui-fuel::-webkit-meter-optimum-value, #gui-fuel::-webkit-meter-suboptimum-value, #gui-fuel::-webkit-meter-even-less-good-value{
 	background: #5493ce;
 }
-#gui-fuel:before {
+#gui-fuel::before {
 	content: "Fuel:";
 	color: #fff;
 	width: 77px;

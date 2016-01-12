@@ -5,6 +5,7 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="user-scalable=no"/>
 		<link href="/style.css" rel="stylesheet"/>
+		<link href='https://fonts.googleapis.com/css?family=Open+Sans:600' rel='stylesheet' type='text/css'>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
@@ -28,7 +29,7 @@
 		<div id="gui-bad-connection" class="hidden">Connection interrupted</div>
 		<div id="chat-input-container" class="hidden">
 			<ul id="player-list" class="hidden"></ul>
-			<input type="text" id="chat-input" maxlength=150/>
+			<input type="text" id="chat-input" maxlength="150"/>
 		</div>
 		<table id="gui-points" class="hidden">
 			<tr>
@@ -48,14 +49,26 @@
 
 
 		<div id="menu-box" class="hidden">
-			<button id="new-lobby" style="float: right;">Create New Lobby</button>
 			<button id="menu-box-info-button" style="float: right;">Infos</button>
 			<button id="menu-box-settings-button" style="float: right;">Settings</button>
 			<div id="status-plus-refresh">
 				<h3 id="status">Waiting for other players...</h3> <img id="refresh" src="/assets/images/refresh.svg" alt="Refresh" title="Refresh"/>
 			</div>
-			<ul id="lobby-list">
-			</ul>
+			<table id="lobby-table">
+				<thead>
+					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_down.svg"/></th><th></th></tr>
+				</thead>
+				<tbody id="lobby-list">
+					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="32" autocomplete="off"/></td><td>? of <input type="number" min="1" max="16" step="1"/></td><td><button>Create!</button></td></tr>
+				</tbody>
+			</table><!--removes non-breaking space
+			--><div id="search-filter">
+				<h1>Search filters<h1>
+				<label><input type="text" placeholder="Search.."/></label>
+				<label><input type="checkbox"/>Do not show empty lobbies</label>
+				<label><input type="checkbox"/>Some more search option</label>
+				<label><input type="checkbox"/>And more!</label>
+			</div>
 			<ul id="team-list" class="hidden">
 				<li><img src="/assets/images/alienBlue_badge.svg"/><span id="teamBlue">-</span></li>
 				<li><img src="/assets/images/alienBeige_badge.svg"/><span id="teamBeige">-</span></li>

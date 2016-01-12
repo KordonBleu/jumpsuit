@@ -26,10 +26,15 @@ Connection.prototype.connectLobby = function(uid) {
 	}));
 	this.lobbyUid = uid;
 };
-Connection.prototype.createLobby = function(n) {
+Connection.prototype.createLobby = function(name, playerAmount) {
+	if (!currentConnection.alive()) return;
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CREATE_LOBBY,
-		data: {name: n, privateLobby: false}
+		data: {
+			name: name,
+			playerAmount: playerAmount,
+			privateLobby: false
+		}
 	}));
 	this.refreshLobbies();
 };
@@ -70,12 +75,10 @@ Connection.prototype.refreshControls = function(controls) {
 	}));
 };
 Connection.prototype.errorHandler = function() {
-	newLobbyButton.disabled = true;
 	this.close();
 };
 Connection.prototype.openHandler = function() {
 	this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
-	newLobbyButton.disabled = false;
 };
 Connection.prototype.messageHandler = function(message) {
 	try {
@@ -215,7 +218,6 @@ Connection.prototype.messageHandler = function(message) {
 				break;
 			case MESSAGE.PLAYER_CONNECTED:
 				ownIdx = msg.data;
-				newLobbyButton.disabled = true;
 				break;
 			case MESSAGE.ERROR:
 				var errDesc;
@@ -269,11 +271,6 @@ autoConnect.counter = 0;
 currentConnection.socket.addEventListener("open", autoConnect);
 document.addEventListener("res loaded", autoConnect);
 
-function newLobby(name) {
-	if (!currentConnection.alive()) return;
-	currentConnection.createLobby(name);
-}
-
 function refreshLobbies() {
 	if (!currentConnection.alive()) return;
 	currentConnection.refreshLobbies();
@@ -287,14 +284,6 @@ function leaveLobby() {
 }
 
 
-lobbyListElement.addEventListener("click", function(e) {
-	if(e.target.tagName == "A") {
-		e.preventDefault();
-		var lobbyUid = e.target.getAttribute("href").replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
-		currentConnection.connectLobby(lobbyUid);
-		history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");
-	}
-});
 window.addEventListener("popstate", function(e) {
 	if(location.pathname === "/") leaveLobby();
 	else {

@@ -18,7 +18,6 @@ var chatElement = document.getElementById("gui-chat"),
 	statusElement = document.getElementById("status"),
 	lobbyListElement = document.getElementById("lobby-list"),
 	teamListElement = document.getElementById("team-list"),
-	newLobbyButton = document.getElementById("new-lobby"),
 	menuBoxSettingsButton = document.getElementById("menu-box-settings-button"),
 	menuBoxInfoButton = document.getElementById("menu-box-info-button"),
 	/* inside settings-box */
@@ -156,7 +155,6 @@ keySettingsElement.addEventListener("click", function(e) {
 		}
 	}
 	function handleChangeKey(e) {
-		console.log(selectedRow);
 		var keyName = e.key || convertToKey(e.keyCode),
 			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent,
 			alreadyTaken = false;
@@ -227,9 +225,6 @@ document.getElementById("refresh").addEventListener("click", function() {//not c
 document.getElementById("leave-button").addEventListener("click", function() {//refreshLobbies and leaveLobby are not yet loaded
 	leaveLobby();
 });
-newLobbyButton.addEventListener("click", function() {
-	dialog.show(newLobby);
-});
 
 /* Chat */
 chatInput.addEventListener("keydown", function(e) {
@@ -237,26 +232,28 @@ chatInput.addEventListener("keydown", function(e) {
 		if (!currentConnection.alive()) return;
 		currentConnection.sendChat(this.value);
 		this.value = "";
+		this.blur();
 	} else if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") {
 		e.preventDefault();
 
 		if (!this.playerSelection) {
 			this.playerSelection = true;
-			this.cursor = this.selectionStart;
-			var text = (this.cursor === 0) ? "" : this.value.substr(0, this.cursor);
+			var text = (this.selectionStart === 0) ? "" : this.value.substr(0, this.selectionStart);
 			this.search = text.substr((text.lastIndexOf(" ") === -1) ? 0 : text.lastIndexOf(" ") + 1);
 
 			this.searchIndex = 0;
-			this.textParts = [this.value.substr(0, this.cursor - this.search.length), this.value.substr(this.cursor)];
+			this.textParts = [this.value.substr(0, this.selectionStart - this.search.length), this.value.substr(this.selectionEnd)];
 		}
 
 		var filteredPlayerList = (players[ownIdx].name.indexOf(this.search) === 0) ? [players[ownIdx].name] : [];
-		for (var pid in players){
+		for (var pid in players) {
 			if (players[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(players[pid].name);
 		}
 
-		if (filteredPlayerList.length !== 0){
+		if (filteredPlayerList.length !== 0) {
+			var cursorPos = this.textParts[0].length + filteredPlayerList[this.searchIndex].length;
 			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];
+			chatInput.setSelectionRange(cursorPos, cursorPos);
 			this.searchIndex++;
 			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0;
 		}
@@ -286,21 +283,6 @@ function printChatMessage(name, appearance, content) {
 
 }
 
-/* Lobby list */
-function printLobbies(lobbies) {
-	newLobbyButton.disabled = false;
-	statusElement.textContent = "Choose a lobby";
-	while (lobbyListElement.firstChild) lobbyListElement.removeChild(lobbyListElement.firstChild);
-	lobbies.forEach(function(lobby) {
-		var li = document.createElement("li"),
-			el = document.createElement("a");
-		el.href = "/lobbies/" + lobby.uid + "/";
-		el.textContent = lobby.name + " | (" + lobby.players + " of " + lobby.maxPlayers + ")";
-		li.appendChild(el);
-		lobbyListElement.appendChild(li);
-	});
-}
-
 /* Player list */
 chatInputContainer.addEventListener("mouseover", function() {
 	playerListElement.classList.remove("hidden");
@@ -308,10 +290,17 @@ chatInputContainer.addEventListener("mouseover", function() {
 chatInputContainer.addEventListener("mouseout", function() {
 	playerListElement.classList.add("hidden");
 });
-function printPlayerList() {//TODO: a new playerlist design
+playerListElement.addEventListener("click", function(e) {
+	if (e.target.tagName === "LI") {
+		chatInput.focus();
+		var cursorPos = chatInput.selectionStart + e.target.textContent.length;
+		chatInput.value = chatInput.value.substring(0, chatInput.selectionStart) + e.target.textContent + chatInput.value.substring(chatInput.selectionEnd, chatInput.value.length);
+		chatInput.setSelectionRange(cursorPos, cursorPos);
+	}
+});
+function printPlayerList() {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	msg.data.forEach(function(player, index) {
-		console.log(player);
 		var li = document.createElement("li");
 		li.textContent = player.name;
 		li.style.color = Planet.prototype.teamColors[player.appearance];
@@ -319,6 +308,42 @@ function printPlayerList() {//TODO: a new playerlist design
 		playerListElement.appendChild(li);
 	});
 }
+
+/* Lobby list */
+function printLobbies(lobbies) {
+	statusElement.textContent = "Choose a lobby";
+	while (lobbyListElement.children.length > 1) lobbyListElement.removeChild(lobbyListElement.firstChild);
+	lobbies.forEach(function(lobby) {
+		var row = document.createElement("tr"),
+			nameTd = document.createElement("td"),
+			playerCountTd = document.createElement("td"),
+			buttonTd = document.createElement("td"),
+			button = document.createElement("button");
+
+		nameTd.textContent = lobby.name;
+		playerCountTd.textContent = lobby.players + " of " + lobby.maxPlayers;
+
+		button.textContent = "Play!";
+		button.dataset.href = "/lobbies/" + lobby.uid + "/";
+
+		buttonTd.appendChild(button);
+		row.appendChild(nameTd);
+		row.appendChild(playerCountTd);
+		row.appendChild(buttonTd);
+		lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
+	});
+}
+lobbyListElement.addEventListener("click", function(e) {
+	if (e.target.tagName === "BUTTON") {
+		if (e.target !== lobbyListElement.lastElementChild.lastElementChild.firstElementChild) {// Play!
+			var lobbyUid = e.target.dataset.href.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
+			currentConnection.connectLobby(lobbyUid);
+			history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");
+		} else {// Create!
+			currentConnection.createLobby(lobbyListElement.lastElementChild.firstElementChild.firstElementChild.value, lobbyListElement.lastElementChild.children[1].firstElementChild.value);
+		}
+	}
+});
 
 
 window.onbeforeunload = function() {
