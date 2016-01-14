@@ -56,18 +56,16 @@
 			</div>
 			<table id="lobby-table">
 				<thead>
-					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_down.svg"/></th><th></th></tr>
+					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_double.svg"/></th><th></th></tr>
 				</thead>
 				<tbody id="lobby-list">
-					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="32" autocomplete="off"/></td><td>? of <input type="number" min="1" max="16" step="1"/></td><td><button>Create!</button></td></tr>
+					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="32" autocomplete="off" required/></td><td>? of <input type="number" min="1" max="16" step="1" required/></td><td><button>Create!</button></td></tr>
 				</tbody>
 			</table><!--removes non-breaking space
 			--><div id="search-filter">
 				<h1>Search filters<h1>
-				<label><input type="text" placeholder="Search.."/></label>
-				<label><input type="checkbox"/>Do not show empty lobbies</label>
-				<label><input type="checkbox"/>Some more search option</label>
-				<label><input type="checkbox"/>And more!</label>
+				<label><input id="search-input" type="text" placeholder="Search.." title="You can even enter RegExp"/></label>
+				<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
 			</div>
 			<ul id="team-list" class="hidden">
 				<li><img src="/assets/images/alienBlue_badge.svg"/><span id="teamBlue">-</span></li>

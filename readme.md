@@ -25,8 +25,8 @@ Flowi: #epic
 ## How to run
 ```sh
 $ npm install
-$ git submodules init
-$ git submodules update
+$ git submodule init
+$ git submodule update
 $ node server.js
 ```
 Now you can access it at `http://localhost:8080` in your browser.

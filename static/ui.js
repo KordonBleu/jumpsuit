@@ -16,10 +16,15 @@ var chatElement = document.getElementById("gui-chat"),
 
 	/* inside menu-box */
 	statusElement = document.getElementById("status"),
+	lobbyTableElement = document.getElementById("lobby-table"),
+	lobbyTableHeaderRowElement = lobbyTableElement.firstElementChild.firstElementChild,
 	lobbyListElement = document.getElementById("lobby-list"),
 	teamListElement = document.getElementById("team-list"),
 	menuBoxSettingsButton = document.getElementById("menu-box-settings-button"),
 	menuBoxInfoButton = document.getElementById("menu-box-info-button"),
+	/* search options */
+	searchInput = document.getElementById("search-input"),
+	emptyLobbyInput = document.getElementById("empty-lobby"),
 	/* inside settings-box */
 	closeSettingsButton = document.getElementById("close-settings-box"),
 	nameElement = document.getElementById("name"),
@@ -212,7 +217,6 @@ nameElement.addEventListener("keydown", function(e) {
 	}
 });
 nameElement.addEventListener("blur", function(e) {
-	console.log(e.target.value);
 	localStorage.setItem("settings.name", e.target.value);
 	settings.name = e.target.value;
 	settingsChanged();
@@ -310,10 +314,10 @@ function printPlayerList() {
 }
 
 /* Lobby list */
-function printLobbies(lobbies) {
+function printLobbies() {
 	statusElement.textContent = "Choose a lobby";
 	while (lobbyListElement.children.length > 1) lobbyListElement.removeChild(lobbyListElement.firstChild);
-	lobbies.forEach(function(lobby) {
+	printLobbies.list.forEach(function(lobby) {
 		var row = document.createElement("tr"),
 			nameTd = document.createElement("td"),
 			playerCountTd = document.createElement("td"),
@@ -340,10 +344,72 @@ lobbyListElement.addEventListener("click", function(e) {
 			currentConnection.connectLobby(lobbyUid);
 			history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");
 		} else {// Create!
-			currentConnection.createLobby(lobbyListElement.lastElementChild.firstElementChild.firstElementChild.value, lobbyListElement.lastElementChild.children[1].firstElementChild.value);
+			var nameInput = lobbyListElement.lastElementChild.firstElementChild.firstElementChild,
+				playerAmountInput = lobbyListElement.lastElementChild.children[1].firstElementChild;
+			if (nameInput.value !== "" && playerAmountInput.value !== "") {
+				currentConnection.createLobby(nameInput.value, playerAmountInput.value);
+				nameInput.value = "";
+			}
 		}
 	}
 });
+
+/* Sorting */
+lobbyTableHeaderRowElement.addEventListener("click", function(e) {
+	if (e.target.tagName === "IMG") {
+		switch (e.target.getAttribute("src")) {
+			case "/assets/images/sort_arrow_double.svg":
+				e.target.setAttribute("src", "/assets/images/sort_arrow_down.svg");
+				Array.prototype.forEach.call(lobbyTableHeaderRowElement.children, function(elem) {
+					var arrowImg = elem.lastElementChild;
+					if (elem.lastElementChild !== null && e.target !== arrowImg) {
+						arrowImg.setAttribute("src", "/assets/images/sort_arrow_double.svg");
+					}
+				});
+
+				switch (e.target.previousSibling.data.trim()) {
+					case "Lobby name":
+						printLobbies.list.sort(function(a, b) {
+							return b.name.trim().localeCompare(a.name.trim());
+						});
+						break;
+					case "Players":
+						printLobbies.list.sort(function(a, b) {
+							return a.players < b.players ? -1 : a.players > b.players ? 1 : 0;
+						});
+				}
+				break;
+			case "/assets/images/sort_arrow_down.svg":
+				e.target.setAttribute("src", "/assets/images/sort_arrow_up.svg");
+				printLobbies.list.reverse();
+				break;
+			case "/assets/images/sort_arrow_up.svg":
+				e.target.setAttribute("src", "/assets/images/sort_arrow_down.svg");
+				printLobbies.list.reverse();
+				break;
+		}
+		printLobbies();
+	}
+});
+/* Search filters */
+function applyLobbySearch() {
+	printLobbies.list.forEach(function(lobby, index) {
+		//lobbyListElement.children are reversed compared to printLobbies.list
+		var currentElem = lobbyListElement.children[printLobbies.list.length - index -1];
+		if (new RegExp(searchInput.value, "gi").test(lobby.name)) currentElem.classList.remove("search-hidden");
+		else currentElem.classList.add("search-hidden");
+	});
+}
+function applyEmptinessCheck() {
+	printLobbies.list.forEach(function(lobby, index) {
+		//lobbyListElement.children are reversed compared to printLobbies.list
+		var currentElem = lobbyListElement.children[printLobbies.list.length - index -1];
+		if (emptyLobbyInput.checked && lobby.players === 0) currentElem.classList.add("empty-lobby-hidden");
+		else currentElem.classList.remove("empty-lobby-hidden");
+	});
+}
+searchInput.addEventListener("input", applyLobbySearch);
+emptyLobbyInput.addEventListener("change", applyEmptinessCheck);
 
 
 window.onbeforeunload = function() {

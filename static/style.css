@@ -42,7 +42,7 @@ canvas.motionBlur {
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
 }
-.hidden, #player-list.hidden {
+.hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
 a {

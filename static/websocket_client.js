@@ -85,7 +85,15 @@ Connection.prototype.messageHandler = function(message) {
 		msg = JSON.parse(message.data);
 		switch(msg.msgType) {
 			case MESSAGE.SENT_LOBBIES:
-				printLobbies(msg.data);
+				if (printLobbies.list === undefined) {//first time data is inserted
+					printLobbies.list = msg.data;
+					printLobbies();
+					applyLobbySearch();//in case the page was refreshed and the
+					applyEmptinessCheck();//inputs left in a modified state
+				} else {
+					printLobbies.list = msg.data;
+					printLobbies();
+				}
 				break;
 			case MESSAGE.PING:
 				this.send(JSON.stringify({
