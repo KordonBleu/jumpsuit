@@ -1,4 +1,4 @@
-const MESSAGE = {
+ const MESSAGE = {
 	ERROR: 0,
 	CONNECT: 1,
 	GET_LOBBIES: 2,
@@ -15,7 +15,15 @@ const MESSAGE = {
 	PONG: 13,
 	LOBBY_STATE: 14,
 	PLAYER_CONNECTED: 15,
-	SCORES: 16
+	SCORES: 16,
+	toString: function(val){
+		var result;
+		for (result in this){
+			if (this[result] === val) return result;
+		
+		}
+		return "UNKNOWN";
+	}
 },
 ERROR = {
 	NO_LOBBY: 0,

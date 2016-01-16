@@ -47,7 +47,7 @@ var chatElement = document.getElementById("gui-chat"),
 		appearance: "alien" + (["Blue", "Beige", "Green", "Yellow", "Pink"])[Math.floor(Math.random() * 5)]
 	};
 
-var dialog = new function() {
+/* var dialog = new function() {
 	var textElement = document.getElementById("dialog-text"),
 		buttonConfirm = document.getElementById("dialog-confirm"),
 		buttonAbort = document.getElementById("dialog-abort"),
@@ -78,20 +78,21 @@ var dialog = new function() {
 		dialogElement.className = "hidden";
 		if (typeof result !== "undefined" && result !== "") _callback(result);
 	};
-}();
+}();*/
 
 /* Buttons */
-function addToogleListener(button, element) {
+function addToggleListener(button, element) {
 	button.addEventListener("click", function() {
 		element.classList.toggle("hidden");
+		document.getElementById("shade-box").classList.toggle("hidden");
 	});
 }
-addToogleListener(closeSettingsButton, settingsBox);
-addToogleListener(settingsButton, settingsBox);
-addToogleListener(menuBoxSettingsButton, settingsBox);
-addToogleListener(closeInfoButton, infoBox);
-addToogleListener(infoButton, infoBox);
-addToogleListener(menuBoxInfoButton, infoBox);
+addToggleListener(closeSettingsButton, settingsBox);
+addToggleListener(settingsButton, settingsBox);
+addToggleListener(menuBoxSettingsButton, settingsBox);
+addToggleListener(closeInfoButton, infoBox);
+addToggleListener(infoButton, infoBox);
+addToggleListener(menuBoxInfoButton, infoBox);
 
 /* Graphic settings */
 document.getElementById("option-fullscreen").addEventListener("change", function() {
@@ -239,7 +240,6 @@ chatInput.addEventListener("keydown", function(e) {
 		this.blur();
 	} else if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") {
 		e.preventDefault();
-
 		if (!this.playerSelection) {
 			this.playerSelection = true;
 			var text = (this.selectionStart === 0) ? "" : this.value.substr(0, this.selectionStart);
@@ -249,11 +249,12 @@ chatInput.addEventListener("keydown", function(e) {
 			this.textParts = [this.value.substr(0, this.selectionStart - this.search.length), this.value.substr(this.selectionEnd)];
 		}
 
-		var filteredPlayerList = (players[ownIdx].name.indexOf(this.search) === 0) ? [players[ownIdx].name] : [];
+		printPlayerList(this.search);
+
+		var filteredPlayerList = [];
 		for (var pid in players) {
 			if (players[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(players[pid].name);
 		}
-
 		if (filteredPlayerList.length !== 0) {
 			var cursorPos = this.textParts[0].length + filteredPlayerList[this.searchIndex].length;
 			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];
@@ -263,6 +264,7 @@ chatInput.addEventListener("keydown", function(e) {
 		}
 	} else {
 		this.playerSelection = false;
+		printPlayerList("");
 	}
 });
 function printChatMessage(name, appearance, content) {
@@ -270,30 +272,30 @@ function printChatMessage(name, appearance, content) {
 		nameElement = document.createElement("b"),
 		textElement = document.createTextNode(content);
 
-		if (name === undefined) element.className = "server";
-		else {
-			nameElement.textContent = name + ": ";
-			nameElement.className = appearance;
-		}
-		element.appendChild(nameElement);
-		element.appendChild(textElement);
-		chatElement.appendChild(element);
-		while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
-		var messageHeight = 0;
-		[].forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
-			messageHeight += element.clientHeight + 2;
-		});
-		chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
-
+	if (name === undefined) element.className = "server";
+	else {
+		nameElement.textContent = name + ": ";
+		nameElement.className = appearance;
+	}
+	element.appendChild(nameElement);
+	element.appendChild(textElement);
+	chatElement.appendChild(element);
+	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
+	var messageHeight = 0;
+	[].forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
+		messageHeight += element.clientHeight + 2;
+	});
+	chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 }
 
 /* Player list */
-chatInputContainer.addEventListener("mouseover", function() {
+chatInputContainer.addEventListener("focus", function() {
 	playerListElement.classList.remove("hidden");
-});
-chatInputContainer.addEventListener("mouseout", function() {
+	printPlayerList("");
+}, true);
+chatInputContainer.addEventListener("blur", function() {
 	playerListElement.classList.add("hidden");
-});
+}, true);
 playerListElement.addEventListener("click", function(e) {
 	if (e.target.tagName === "LI") {
 		chatInput.focus();
@@ -302,9 +304,10 @@ playerListElement.addEventListener("click", function(e) {
 		chatInput.setSelectionRange(cursorPos, cursorPos);
 	}
 });
-function printPlayerList() {
+function printPlayerList(filter) {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-	msg.data.forEach(function(player, index) {
+	players.forEach(function(player, index) {
+		if (filter !== "" && player.name.indexOf(filter) !== 0) return;
 		var li = document.createElement("li");
 		li.textContent = player.name;
 		li.style.color = Planet.prototype.teamColors[player.appearance];
@@ -411,9 +414,8 @@ function applyEmptinessCheck() {
 searchInput.addEventListener("input", applyLobbySearch);
 emptyLobbyInput.addEventListener("change", applyEmptinessCheck);
 
-
 window.onbeforeunload = function() {
-	localStorage.setItem("settings.name", player.name);
+	localStorage.setItem("settings.name", settings.name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
 	localStorage.setItem("settings.volume.music", musicVolumeElement.value);
 	localStorage.setItem("settings.volume.effects", effectsVolumeElement.value);

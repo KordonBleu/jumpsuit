@@ -114,7 +114,7 @@ function handleInput(e) {
 			e.preventDefault();
 			triggered = e.target.id;
 		}
-		if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([menuBox, dialogElement]) && players[ownIdx] !== undefined) {
+		if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
 			//oh boy, this statement is fucked up :D
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;

@@ -87,6 +87,7 @@ function Enemy(x, y, appearance) {
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
+
 function doPhysics(universe, players, planets, enemies, shots, isClient, gameProgress) {
 	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);

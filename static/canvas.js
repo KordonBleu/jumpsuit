@@ -6,6 +6,8 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 
 var canvas = document.getElementById("canvas"),
 	context = canvas.getContext("2d"),
+	minimapCanvas = document.getElementById("minimap-canvas"),
+	minimapContext = minimapCanvas.getContext("2d"),
 	meteors = [],
 	players = [],
 	planets = [],
@@ -48,6 +50,8 @@ var canvas = document.getElementById("canvas"),
 function resizeCanvas() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
+	minimapCanvas.width = 150;
+	minimapCanvas.height = 150;
 };
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -172,9 +176,8 @@ function loop() {
 	//layer 1: the game
 	players.forEach(function(otherPlayer) {
 		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
-			//TODO: make a non-linear prediction for moving around on planets
-			//TODO: current frame rate needs to influent the intensity
-			var intensity = Math.max(1, 60 * (otherPlayer.boxInformations[1].timestamp - otherPlayer.boxInformations[0].timestamp) / 1000);
+			var intensity =  60 * 50 / 1000; //60 is the current FPS and 50 is the server tick rate | Both should be replaced with variables, server should send the tick rate according to the client.
+			
 			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
 			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
 			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
@@ -259,44 +262,26 @@ function loop() {
 		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
 	});
 
-	//minimap
-	var minimapMarginTopOffset = guiOptionElement.offsetHeight + 8;
-	context.beginPath();
-	context.rect(canvas.width - 158, minimapMarginTopOffset, 150, 150);
-	context.closePath();
-
-	context.fillStyle = "rgba(0, 0, 0, 0.7)";
-	context.fill();
-
-	context.lineWidth = 1;
-	context.strokeStyle = "#fff";
-	context.stroke();
-
-	context.save();
-	context.clip();
+	//minimap	
+	minimapContext.fillStyle = "rgba(0, 0, 0, 0.7)";
+	minimapContext.fillRect(0, 0, 150, 150);
 
 	planets.forEach(function (planet) {
-		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (planet.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, minimapMarginTopOffset + (planet.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
-		context.closePath();
-		context.fillStyle = planet.progress.color;
-		context.fill();
+		minimapContext.beginPath();
+		minimapContext.arc((planet.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, (planet.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
+		minimapContext.closePath();
+		minimapContext.fillStyle = planet.progress.color;
+		minimapContext.fill();
 	});
 
-	context.fillStyle = "#f33";
-	players.forEach(function (otherPlayer) {
-		if (otherPlayer.appearance !== players[ownIdx].appearance) return;
-		context.beginPath();
-		context.arc(canvas.clientWidth - 158 + (otherPlayer.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, minimapMarginTopOffset + (otherPlayer.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
-		context.closePath();
-		context.fill();
+	minimapContext.fillStyle = "#f33";
+	players.forEach(function (player) {
+		if (player.appearance !== players[ownIdx].appearance) return;
+		minimapContext.beginPath();
+		minimapContext.arc((player.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, (player.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
+		minimapContext.closePath();
+		minimapContext.fill();
 	});
-	context.beginPath();
-	context.arc(canvas.clientWidth - 158 + 75, minimapMarginTopOffset + 75, 2.5, 0, 2*Math.PI);//your character
-	context.fill();
-	context.closePath();
-
-	context.restore();
 
 	chatElement.style.clip = "rect(0px," + chatElement.clientWidth + "px," + chatElement.clientHeight + "px,0px)";
 	game.animationFrameId = window.requestAnimationFrame(loop);

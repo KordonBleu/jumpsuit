@@ -3,6 +3,7 @@
 var fs = require("fs"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
+	colors = require("colors"),
 	MESSAGE = require("./static/message.js").MESSAGE,
 	ERROR = require("./static/message.js").ERROR,
 	engine = require("./static/engine.js"),
@@ -53,7 +54,7 @@ function loadConfig(firstRun) {
 		for(var key in config) {
 			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
 		}
-		console.log("Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
+		console.log("[INFO: ] ".yellow.bold + "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
 		var addedProp = [];
 		for(var key in configSkeleton) {
 			if(!config.hasOwnProperty(key)) {
@@ -64,10 +65,11 @@ function loadConfig(firstRun) {
 		if(addedProp.length !== 0) {
 			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
 			loadConfig.selfModified = true;
-			console.log("New properties added to \u001b[1mconfig.json\u001b[0m file: \u001b[4m" + addedProp.join("\u001b[0m, \u001b[4m") + "\u001b[0m");
+			console.log("[INFO: ] ".yellow.bold + "New properties added to config file: " + addedProp.join(", ").bold);
 		}
 	} catch(err) {
-		console.log(err, "Unproper config file found. Loading default settings.");
+		console.log("[ERR:  ] ".red.bold + err);
+		console.log("[INFO: ] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
 		config = configSkeleton;
 	}
 	if(previousConfig !== undefined) {
@@ -397,7 +399,7 @@ Lobby.prototype.update = function() {
 					player.lastRefresh = Date.now();
 					player.needsUpdate = true;
 				} catch(e) {/*Ignore errors*/}
-			}.bind(this), Math.min(90, Math.max(33, Date.now() - player.lastRefresh + player.latency)));
+			}.bind(this), 50);
 		}
 	}.bind(this));
 };
@@ -453,7 +455,7 @@ function monitoring() {
 		headerNames = ["lobby name", "players", "process time", "lifetime"],
 		header = "";
 	headerSizes.forEach(function(hSize, i) {
-		header += (i !== 0 ? " | " : "") + "\u001b[1m" + headerNames[i].toUpperCase() + "\u001b[0m" + genSpaces(hSize - headerNames[i].length);
+		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold  + genSpaces(hSize - headerNames[i].length);
 	});
 	console.log(header);
 	lobbies.forEach(function(lobby) {
@@ -475,8 +477,9 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function(lobby) {
 			lobby.players.some(function(player, i) {
 				if (player.ws === ws) {
-					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}));
+					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}))
 					delete lobby.players[i];
+					if (config.dev) console.log("[DEV:  ] ".cyan.bold + "DISCONNECT".italic);
 					return true;
 				}
 			});
@@ -487,7 +490,11 @@ wss.on("connection", function(ws) {
 		var msg;
 		try {
 			msg = JSON.parse(message);
-			if(config.dev) console.log("received: ", msg);
+			if (config.dev && msg.msgType !== MESSAGE.PONG && msg.msgType !== MESSAGE.PLAYER_SETTINGS && msg.msgType !== MESSAGE.PLAYER_CONTROLS){
+				var _m = MESSAGE.toString(msg.msgType);
+				while (_m.length !== 15) _m += " ";
+				console.log("[DEV:  ] ".cyan.bold + _m.italic + " ", (JSON.stringify(msg.data) || ""));
+			}
 			switch(msg.msgType) {
 				case MESSAGE.CONNECT:
 					var lobby = lobbies.getByUid(msg.data.uid);
@@ -560,7 +567,7 @@ wss.on("connection", function(ws) {
 					break;
 			}
 		} catch (err) {
-			console.log("ERROR", err, msg);
+			console.log("[ERR:  ] ".red.bold, err);
 		}
 	});
 	ws.on("close", cleanup);

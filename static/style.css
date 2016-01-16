@@ -34,13 +34,34 @@ html, body {
 html {
 	background-image: url("/assets/images/background.png");
 }
-canvas.boosted {
+#canvas.boosted {
 	transform: scale3d(2, 2, 1);
 	transform-origin: 0 0;
 }
-canvas.motionBlur {
+#canvas.motionBlur {
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
+}
+#minimap-canvas{
+	position: fixed;
+	top: 52px;
+	right: 8px;
+	border-radius: 3px;
+	border: 2px solid #fff;
+	width: 150px;
+	height: 150px;
+}
+#minimap-canvas:after{
+	content: "+";
+	display: block;
+	position: fixed;
+	top: 8px;
+	left: 52px;
+	width: 150px;
+	height: 150px;
+	background: rgba(66, 66, 66, 0.5);
+	color: #fff;
+	font-size: 80px;
 }
 .hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
@@ -97,6 +118,7 @@ input[type=range] {
 	background: transparent;
 	height: 20px;
 	margin-bottom: 15px;
+	display: block;
 }
 input[type=range]::-ms-track {
 	width: 100%;
@@ -193,6 +215,11 @@ label.checkbox-label[data-beta]:after {
 label.checkbox-label {
 	margin-left: 5px;
 	cursor: pointer;
+}
+label.range-label{
+	min-width: 150px;
+	margin: 0 8px 8px 0;
+	display: inline-block;
 }
 ::-webkit-scrollbar {
 	width: 8px;	
@@ -325,6 +352,18 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	padding-left: 1%;
 	cursor: pointer;
 }
+#shade-box{
+	position: fixed;
+	top: 0;
+	left: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);	
+}
+#shade-box.hidden{
+	display: none;
+}
 #settings-box, #info-box {
 	padding: 0.5%;
 	transition: transform .5s, opacity .2s;
@@ -350,9 +389,13 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	margin-bottom: 0.5rem;
 }
 #settings-box > button, #info-box > button {
-	position: fixed;
+	position: absolute;
 	top: 0.5%;
 	right: 0.5%;
+}
+#settings-box h3, #info-box h3{
+	float: left;
+	width: 100%;	
 }
 #menu-box {
 	transition: transform .5s, opacity .2s;
@@ -450,7 +493,7 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	text-align: left;
 	border-collapse: collapse;
 	cursor: pointer;
-	margin-bottom: 16px;
+	margin: 4px 8px;
 }
 #key-settings #key-action {
 	width: 140px;
