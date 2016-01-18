@@ -4,7 +4,8 @@
   "description": "A sweet canvas game",
   "dependencies": {
     "ws": "1.0.x",
-    "image-size": "0.x"
+    "image-size": "0.x",
+    "colors": "1.x"
   },
   "repository": {
     "type": "git",

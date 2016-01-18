@@ -1,4 +1,4 @@
- const MESSAGE = {
+const MESSAGE = {
 	ERROR: 0,
 	CONNECT: 1,
 	GET_LOBBIES: 2,
@@ -11,18 +11,12 @@
 	CHAT: 9,
 	PLAY_SOUND: 10,
 	GAME_DATA: 11,
-	PING: 12,
-	PONG: 13,
-	LOBBY_STATE: 14,
-	PLAYER_CONNECTED: 15,
-	SCORES: 16,
-	toString: function(val){
-		var result;
-		for (result in this){
-			if (this[result] === val) return result;
-		
-		}
-		return "UNKNOWN";
+	LOBBY_STATE: 12,
+	PLAYER_CONNECTED: 13,
+	SCORES: 14,
+	toString: function(val) {
+		var res = Object.keys(this)[val];
+		return res !== undefined ? res : "UNKNOW";
 	}
 },
 ERROR = {

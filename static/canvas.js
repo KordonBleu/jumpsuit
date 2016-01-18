@@ -4,9 +4,7 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
 
-var canvas = document.getElementById("canvas"),
-	context = canvas.getContext("2d"),
-	minimapCanvas = document.getElementById("minimap-canvas"),
+var context = canvas.getContext("2d"),
 	minimapContext = minimapCanvas.getContext("2d"),
 	meteors = [],
 	players = [],
@@ -29,12 +27,20 @@ var canvas = document.getElementById("canvas"),
 			healthElement.classList.remove("hidden");
 			fuelElement.classList.remove("hidden");
 			pointsElement.classList.remove("hidden");
+			minimapCanvas.classList.remove("hidden");
 			menuBox.classList.add("hidden");
 			loop();
 		},
 		stop: function() {
 			game.started = false;
 			menuBox.classList.remove("hidden");
+
+			players.forEach(function(player) {
+				if (player.jetpack) {
+					player.jetpackSound.stop();
+				}
+
+			});
 
 			players.length = 0;
 			planets.length = 0;

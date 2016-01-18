@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<canvas id="minimap-canvas"></canvas>
+		<canvas id="minimap-canvas" class="hidden"></canvas>
 		<div id="minimap-overlay">+</div>
 		<ul id="controls">
 			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
@@ -53,12 +53,10 @@
 		<div id="menu-box" class="hidden">
 			<button id="menu-box-info-button" style="float: right;">Infos</button>
 			<button id="menu-box-settings-button" style="float: right;">Settings</button>
-			<div id="status-plus-refresh">
-				<h3 id="status">Waiting for other players...</h3> <img id="refresh" src="/assets/images/refresh.svg" alt="Refresh" title="Refresh"/>
-			</div>
+			<h3 id="status">Waiting for other players...</h3>
 			<table id="lobby-table">
 				<thead>
-					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_double.svg"/></th><th></th></tr>
+					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_double.svg"/></th><th><button id="refresh">Refresh</button></th></tr>
 				</thead>
 				<tbody id="lobby-list">
 					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="32" autocomplete="off" required/></td><td>? of <input type="number" min="1" max="16" step="1" required/></td><td><button>Create!</button></td></tr>
@@ -86,7 +84,7 @@
 					<li>Music &amp; sound effects: Arnaud Poyeton, <a href="http://kenney.nl">Kenney.nl</a></li>
 					<li>Assets: <a href="http://kenney.nl">Kenney.nl</a></li>
 					<li>Icons: Lemon Liu, <a href="https://thenounproject.com/grega.cresnar/">Gregor Črešnar</a>,
-						<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>, <a href="https://thenounproject.com/term/refresh/24732/">Alexey Sohrin</a>
+						<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>
 					</li>
 					<li>Font: <a href="https://www.google.com/fonts/specimen/Open+Sans">Open Sans</a> by Steve Matteson</li>
 				</ul>

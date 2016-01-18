@@ -54,7 +54,7 @@ function loadConfig(firstRun) {
 		for(var key in config) {
 			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
 		}
-		console.log("[INFO: ] ".yellow.bold + "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
+		console.log("[INFO] ".yellow.bold + "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
 		var addedProp = [];
 		for(var key in configSkeleton) {
 			if(!config.hasOwnProperty(key)) {
@@ -65,11 +65,11 @@ function loadConfig(firstRun) {
 		if(addedProp.length !== 0) {
 			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
 			loadConfig.selfModified = true;
-			console.log("[INFO: ] ".yellow.bold + "New properties added to config file: " + addedProp.join(", ").bold);
+			console.log("[INFO] ".yellow.bold + "New properties added to config file: " + addedProp.join(", ").bold);
 		}
 	} catch(err) {
-		console.log("[ERR:  ] ".red.bold + err);
-		console.log("[INFO: ] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
+		console.log("[ERR] ".red.bold + err);
+		console.log("[INFO] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
 		config = configSkeleton;
 	}
 	if(previousConfig !== undefined) {
@@ -89,6 +89,11 @@ function loadConfig(firstRun) {
 		if(config.interactive !== previousConfig.interactive) {
 			if(previousConfig.interactive) rl.close();
 			else initRl();
+		}
+		if (config.dev && !previousConfig.dev) {
+			lobbies.forEach(function(lobby) {
+				lobby.stateTimer = config.dev ? 0 : 30;
+			});
 		}
 	}
 }
@@ -321,7 +326,7 @@ Lobby.prototype.broadcast = function(message) {
 };
 Lobby.prototype.update = function() {
 	if (this.players.amount() !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
-	if (this.state === this.stateEnum.WAITING){
+	if (this.state === this.stateEnum.WAITING) {
 		this.broadcast(JSON.stringify({msgType: MESSAGE.LOBBY_STATE, data: {state: this.state, timer: this.stateTimer}}));
 		if (this.stateTimer <= 0) {
 			this.resetWorld();
@@ -339,7 +344,7 @@ Lobby.prototype.update = function() {
 		}
 		return;
 	} else {
-		if (this.stateTimer <= 0){
+		if (this.stateTimer <= 0) {
 			this.state = this.stateEnum.END;
 			this.stateTimer = 10;
 			this.broadcast(JSON.stringify({msgType: MESSAGE.SCORES, data: this.getScores()}));
@@ -358,7 +363,7 @@ Lobby.prototype.update = function() {
 		this.gameProgress.ticks = 0;
 	}
 
-	this.broadcast(JSON.stringify({msgType: MESSAGE.PLAY_SOUND, data: sounds}));
+	this.broadcast(JSON.stringify({msgType: MESSAGE.PLAY_SOUND, data: sounds}));//TODO: add them to a queue so they can be all sent together
 
 	this.players.forEach(function(player, i) {
 		function truncTo(number, decimalNbr) {
@@ -371,52 +376,38 @@ Lobby.prototype.update = function() {
 		} : null;
 	});
 	this.players.forEach(function(player) {
-		if (player === undefined) return;
-		try {
-			player.ws.send(JSON.stringify({
-				msgType: MESSAGE.LOBBY_STATE,
-				data: {
-					state: this.state,
-					timer: this.stateTimer
-				}
-			}));
-		} catch(e) {/*Ignore errors*/}
+		function updPlayer() {
+			try {
+				player.ws.send(JSON.stringify({
+					msgType: MESSAGE.GAME_DATA,
+					data: {
+						players: playerData,
+						planets: this.planets.getGameData(),
+						enemies: this.enemies.getGameData(),
+						shots: this.shots.getGameData(),
+						gameProgress: this.gameProgress
+					}
+				}));
+
+				player.lastRefresh = Date.now();
+				player.needsUpdate = true;
+			} catch(e) {/*Ignore errors*/}
+		}
+
 		if (player.needsUpdate || player.needsUpdate === undefined) {
 			player.needsUpdate = false;
-			setTimeout(function() {
-				try {
-					player.ws.send(JSON.stringify({
-						msgType: MESSAGE.GAME_DATA,
-						data: {
-							players: playerData,
-							planets: this.planets.getGameData(),
-							enemies: this.enemies.getGameData(),
-							shots: this.shots.getGameData(),
-							gameProgress: this.gameProgress
-						}
-					}));
+			var when = player.lastRefresh + player.latency - Date.now();//TODO: tweak player.latency
 
-					player.lastRefresh = Date.now();
-					player.needsUpdate = true;
-				} catch(e) {/*Ignore errors*/}
-			}.bind(this), 50);
+			if (when >= 8) setTimeout(updPlayer.bind(this), when);
+			else setImmediate(updPlayer.bind(this));//mitigate setTimeout's inaccuracy
 		}
 	}.bind(this));
 };
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
-		player.lastPing = {};
-		player.lastPing.timestamp = Date.now();
-		player.lastPing.key = Math.floor(Math.random()*65536);
+		player.lastPing = Date.now();
 
-		try {
-			player.ws.send(JSON.stringify({
-				msgType: MESSAGE.PING,
-				data: {
-					key: player.lastPing.key
-				}
-			}));
-		} catch(e) {/*Ignore errors*/}
+		player.ws.ping(undefined, undefined, true);
 	});
 };
 lobbies.getUid = function(index) {
@@ -441,7 +432,7 @@ setInterval(function() {
 	lobbies.forEach(function(lobby) {
 		lobby.pingPlayers();
 	});
-}, 1000);
+}, 500);
 
 function monitoring() {
 	function genSpaces(amount) {
@@ -479,7 +470,7 @@ wss.on("connection", function(ws) {
 				if (player.ws === ws) {
 					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}))
 					delete lobby.players[i];
-					if (config.dev) console.log("[DEV:  ] ".cyan.bold + "DISCONNECT".italic);
+					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic);
 					return true;
 				}
 			});
@@ -490,10 +481,10 @@ wss.on("connection", function(ws) {
 		var msg;
 		try {
 			msg = JSON.parse(message);
-			if (config.dev && msg.msgType !== MESSAGE.PONG && msg.msgType !== MESSAGE.PLAYER_SETTINGS && msg.msgType !== MESSAGE.PLAYER_CONTROLS){
+			if (config.dev && msg.msgType !== MESSAGE.PLAYER_SETTINGS && msg.msgType !== MESSAGE.PLAYER_CONTROLS){
 				var _m = MESSAGE.toString(msg.msgType);
 				while (_m.length !== 15) _m += " ";
-				console.log("[DEV:  ] ".cyan.bold + _m.italic + " ", (JSON.stringify(msg.data) || ""));
+				console.log("[DEV] ".cyan.bold + _m.italic + " ", (JSON.stringify(msg.data) || ""));
 			}
 			switch(msg.msgType) {
 				case MESSAGE.CONNECT:
@@ -556,22 +547,16 @@ wss.on("connection", function(ws) {
 				case MESSAGE.LEAVE_LOBBY:
 					cleanup();
 					break;
-				case MESSAGE.PONG:
-					var lobby = lobbies.getByUid(msg.data.uid);
-					if(lobby !== null) {
-						if(player.lastPing.key === msg.data.key) {
-							player.latency = (Date.now() - player.lastPing.timestamp) / 2;
-							//up speed is usually faster than down speed so we can send world data at `thisPlayer.latency` pace
-						}
-					}
-					break;
 			}
 		} catch (err) {
-			console.log("[ERR:  ] ".red.bold, err);
+			console.log("[ERR] ".red.bold, err);
 		}
+	});
+	ws.on("pong", function() {
+		player.latency = (Date.now() - player.lastPing) / 2;
+		console.log("latency ", player.latency);
 	});
 	ws.on("close", cleanup);
 });
 
 lobbies.push(new Lobby("Lobby No. 1", 7));
-

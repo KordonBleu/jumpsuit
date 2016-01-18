@@ -40,6 +40,9 @@ var chatElement = document.getElementById("gui-chat"),
 	infoButton = document.getElementById("info-button"),
 	/* New lobby dialog */
 	dialogElement = document.getElementById("dialog"),
+	/* Canvases */
+	canvas = document.getElementById("canvas"),
+	minimapCanvas = document.getElementById("minimap-canvas"),
 
 
 	settings = {
@@ -227,7 +230,7 @@ nameElement.addEventListener("blur", function(e) {
 document.getElementById("refresh").addEventListener("click", function() {//not called directly because
 	refreshLobbies();
 });
-document.getElementById("leave-button").addEventListener("click", function() {//refreshLobbies and leaveLobby are not yet loaded
+document.getElementById("leave-button").addEventListener("click", function() {//refreshLobbies and leaveLobby are not loaded yet
 	leaveLobby();
 });
 
@@ -253,7 +256,7 @@ chatInput.addEventListener("keydown", function(e) {
 
 		var filteredPlayerList = [];
 		for (var pid in players) {
-			if (players[pid].name.indexOf(this.search) === 0) filteredPlayerList.push(players[pid].name);
+			if (players[pid].name.indexOf(this.search) !== -1) filteredPlayerList.push(players[pid].name);
 		}
 		if (filteredPlayerList.length !== 0) {
 			var cursorPos = this.textParts[0].length + filteredPlayerList[this.searchIndex].length;
@@ -307,7 +310,7 @@ playerListElement.addEventListener("click", function(e) {
 function printPlayerList(filter) {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	players.forEach(function(player, index) {
-		if (filter !== "" && player.name.indexOf(filter) !== 0) return;
+		if (filter !== "" && player.name.indexOf(filter) === -1) return;
 		var li = document.createElement("li");
 		li.textContent = player.name;
 		li.style.color = Planet.prototype.teamColors[player.appearance];

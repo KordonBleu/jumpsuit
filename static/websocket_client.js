@@ -95,15 +95,6 @@ Connection.prototype.messageHandler = function(message) {
 					printLobbies();
 				}
 				break;
-			case MESSAGE.PING:
-				this.send(JSON.stringify({
-					msgType: MESSAGE.PONG,
-					data: {
-						key: msg.data.key,
-						uid: currentConnection.lobbyUid
-					}
-				}));
-				break;
 			case MESSAGE.PLAYER_SETTINGS:
 				printPlayerList(msg.data);
 				break;
@@ -179,8 +170,8 @@ Connection.prototype.messageHandler = function(message) {
 						players[i].boxInformations[0].box.angle = players[i].box.angle;
 						players[i].boxInformations[0].timestamp = (players[i].boxInformations[1] !== undefined) ? players[i].boxInformations[1].timestamp : Date.now();
 					}
-					players[i].boxInformations[p] = {box: new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle), timestamp: Date.now()}; 
-					
+					players[i].boxInformations[p] = {box: new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle), timestamp: Date.now()};
+
 					players[i].box.width = resources[players[i].appearance + players[i].walkFrame].width;
 					players[i].box.height = resources[players[i].appearance + players[i].walkFrame].height;
 					players[i].looksLeft = msg.data.players[i].looksLeft;

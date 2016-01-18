@@ -258,18 +258,9 @@ label.range-label{
 	transition: opacity .15s;
 }
 
-#status-plus-refresh img, #status-plus-refresh h3 {
-	display: inline-block;
-	vertical-align: baseline;
-}
 #refresh {
-	width: 1em;
-	height: 1em;
+	border-color: #EBEDF4;
 }
-#refresh:hover {
-	cursor: pointer;
-}
-
 #name {
 	display: block;
 	margin: 0;
