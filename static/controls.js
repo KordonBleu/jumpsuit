@@ -210,7 +210,7 @@ function handleGamepad() {
 		for (var i = 0; i < gamepads.length; i++) {
 			var gp = gamepads[i];
 			if (gp) {
-				onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
+				//onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
 				usingGamepad = gp.index;
 			}
 		}
@@ -231,7 +231,7 @@ function handleGamepad() {
 			else game.drag.y = 0;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		} else {
-			if (typeof usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (usingGamepad + 1).toString() + " disconnected");
+			//if (typeof usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (usingGamepad + 1).toString() + " disconnected");
 			usingGamepad = -1;
 		}
 	}

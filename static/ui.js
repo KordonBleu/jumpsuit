@@ -347,6 +347,7 @@ lobbyListElement.addEventListener("click", function(e) {
 	if (e.target.tagName === "BUTTON") {
 		if (e.target !== lobbyListElement.lastElementChild.lastElementChild.firstElementChild) {// Play!
 			var lobbyUid = e.target.dataset.href.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
+			if (currentConnection.lobbyUid !== null) currentConnection.leaveLobby();
 			currentConnection.connectLobby(lobbyUid);
 			history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");
 		} else {// Create!
@@ -381,7 +382,8 @@ lobbyTableHeaderRowElement.addEventListener("click", function(e) {
 						break;
 					case "Players":
 						printLobbies.list.sort(function(a, b) {
-							return a.players < b.players ? -1 : a.players > b.players ? 1 : 0;
+							if (a.players < b.players || a.players > b.players) return a.players < b.players ? -1 : 1;
+							else return a.maxPlayers < b.maxPlayers ? -1 : a.maxPlayers > b.maxPlayers ? 1 : 0;
 						});
 				}
 				break;

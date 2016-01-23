@@ -5,7 +5,8 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="user-scalable=no"/>
 		<link href="/style.css" rel="stylesheet"/>
-		<link href='https://fonts.googleapis.com/css?family=Open+Sans:600' rel='stylesheet' type='text/css'>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:600" rel="stylesheet" type="text/css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
@@ -44,27 +45,27 @@
 		</table>
 
 		<div id="gui-options" class="hidden">
-			<button id="leave-button">Leave</button><!--perhaps add an icon here-->
-			<button id="info-button">Infos</button><!--perhaps add an icon here-->
-			<button id="settings-button">Settings</button><!--perhaps add an icon here-->
+			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button><!--perhaps add an icon here-->
+			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button><!--perhaps add an icon here-->
+			<button id="settings-button"><i class="fa fa-wrench"></i>Settings</button><!--perhaps add an icon here-->
 		</div>
 
 
 		<div id="menu-box" class="hidden">
-			<button id="menu-box-info-button" style="float: right;">Infos</button>
-			<button id="menu-box-settings-button" style="float: right;">Settings</button>
+			<button id="menu-box-info-button" style="float: right;"><i class="fa fa-info-circle"></i>Infos</button>
+			<button id="menu-box-settings-button" style="float: right;"><i class="fa fa-wrench"></i>Settings</button>
 			<h3 id="status">Waiting for other players...</h3>
 			<table id="lobby-table">
 				<thead>
-					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_double.svg"/></th><th><button id="refresh">Refresh</button></th></tr>
+					<tr><th>Lobby name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Players <img src="/assets/images/sort_arrow_double.svg"/></th><th><button id="refresh"><i class="fa fa-refresh"></i></button></th></tr>
 				</thead>
 				<tbody id="lobby-list">
-					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="32" autocomplete="off" required/></td><td>? of <input type="number" min="1" max="16" step="1" required/></td><td><button>Create!</button></td></tr>
+					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="50" autocomplete="off" required/></td><td>? of <input type="number" min="1" max="16" step="1" required/></td><td><button>Create!</button></td></tr>
 				</tbody>
 			</table><!--removes non-breaking space
 			--><div id="search-filter">
-				<h1>Search filters<h1>
-				<label><input id="search-input" type="text" placeholder="Search.." title="You can even enter RegExp"/></label>
+				<h1><i class="fa fa-search"></i>Search filters</h1>
+				<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp"/></label>
 				<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
 			</div>
 			<ul id="team-list" class="hidden">
@@ -77,7 +78,7 @@
 		</div>
 		<div id="shade-box" class="hidden"></div>
 		<div id="info-box" class="hidden">
-			<h2>Informations</h2><button id="close-info-box">Close</button>
+			<h2>Informations</h2><button id="close-info-box"><i class="fa fa-times"></i>Close</button>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>And the credits go to...</p>
 				<ul>
@@ -102,7 +103,7 @@
 		</div>
 
 		<div id="settings-box" class="hidden">
-			<h2>Settings</h2><button id="close-settings-box">Close</button>
+			<h2>Settings</h2><button id="close-settings-box"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<div class="splitContainer">
 					<h3>Team</h3>

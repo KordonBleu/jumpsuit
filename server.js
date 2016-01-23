@@ -10,12 +10,12 @@ var fs = require("fs"),
 	vinage = require("./static/vinage/vinage.js");
 
 var configSkeleton = {
-	dev: false,
-	interactive: false,
-	monitor: false,
-	port: 8080
-},
-	configPath = process.argv[2] || "./config.json";
+		dev: false,
+		interactive: false,
+		monitor: false,
+		port: 8080
+	}, configPath = process.argv[2] || "./config.json";
+
 try {
 	fs.statSync(configPath);
 } catch(err) {
@@ -122,10 +122,11 @@ function initRl(){
 		input: process.stdin,
 		output: process.stdout
 	});
-
+	rl.setPrompt("[INPUT:] ".blue.bold, "[INPUT:] ".length);
 	rl.on("line", function (cmd) {
 		//allowing to output variables on purpose
-		console.log(eval(cmd));
+		var result = eval(cmd);
+		if (result !== undefined) console.log("[RESULT:] ".magenta.bold, result);
 	});
 }
 
@@ -138,8 +139,7 @@ var server = http.createServer(function (req, res){
 		else res.end("This lobby doesn't exist (anymore)!\n");
 	}
 
-	var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1),
-		mime;
+	var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1), mime;
 	switch(extension) {
 		case "html":
 			mime = "text/html";
@@ -190,7 +190,6 @@ server.listen(config.port);
 
 var lobbies = [],
 	wss = new WebSocketServer({server: server});
-
 
 function Lobby(name, maxPlayers){
 	this.players = new Array(maxPlayers || 8);
@@ -309,8 +308,8 @@ function Lobby(name, maxPlayers){
 	};
 
 	this.resetWorld();
-	this.name = name || "Unnamed Lobby";
-	this.maxPlayers = maxPlayers || 8;
+	this.name = name;
+	this.maxPlayers = maxPlayers;
 }
 Lobby.prototype.stateEnum = {
 	WAITING: 0,
@@ -558,5 +557,6 @@ wss.on("connection", function(ws) {
 	});
 	ws.on("close", cleanup);
 });
-
-lobbies.push(new Lobby("Lobby No. 1", 7));
+for (var i = 0; i < 17; i++){
+	lobbies.push(new Lobby("Lobby No. " + i, (i + 1) % 8));
+}

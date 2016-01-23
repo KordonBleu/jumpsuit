@@ -66,6 +66,9 @@ html {
 .hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
+i {
+	margin-right: 2px;
+}
 a {
 	color: #AD3726;
 	text-decoration: none;
@@ -230,7 +233,6 @@ label.range-label{
 	border-radius: 4px;
 	margin: 4px 0; 
 }
-/* Handle */
 ::-webkit-scrollbar-thumb {
 	-webkit-border-radius: 4px;
 	border-radius: 4px;
@@ -257,9 +259,9 @@ label.range-label{
 	opacity: 0.3;
 	transition: opacity .15s;
 }
-
 #refresh {
-	border-color: #EBEDF4;
+	outline: none;
+	/*border-color: #EBEDF4;*/
 }
 #name {
 	display: block;
@@ -406,9 +408,12 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	padding: 0 8px;	
 	box-sizing: border-box;
 }
+#status{
+	margin-left: 8px;
+}
 #lobby-table {
 	font-size: 1.6rem;
-	width: 80%;
+	width: calc(100% - 250px);
 	border-collapse: collapse;
 	table-layout: fixed;
 	display: inline-table;
@@ -453,14 +458,23 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 }
 #search-filter {
 	display: inline-block;
-	width: 18%;
-	padding: 0 1%;
+	width: 240px;
+	margin: 0 5px;
+}
+#search-filter h1{
+	margin: 12.5px 0;
 }
 #search-filter label {
 	display: block;
 	font-size: 1rem;
 	font-weight: normal;
 	margin: 0.5em 0px;
+}
+#search-input{
+	margin-top: 12px;
+	padding: 2px;
+	width: calc(100% - 8px);
+	font-size: 20px;
 }
 #team-list {
 	list-style-type: none;
