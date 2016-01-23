@@ -4,12 +4,13 @@ function Connection(address) {
 	var lastControls;
 
 	this.socket = new WebSocket(address || "ws://" + location.hostname + (location.port === "" ? "" : ":" + location.port));
+	this.socket.binaryType = "arraybuffer";
 
 	this.alive = function() { return this.socket.readyState === 1; };
 
 	this.lobbyUid = null;
 
-	this.socket.addEventListener("open", this.openHandler);
+	this.socket.addEventListener("open", this.refreshLobbies.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
 }
@@ -28,14 +29,7 @@ Connection.prototype.connectLobby = function(uid) {
 };
 Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.CREATE_LOBBY,
-		data: {
-			name: name,
-			playerAmount: playerAmount,
-			privateLobby: false
-		}
-	}));
+	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
 	this.refreshLobbies();
 };
 Connection.prototype.refreshLobbies = function() {
@@ -77,14 +71,12 @@ Connection.prototype.refreshControls = function(controls) {
 Connection.prototype.errorHandler = function() {
 	this.close();
 };
-Connection.prototype.openHandler = function() {
-	this.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
-};
 Connection.prototype.messageHandler = function(message) {
-	try {
+	if (typeof message.data === "string") {//JSON message
+	//try {
 		msg = JSON.parse(message.data);
 		switch(msg.msgType) {
-			case MESSAGE.SENT_LOBBIES:
+			case MESSAGE.LOBBY_LIST:
 				if (printLobbies.list === undefined) {//first time data is inserted
 					printLobbies.list = msg.data;
 					printLobbies();
@@ -149,7 +141,6 @@ Connection.prototype.messageHandler = function(message) {
 						}
 					} else {
 						if(!players[i].jetpack && msg.data.players[i].jetpack) {
-							console.log(players[i].panner);
 							setPanner(players[i].panner, players[i].box.center.x - players[ownIdx].box.center.x, players[i].box.center.y - players[ownIdx].box.center.y);
 							players[i].jetpackSound = jetpackModel.makeSound(players[i].panner, 1);
 							players[i].jetpackSound.start(0);
@@ -215,12 +206,24 @@ Connection.prototype.messageHandler = function(message) {
 					statusElement.textContent = "Match is over " + msg.data.timer;
 				}
 				break;
-			case MESSAGE.PLAYER_CONNECTED:
-				ownIdx = msg.data;
+			case MESSAGE.PLAY_SOUND:
+				msg.data.forEach(function(sound) {
+					switch(sound.type) {
+						case "laser":
+							laserModel.makeSound(makePanner(sound.position.x - players[ownIdx].box.center.x, sound.position.y - players[ownIdx].box.center.y)).start(0);
+							break;
+					}
+				});
 				break;
-			case MESSAGE.ERROR:
+		}
+	/*} catch(err) {
+		console.error(err, err.stack);
+	}*/
+	} else {//binary message
+		switch (new Uint8Array(message.data, 0, 1)[0]) {
+			case MESSAGE.ERROR.value:
 				var errDesc;
-				switch(msg.data.code) {
+				switch(MESSAGE.ERROR.deserialize(message.data)) {
 					case ERROR.NO_LOBBY:
 						errDesc = "This lobby doesn't exist (anymore)";
 						break;
@@ -235,26 +238,21 @@ Connection.prototype.messageHandler = function(message) {
 				history.pushState(null, "Main menu", "/");
 				alert("Error " + msg.data.code + ":\n" + errDesc);
 				break;
-			case MESSAGE.PLAY_SOUND:
-				msg.data.forEach(function(sound) {
-					switch(sound.type) {
-						case "laser":
-							laserModel.makeSound(makePanner(sound.position.x - players[ownIdx].box.center.x, sound.position.y - players[ownIdx].box.center.y)).start(0);
-							break;
-					}
-				});
+			case MESSAGE.CONNECT_ACCEPTED.value:
+				console.log("BAMMMMMMM");
+				ownIdx = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
+				console.log(ownIdx);
 				break;
-			case MESSAGE.SCORES:
-				var b = [];
-				for (a in msg.data) b.push([a, msg.data[a]]);
+			case MESSAGE.SCORES.value:
+				var val = MESSAGE.SCORES.deserialize(message.data),
+					b = [];
+				for (a in val) b.push([a, val[a]]);
 				b.sort(function(a, c){ return a[1]-c[1]; });
 				b.forEach(function(a, i){
 					if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
 				});
 				break;
 		}
-	} catch(err) {
-		console.error(err, err.stack);
 	}
 };
 

@@ -707,27 +707,3 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	top: 0;
 	right: 0;
 }
-
-#piano{
-	position: fixed;
-	top: 100%;
-	left: 50%;
-	background-image: url("/assets/images/piano.png");
-	width: 250px;
-	height: 143px;
-	margin-left: -125px;
-	transition: top .5s;
-}
-#piano.playing{
-	top: 20%;
-	animation: piano-playing 2s .7s;
-}
-
-@keyframes piano-playing {
-	0% {background-image: url("/assets/images/piano.png"); }
-	10% {background-image: url("/assets/images/piano2.png"); }
-	60% {background-image: url("/assets/images/piano2.png"); }
-	70% {background-image: url("/assets/images/piano3.png"); }
-	90% {background-image: url("/assets/images/piano3.png"); }
-	100% {background-image: url("/assets/images/piano.png"); }
-}

@@ -1,0 +1,186 @@
+# Application protocol
+
+Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
+
+## Notation
+
+Possible values for a field will be noted:
+ * with a number for the packet type (ex: 4)
+ * with lowercase words for variables (ex: player name)
+ * with lowercase words starting with a uppercase character for enumerations (ex: Error Type)
+ * with uppercase snake case for packets and subpackets (ex: CREATE_LOBBY)
+
+## Packet type
+
+The first byte of every packet determines its type. A payload may be placed after this first byte.
+
+   1B       ?B
++------+-----------
+| type | payload...
++------+-----------
+
+There are yet 13 packet types.
+
+## Payload
+
+### ERROR
+
+ 1B       1B
++---+------------+
+| 0 | Error Type |
++---+------------+
+
+Error Type must be either:
+ 0. no lobby avalaible
+ 1. no slot avalaible
+ 2. name taken
+
+
+### CONNECT
+
+ 1B      4B       1B        ? * 2B
++---+----------+------+-------------+
+| 1 | lobby ID | Team | player name |
++---+----------+------+-------------+
+
+The player name starts at the 3rd byte and ends ends at the last byte of the packet.
+
+Note: in future versions this packet will be simplificated because it is redundant with PLAYER_SETTINGS.
+
+
+### GET_LOBBIES
+
+ 1B
++---+
+| 2 |
++---+
+
+
+### LOBBY_LIST
+
+ 1B    ?B      ?B      ?B      ?B
++---+-------+-------+-------+---------
+| 3 | LOBBY | LOBBY | LOBBY | LOBBY...
++---+-------+-------+-------+---------
+
+The payload of the GET_LOBBIES packet consists of an undefined amount of LOBBY subpackets.
+
+#### LOBBY
+
+A LOBBY subpacket is defined as follow:
+
+     4B                 1B                           1B                         1B                 0B-510B
++----------+----------------------------+---------------------------+--------------------------+------------+
+| lobby ID | amount of connected player | maximum amount of players | length of the lobby name | lobby name |
++----------+----------------------------+---------------------------+--------------------------+------------+
+
+The length of the lobby name is in number of characters.
+The lobby name is encoded as UTF-16.
+
+
+### CREATE_LOBBY
+
+ 1B              1B                  0B-510B
++---+---------------------------+------------+
+| 4 | maximum amount of players | lobby name |
++---+---------------------------+------------+
+
+
+### PLAYER_SETTINGS
+
+ 1B      4B       1B      0B-510B
++---+----------+------+-------------+
+| 5 | lobby ID | Team | player name |
++---+----------+------+-------------+
+
+Team must be either:
+ 0. beige
+ 1. blue
+ 2. green
+ 3. pink
+ 4. yellow
+
+Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby ID will be assumed to be the only lobby the player is connected to.
+
+
+### LEAVE_LOBBY
+
+ 1B      4B
++---+----------+
+| 6 | lobby ID |
++---+----------+
+
+Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby ID will be assumed to be the only lobby the player is connected to.
+
+### PLAYER_CONTROLS
+
+ 1B   1B      1B     1B        1B       1B           1B
++---+------+-----+--------+---------+-----------+------------+
+| 7 | jump | run | crouch | jetpack | move left | move right |
++---+------+-----+--------+---------+-----------+------------+
+
+The values of jump, run, crouch, jetpack, move left and move right are 1 if enabled, 0 if not.
+
+Note: in future JumpSuit's versions this will be encoded as a bitfield.
+
+
+### WORLD_ DATA
+
+ 1B
++---+---
+| 8 |
++---+--
+
+Note: this is yet encoded as JSON.
+
+### CHAT
+ 1B
++---+---
+| 9 |
++---+--
+
+
+### PLAY_SOUND
+
+  1B
++----+---
+| 10 |
++----+--
+
+Note: this is yet encoded as JSON.
+
+### GAME_DATA
+
+  1B
++----+---
+| 11 |
++----+--
+
+Note: this is yet encoded as JSON.
+
+### LOBBY_STATE
+
+  1B       1B         1B
++----+-------------+-------+
+| 12 | Lobby State | timer |
++----+-------------+-------+
+
+Lobby State must be either:
+ 1. waiting for players
+ 2. game started
+ 3. game over
+
+### CONNECT_ACCEPTED
+
+  1B      1B
++----+-----------+
+| 13 | player ID |
++----+-----------+
+
+
+### SCORES
+
+  1B         4B                 4B                4B                 4B                 4B
++----+------------------+-----------------+------------------+-----------------+-------------------+
+| 14 | beige team score | blue team score | green team score | pink team score | yellow team score |
++----+------------------+-----------------+------------------+-----------------+-------------------+
