@@ -1,7 +1,9 @@
+"use strict";
+
 var ownIdx = null;
 
 function Connection(address) {
-	var lastControls;
+	this.lastControls = {};
 
 	this.socket = new WebSocket(address || "ws://" + location.hostname + (location.port === "" ? "" : ":" + location.port));
 	this.socket.binaryType = "arraybuffer";
@@ -33,13 +35,10 @@ Connection.prototype.createLobby = function(name, playerAmount) {
 	this.refreshLobbies();
 };
 Connection.prototype.refreshLobbies = function() {
-	this.socket.send(JSON.stringify({ msgType: MESSAGE.GET_LOBBIES }));
+	this.socket.send(MESSAGE.GET_LOBBIES.serialize());
 };
 Connection.prototype.leaveLobby = function() {
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.LEAVE_LOBBY,
-		data: {uid: this.lobbyUid}
-	}));
+	this.socket.send(MESSAGE.LEAVE_LOBBY.serialize());
 	game.stop();
 };
 Connection.prototype.sendSettings = function() {
@@ -55,18 +54,14 @@ Connection.prototype.sendChat = function(content) {
 	}));
 };
 Connection.prototype.refreshControls = function(controls) {
-	if (typeof lastControls === "undefined") lastControls = {};
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
 	for (var c in players[ownIdx].controls){
 		b++;
-		if (lastControls[c] === players[ownIdx].controls[c]) accordance++;
-		else lastControls[c] = players[ownIdx].controls[c];
+		if (this.lastControls[c] === players[ownIdx].controls[c]) accordance++;
+		else this.lastControls[c] = players[ownIdx].controls[c];
 	}
 	if (accordance === b) return;
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.PLAYER_CONTROLS,
-		data: {uid: this.lobbyUid, controls: controls}
-	}));
+	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
 Connection.prototype.errorHandler = function() {
 	this.close();
@@ -74,19 +69,8 @@ Connection.prototype.errorHandler = function() {
 Connection.prototype.messageHandler = function(message) {
 	if (typeof message.data === "string") {//JSON message
 	//try {
-		msg = JSON.parse(message.data);
+		var msg = JSON.parse(message.data);
 		switch(msg.msgType) {
-			case MESSAGE.LOBBY_LIST:
-				if (printLobbies.list === undefined) {//first time data is inserted
-					printLobbies.list = msg.data;
-					printLobbies();
-					applyLobbySearch();//in case the page was refreshed and the
-					applyEmptinessCheck();//inputs left in a modified state
-				} else {
-					printLobbies.list = msg.data;
-					printLobbies();
-				}
-				break;
 			case MESSAGE.PLAYER_SETTINGS:
 				printPlayerList(msg.data);
 				break;
@@ -236,10 +220,20 @@ Connection.prototype.messageHandler = function(message) {
 				}
 
 				history.pushState(null, "Main menu", "/");
-				alert("Error " + msg.data.code + ":\n" + errDesc);
+				alert("Error:\n" + errDesc);
+				break;
+			case MESSAGE.LOBBY_LIST.value:
+				if (printLobbies.list === undefined) {//first time data is inserted
+					printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
+					printLobbies();
+					applyLobbySearch();//in case the page was refreshed and the
+					applyEmptinessCheck();//inputs left in a modified state
+				} else {
+					printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
+					printLobbies();
+				}
 				break;
 			case MESSAGE.CONNECT_ACCEPTED.value:
-				console.log("BAMMMMMMM");
 				ownIdx = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
 				console.log(ownIdx);
 				break;

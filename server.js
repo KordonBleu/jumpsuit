@@ -17,7 +17,7 @@ var fs = require("fs"),
 	},
 	configPath = process.argv[2] || "./config.json",
 
-	wsOptions = { binary: true, mask: true };
+	wsOptions = { binary: true, mask: false };
 
 try {
 	fs.statSync(configPath);
@@ -319,10 +319,10 @@ Lobby.prototype.stateEnum = {
 	PLAYING: 1,
 	END: 2
 };
-Lobby.prototype.broadcast = function(message) {
+Lobby.prototype.broadcast = function(message, options) {
 	this.players.forEach(function(player) {
 		try {
-			player.ws.send(message);
+			player.ws.send(message, options);
 		} catch(e) {/*Ignore errors*/}
 	});
 };
@@ -484,14 +484,13 @@ wss.on("connection", function(ws) {
 		if (!flags.binary) {
 		try {
 			msg = JSON.parse(message);
-			if (config.dev && msg.msgType !== MESSAGE.PLAYER_SETTINGS && msg.msgType !== MESSAGE.PLAYER_CONTROLS) {
+			if (config.dev && msg.msgType !== MESSAGE.PLAYER_SETTINGS) {
 				var _m = MESSAGE.toString(msg.msgType);
 				while (_m.length <= 15) _m += " ";
 				console.log("[DEV] ".cyan.bold + _m.italic + " ", (JSON.stringify(msg.data) || ""));
 			}
 			switch(msg.msgType) {
 				case MESSAGE.CONNECT:
-					console.log(msg);
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby.players.amount() === lobby.maxPlayers) ws.send(MESSAGE.ERROR.serialize(ERROR.NO_SLOT), wsOptions);
 					else if(lobby.players.some(function(player) { return player.name === msg.data.name; })) ws.send(MESSAGE.ERROR.serialize(ERROR.NAME_TAKEN), wsOptions);
@@ -499,9 +498,7 @@ wss.on("connection", function(ws) {
 					else {
 						player = new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this);
 						var pid = lobby.players.firstEmpty();
-						console.log("pid", pid);
 						lobby.players.splice(pid, 1, player);
-						console.log(MESSAGE.CONNECT_ACCEPTED.serialize(pid));
 						ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid), wsOptions);
 						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
@@ -509,13 +506,6 @@ wss.on("connection", function(ws) {
 						player.lastRefresh = Date.now();
 						ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 					}
-					break;
-				case MESSAGE.GET_LOBBIES:
-					var lobbyList = [];
-					lobbies.forEach(function(lobby, i) {
-						lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.amount(), maxPlayers: lobby.maxPlayers});
-					});
-					ws.send(JSON.stringify({msgType: MESSAGE.LOBBY_LIST, data: lobbyList}));
 					break;
 				case MESSAGE.PLAYER_SETTINGS:
 					var lobby = lobbies.getByUid(msg.data.uid);
@@ -537,26 +527,28 @@ wss.on("connection", function(ws) {
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: player.name, appearance: player.appearance}}));
 					}
 					break;
-				case MESSAGE.PLAYER_CONTROLS:
-					var lobby = lobbies.getByUid(msg.data.uid);
-					if (lobby !== null){
-						for (var i in msg.data.controls) {
-							player.controls[i] = msg.data.controls[i];
-						}
-					}
-					break;
-				case MESSAGE.LEAVE_LOBBY:
-					cleanup();
-					break;
 			}
 		} catch (err) {
 			console.log("[ERR] ".red.bold, err, err.stack);
 		}
 		} else {
-			switch (new Uint8Array(message.data, 0, 1)[0]) {
+			switch (new Uint8Array(message, 0, 1)[0]) {
+				case MESSAGE.GET_LOBBIES.value:
+					var lobbyList = [];
+					lobbies.forEach(function(lobby, i) {
+						lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.amount(), maxPlayers: lobby.maxPlayers});
+					});
+					ws.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
+					break;
 				case MESSAGE.CREATE_LOBBY.value:
-					var data = MESSAGE.CREATE_LOBBY.deserialize(message.data);
+					var data = MESSAGE.CREATE_LOBBY.deserialize(message);
 					if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.name, data.playerAmount));
+					break;
+				case MESSAGE.LEAVE_LOBBY.value:
+					cleanup();
+					break;
+				case MESSAGE.PLAYER_CONTROLS.value:
+					player.controls = MESSAGE.PLAYER_CONTROLS.deserialize(message);
 					break;
 			}
 		}
