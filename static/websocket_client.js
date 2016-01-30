@@ -25,7 +25,7 @@ Connection.prototype.connectLobby = function(uid) {
 
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.CONNECT,
-		data: { uid: uid, name: settings.name, appearance: "alienGreen" }
+		data: { uid: uid, name: settings.name}
 	}));
 	this.lobbyUid = uid;
 };
@@ -44,7 +44,7 @@ Connection.prototype.leaveLobby = function() {
 Connection.prototype.sendSettings = function() {
 	this.socket.send(JSON.stringify({
 		msgType: MESSAGE.PLAYER_SETTINGS,
-		data: {uid: this.lobbyUid, name: settings.name, appearance: settings.appearance}
+		data: {uid: this.lobbyUid, name: settings.name}
 	}));
 };
 Connection.prototype.sendChat = function(content) {
@@ -111,9 +111,17 @@ Connection.prototype.messageHandler = function(message) {
 						delete players[i];
 						continue;
 					}
+					
+					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
+					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
+					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
 					if (players[i] === undefined) {
-						if (msg.data.players[i] !== undefined) players[i] = new Player(msg.data.players[i].name, msg.data.players[i].appearance, msg.data.players[i].x, msg.data.players[i].y);
-						else continue;
+						if (msg.data.players[i] !== undefined) {
+							players[i] = new Player(msg.data.players[i].name);
+							players[i].box = new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle);
+							players[i].appearance = msg.data.players[i].appearance;
+							players[i].setBoxSize();
+						} else continue;
 					}
 
 					if (i === ownIdx) {
@@ -131,12 +139,8 @@ Connection.prototype.messageHandler = function(message) {
 						} else if(players[i].jetpack && !msg.data.players[i].jetpack && players[i].jetpackSound !== undefined) {
 							players[i].jetpackSound.stop();
 						}
-					}
-
-					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
-					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
-					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
-
+					}				 
+					
 					var p = 1;
 					if (players[i].boxInformations[0] === undefined) p = 0;
 					if (p === 1) {
@@ -147,10 +151,9 @@ Connection.prototype.messageHandler = function(message) {
 					}
 					players[i].boxInformations[p] = {box: new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle), timestamp: Date.now()};
 
-					players[i].box.width = resources[players[i].appearance + players[i].walkFrame].width;
-					players[i].box.height = resources[players[i].appearance + players[i].walkFrame].height;
 					players[i].looksLeft = msg.data.players[i].looksLeft;
 					players[i].walkFrame = msg.data.players[i].walkFrame;
+					players[i].setBoxSize();
 					players[i].name = msg.data.players[i].name;
 					players[i].appearance = msg.data.players[i].appearance;
 					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
@@ -171,7 +174,11 @@ Connection.prototype.messageHandler = function(message) {
 					}
 				}
 				for (var i in msg.data.gameProgress){
-					if (i.indexOf("alien") === 0) document.getElementById("gui-points-" + i).textContent = msg.data.gameProgress[i];
+					var element = document.getElementById("gui-points-" + i);
+					if (element !== null){
+						element.textContent = msg.data.gameProgress[i];
+						element.style.display = "inline-block";
+					}
 				}
 				if (!game.started) game.start();
 				break;

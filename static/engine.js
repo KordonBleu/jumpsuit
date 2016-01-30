@@ -33,16 +33,16 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-function Player(name, appearance, startx, starty, ws) {
+function Player(name, ws) {
 	this._walkCounter = 0;
 	this.name = name;
-	this.appearance = appearance;
 	this.ws = ws;
-	this.box = new Rectangle(new Point(startx, starty), resources[this.appearance + "_stand"].width, resources[this.appearance + "_stand"].height);
+	this.box = undefined;
 	this.boxInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
 	this.setWalkframe = function(){
+		if (this.box === undefined) return;
 		if (this.attachedPlanet === -1){
 			this.walkFrame = "_jump";
 		} else {
@@ -52,10 +52,13 @@ function Player(name, appearance, startx, starty, ws) {
 				this._walkCounter = 0;
 				this.walkFrame = (this.walkFrame === "_walk1") ? "_walk2" : "_walk1";
 			}
-			this.box.width = resources[this.appearance + this.walkFrame].width;
-			this.box.height = resources[this.appearance + this.walkFrame].height;
+			this.setBoxSize();
 		}
 	};
+	this.setBoxSize = function(){
+		this.box.width = resources[this.appearance + this.walkFrame].width
+		this.box.height = resources[this.appearance + this.walkFrame].height;
+	}
 	this.walkFrame = "_stand";
 	this.jetpack = false;
 	this.health = 8;
@@ -75,7 +78,6 @@ function Planet(x, y, radius) {
 	this.progress = {team: "neutral", value: 0, color: "rgb(80,80,80)"};
 }
 Planet.prototype.teamColors = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
-Planet.prototype.names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa", "Quebec", "Romeo", "Sierra", "Tango", "Uniform", "Victor", "Whiskey", "X-Ray", "Yankee", "Zulu"];
 
 
 function Enemy(x, y, appearance) {
@@ -92,6 +94,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);
 
+
 	shots.forEach(function(shot, si) {
 		shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 18;
 		shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 18;
@@ -100,7 +103,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 	enemies.forEach(function(enemy) {
 		var playerToHit = null;
 		players.forEach(function(player) {
-			if(universe.collide(enemy.aggroBox, player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
+			if (universe.collide(enemy.aggroBox, player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
 				playerToHit = player;
 			}
 		});

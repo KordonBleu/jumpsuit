@@ -52,142 +52,142 @@ function loadConfig(firstRun) {
 		loadConfig.selfModified = false;
 		return;
 	}
-	try {
-		config = JSON.parse(fs.readFileSync(configPath));
-		for(var key in config) {
-			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
-		}
-		console.log("[INFO] ".yellow.bold + "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
-		var addedProp = [];
-		for(var key in configSkeleton) {
-			if(!config.hasOwnProperty(key)) {
-				config[key] = configSkeleton[key];//all the properties must be listed in `config.json`
-				addedProp.push(key);
-			}
-		}
-		if(addedProp.length !== 0) {
-			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
-			loadConfig.selfModified = true;
-			console.log("[INFO] ".yellow.bold + "New properties added to config file: " + addedProp.join(", ").bold);
-		}
-	} catch(err) {
-		console.log("[ERR] ".red.bold + err);
-		console.log("[INFO] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
-		config = configSkeleton;
-	}
-	if(previousConfig !== undefined) {
-		if(config.port !== previousConfig.port) {
-			server.close();
-			server.listen(config.port);
-		}
-		if(config.monitor !== previousConfig.monitor) {
-			if(previousConfig.monitor) {
-				clearInterval(monitorTimerID);
-				process.stdout.write("\u001b[?1049l")
-			} else {
-				process.stdout.write("\u001b[?1049h\u001b[H");
-				monitorTimerID = setInterval(monitoring, 500);
-			}
-		}
-		if(config.interactive !== previousConfig.interactive) {
-			if(previousConfig.interactive) rl.close();
-			else initRl();
-		}
-		if (config.dev && !previousConfig.dev) {
-			lobbies.forEach(function(lobby) {
-				lobby.stateTimer = config.dev ? 0 : 30;
-			});
-		}
-	}
+ try {
+	 config = JSON.parse(fs.readFileSync(configPath));
+	 for(var key in config) {
+		 if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
+	 }
+	 console.log("[INFO] ".yellow.bold + "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
+	 var addedProp = [];
+	 for(var key in configSkeleton) {
+		 if(!config.hasOwnProperty(key)) {
+			 config[key] = configSkeleton[key];//all the properties must be listed in `config.json`
+			 addedProp.push(key);
+		 }
+	 }
+	 if(addedProp.length !== 0) {
+		 fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
+		 loadConfig.selfModified = true;
+		 console.log("[INFO] ".yellow.bold + "New properties added to config file: " + addedProp.join(", ").bold);
+	 }
+ } catch(err) {
+	 console.log("[ERR] ".red.bold + err);
+	 console.log("[INFO] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
+	 config = configSkeleton;
+ }
+ if(previousConfig !== undefined) {
+	 if(config.port !== previousConfig.port) {
+		 server.close();
+		 server.listen(config.port);
+	 }
+	 if(config.monitor !== previousConfig.monitor) {
+		 if(previousConfig.monitor) {
+			 clearInterval(monitorTimerID);
+			 process.stdout.write("\u001b[?1049l")
+		 } else {
+			 process.stdout.write("\u001b[?1049h\u001b[H");
+			 monitorTimerID = setInterval(monitoring, 500);
+		 }
+	 }
+	 if(config.interactive !== previousConfig.interactive) {
+		 if(previousConfig.interactive) rl.close();
+		 else initRl();
+	 }
+	 if (config.dev && !previousConfig.dev) {
+		 lobbies.forEach(function(lobby) {
+			 lobby.stateTimer = config.dev ? 0 : 30;
+		 });
+	 }
+ }
 }
 loadConfig(true);
 fs.watchFile(configPath, loadConfig);//refresh config whenever the `config.json` is modified
 
 var files = {};
 files.construct = function(path, oName) {
-	fs.readdirSync(path).forEach(function(pPath) {
-		var cPath = path + "/" + pPath,
-			stat = fs.statSync(cPath);
-		if(stat.isDirectory()) {//WE NEED TO GO DEEPER
-			files.construct(cPath, oName + pPath + "/");
-		} else {
-			files[oName + pPath] = fs.readFileSync(cPath);
-			files[oName + pPath].mtime = stat.mtime;
-		}
-	});
+ fs.readdirSync(path).forEach(function(pPath) {
+	 var cPath = path + "/" + pPath,
+		 stat = fs.statSync(cPath);
+	 if(stat.isDirectory()) {//WE NEED TO GO DEEPER
+		 files.construct(cPath, oName + pPath + "/");
+	 } else {
+		 files[oName + pPath] = fs.readFileSync(cPath);
+		 files[oName + pPath].mtime = stat.mtime;
+	 }
+ });
 };
 files.construct("./static", "/");//load everything under `./static` in RAM for fast access
 
 if(config.interactive) initRl();
 var rl;
 function initRl(){
-	rl = require("readline").createInterface({
-		input: process.stdin,
-		output: process.stdout
-	});
-	rl.setPrompt("[INPUT:] ".blue.bold, "[INPUT:] ".length);
-	rl.on("line", function (cmd) {
-		//allowing to output variables on purpose
-		var result = eval(cmd);
-		if (result !== undefined) console.log("[RESULT:] ".magenta.bold, result);
-	});
+ rl = require("readline").createInterface({
+	 input: process.stdin,
+	 output: process.stdout
+ });
+ rl.setPrompt("[INPUT:] ".blue.bold, "[INPUT:] ".length);
+ rl.on("line", function (cmd) {
+	 //allowing to output variables on purpose
+	 var result = eval(cmd);
+	 if (result !== undefined) console.log("[RESULT:] ".magenta.bold, result);
+ });
 }
 
 //send static files
 var server = http.createServer(function (req, res){
-	var lobbyUid = /^\/lobbies\/([0-9a-f]+)\/$/.exec(req.url);
-	if(req.url === "/") req.url = "/index.html";
-	else if(lobbyUid !== null) {
-		if(lobbies.getByUid(lobbyUid[1]) !== undefined) req.url = "/index.html";
-		else res.end("This lobby doesn't exist (anymore)!\n");
-	}
+ var lobbyUid = /^\/lobbies\/([0-9a-f]+)\/$/.exec(req.url);
+ if(req.url === "/") req.url = "/index.html";
+ else if(lobbyUid !== null) {
+	 if(lobbies.getByUid(lobbyUid[1]) !== undefined) req.url = "/index.html";
+	 else res.end("This lobby doesn't exist (anymore)!\n");
+ }
 
-	var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1), mime;
-	switch(extension) {
-		case "html":
-			mime = "text/html";
-			break;
-		case "css":
-			mime = "text/css";
-			break;
-		case "svg":
-			mime = "image/svg+xml";
-			break;
-		case "png":
-			mime = "image/png";
-			break;
-		case "js":
-			mime = "application/javascript";
-			break;
-		default:
-			mime = "application/octet-stream";
-	}
+ var extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1), mime;
+ switch(extension) {
+	 case "html":
+		 mime = "text/html";
+		 break;
+	 case "css":
+		 mime = "text/css";
+		 break;
+	 case "svg":
+		 mime = "image/svg+xml";
+		 break;
+	 case "png":
+		 mime = "image/png";
+		 break;
+	 case "js":
+		 mime = "application/javascript";
+		 break;
+	 default:
+		 mime = "application/octet-stream";
+ }
 
-	if(files[req.url] !== undefined) {
-		res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
-		if(config.dev) {
-			try {
-				var path = "./static" + req.url,
-					mtime = fs.statSync(path).mtime;
-				if(mtime.getTime() !== files[req.url].mtime.getTime()) {
-					files[req.url] = fs.readFileSync(path);
-					files[req.url].mtime = mtime;
-				}
-			} catch(e) {/*Do nothing*/}
-		}
-		if(req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).getTime() === files[req.url].mtime.getTime()) {
-			res.writeHead(304);
-			res.end();
-		} else {
-			res.setHeader("Content-Type", mime);
-			res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
-			res.writeHead(200);
-			res.end(files[req.url]);
-		}
-	} else {
-		res.writeHead(404);
-		res.end("Error 404:\nPage not found\n");
-	}
+ if(files[req.url] !== undefined) {
+	 res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
+	 if(config.dev) {
+		 try {
+			 var path = "./static" + req.url,
+				 mtime = fs.statSync(path).mtime;
+			 if(mtime.getTime() !== files[req.url].mtime.getTime()) {
+				 files[req.url] = fs.readFileSync(path);
+				 files[req.url].mtime = mtime;
+			 }
+		 } catch(e) {/*Do nothing*/}
+	 }
+	 if(req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).getTime() === files[req.url].mtime.getTime()) {
+		 res.writeHead(304);
+		 res.end();
+	 } else {
+		 res.setHeader("Content-Type", mime);
+		 res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
+		 res.writeHead(200);
+		 res.end(files[req.url]);
+	 }
+ } else {
+	 res.writeHead(404);
+	 res.end("Error 404:\nPage not found\n");
+ }
 });
 server.listen(config.port);
 
@@ -211,9 +211,9 @@ function Lobby(name, maxPlayers){
 	this.players.amount = function() {
 		var amount = 0;
 		this.forEach(function(player) {
-			amount += 1;
+			if (player !== undefined) amount++;
 		});
-		return amount;
+	 	return amount;
 	};
 	this.players.getData = function() {
 		var plData = [];
@@ -270,9 +270,7 @@ function Lobby(name, maxPlayers){
 		return {x: this.universe.center.x, y: this.universe.center.y, width: this.universe.width, height: this.universe.height};
 	}
 	//generate world structure
-	this.resetWorld = function(){
-		this.gameProgress = {ticks: 0, "alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
-
+	this.resetWorld = function(){		
 		this.planets.length = 0;
 		this.enemies.length = 0;
 
@@ -300,16 +298,35 @@ function Lobby(name, maxPlayers){
 			if (wellPositioned) this.enemies.push(newEnemy);
 			iterations++;
 		}
-		this.players.forEach(function(player){
-			if (player !== undefined){
-				player.attachedPlanet = -1;
-				player.box.center.x = 0;
-				player.box.center.y = 0;
-				player.box.angle = Math.random() * Math.PI;
-			}
-		});
-	};
 
+		this.availableTeams = [];
+		this.teams = {};
+		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
+
+		while (this.availableTeams.length !== 2){
+			var _t = Math.floor(Math.random() * _teams.length);
+			this.teams[_teams[_t]] = [];
+			this.availableTeams.push(_teams[_t]);
+			_teams.splice(_t, 1);
+		}
+		this.gameProgress = {ticks: 0};
+		this.gameProgress[this.availableTeams[0]] = 0;
+		this.gameProgress[this.availableTeams[1]] = 0;		
+
+		this.players.forEach(function(player){
+			player = new engine.Player(player.name, player.ws); //resetPlayers for team-reassignment
+		}.bind(this));
+	};
+	this.assignPlayerTeam = function(player){
+		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
+		if (this.teams[this.availableTeams[0]].length === this.teams[this.availableTeams[1]].length) player.appearance = this.availableTeams[Math.random() > 0.5 ? 1 : 0];				
+		else player.appearance = this.availableTeams[this.teams[this.availableTeams[0]].length > this.teams[this.availableTeams[1]].length ? 1 : 0];
+		this.teams[player.appearance].push(player.pid);
+		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
+		player.setBoxSize();
+		player.box.angle = Math.random() * Math.PI;
+		player.attachedPlanet = -1;
+	};
 	this.resetWorld();
 	this.name = name;
 	this.maxPlayers = maxPlayers;
@@ -328,7 +345,9 @@ Lobby.prototype.broadcast = function(message, options) {
 };
 Lobby.prototype.update = function() {
 	if (this.players.amount() !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
+	//actually this is just a hack to make set the timer interval to 1s... maybe move it to a new function that runs a 1s interval
 	if (this.state === this.stateEnum.WAITING) {
+
 		this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.state, this.stateTimer), wsOptions);
 		if (this.stateTimer <= 0) {
 			this.resetWorld();
@@ -353,7 +372,9 @@ Lobby.prototype.update = function() {
 			//TODO: display the scores
 		}
 	}
-
+	
+	for (var i = 0; i < this.players.length; i++) if (this.players[i] !== undefined && this.players[i].appearance === undefined) this.assignPlayerTeam(this.players[i]);
+	
 	var oldDate = Date.now(), playerData = [],
 	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.gameProgress);
 
@@ -372,8 +393,8 @@ Lobby.prototype.update = function() {
 			var lel = Math.pow(10, decimalNbr);
 			return Math.round(number * lel) / lel;
 		}
-		playerData[i] = (player !== undefined) ? {x: truncTo(player.box.center.x, 5), y: truncTo(player.box.center.y, 5), attachedPlanet: player.attachedPlanet,
-			angle: truncTo(player.box.angle, 7), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
+		playerData[i] = (player !== undefined) ? {x: truncTo(player.box.center.x, 3), y: truncTo(player.box.center.y, 3), attachedPlanet: player.attachedPlanet,
+			angle: truncTo(player.box.angle, 4), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
 			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft, jetpack: player.jetpack
 		} : null;
 	});
@@ -496,8 +517,8 @@ wss.on("connection", function(ws) {
 					else if(lobby.players.some(function(player) { return player.name === msg.data.name; })) ws.send(MESSAGE.ERROR.serialize(ERROR.NAME_TAKEN), wsOptions);
 					else if(lobby === null) ws.send(MESSAGE.ERROR.serialize(ERROR.NO_LOBBY), wsOptions);
 					else {
-						player = new engine.Player(msg.data.name, msg.data.appearance, 0, 0, this);
-						var pid = lobby.players.firstEmpty();
+						player = new engine.Player(msg.data.name, this);
+						var pid = lobby.players.firstEmpty();					
 						lobby.players.splice(pid, 1, player);
 						ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid), wsOptions);
 						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
@@ -513,9 +534,6 @@ wss.on("connection", function(ws) {
 					else {
 						var oldName = player.name;
 						player.name = msg.data.name;
-						if (engine.Planet.prototype.teamColors[msg.data.appearance] !== undefined) {//prevent malicious players from crashing the server
-							player.appearance = msg.data.appearance;
-						}
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
 						if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'"}}));
 					}
@@ -523,7 +541,7 @@ wss.on("connection", function(ws) {
 				case MESSAGE.CHAT:
 					var lobby = lobbies.getByUid(msg.data.uid);
 					if (lobby !== null) {
-						i = msg.data.content;
+						var i = msg.data.content;
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: player.name, appearance: player.appearance}}));
 					}
 					break;
@@ -558,6 +576,5 @@ wss.on("connection", function(ws) {
 	});
 	ws.on("close", cleanup);
 });
-for (var i = 0; i < 17; i++){
-	lobbies.push(new Lobby("Lobby No. " + i, (i + 1) % 8));
-}
+lobbies.push(new Lobby("Lobby No. 1", 8));
+

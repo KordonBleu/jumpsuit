@@ -63,7 +63,7 @@
 				</tbody>
 			</table><!--removes non-breaking space
 			--><div id="search-filter">
-				<h1><i class="fa fa-search"></i>Search filters</h1>
+			 	<h1><i class="fa fa-search"></i></h1>
 				<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp"/></label>
 				<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
 			</div>
@@ -86,7 +86,7 @@
 					<li>Icons: Lemon Liu, <a href="https://thenounproject.com/grega.cresnar/">Gregor Črešnar</a>,
 						<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>
 					</li>
-					<li>Font: <a href="https://www.google.com/fonts/specimen/Open+Sans">Open Sans</a> by Steve Matteson</li>
+					<li>Font: <a href="https://www.google.com/fonts/specimen/Open+Sans">Open Sans</a> by Steve Matteson, <a href="http://fontawesome.io/">FontAwesome</a></li>
 				</ul>
 			<h2>Support us</h2>
 			<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do!</p>
@@ -105,32 +105,16 @@
 			<h2>Settings</h2><button id="close-settings-box"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<div class="splitContainer">
-					<h3>Team</h3>
+					<h3>Player</h3>
 					<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
-					<label>
-						<input type="radio" name="playerSelect" value="alienBlue"/><span></span>
-					</label>
-					<label>
-						<input type="radio" name="playerSelect" value="alienBeige"/><span></span>
-					</label>
-					<label>
-						<input type="radio" name="playerSelect" value="alienGreen"/><span></span>
-					</label>
-					<label>
-						<input type="radio" name="playerSelect" value="alienPink"/><span></span>
-					</label>
-					<label>
-						<input type="radio" name="playerSelect" value="alienYellow"/><span></span>
-					</label>
-
 					<h3>Volume</h3>
 					<label class="range-label">Background Music</label><input type="range" value="50" id="music-volume"/><br/>
 					<label class="range-label">Sound Effects</label><input type="range" value="100" id="effects-volume"/>
 
-					<h3>Graphic</h3>
+				 	<!--<h3>Graphic</h3>
 					<label class="checkbox-label"><input type="checkbox" id="option-fullscreen" />Fullscreen</label>
 					<label class="checkbox-label" data-beta><input type="checkbox" id="option-moblur"/>Motion Blur</label>
-					<label class="checkbox-label"><input type="checkbox" id="option-performance">Performance-boost (poorer resolution)</label>
+					<label class="checkbox-label"><input type="checkbox" id="option-performance">Performance-boost (poorer resolution)</label>-->
 				</div>
 				<div class="splitContainer">
 					<h3>Key map</h3>

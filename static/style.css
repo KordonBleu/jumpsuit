@@ -25,11 +25,11 @@ html, body {
 	-webkit-transform: translate3d(0, 0, 0);/*GPU boost*/
 }
 #menu-box, #settings-box, #info-box {
+	overflow-y: auto;
 	-webkit-user-select: text;
 	-moz-user-select: text;
 	-ms-user-select: text;
 	user-select: text;
-	overflow-y: auto;
 }
 html {
 	background-image: url("/assets/images/background.png");
@@ -100,6 +100,10 @@ button {
 	border: 2px solid #AD3726;
 	text-align: center;
 	transition: background .2s, color .2s;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 button:disabled {
 	background: #555;
@@ -206,6 +210,12 @@ input[type=checkbox]:checked:after {
 	transform: scale(1);
 	opacity: 1;
 }
+label {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
 label.checkbox-label[data-beta]:after {
 	font-size: 10px;
 	content: "BETA";
@@ -216,7 +226,8 @@ label.checkbox-label[data-beta]:after {
 	top: -10px;
 }
 label.checkbox-label {
-	margin-left: 5px;
+	display: block;
+	margin: 8px 2px;
 	cursor: pointer;
 }
 label.range-label{
@@ -261,7 +272,7 @@ label.range-label{
 }
 #refresh {
 	outline: none;
-	/*border-color: #EBEDF4;*/
+	font-size: inherit;
 }
 #name {
 	display: block;
@@ -270,35 +281,6 @@ label.range-label{
 	outline: none;
 	width: 230px;
 }
-/* Team selection */
-label > input[type="radio"] {
-	display: none;
-}
-label > input[type="radio"] + span {
-	cursor: pointer;
-	filter: grayscale(100%);
-	width: 47px;
-	height: 47px;
-	margin: 8px 8px;
-	display: block;
-	float: left;
-	background-size: 47px 47px;
-	background-position: center;
-	border-radius: 5px;
-	transition: background-size .1s;
-}
-label > input[type="radio"]:checked + span {
-	filter:grayscale(0%);
-}
-label > input[type="radio"]:hover + span {
-	filter: grayscale(50%);
-	background-size: 85px 85px;
-}
-label > input[type="radio"][value="alienBlue"] + span {background-image: url("/assets/images/alienBlue_badge.svg");}
-label > input[type="radio"][value="alienBeige"] + span {background-image: url("/assets/images/alienBeige_badge.svg");}
-label > input[type="radio"][value="alienGreen"] + span {background-image: url("/assets/images/alienGreen_badge.svg");}
-label > input[type="radio"][value="alienPink"] + span {background-image: url("/assets/images/alienPink_badge.svg");}
-label > input[type="radio"][value="alienYellow"] + span {background-image: url("/assets/images/alienYellow_badge.svg");}
 
 #gui-chat-first{
 	height: 1px;
@@ -306,8 +288,8 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 #chat-input-container {
 	position: fixed;
 	bottom: 20px;
-	left: 20%;
-	width: 60%;
+	left: 240px; 
+	right: 240px;
 }
 #chat-input {
 	width: 98.8%;/* 100% minus twice the padding */
@@ -319,14 +301,18 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	color: #c9c9c9;
 	outline: none;
 	font-family: inherit;
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+}
+#chat-input:focus{
+	background: rgba(0, 0, 0, 0.3);	
 }
 #player-list {
 	background: rgba(235, 237, 244, 0.2);
-	border-radius: 2px;
+	border-radius: 4px;
 	list-style-type: none;
 	position: relative;
-	padding: 1%;
-	
+	padding: 1%;	
 	display: flex;
 	flex-wrap: wrap;
 }
@@ -380,6 +366,7 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	display: block;
 	text-align: center;
 	margin-bottom: 0.5rem;
+	margin-top: 0;
 }
 #settings-box > button, #info-box > button {
 	position: absolute;
@@ -418,10 +405,15 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	table-layout: fixed;
 	display: inline-table;
 	vertical-align: top;
+	overflow-y: auto;
 }
 #lobby-table thead {
 	color: #ebedf4;
 	background-color: #AD3726;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 #lobby-table th {
 	padding: 0.5rem;
@@ -436,6 +428,10 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 }
 #lobby-list tr:nth-child(even) {
 	background-color: rgba(0, 0, 0, 0.1);
+}
+#lobby-list tr td:first-child{
+	text-align: left;
+	padding-left: 20px;
 }
 #lobby-list td {
 	text-align: center;
@@ -463,6 +459,7 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 }
 #search-filter h1{
 	margin: 12.5px 0;
+	text-align: center;
 }
 #search-filter label {
 	display: block;
@@ -476,6 +473,7 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	width: calc(100% - 8px);
 	font-size: 20px;
 }
+
 #team-list {
 	list-style-type: none;
 	font-size: 18px;
@@ -499,6 +497,10 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	border-collapse: collapse;
 	cursor: pointer;
 	margin: 4px 8px;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 #key-settings #key-action {
 	width: 140px;
@@ -657,11 +659,12 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	color: #eee;
 }
 #gui-health:before{
-	line-height: 100%;
-	height: 22.5px;
 	content: "Health:";
 	width: 77px;
 	display: inline-block;
+	position: relative;
+	top: -5px;
+	right: 0;
 }
 #gui-health div {
 	background-size: 100% 100%;
@@ -687,14 +690,18 @@ label > input[type="radio"][value="alienYellow"] + span {background-image: url("
 	position: fixed;
 	top: 4px;
 	left: 50%;
-	width: 440px;
-	margin-left: -220px;
+	width: 200px;
+	margin-left: -100px;
 	color: #eee;
 	font-size: 32px;
 	background: rgba(0, 0, 0, 0.7);
 }
-#gui-points th{
-	width: 50px;
+#gui-points th, #gui-points td{
+	width: 85px;
+	margin: 0 5px;
+	padding: 0;
+	display: none;
+	text-align: center;
 }
 #gui-points-alienBeige{ color: #e5d9be; }
 #gui-points-alienBlue{ color: #a2c2ea; }

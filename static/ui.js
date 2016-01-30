@@ -46,8 +46,7 @@ var chatElement = document.getElementById("gui-chat"),
 
 
 	settings = {
-		name: localStorage.getItem("settings.name"),
-		appearance: "alien" + (["Blue", "Beige", "Green", "Yellow", "Pink"])[Math.floor(Math.random() * 5)]
+		name: localStorage.getItem("settings.name")
 	};
 
 /* var dialog = new function() {
@@ -98,7 +97,7 @@ addToggleListener(infoButton, infoBox);
 addToggleListener(menuBoxInfoButton, infoBox);
 
 /* Graphic settings */
-document.getElementById("option-fullscreen").addEventListener("change", function() {
+/*document.getElementById("option-fullscreen").addEventListener("change", function() {
 	if (!this.checked){
 		if (document.exitFullscreen) {
 			document.exitFullscreen();
@@ -228,12 +227,17 @@ nameElement.addEventListener("blur", function(e) {
 
 /* Buttons */
 document.getElementById("refresh").addEventListener("click", function() {//not called directly because
-	refreshLobbies();
+	resfreshLobbies();
 });
 document.getElementById("leave-button").addEventListener("click", function() {//refreshLobbies and leaveLobby are not loaded yet
 	leaveLobby();
 });
-
+function isDocumentInFullScreenMode() {
+  // Note that the browser fullscreen (triggered by short keys) might
+  // be considered different from content fullscreen when expecting a boolean
+  return ((document.fullscreenElement && document.fullscreenElement !== null) ||    // alternative standard methods
+      document.mozFullScreen || document.webkitIsFullScreen);                   // current working methods
+}
 /* Chat */
 chatInput.addEventListener("keydown", function(e) {
 	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
@@ -425,3 +429,4 @@ window.onbeforeunload = function() {
 	localStorage.setItem("settings.volume.music", musicVolumeElement.value);
 	localStorage.setItem("settings.volume.effects", effectsVolumeElement.value);
 };
+

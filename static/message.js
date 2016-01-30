@@ -1,5 +1,3 @@
-"use strict";
-
 var isNode = typeof module !== "undefined" && typeof module.exports !== "undefined";
 
 function stringToBuffer(string) {
@@ -240,7 +238,7 @@ const MESSAGE = {
 	},
 	toString: function(val) {
 		var res = Object.keys(this);
-		return res !== undefined ? res[1] : "UNKNOW";
+		return res !== undefined && res[val] !== undefined ? res[val] : "UNKNOWN";
 	}
 },
 ERROR = {
