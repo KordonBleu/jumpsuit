@@ -210,7 +210,11 @@ Lobby State must be either:
 
 ### SCORES
 
-  1B         4B                 4B                4B                 4B                 4B
-+----+------------------+-----------------+------------------+-----------------+-------------------+
-| 15 | beige team score | blue team score | green team score | pink team score | yellow team score |
-+----+------------------+-----------------+------------------+-----------------+-------------------+
+  1B         xB                    4B                  4B 
++----+---------------------+------------------+-------------------+
+| 14 | two available teams | first team score | second team score | 
++----+---------------------+------------------+-------------------+
+
+Second information "two available teams" should be a STRING which is the best solution if there will be other teams added in the future or ENUM
+ENUM should be shared between client and server on connect e.g.
+

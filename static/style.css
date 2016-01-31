@@ -5,13 +5,13 @@
 	font-family: "Open Sans";
 	font-style: normal;
 	font-weight: 400;
-	src: local('Open Sans'), local('OpenSans'), url("/assets/fonts/open_sans_400.woff2") format("woff2"), url("/assets/fonts/open_sans_400.woff") format("woff");
+	src: local("Open Sans"), url("/assets/fonts/open_sans_400.woff2") format("woff2"), url("/assets/fonts/open_sans_400.woff") format("woff");
 }
 @font-face {
-	font-family: 'Open Sans';
+	font-family: "Open Sans";
 	font-style: normal;
 	font-weight: 300;
-	src: local('Open Sans Light'), local('OpenSans-Light'), url("/assets/fonts/open_sans_300.woff2") format('woff2');
+	src: local("Open Sans Light"), url("/assets/fonts/open_sans_300.woff2") format('woff2');
 }
 html, body {
 	margin: 0;
@@ -344,18 +344,23 @@ label.range-label{
 	display: none;
 }
 #settings-box, #info-box {
-	padding: 0.5%;
+	padding: 14px;
 	transition: transform .5s, opacity .2s;
 	transform: scale(1);
 	opacity: 1;
 	position: fixed;
-	top: 50vh;
-	left: 50vw;
+	top: 50%;
+	left: 50%;
 	transform: translate(-50%, -50%);
 	background: #ebedf4;
 	color: #333;
-	box-shadow: 0 0 3px 0 black;
-	max-height: 90vh;
+	box-shadow: 0 0 13px 0 black;
+	min-width: 600px;
+	min-height: 400px;
+	width: calc(100% - 300px);
+	height: calc(100% - 190px);
+	max-width: 900px;
+	
 }
 #settings-box.hidden, #info-box.hidden, #menu-box.hidden {
 	display: block;
@@ -375,7 +380,7 @@ label.range-label{
 }
 #settings-box h3, #info-box h3{
 	float: left;
-	width: 100%;	
+	width: 100%;
 }
 #menu-box {
 	transition: transform .5s, opacity .2s;
@@ -391,7 +396,8 @@ label.range-label{
 }
 .splitContainer {
 	float: left;
-	max-width: 50%;
+	max-width: calc(100% - 330px);
+	min-width: 260px;
 	padding: 0 8px;	
 	box-sizing: border-box;
 }
@@ -690,17 +696,15 @@ label.range-label{
 	position: fixed;
 	top: 4px;
 	left: 50%;
-	width: 200px;
-	margin-left: -100px;
+	transform: translate(-50%, 0);
 	color: #eee;
 	font-size: 32px;
 	background: rgba(0, 0, 0, 0.7);
 }
-#gui-points th, #gui-points td{
-	width: 85px;
+#gui-points th{
+	width: 120px;
 	margin: 0 5px;
 	padding: 0;
-	display: none;
 	text-align: center;
 }
 #gui-points-alienBeige{ color: #e5d9be; }

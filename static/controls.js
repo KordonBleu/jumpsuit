@@ -1,6 +1,6 @@
 "use strict";
 
-const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch"};
+const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch", t: "chat"};
 function sameObjects(a, b) {
 	var aProps = Object.getOwnPropertyNames(a);
 	var bProps = Object.getOwnPropertyNames(b);
@@ -117,8 +117,10 @@ function handleInput(e) {
 		if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
 			//oh boy, this statement is fucked up :D
 			e.preventDefault();
-			players[ownIdx].controls[triggered] = s;
-			currentConnection.refreshControls(players[ownIdx].controls);
+			if (players[ownIdx].controls[triggered] !== undefined){
+				players[ownIdx].controls[triggered] = s;
+				currentConnection.refreshControls(players[ownIdx].controls);
+			} else if (triggered === "chat" && s === 1) chatInput.focus();
 		}
 	}
 }
@@ -178,12 +180,9 @@ handleInput.initKeymap = function(fromReversed) {
 };
 handleInput.loadKeySettings = function() {
 	var presets = localStorage.getItem("settings.keys");
-	try {
-		handleInput.reverseKeyMap = JSON.parse(presets);
-		handleInput.initKeymap(true);
-	} catch (e) {
-		handleInput.initKeymap(false);
-	}
+	if (presets !== null) handleInput.reverseKeyMap = JSON.parse(presets);
+	else handleInput.keyMap = defaultKeymap;
+	handleInput.initKeymap(presets !== null);
 };
 
 function dragging(ev, x, y) {

@@ -552,7 +552,7 @@ wss.on("connection", function(ws) {
 					break;
 			}
 		} catch (err) {
-			console.log("[ERR] ".red.bold, err, err.stack);
+			console.log("[ERR] ".red.bold, err.stack);
 		}
 		} else {
 			switch (new Uint8Array(message, 0, 1)[0]) {

@@ -244,7 +244,7 @@ Connection.prototype.messageHandler = function(message) {
 				break;
 			case MESSAGE.SCORES.value:
 				var val = MESSAGE.SCORES.deserialize(message.data),
-					b = [];
+					b = [], a;
 				for (a in val) b.push([a, val[a]]);
 				b.sort(function(a, c){ return a[1]-c[1]; });
 				b.forEach(function(a, i){

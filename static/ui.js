@@ -46,7 +46,7 @@ var chatElement = document.getElementById("gui-chat"),
 
 
 	settings = {
-		name: localStorage.getItem("settings.name")
+		name: localStorage.getItem("settings.name") || "Unnamed Player"
 	};
 
 /* var dialog = new function() {
@@ -199,8 +199,7 @@ keySettingsElement.addEventListener("click", function(e) {
 
 keyResetElement.addEventListener("click", function() {
 	handleInput.keyMap = defaultKeymap;
-	handleInput.updateReverseKeyMap();
-	handleInput.initKeymap();
+	handleInput.initKeymap(false);
 });
 
 /* Appearance & name */

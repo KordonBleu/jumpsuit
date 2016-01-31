@@ -29,23 +29,20 @@ var context = canvas.getContext("2d"),
 			pointsElement.classList.remove("hidden");
 			minimapCanvas.classList.remove("hidden");
 			menuBox.classList.add("hidden");
+			[].forEach.call(document.querySelectorAll("#gui-points th"), function(element){
+				element.style.display = "none";
+			});
 			loop();
 		},
 		stop: function() {
 			game.started = false;
 			menuBox.classList.remove("hidden");
-
 			players.forEach(function(player) {
-				if (player.jetpack) {
-					player.jetpackSound.stop();
-				}
-
+				if (player.jetpack) player.jetpackSound.stop();
 			});
-
 			players.length = 0;
 			planets.length = 0;
 			enemies.length = 0;
-
 			window.cancelAnimationFrame(this.animationFrameId);
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		},
@@ -152,28 +149,25 @@ function loop() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//layer 0: meteors
-	if (Math.random() < 0.01){
-		var m_resources = ["meteorBig1", "meteorBig2", "meteorBig3", "meteorBig4", "meteorMed1", "meteorMed2", "meteorSmall1", "meteorSmall2", "meteorTiny1", "meteorTiny2"],
-			m_rand = Math.floor(1 / Math.random()) - 1,
-			chosen_img = m_resources[(m_rand > m_resources.length - 1) ? m_resources.length - 1 : m_rand];
+	if (Math.random() < 0.02){
+		var m_resources = ["meteorBig1", "meteorMed2", "meteorSmall1", "meteorTiny1", "meteorTiny2"],
+			m_rand = Math.floor(m_resources.length * Math.random()),
+			chosen_img = m_resources[m_rand];
 
 		meteors[meteors.length] = {
-			x: -resources[chosen_img].width/2,
+			x: -resources[chosen_img].width,
 			y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
 			res: chosen_img,
-			speed: Math.map(Math.random(), 0, 1, 2, 4),
-			ang: Math.map(Math.random(), 0, 1, 0.25 * Math.PI, 0.75 * Math.PI),
-			rotAng: Math.map(Math.random(), 0, 1, 0, 2 * Math.PI),
+			speed: Math.map(Math.random(), 0, 1, 2, 6.5),
+			rotAng: 0,
 			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05),
-			depth: Math.map(Math.random(), 0, 1, 0.2, 0.6)
 		};
 	}
+	context.globalAlpha = 0.2;
 	meteors.forEach(function(m, i) {
-		m.x += Math.sin(m.ang) * m.speed;
-		m.y += Math.cos(m.ang) * m.speed;
-		context.globalAlpha = m.depth;
+		m.x += m.speed;
 		m.rotAng += m.rotSpeed;
-		if (m.x - resources[m.res].width/2 > canvas.width || m.y - resources[m.res].height/2 > canvas.height || m.y + resources[m.res].height/2 < 0) meteors.splice(i, 1);
+		if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
 		else drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng);
 	});
 	context.globalAlpha = 1;
