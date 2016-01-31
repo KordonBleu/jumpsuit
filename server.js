@@ -270,7 +270,7 @@ function Lobby(name, maxPlayers){
 		return {x: this.universe.center.x, y: this.universe.center.y, width: this.universe.width, height: this.universe.height};
 	}
 	//generate world structure
-	this.resetWorld = function(){		
+	this.resetWorld = function() {
 		this.planets.length = 0;
 		this.enemies.length = 0;
 
@@ -311,7 +311,7 @@ function Lobby(name, maxPlayers){
 		}
 		this.gameProgress = {ticks: 0};
 		this.gameProgress[this.availableTeams[0]] = 0;
-		this.gameProgress[this.availableTeams[1]] = 0;		
+		this.gameProgress[this.availableTeams[1]] = 0;
 
 		this.players.forEach(function(player){
 			player = new engine.Player(player.name, player.ws); //resetPlayers for team-reassignment
@@ -319,7 +319,7 @@ function Lobby(name, maxPlayers){
 	};
 	this.assignPlayerTeam = function(player){
 		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
-		if (this.teams[this.availableTeams[0]].length === this.teams[this.availableTeams[1]].length) player.appearance = this.availableTeams[Math.random() > 0.5 ? 1 : 0];				
+		if (this.teams[this.availableTeams[0]].length === this.teams[this.availableTeams[1]].length) player.appearance = this.availableTeams[Math.random() > 0.5 ? 1 : 0];
 		else player.appearance = this.availableTeams[this.teams[this.availableTeams[0]].length > this.teams[this.availableTeams[1]].length ? 1 : 0];
 		this.teams[player.appearance].push(player.pid);
 		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
@@ -372,9 +372,9 @@ Lobby.prototype.update = function() {
 			//TODO: display the scores
 		}
 	}
-	
+
 	for (var i = 0; i < this.players.length; i++) if (this.players[i] !== undefined && this.players[i].appearance === undefined) this.assignPlayerTeam(this.players[i]);
-	
+
 	var oldDate = Date.now(), playerData = [],
 	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.gameProgress);
 
@@ -433,6 +433,16 @@ Lobby.prototype.pingPlayers = function() {
 		player.ws.ping(undefined, undefined, true);
 	});
 };
+Lobby.prototype.getPlayerId = function(player) {
+	var id;
+	this.players.some(function(_player, index) {
+		if (_player === player) {
+			id = index;
+			return true;
+		}
+	});
+	return id;
+};
 lobbies.getUid = function(index) {
 	var uid = index.toString(16);
 	while(uid.length !== 6) {
@@ -469,7 +479,7 @@ function monitoring() {
 		headerNames = ["lobby name", "players", "process time", "lifetime"],
 		header = "";
 	headerSizes.forEach(function(hSize, i) {
-		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold  + genSpaces(hSize - headerNames[i].length);
+		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
 	});
 	console.log(header);
 	lobbies.forEach(function(lobby) {
@@ -491,7 +501,7 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function(lobby) {
 			lobby.players.some(function(player, i) {
 				if (player.ws === ws) {
-					lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}))
+					//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}))
 					delete lobby.players[i];
 					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic);
 					return true;
@@ -518,13 +528,15 @@ wss.on("connection", function(ws) {
 					else if(lobby === null) ws.send(MESSAGE.ERROR.serialize(ERROR.NO_LOBBY), wsOptions);
 					else {
 						player = new engine.Player(msg.data.name, this);
-						var pid = lobby.players.firstEmpty();					
+						var pid = lobby.players.firstEmpty();
 						lobby.players.splice(pid, 1, player);
+						player.lastRefresh = Date.now();
+						player.lobby = lobby;
+
 						ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid), wsOptions);
 						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
-						player.lastRefresh = Date.now();
+						//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
 						ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 					}
 					break;
@@ -535,14 +547,7 @@ wss.on("connection", function(ws) {
 						var oldName = player.name;
 						player.name = msg.data.name;
 						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
-						if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'"}}));
-					}
-					break;
-				case MESSAGE.CHAT:
-					var lobby = lobbies.getByUid(msg.data.uid);
-					if (lobby !== null) {
-						var i = msg.data.content;
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: i, name: player.name, appearance: player.appearance}}));
+						//TODO: replace if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'"}}));
 					}
 					break;
 			}
@@ -567,6 +572,9 @@ wss.on("connection", function(ws) {
 					break;
 				case MESSAGE.PLAYER_CONTROLS.value:
 					player.controls = MESSAGE.PLAYER_CONTROLS.deserialize(message);
+					break;
+				case MESSAGE.CHAT.value:
+					player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)));
 					break;
 			}
 		}

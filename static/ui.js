@@ -358,7 +358,7 @@ lobbyListElement.addEventListener("click", function(e) {
 			var nameInput = lobbyListElement.lastElementChild.firstElementChild.firstElementChild,
 				playerAmountInput = lobbyListElement.lastElementChild.children[1].firstElementChild;
 			if (nameInput.value !== "" && playerAmountInput.value !== "") {
-				currentConnection.createLobby(nameInput.value, playerAmountInput.value);
+				currentConnection.createLobby(nameInput.value, playerAmountInput.valueAsNumber);
 				nameInput.value = "";
 			}
 		}

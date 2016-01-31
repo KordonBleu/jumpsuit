@@ -119,7 +119,7 @@ const MESSAGE = {
 		},
 		deserialize: function(buffer) {
 			return {
-				playerAmount: new Uint8ClampedArray(buffer.slice(1, 1))[1],//slice for Node.js compatibility
+				playerAmount: new Uint8ClampedArray(buffer, 1)[0],
 				name: bufferToString(new Uint8Array(buffer.slice(2)))
 			};
 		}
@@ -173,7 +173,47 @@ const MESSAGE = {
 
 	WORLD_DATA: 8,
 
-	CHAT: 9,
+	CHAT: {
+		value: 9,
+		serialize: function(message) {
+			var bufMsg = stringToBuffer(message),
+				buffer = new ArrayBuffer(bufMsg.length + 1),
+				view = new DataView(buffer);
+
+			view.setUint8(0, this.value);
+			new Uint8Array(bufMsg).forEach(function(val, i) {
+				view.setUint8(i + 1, val);
+			});
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			return bufferToString(buffer.slice(1));
+		}
+	},
+
+	CHAT_BROADCAST: {
+		value: 10,
+		serialize: function(id, message) {
+			var bufMsg = stringToBuffer(message),
+				buffer = new ArrayBuffer(bufMsg.length + 2),
+				view = new DataView(buffer);
+
+			view.setUint8(0, this.value);
+			view.setUint8(1, id);
+			new Uint8Array(bufMsg).forEach(function(val, i) {
+				view.setUint8(i + 2, val);
+			});
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			return {
+				id: new Uint8Array(buffer)[1],
+				message: bufferToString(buffer.slice(2))
+			};
+		}
+	},
 
 	PLAY_SOUND: 10,
 

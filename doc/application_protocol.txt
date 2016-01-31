@@ -1,14 +1,33 @@
-# Application protocol
+# JumpSuit's protocol specification
 
 Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
+Strings used by the JumpSuit's protocol are always encoded as UTF-8.
 
 ## Notation
 
-Possible values for a field will be noted:
+Possible values for a field are noted:
  * with a number for the packet type (ex: 4)
  * with lowercase words for variables (ex: player name)
  * with lowercase words starting with a uppercase character for enumerations (ex: Error Type)
- * with uppercase snake case for packets and subpackets (ex: CREATE_LOBBY)
+ * with uppercase snake case for packets and subpayloads (ex: CREATE_LOBBY)
+
+Values are enclosed in boxes.
+The minus signs (-) indicates the value is required and not repeated.
+The tilde (~) indicates the value is optional and not repeated.
+The equal sign (=) indicates the value is optional and repeated.
+
++-------+
+| value |
++-------+
+
++================+
+| repeated value |
++================+
+
++~~~~~~~~~~~~~~~~+
+| optional value |
++~~~~~~~~~~~~~~~~+
+
 
 ## Packet type
 
@@ -16,14 +35,33 @@ The first byte of every packet determines its type. A payload may be placed afte
 
    1B       ?B
 +------+-----------
-| type | payload...
+| Type | payload...
 +------+-----------
 
-There are yet 13 packet types.
+There are 16 packet types.
+
+
+
+## Subpayloads
+
+Subpayloads are sequences of bytes which are always defined after the same scheme. They often represent an entity with multiples properties.
+They might be used several times in a packet or in packets with different types.
+
+
+### LOBBY
+
+     4B                 1B                           1B                         1B                 0B-255B
++----------+----------------------------+---------------------------+--------------------------+------------+
+| lobby ID | amount of connected player | maximum amount of players | length of the lobby name | lobby name |
++----------+----------------------------+---------------------------+--------------------------+------------+
+
+The length of the lobby name is an amount of bytes.
+
+
 
 ## Payload
 
-### ERROR
+### ERROR (server -> client)
 
  1B       1B
 +---+------------+
@@ -34,20 +72,20 @@ Error Type must be either:
  0. no lobby avalaible
  1. no slot avalaible
  2. name taken
+ 3. name unknown
 
 
-### CONNECT
+### CONNECT (client -> server)
 
- 1B      4B       1B        0-?B
-+---+----------+------+-------------+
-| 1 | lobby ID | Team | player name |
-+---+----------+------+-------------+
+ 1B      4B
++---+----------+
+| 1 | lobby ID |
++---+----------+
 
-Note: this is yet encoded as JSON.
-Note: in future versions this packet will be simplificated because it is redundant with PLAYER_SETTINGS.
+A SET_NAME packet must have been sent before CONNECT is sent, otherwise the server will respond with an ERROR 3.
 
 
-### GET_LOBBIES
+### GET_LOBBIES (client -> server)
 
  1B
 +---+
@@ -55,29 +93,15 @@ Note: in future versions this packet will be simplificated because it is redunda
 +---+
 
 
-### LOBBY_LIST
+### LOBBY_LIST (server -> client)
 
- 1B    ?B      ?B      ?B      ?B
-+---+-------+-------+-------+---------
-| 3 | LOBBY | LOBBY | LOBBY | LOBBY...
-+---+-------+-------+-------+---------
-
-The payload of the GET_LOBBIES packet consists of an undefined amount of LOBBY subpackets.
-
-#### LOBBY
-
-A LOBBY subpacket is defined as follow:
-
-     4B                 1B                           1B                         1B                 0B-255B
-+----------+----------------------------+---------------------------+--------------------------+------------+
-| lobby ID | amount of connected player | maximum amount of players | length of the lobby name | lobby name |
-+----------+----------------------------+---------------------------+--------------------------+------------+
-
-The length of the lobby name is an amount of bytes.
-The lobby name is encoded as UTF-8.
+ 1B    ?B
++---+=======+
+| 3 | LOBBY |
++---+=======+
 
 
-### CREATE_LOBBY
+### CREATE_LOBBY (client -> server)
 
  1B              1B                  0B-255B
 +---+---------------------------+------------+
@@ -85,85 +109,89 @@ The lobby name is encoded as UTF-8.
 +---+---------------------------+------------+
 
 
-### PLAYER_SETTINGS
+### SET_NAME (client -> server)
 
- 1B      4B       1B      0B-?B
-+---+----------+------+-------------+
-| 5 | lobby ID | Team | player name |
-+---+----------+------+-------------+
-
-Team must be either:
- 0. beige
- 1. blue
- 2. green
- 3. pink
- 4. yellow
-
-Note: this is yet encoded as JSON.
-Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby ID will be assumed to be the only lobby the player is connected to.
+ 1B      0B-?B
++---+-------------+
+| 5 | player name |
++---+-------------+
 
 
-### LEAVE_LOBBY
+### SET_NAME_BROADCAST (client -> server)
+
+ 1B      1B          0B-?B
++---+-----------+-------------+
+| 6 | player ID | player name |
++---+-----------+-------------+
+
+
+### LEAVE_LOBBY (client -> server)
 
  1B      4B
 +---+----------+
-| 6 | lobby ID |
+| 7 | lobby ID |
 +---+----------+
 
 Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby ID will be assumed to be the only lobby the player is connected to.
 
-### PLAYER_CONTROLS
+
+### PLAYER_CONTROLS (client -> server)
 
  1B       2b         1b    1b      1b       1b         1b           1b
-+---+--------------+------+-----+--------+---------+-----------+------------+
-| 7 | unused bits | jump | run | crouch | jetpack | move left | move right |
-+---+--------------+------+-----+--------+---------+-----------+------------+
++---+-------------+------+-----+--------+---------+-----------+------------+
+| 8 | unused bits | jump | run | crouch | jetpack | move left | move right |
++---+-------------+------+-----+--------+---------+-----------+------------+
 
 The values of jump, run, crouch, jetpack, move left and move right are 1 if enabled, 0 if not.
 This is a bit field.
 Note: two unused bits a present to complete a byte.
 
 
-### WORLD_ DATA
+### WORLD (server -> client)
+
+This packet represents the initial collection of entities.
 
  1B
-+---+---
-| 8 |
-+---+--
++---+---------------+========+--------------+=======+---------------+========+======+
+| 9 | planet amount | PLANET | enemy amount | ENEMY | player amount | PLAYER | SHOT |
++---+---------------+========+--------------+=======+---------------+========+======+
 
 Note: this is yet encoded as JSON.
 
-### CHAT
- 1B
-+---+---
-| 9 |
-+---+--
+
+### CHAT (client -> server)
+
+  1B     1B
++----+---------+
+| 10 | message |
++----+---------+
+
+
+### CHAT_BROADCAST (server -> client)
+
+  1B      1B         ?B
++----+-----------+---------+
+| 11 | player ID | message |
++----+-----------+---------+
 
 Note: this is yet encoded as JSON.
 
-### PLAY_SOUND
-
-  1B
-+----+---
-| 10 |
-+----+--
-
-Note: this is yet encoded as JSON.
 
 ### GAME_DATA
 
   1B
 +----+---
-| 11 |
+| 12 |
 +----+--
 
 Note: this is yet encoded as JSON.
+
 
 ### LOBBY_STATE
 
   1B       1B         1B
 +----+-------------+-------+
-| 12 | Lobby State | timer |
+| 13 | Lobby State | timer |
 +----+-------------+-------+
 
 Lobby State must be either:
@@ -171,11 +199,12 @@ Lobby State must be either:
  2. game started
  3. game over
 
+
 ### CONNECT_ACCEPTED
 
   1B      1B
 +----+-----------+
-| 13 | player ID |
+| 14 | player ID |
 +----+-----------+
 
 
@@ -183,5 +212,5 @@ Lobby State must be either:
 
   1B         4B                 4B                4B                 4B                 4B
 +----+------------------+-----------------+------------------+-----------------+-------------------+
-| 14 | beige team score | blue team score | green team score | pink team score | yellow team score |
+| 15 | beige team score | blue team score | green team score | pink team score | yellow team score |
 +----+------------------+-----------------+------------------+-----------------+-------------------+

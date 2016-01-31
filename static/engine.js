@@ -1,9 +1,5 @@
 "use strict";
 
-Math.trunc = Math.trunc || function(x) {
-	return x < 0 ? Math.ceil(x) : Math.floor(x);
-} //trunc Polyfill for Node
-
 var resPaths = [
 	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
 	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg",

@@ -48,10 +48,7 @@ Connection.prototype.sendSettings = function() {
 	}));
 };
 Connection.prototype.sendChat = function(content) {
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.CHAT,
-		data: {uid: this.lobbyUid, content: content}
-	}));
+	this.socket.send(MESSAGE.CHAT.serialize(content));
 };
 Connection.prototype.refreshControls = function(controls) {
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
@@ -73,9 +70,6 @@ Connection.prototype.messageHandler = function(message) {
 		switch(msg.msgType) {
 			case MESSAGE.PLAYER_SETTINGS:
 				printPlayerList(msg.data);
-				break;
-			case MESSAGE.CHAT:
-				printChatMessage(msg.data.name, msg.data.appearance, msg.data.content);
 				break;
 			case MESSAGE.WORLD_DATA:
 				planets.length = 0;
@@ -111,7 +105,7 @@ Connection.prototype.messageHandler = function(message) {
 						delete players[i];
 						continue;
 					}
-					
+
 					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
 					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
 					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
@@ -139,8 +133,8 @@ Connection.prototype.messageHandler = function(message) {
 						} else if(players[i].jetpack && !msg.data.players[i].jetpack && players[i].jetpackSound !== undefined) {
 							players[i].jetpackSound.stop();
 						}
-					}				 
-					
+					}
+
 					var p = 1;
 					if (players[i].boxInformations[0] === undefined) p = 0;
 					if (p === 1) {
@@ -239,6 +233,10 @@ Connection.prototype.messageHandler = function(message) {
 					printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
 					printLobbies();
 				}
+				break;
+			case MESSAGE.CHAT_BROADCAST.value:
+				var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
+				printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
 				break;
 			case MESSAGE.CONNECT_ACCEPTED.value:
 				ownIdx = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);

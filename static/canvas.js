@@ -182,7 +182,7 @@ function loop() {
 	//layer 1: the game
 	players.forEach(function(otherPlayer) {
 		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
-			var intensity =  60 * 50 / 1000; //60 is the current FPS and 50 is the server tick rate | Both should be replaced with variables, server should send the tick rate according to the client.
+			var intensity = 60 * 50 / 1000; //60 is the current FPS and 50 is the server tick rate | Both should be replaced with variables, server should send the tick rate according to the client.
 
 			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
 			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
@@ -205,7 +205,7 @@ function loop() {
 		var shift = player.looksLeft === true ? -14 : 14,
 			jetpackX = player.box.center.x - game.offset.x -shift*Math.sin(player.box.angle + Math.PI/2),
 			jetpackY = player.box.center.y - game.offset.y + shift*Math.cos(player.box.angle + Math.PI/2);
-		drawRotatedImage(resources["jetpack"], jetpackX,  jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+		drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 		if (player.jetpack) {
 			if(player.panner !== undefined) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 			drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
