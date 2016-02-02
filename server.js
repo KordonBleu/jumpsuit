@@ -5,7 +5,6 @@ var fs = require("fs"),
 	WebSocketServer = require("ws").Server,
 	colors = require("colors"),
 	MESSAGE = require("./static/message.js").MESSAGE,
-	ERROR = require("./static/message.js").ERROR,
 	engine = require("./static/engine.js"),
 	vinage = require("./static/vinage/vinage.js"),
 
@@ -369,7 +368,6 @@ Lobby.prototype.update = function() {
 			this.state = this.stateEnum.END;
 			this.stateTimer = 10;
 			this.broadcast(MESSAGE.SCORES.serialize(this.getScores()), wsOptions);
-			//TODO: display the scores
 		}
 	}
 
@@ -511,72 +509,56 @@ wss.on("connection", function(ws) {
 	}
 	var player;
 	ws.on("message", function(message, flags) {
-		var msg;
-		if (!flags.binary) {
-		try {
-			msg = JSON.parse(message);
-			if (config.dev && msg.msgType !== MESSAGE.PLAYER_SETTINGS) {
-				var _m = MESSAGE.toString(msg.msgType);
-				while (_m.length <= 15) _m += " ";
-				console.log("[DEV] ".cyan.bold + _m.italic + " ", (JSON.stringify(msg.data) || ""));
-			}
-			switch(msg.msgType) {
-				case MESSAGE.CONNECT:
-					var lobby = lobbies.getByUid(msg.data.uid);
-					if (lobby.players.amount() === lobby.maxPlayers) ws.send(MESSAGE.ERROR.serialize(ERROR.NO_SLOT), wsOptions);
-					else if(lobby.players.some(function(player) { return player.name === msg.data.name; })) ws.send(MESSAGE.ERROR.serialize(ERROR.NAME_TAKEN), wsOptions);
-					else if(lobby === null) ws.send(MESSAGE.ERROR.serialize(ERROR.NO_LOBBY), wsOptions);
-					else {
-						player = new engine.Player(msg.data.name, this);
-						var pid = lobby.players.firstEmpty();
-						lobby.players.splice(pid, 1, player);
-						player.lastRefresh = Date.now();
-						player.lobby = lobby;
+		switch (new Uint8Array(message, 0, 1)[0]) {
+			case MESSAGE.GET_LOBBIES.value:
+				var lobbyList = [];
+				lobbies.forEach(function(lobby, i) {
+					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.amount(), maxPlayers: lobby.maxPlayers});
+				});
+				ws.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
+				break;
+			case MESSAGE.CREATE_LOBBY.value:
+				var data = MESSAGE.CREATE_LOBBY.deserialize(message);
+				if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.name, data.playerAmount));
+				break;
+			case MESSAGE.SET_NAME.value:
+				let name = MESSAGE.SET_NAME.deserialize(message);
+				if (player === undefined) {
+					player = new engine.Player(name, this);
+				} else {
+					player.name = name;
+					player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
+				}
+				break;
+			case MESSAGE.CONNECT.value:
+				let lobbyId = MESSAGE.CONNECT.deserialize(message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength)),
+					lobby = lobbies.getByUid(lobbyId);
 
-						ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid), wsOptions);
-						ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
-						//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
-						ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
-					}
-					break;
-				case MESSAGE.PLAYER_SETTINGS:
-					var lobby = lobbies.getByUid(msg.data.uid);
-					if (lobby === null) ws.send(MESSAGE.ERROR.serialize(ERROR.NO_LOBBY), wsOptions);
-					else {
-						var oldName = player.name;
-						player.name = msg.data.name;
-						lobby.broadcast(JSON.stringify({msgType: MESSAGE.PLAYER_SETTINGS, data: lobby.players.getData()}));
-						//TODO: replace if (oldName !== msg.data.name) lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + oldName + "' changed name to '" + msg.data.name + "'"}}));
-					}
-					break;
-			}
-		} catch (err) {
-			console.log("[ERR] ".red.bold, err.stack);
-		}
-		} else {
-			switch (new Uint8Array(message, 0, 1)[0]) {
-				case MESSAGE.GET_LOBBIES.value:
-					var lobbyList = [];
-					lobbies.forEach(function(lobby, i) {
-						lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.amount(), maxPlayers: lobby.maxPlayers});
-					});
-					ws.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
-					break;
-				case MESSAGE.CREATE_LOBBY.value:
-					var data = MESSAGE.CREATE_LOBBY.deserialize(message);
-					if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.name, data.playerAmount));
-					break;
-				case MESSAGE.LEAVE_LOBBY.value:
-					cleanup();
-					break;
-				case MESSAGE.PLAYER_CONTROLS.value:
-					player.controls = MESSAGE.PLAYER_CONTROLS.deserialize(message);
-					break;
-				case MESSAGE.CHAT.value:
-					player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)));
-					break;
-			}
+				if (player === undefined) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN), wsOptions);
+				else if (lobby === undefined) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY), wsOptions);
+				else if (lobby.players.amount() === lobby.maxPlayers) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT), wsOptions);
+				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN), wsOptions);
+				else {
+					var pid = lobby.players.firstEmpty();
+					lobby.players.splice(pid, 1, player);
+					player.lastRefresh = Date.now();
+					player.lobby = lobby;
+
+					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid), wsOptions);
+					ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
+					//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
+					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
+				}
+				break;
+			case MESSAGE.LEAVE_LOBBY.value:
+				cleanup();
+				break;
+			case MESSAGE.PLAYER_CONTROLS.value:
+				player.controls = MESSAGE.PLAYER_CONTROLS.deserialize(message);
+				break;
+			case MESSAGE.CHAT.value:
+				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)));
+				break;
 		}
 	});
 	ws.on("pong", function() {

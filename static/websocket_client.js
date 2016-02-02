@@ -12,7 +12,10 @@ function Connection(address) {
 
 	this.lobbyUid = null;
 
-	this.socket.addEventListener("open", this.refreshLobbies.bind(this));
+	this.socket.addEventListener("open", function() {
+		this.setName.call(this);
+		this.refreshLobbies.call(this)
+	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
 }
@@ -20,14 +23,11 @@ Connection.prototype.close = function() {
 	this.leaveLobby();
 	this.socket.close();
 };
-Connection.prototype.connectLobby = function(uid) {
+Connection.prototype.connectLobby = function(lobbyId) {
 	if(!currentConnection.alive()) return;
 
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.CONNECT,
-		data: { uid: uid, name: settings.name}
-	}));
-	this.lobbyUid = uid;
+	this.socket.send(MESSAGE.CONNECT.serialize(lobbyId));
+	this.lobbyUid = lobbyId;
 };
 Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
@@ -41,11 +41,10 @@ Connection.prototype.leaveLobby = function() {
 	this.socket.send(MESSAGE.LEAVE_LOBBY.serialize());
 	game.stop();
 };
-Connection.prototype.sendSettings = function() {
-	this.socket.send(JSON.stringify({
-		msgType: MESSAGE.PLAYER_SETTINGS,
-		data: {uid: this.lobbyUid, name: settings.name}
-	}));
+Connection.prototype.setName = function() {
+	if(!currentConnection.alive()) return;
+
+	this.socket.send(MESSAGE.SET_NAME.serialize(settings.name));
 };
 Connection.prototype.sendChat = function(content) {
 	this.socket.send(MESSAGE.CHAT.serialize(content));
@@ -68,9 +67,6 @@ Connection.prototype.messageHandler = function(message) {
 	//try {
 		var msg = JSON.parse(message.data);
 		switch(msg.msgType) {
-			case MESSAGE.PLAYER_SETTINGS:
-				printPlayerList(msg.data);
-				break;
 			case MESSAGE.WORLD_DATA:
 				planets.length = 0;
 				msg.data.planets.forEach(function(planet) {
@@ -209,13 +205,13 @@ Connection.prototype.messageHandler = function(message) {
 			case MESSAGE.ERROR.value:
 				var errDesc;
 				switch(MESSAGE.ERROR.deserialize(message.data)) {
-					case ERROR.NO_LOBBY:
+					case MESSAGE.ERROR.NO_LOBBY:
 						errDesc = "This lobby doesn't exist (anymore)";
 						break;
-					case ERROR.NO_SLOT:
+					case MESSAGE.ERROR.NO_SLOT:
 						errDesc = "There's no slot left in the lobby";
 						break;
-					case ERROR.NAME_TAKEN:
+					case MESSAGE.ERROR.NAME_TAKEN:
 						errDesc = "The name " + localStorage.getItem("settings.name") + " is already taken";
 						break;
 				}
@@ -240,7 +236,12 @@ Connection.prototype.messageHandler = function(message) {
 				break;
 			case MESSAGE.CONNECT_ACCEPTED.value:
 				ownIdx = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
-				console.log(ownIdx);
+				break;
+			case MESSAGE.SET_NAME_BROADCAST.value:
+				var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);
+				printChatMessage(undefined, undefined, "\"" + players[val.id].name + "\" is now known as \"" + val.name + "\"");
+				players[val.id].name = val.name;
+				printPlayerList();
 				break;
 			case MESSAGE.SCORES.value:
 				var val = MESSAGE.SCORES.deserialize(message.data),
@@ -287,8 +288,3 @@ window.addEventListener("popstate", function(e) {
 		if(lobbyUid !== null && lobbyUid[0] !== undefined) currentConnection.connectLobby(lobbyUid[0]);
 	}
 });
-
-function settingsChanged() {
-	if (!currentConnection.alive() || currentConnection.lobbyUid === null) return;
-	currentConnection.sendSettings();
-}

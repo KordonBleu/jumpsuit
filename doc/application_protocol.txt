@@ -61,11 +61,69 @@ The length of the lobby name is an amount of bytes.
 
 ## Payload
 
+### GET_LOBBY_LIST (client -> server)
+
+ 1B
++---+
+| 0 |
++---+
+
+
+### LOBBY_LIST (server -> client)
+
+ 1B    ?B
++---+=======+
+| 1 | LOBBY |
++---+=======+
+
+
+### CREATE_LOBBY (client -> server)
+
+ 1B              1B                  0B-255B
++---+---------------------------+------------+
+| 2 | maximum amount of players | lobby name |
++---+---------------------------+------------+
+
+
+### SET_NAME (client -> server)
+
+ 1B      0B-?B
++---+-------------+
+| 3 | player name |
++---+-------------+
+
+
+### SET_NAME_BROADCAST (client -> server)
+
+ 1B      1B          0B-?B
++---+-----------+-------------+
+| 4 | player ID | player name |
++---+-----------+-------------+
+
+
+### CONNECT (client -> server)
+
+ 1B      4B
++---+----------+
+| 5 | lobby ID |
++---+----------+
+
+The server will respond with either CONNECT_ACCEPTED or an ERROR.
+
+
+### CONNECT_ACCEPTED (server -> client)
+
+ 1B       1B
++----+-----------+
+| 6 | player ID |
++----+-----------+
+
+
 ### ERROR (server -> client)
 
  1B       1B
 +---+------------+
-| 0 | Error Type |
+| 7 | Error Type |
 +---+------------+
 
 Error Type must be either:
@@ -75,95 +133,68 @@ Error Type must be either:
  3. name unknown
 
 
-### CONNECT (client -> server)
-
- 1B      4B
-+---+----------+
-| 1 | lobby ID |
-+---+----------+
-
-A SET_NAME packet must have been sent before CONNECT is sent, otherwise the server will respond with an ERROR 3.
-
-
-### GET_LOBBIES (client -> server)
-
- 1B
-+---+
-| 2 |
-+---+
-
-
-### LOBBY_LIST (server -> client)
-
- 1B    ?B
-+---+=======+
-| 3 | LOBBY |
-+---+=======+
-
-
-### CREATE_LOBBY (client -> server)
-
- 1B              1B                  0B-255B
-+---+---------------------------+------------+
-| 4 | maximum amount of players | lobby name |
-+---+---------------------------+------------+
-
-
-### SET_NAME (client -> server)
-
- 1B      0B-?B
-+---+-------------+
-| 5 | player name |
-+---+-------------+
-
-
-### SET_NAME_BROADCAST (client -> server)
-
- 1B      1B          0B-?B
-+---+-----------+-------------+
-| 6 | player ID | player name |
-+---+-----------+-------------+
-
-
 ### LEAVE_LOBBY (client -> server)
 
  1B      4B
 +---+----------+
-| 7 | lobby ID |
+| 8 | lobby ID |
 +---+----------+
 
 Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby ID will be assumed to be the only lobby the player is connected to.
 
 
-### PLAYER_CONTROLS (client -> server)
+### LOBBY_STATE (server -> client)
 
- 1B       2b         1b    1b      1b       1b         1b           1b
-+---+-------------+------+-----+--------+---------+-----------+------------+
-| 8 | unused bits | jump | run | crouch | jetpack | move left | move right |
-+---+-------------+------+-----+--------+---------+-----------+------------+
+ 1B       1B         1B
++---+-------------+-------+
+| 9 | Lobby State | timer |
++---+-------------+-------+
 
-The values of jump, run, crouch, jetpack, move left and move right are 1 if enabled, 0 if not.
-This is a bit field.
-Note: two unused bits a present to complete a byte.
+Lobby State must be either:
+ 0. waiting for players
+ 1. game started
+ 2. game over
 
 
 ### WORLD (server -> client)
 
 This packet represents the initial collection of entities.
 
- 1B
-+---+---------------+========+--------------+=======+---------------+========+======+
-| 9 | planet amount | PLANET | enemy amount | ENEMY | player amount | PLAYER | SHOT |
-+---+---------------+========+--------------+=======+---------------+========+======+
+  1B
++----+---------------+========+--------------+=======+---------------+========+======+
+| 10 | planet amount | PLANET | enemy amount | ENEMY | player amount | PLAYER | SHOT |
++----+---------------+========+--------------+=======+---------------+========+======+
 
 Note: this is yet encoded as JSON.
+
+
+### GAME_STATE (server -> client)
+
+  1B
++----+---
+| 11 |
++----+--
+
+Note: this is yet encoded as JSON.
+
+
+### PLAYER_CONTROLS (client -> server)
+
+  1B      2b         1b    1b      1b       1b         1b           1b
++----+-------------+------+-----+--------+---------+-----------+------------+
+| 12 | unused bits | jump | run | crouch | jetpack | move left | move right |
++----+-------------+------+-----+--------+---------+-----------+------------+
+
+The values of jump, run, crouch, jetpack, move left and move right are 1 if enabled, 0 if not.
+This is a bit field.
+Note: two unused bits are present to complete a byte.
 
 
 ### CHAT (client -> server)
 
   1B     1B
 +----+---------+
-| 10 | message |
+| 13 | message |
 +----+---------+
 
 
@@ -171,50 +202,38 @@ Note: this is yet encoded as JSON.
 
   1B      1B         ?B
 +----+-----------+---------+
-| 11 | player ID | message |
+| 14 | player ID | message |
 +----+-----------+---------+
 
 Note: this is yet encoded as JSON.
 
 
-### GAME_DATA
+### ADD_ENTITY (server -> client)
 
   1B
-+----+---
-| 12 |
-+----+--
-
-Note: this is yet encoded as JSON.
++----+---------
+| 15 |
++----+---------
 
 
-### LOBBY_STATE
+### REMOVE_ENTITY (server -> client)
 
-  1B       1B         1B
-+----+-------------+-------+
-| 13 | Lobby State | timer |
-+----+-------------+-------+
-
-Lobby State must be either:
- 1. waiting for players
- 2. game started
- 3. game over
+  1B
++----+---------
+| 16 |
++----+---------
 
 
-### CONNECT_ACCEPTED
+### SCORES (server -> client)
 
-  1B      1B
-+----+-----------+
-| 14 | player ID |
-+----+-----------+
+  1B       1B            1B           4B                  4B
++----+------------+-------------+------------------+-------------------+
+| 17 | First Team | Second Team | first team score | second team score |
++----+------------+-------------+------------------+-------------------+
 
-
-### SCORES
-
-  1B         xB                    4B                  4B 
-+----+---------------------+------------------+-------------------+
-| 14 | two available teams | first team score | second team score | 
-+----+---------------------+------------------+-------------------+
-
-Second information "two available teams" should be a STRING which is the best solution if there will be other teams added in the future or ENUM
-ENUM should be shared between client and server on connect e.g.
-
+The First Team and Second Team must be:
+ 0. beige team
+ 1. blue team
+ 2. green team
+ 3. pink team
+ 4. yellow team

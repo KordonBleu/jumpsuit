@@ -202,16 +202,7 @@ keyResetElement.addEventListener("click", function() {
 	handleInput.initKeymap(false);
 });
 
-/* Appearance & name */
-[].forEach.call(document.getElementsByName("playerSelect"), function(element) {
-	element.addEventListener("change", function() {
-		settings.appearance = this.value;
-		settingsChanged();
-	});
-	if (element.value === settings.appearance) {
-		element.checked = true;
-	}
-});
+/* Name */
 nameElement.value = settings.name;
 nameElement.addEventListener("keydown", function(e) {
 	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
@@ -221,7 +212,7 @@ nameElement.addEventListener("keydown", function(e) {
 nameElement.addEventListener("blur", function(e) {
 	localStorage.setItem("settings.name", e.target.value);
 	settings.name = e.target.value;
-	settingsChanged();
+	currentConnection.setName();
 });
 
 /* Buttons */
@@ -232,11 +223,12 @@ document.getElementById("leave-button").addEventListener("click", function() {//
 	leaveLobby();
 });
 function isDocumentInFullScreenMode() {
-  // Note that the browser fullscreen (triggered by short keys) might
-  // be considered different from content fullscreen when expecting a boolean
-  return ((document.fullscreenElement && document.fullscreenElement !== null) ||    // alternative standard methods
-      document.mozFullScreen || document.webkitIsFullScreen);                   // current working methods
+	// Note that the browser fullscreen (triggered by short keys) might
+	// be considered different from content fullscreen when expecting a boolean
+	return ((document.fullscreenElement && document.fullscreenElement !== null) ||// alternative standard methods
+		document.mozFullScreen || document.webkitIsFullScreen);// current working methods
 }
+
 /* Chat */
 chatInput.addEventListener("keydown", function(e) {
 	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {

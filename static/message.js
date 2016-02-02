@@ -21,26 +21,14 @@ function bufferToString(arrayBuffer) {
 }
 
 const MESSAGE = {
-	ERROR: {
-		value: 0,
-		serialize: function(errorCode) {
-			return new Uint8Array([this.value, errorCode]);
-		},
-		deserialize: function(buffer) {
-			return new Uint8Array(buffer)[1];
-		}
-	},
-
-	CONNECT: 1,
-
 	GET_LOBBIES: {
-		value: 2,
+		value: 0,
 		serialize: function() {
 			return new Uint8Array([this.value]);
 		}
 	},
 	LOBBY_LIST: {
-		value: 3,
+		value: 1,
 		serialize: function(lobbyList) {
 			var totalNameSize = 0,
 				lobbyNameBufs = [];
@@ -104,7 +92,7 @@ const MESSAGE = {
 		}
 	},
 	CREATE_LOBBY: {
-		value: 4,
+		value: 2,
 		serialize: function(name, playerAmount) {
 			var bufdStr = stringToBuffer(name),
 				buffer = new ArrayBuffer(2 + bufdStr.length),
@@ -124,18 +112,117 @@ const MESSAGE = {
 			};
 		}
 	},
+	SET_NAME: {
+		value: 3,
+		serialize: function(name) {
+			var bufMsg = stringToBuffer(name),
+				buffer = new ArrayBuffer(bufMsg.length + 1),
+				view = new DataView(buffer);
 
-	PLAYER_SETTINGS: 5,
+			view.setUint8(0, this.value);
+			new Uint8Array(bufMsg).forEach(function(val, i) {
+				view.setUint8(i + 1, val);
+			});
 
-	LEAVE_LOBBY: {
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			return bufferToString(buffer.slice(1));
+		}
+	},
+	SET_NAME_BROADCAST: {
+		value: 4,
+		serialize: function(id, name) {
+			var bufMsg = stringToBuffer(name),
+				buffer = new ArrayBuffer(bufMsg.length + 2),
+				view = new DataView(buffer);
+
+			view.setUint8(0, this.value);
+			view.setUint8(1, id);
+			new Uint8Array(bufMsg).forEach(function(val, i) {
+				view.setUint8(i + 2, val);
+			});
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			return {
+				id: new Uint8Array(buffer)[1],
+				name: bufferToString(buffer.slice(2))
+			};
+		}
+	},
+	CONNECT: {
+		value: 5,
+		serialize: function(lobbyId) {
+			var buffer = new ArrayBuffer(5),
+				view = new DataView(buffer);
+			view.setUint8(0, this.value);
+			view.setUint32(1, lobbyId);
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			return new DataView(buffer).getUint32(1);
+		}
+	},
+	CONNECT_ACCEPTED: {
 		value: 6,
+		serialize: function(playerId) {
+			return new Uint8Array([this.value, playerId]).buffer;
+		},
+		deserialize: function(buffer) {
+			var view = new Uint8Array(buffer);
+			return view[1];
+		}
+	},
+	ERROR: {
+		NO_LOBBY: 0,
+		NO_SLOT: 1,
+		NAME_TAKEN: 2,
+		NAME_UNKNOWN: 3,
+
+		value: 7,
+		serialize: function(errorCode) {
+			return new Uint8Array([this.value, errorCode]);
+		},
+		deserialize: function(buffer) {
+			return new Uint8Array(buffer)[1];
+		}
+	},
+	LEAVE_LOBBY: {
+		value: 8,
 		serialize: function() {
 			return new Uint8Array([this.value]);
 		}
 	},
+	LOBBY_STATE: {
+		value: 9,
+		serialize: function(state, timer) {
+			var data = new Uint8ClampedArray(timer === undefined ? 2 : 3);
+			data[0] = MESSAGE.LOBBY_STATE.value;
+			data[1] = state;
+			if (timer !== undefined) data[2] = timer;
+
+			return data;
+		},
+		deserialize: function(data) {
+			var view = new Uint8ClampedArray(data),
+				val = {
+					state: view[1],
+				};
+			if (data.length === 3) val.timer = view[2];
+
+			return val;
+		}
+	},
+
+	WORLD_DATA: 10,
+
+	GAME_DATA: 11,
 
 	PLAYER_CONTROLS: {
-		value: 7,
+		value: 12,
 		MASK: {
 			JUMP: 1,
 			RUN: 2,
@@ -170,11 +257,8 @@ const MESSAGE = {
 			return controls;
 		}
 	},
-
-	WORLD_DATA: 8,
-
 	CHAT: {
-		value: 9,
+		value: 13,
 		serialize: function(message) {
 			var bufMsg = stringToBuffer(message),
 				buffer = new ArrayBuffer(bufMsg.length + 1),
@@ -191,9 +275,8 @@ const MESSAGE = {
 			return bufferToString(buffer.slice(1));
 		}
 	},
-
 	CHAT_BROADCAST: {
-		value: 10,
+		value: 14,
 		serialize: function(id, message) {
 			var bufMsg = stringToBuffer(message),
 				buffer = new ArrayBuffer(bufMsg.length + 2),
@@ -214,44 +297,22 @@ const MESSAGE = {
 			};
 		}
 	},
-
-	PLAY_SOUND: 10,
-
-	GAME_DATA: 11,
-
-	LOBBY_STATE: {
-		value: 12,
-		serialize: function(state, timer) {
-			var data = new Uint8ClampedArray(timer === undefined ? 2 : 3);
-			data[0] = MESSAGE.LOBBY_STATE.value;
-			data[1] = state;
-			if (timer !== undefined) data[2] = timer;
-
-			return data;
+	ADD_ENTITY: {
+		value: 15,
+		serialize: function() {
 		},
-		deserialize: function(data) {
-			var view = new Uint8ClampedArray(data),
-				val = {
-					state: view[1],
-				};
-			if (data.length === 3) val.timer = view[2];
-
-			return val;
+		deserialize: function() {
 		}
 	},
-	CONNECT_ACCEPTED: {
-		value: 13,
-		serialize: function(playerId) {
-			return new Uint8ClampedArray([this.value, playerId]);
+	REMOVE_ENTITY: {
+		value: 16,
+		serialize: function() {
 		},
-		deserialize: function(data) {
-			var view = new Uint8ClampedArray(data);
-			return view[1];
+		deserialize: function() {
 		}
 	},
-
 	SCORES: {
-		value: 14,
+		value: 17,
 		serialize: function(scoresObj) {
 			var buffer = new ArrayBuffer(21), //5 teams * 4 bytes + 1 byte
 				teamView = new DataView(buffer, 1),
@@ -279,12 +340,9 @@ const MESSAGE = {
 	toString: function(val) {
 		var res = Object.keys(this);
 		return res !== undefined && res[val] !== undefined ? res[val] : "UNKNOWN";
-	}
-},
-ERROR = {
-	NO_LOBBY: 0,
-	NO_SLOT: 1,
-	NAME_TAKEN: 2
+	},
+
+	PLAY_SOUND: 666,
 };
 
-if (isNode) module.exports = { MESSAGE: MESSAGE, ERROR: ERROR};
+if (isNode) module.exports.MESSAGE = MESSAGE;
