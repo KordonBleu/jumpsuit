@@ -51,18 +51,19 @@ html {
 	width: 150px;
 	height: 150px;
 }
-#minimap-canvas:after{
-	content: "+";
-	display: block;
+#minimap-overlay{
+	display: none;
 	position: fixed;
-	top: 8px;
-	left: 52px;
+	top: 54px;
+	right: 10px;
 	width: 150px;
 	height: 150px;
 	background: rgba(66, 66, 66, 0.5);
 	color: #fff;
-	font-size: 80px;
+	font-size: 130px;
+	text-align: center;
 }
+#minimap-overlay i{ position: relative; top: -13px;}
 .hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
@@ -405,8 +406,10 @@ label.range-label{
 	margin-left: 8px;
 }
 #lobby-table {
-	font-size: 1.6rem;
-	width: calc(100% - 250px);
+	font-size: 1.4rem;
+	max-width: calc(100% - 190px);
+	width: calc(80% - 10px);
+	min-width: calc(100% - 290px);
 	border-collapse: collapse;
 	table-layout: fixed;
 	display: inline-table;
@@ -425,9 +428,12 @@ label.range-label{
 	padding: 0.5rem;
 	text-transform: uppercase;
 }
+#lobby-table th:last-child{
+	width: 150px;
+}
 #lobby-table th img {
-	width: 1.6rem;
-	height: 1.6rem;
+	width: 1.4rem;
+	height: 1.4rem;
 }
 #lobby-list tr {
 	font-weight: 600;
@@ -437,17 +443,18 @@ label.range-label{
 }
 #lobby-list tr td:first-child{
 	text-align: left;
-	padding-left: 20px;
+	padding-left: 1.8%;
 }
-#lobby-list td {
+#lobby-list tr td {
 	text-align: center;
 	word-wrap: break-word;
 }
+
 #lobby-list button {
 	text-transform: none;
 }
 #lobby-list input {
-	font-size: 1.6rem;
+	font-size: 1.4rem;
 }
 #lobby-list input[type=text] {
 	width: 100%;
@@ -460,8 +467,10 @@ label.range-label{
 }
 #search-filter {
 	display: inline-block;
-	width: 240px;
-	margin: 0 5px;
+	min-width: 180px;
+	width: 20%;
+	max-width: 280px;
+	margin: 0 auto;
 }
 #search-filter h1{
 	margin: 12.5px 0;

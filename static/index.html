@@ -11,7 +11,7 @@
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
 		<canvas id="minimap-canvas" class="hidden"></canvas>
-		<div id="minimap-overlay">+</div>
+		<div id="minimap-overlay"><i class="fa fa-mobile"></i></div>
 		<ul id="controls">
 			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
 				<img src="/assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
@@ -44,9 +44,9 @@
 		</table>
 
 		<div id="gui-options" class="hidden">
-			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button><!--perhaps add an icon here-->
-			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button><!--perhaps add an icon here-->
-			<button id="settings-button"><i class="fa fa-wrench"></i>Settings</button><!--perhaps add an icon here-->
+			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button>
+			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button>
+			<button id="settings-button"><i class="fa fa-wrench"></i>Settings</button>
 		</div>
 
 
@@ -61,8 +61,8 @@
 				<tbody id="lobby-list">
 					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="50" autocomplete="off" required/></td><td>? of <input type="number" min="1" max="16" step="1" required/></td><td><button>Create!</button></td></tr>
 				</tbody>
-			</table><!--removes non-breaking space
-			--><div id="search-filter">
+			</table>
+			<div id="search-filter">
 			 	<h1><i class="fa fa-search"></i></h1>
 				<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp"/></label>
 				<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
@@ -83,21 +83,18 @@
 				<ul>
 					<li>Music &amp; sound effects: Arnaud Poyeton, <a href="http://kenney.nl">Kenney.nl</a></li>
 					<li>Assets: <a href="http://kenney.nl">Kenney.nl</a></li>
-					<li>Icons: Lemon Liu, <a href="https://thenounproject.com/grega.cresnar/">Gregor Črešnar</a>,
-						<a href="https://thenounproject.com/ViconsDesign/">Vicons Design</a>, <a href="https://thenounproject.com/Fhlcreative/">Phil Goodwin</a>
-					</li>
-					<li>Font: <a href="https://www.google.com/fonts/specimen/Open+Sans">Open Sans</a> by Steve Matteson, <a href="http://fontawesome.io/">FontAwesome</a></li>
+					<li>Fonts: <a href="https://www.google.com/fonts/specimen/Open+Sans">Open Sans</a> by Steve Matteson, <a href="http://fontawesome.io/">FontAwesome</a></li>
 				</ul>
 			<h2>Support us</h2>
-			<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do!</p>
-			<h3>Help us code it!</h3>
+			<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do:</p>
+			<h3>Help us coding it!</h3>
 			<p>This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
-			If you ever plan to do this - tell us.</p>
+			If you ever plan to do this - tell us, or at least upload a video somewhere.<img src="http://twemoji.maxcdn.com/72x72/1f605.png" width=20 height=20 /></p>
 			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
 			<h3>Buy us a coffee or pizza!</h3>
 			<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
-			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where honestly we couldnt agree more<br/>
-			<b>TL;DR:</b> share your knowledge. Delicious crusty knowledge. Yum!<br/><br/>
+			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where - honestly - we couldnt agree more.<br/>
+			<b>TL;DR:</b> Donate us knowledge. Delicious crusty knowledge. Yum!<br/><br/>
 			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height=64 width=64 /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height=64 width=64 /></p>
 		</div>
 
@@ -109,12 +106,7 @@
 					<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 					<h3>Volume</h3>
 					<label class="range-label">Background Music</label><input type="range" value="50" id="music-volume"/><br/>
-					<label class="range-label">Sound Effects</label><input type="range" value="100" id="effects-volume"/>
-
-				 	<!--<h3>Graphic</h3>
-					<label class="checkbox-label"><input type="checkbox" id="option-fullscreen" />Fullscreen</label>
-					<label class="checkbox-label" data-beta><input type="checkbox" id="option-moblur"/>Motion Blur</label>
-					<label class="checkbox-label"><input type="checkbox" id="option-performance">Performance-boost (poorer resolution)</label>-->
+					<label class="range-label">Sound Effects</label><input type="range" value="50" id="effects-volume"/>
 				</div>
 				<div class="splitContainer">
 					<h3>Key map</h3>
@@ -126,15 +118,6 @@
 				</div>
 			</div>
 		</div>
-
-		<svg xmlns="http://www.w3.org/2000/svg" version="1.1" class="filters" shape-rendering="optimizeSpeed">
-			<filter id="Sharpen">
-				<feConvolveMatrix order="3 3" preserveAlpha="true" kernelMatrix="0 -1 0 -1 4 -1 0 -1 0"/>
-			</filter>
-			<filter id="MotionBlur">
-				<feGaussianBlur in="SourceGraphic" stdDeviation="0,0" />
-			</filter>
-		</svg>
 		<script src="/audio.js"></script>
 		<script src="/engine.js"></script>
 		<script src="/vinage/vinage.js"></script>

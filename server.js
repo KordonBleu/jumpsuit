@@ -426,8 +426,8 @@ Lobby.prototype.update = function() {
 };
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
+		if (player === undefined) return;
 		player.lastPing = Date.now();
-
 		player.ws.ping(undefined, undefined, true);
 	});
 };
