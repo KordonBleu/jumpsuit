@@ -150,7 +150,7 @@ var changingKeys = false,
 keySettingsElement.addEventListener("click", function(e) {
 	function reselect(obj){
 		document.removeEventListener("keydown", wrap);
-		Array.prototype.forEach.call(keySettingsElement.childNodes, function (row){ row.classList.remove("selected"); });
+		[].forEach.call(keySettingsElement.childNodes, function (row){ row.classList.remove("selected"); });
 		if (typeof obj !== "undefined") {
 			obj.classList.add("selected");
 			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
@@ -163,6 +163,7 @@ keySettingsElement.addEventListener("click", function(e) {
 		}
 	}
 	function handleChangeKey(e) {
+		if (selectedRow === -1) return;
 		var keyName = e.key || convertToKey(e.keyCode),
 			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent,
 			alreadyTaken = false;

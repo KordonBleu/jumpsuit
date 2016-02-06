@@ -86,6 +86,28 @@ function Enemy(x, y, appearance) {
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
 
+var _doPrediction = {};
+function doPrediction(universe, players, enemies, shots){
+	_doPrediction._newTimestamp = Date.now();
+	_doPrediction._oldTimestamp = _doPrediction._oldTimestamp || Date.now();
+	
+	var fps = 1000 / (_doPrediction._newTimestamp - _doPrediction._oldTimestamp);
+	game.fps = fps;
+	players.forEach(function(player) {
+		if (player.boxInformations.length === 2 && "timestamp" in player.boxInformations[0] && "timestamp" in player.boxInformations[1]){
+			var intensity = fps * 40 / 1000; //60 is the current FPS and 50 is the server tick rate | Both should be replaced with variables, server should send the tick rate according to the client.
+			player.box.center.x += (player.boxInformations[1].box.center.x - player.boxInformations[0].box.center.x) / intensity;
+			player.box.center.y += (player.boxInformations[1].box.center.y - player.boxInformations[0].box.center.y) / intensity;
+			player.box.angle += (player.boxInformations[1].box.angle - player.boxInformations[0].box.angle) / intensity;
+
+		}
+	});
+	shots.forEach(function(shot){
+		shot.box.center.x += 18 * Math.sin(shot.box.angle) * (fps / 60);
+		shot.box.center.y += 18 * -Math.cos(shot.box.angle) * (fps / 60);
+	});
+	_doPrediction._oldTimestamp = _doPrediction._newTimestamp;
+};
 function doPhysics(universe, players, planets, enemies, shots, isClient, gameProgress) {
 	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);
@@ -222,7 +244,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
 			}
 			var fadeRGB = [];
-			for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.floor(planets[i].progress.value / 100 * (parseInt(Planet.prototype.teamColors[planets[i].progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
+			for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.round(planets[i].progress.value / 100 * (parseInt(Planet.prototype.teamColors[planets[i].progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
 
 			planets[i].progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
 		}

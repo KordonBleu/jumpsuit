@@ -264,7 +264,7 @@ function Lobby(name, maxPlayers){
 	};
 
 
-	this.universe = new vinage.Rectangle(new vinage.Point(0, 0), Infinity, Infinity);
+	this.universe = new vinage.Rectangle(new vinage.Point(0, 0), 6400, 6400);
 	this.universe.getWorldData = function() {
 		return {x: this.universe.center.x, y: this.universe.center.y, width: this.universe.width, height: this.universe.height};
 	}
@@ -273,10 +273,9 @@ function Lobby(name, maxPlayers){
 		this.planets.length = 0;
 		this.enemies.length = 0;
 
-		var areaSize = 6400,
-			chunkSize = 1600;
-		for (var y = 0; y < areaSize; y += chunkSize){
-			for (var x = 0; x < areaSize; x += chunkSize){
+		var chunkSize = 1600;
+		for (var y = 0; y < this.universe.height; y += chunkSize){
+			for (var x = 0; x < this.universe.width; x += chunkSize){
 				var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
 					py = Math.floor(Math.random() * (chunkSize - 400) + 200),
 					radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
@@ -285,7 +284,7 @@ function Lobby(name, maxPlayers){
 		}
 		var iterations = 0;
 		while (iterations < 250 && this.enemies.length < 15){
-			var newEnemy = new engine.Enemy(Math.floor(Math.random() * 6400), Math.floor(Math.random() * 6400)), wellPositioned = true;
+			var newEnemy = new engine.Enemy(Math.floor(Math.random() * this.universe.width), Math.floor(Math.random() * this.universe.height)), wellPositioned = true;
 			this.enemies.forEach(function (enemy){
 				if (!wellPositioned) return;
 				if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
@@ -409,18 +408,12 @@ Lobby.prototype.update = function() {
 						gameProgress: this.gameProgress
 					}
 				}));
-
-				player.lastRefresh = Date.now();
 				player.needsUpdate = true;
 			} catch(e) {/*Ignore errors*/}
 		}
-
 		if (player.needsUpdate || player.needsUpdate === undefined) {
 			player.needsUpdate = false;
-			var when = player.lastRefresh + player.latency - Date.now();//TODO: tweak player.latency
-
-			if (when >= 8) setTimeout(updPlayer.bind(this), when);
-			else setImmediate(updPlayer.bind(this));//mitigate setTimeout's inaccuracy
+			setTimeout(updPlayer.bind(this), 40);
 		}
 	}.bind(this));
 };
@@ -527,7 +520,7 @@ wss.on("connection", function(ws) {
 					player = new engine.Player(name, this);
 				} else {
 					player.name = name;
-					player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
+					if (player.lobby !== undefined) player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
 				}
 				break;
 			case MESSAGE.CONNECT.value:

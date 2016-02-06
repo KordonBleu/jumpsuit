@@ -11,7 +11,7 @@ var context = canvas.getContext("2d"),
 	planets = [],
 	enemies = [],
 	shots = [],
-	universe = new Rectangle(new Point(0, 0), Infinity, Infinity),//the universe defined here is the same size as every lobby's universe
+	universe = new Rectangle(new Point(0, 0), 6400, 6400),//the universe defined here is the same size as every lobby's universe
 	game = {
 		dragStart: new Vector(0, 0),
 		drag: new Vector(0, 0),
@@ -47,7 +47,7 @@ var context = canvas.getContext("2d"),
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		},
 		started: false,
-		scaleFactor: 1
+		fps: 0	
 	};
 
 function resizeCanvas() {
@@ -114,12 +114,12 @@ function loop() {
 		context.translate(x, y);
 		context.rotate(angle);
 		if (mirror === true) context.scale(-1, 1);
-		var wdt = (sizeX !== undefined ? sizeX : image.width),
-			hgt = (sizeY !== undefined ? sizeY : image.height);
+		var wdt = sizeX || image.width, hgt = sizeY || image.height;
 		context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 		context.resetTransform();
 	}
-	function fillPlanet(cx, cy, r) {
+	function drawPlanet(cx, cy, r) {
+		strokeAtmos(cx, cy, r*1.75, 2);
 		context.beginPath();
 		context.arc(cx, cy, r, 0, 2 * Math.PI, false);
 		context.closePath();
@@ -174,15 +174,7 @@ function loop() {
 
 
 	//layer 1: the game
-	players.forEach(function(otherPlayer) {
-		if (otherPlayer.boxInformations.length === 2 && "timestamp" in otherPlayer.boxInformations[0] && "timestamp" in otherPlayer.boxInformations[1]){
-			var intensity = 60 * 50 / 1000; //60 is the current FPS and 50 is the server tick rate | Both should be replaced with variables, server should send the tick rate according to the client.
-
-			otherPlayer.box.center.x += (otherPlayer.boxInformations[1].box.center.x - otherPlayer.boxInformations[0].box.center.x) / intensity;
-			otherPlayer.box.center.y += (otherPlayer.boxInformations[1].box.center.y - otherPlayer.boxInformations[0].box.center.y) / intensity;
-			otherPlayer.box.angle += (otherPlayer.boxInformations[1].box.angle - otherPlayer.boxInformations[0].box.angle) / intensity;
-		}
-	});
+	doPrediction(universe, players, enemies, shots);	
 	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) + game.dragSmoothed.x * 4) / 5;
 	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) + game.dragSmoothed.y * 4) / 5;
 
@@ -213,23 +205,19 @@ function loop() {
 	planets.forEach(function (planet, pi) {
 		context.fillStyle = planet.progress.color;
 
-		if (universe.collide(windowBox, planet.box)) {
-			fillPlanet(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
+		if (universe.collide(windowBox, planet.atmosBox)) {
+			drawPlanet(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.box.radius);
 			drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 		}
-		if (universe.collide(windowBox, planet.atmosBox)) strokeAtmos(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.atmosBox.radius, 2);
-
 		if (!playerInAtmos && universe.collide(planet.atmosBox, players[ownIdx].box)) playerInAtmos = true;
 
 		drawCircleBar(planet.box.center.x - game.offset.x, planet.box.center.y - game.offset.y, planet.progress.value);
 	});
-	if(playerInAtmos) bgFilter.frequency.value = bgFilter.frequency.value >= 4000 ? 4000 : bgFilter.frequency.value * 1.05;
-	else bgFilter.frequency.value = bgFilter.frequency.value <= 200 ? 200 : bgFilter.frequency.value * 0.95;
+	if(playerInAtmos) bgFilter.frequency.value = Math.min(4000, bgFilter.frequency.value * 1.05);
+	else bgFilter.frequency.value = Math.max(200, bgFilter.frequency.value * 0.95);
 
 	//shots
 	shots.forEach(function (shot) {
-		shot.box.center.x += 18 * Math.sin(shot.box.angle);
-		shot.box.center.y += 18 * -Math.cos(shot.box.angle);
 		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"], shot.box.center.x - game.offset.x, shot.box.center.y - game.offset.y, shot.box.angle, false);
 	});
 
