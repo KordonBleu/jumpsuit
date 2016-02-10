@@ -235,7 +235,10 @@ Connection.prototype.messageHandler = function(message) {
 				printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
 				break;
 			case MESSAGE.CONNECT_ACCEPTED.value:
-				ownIdx = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
+				var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
+				ownIdx = val.playerId;
+				universe.width = val.univWidth;
+				universe.height = val.univHeight;
 				break;
 			case MESSAGE.SET_NAME_BROADCAST.value:
 				var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);

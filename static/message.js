@@ -168,12 +168,23 @@ const MESSAGE = {
 	},
 	CONNECT_ACCEPTED: {
 		value: 6,
-		serialize: function(playerId) {
-			return new Uint8Array([this.value, playerId]).buffer;
+		serialize: function(playerId, univWidth, univHeigth) {
+			var buffer = new ArrayBuffer(10),
+				view = new DataView(buffer);
+			view.setUint8(0, this.value);
+			view.setUint8(1, playerId);
+			view.setUint32(2, univWidth);
+			view.setUint32(6, univHeigth);
+
+			return buffer;
 		},
 		deserialize: function(buffer) {
-			var view = new Uint8Array(buffer);
-			return view[1];
+			var view = new DataView(buffer);
+			return {
+				playerId: view.getUint8(1),
+				univWidth: view.getUint32(2),
+				univHeight: view.getUint32(6)
+			};
 		}
 	},
 	ERROR: {

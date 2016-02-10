@@ -113,10 +113,10 @@ The server will respond with either CONNECT_ACCEPTED or an ERROR.
 
 ### CONNECT_ACCEPTED (server -> client)
 
- 1B       1B
-+----+-----------+
-| 6 | player ID |
-+----+-----------+
+ 1B       1B            4B                4B
++---+-----------+----------------+-----------------+
+| 6 | player ID | universe width | universe height |
++---+-----------+----------------+-----------------+
 
 
 ### ERROR (server -> client)

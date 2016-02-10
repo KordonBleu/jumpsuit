@@ -193,7 +193,7 @@ server.listen(config.port);
 var lobbies = [],
 	wss = new WebSocketServer({server: server});
 
-function Lobby(name, maxPlayers){
+function Lobby(name, maxPlayers) {
 	this.players = new Array(maxPlayers || 8);
 	this.planets = [];
 	this.enemies = [];
@@ -315,7 +315,7 @@ function Lobby(name, maxPlayers){
 			player = new engine.Player(player.name, player.ws); //resetPlayers for team-reassignment
 		}.bind(this));
 	};
-	this.assignPlayerTeam = function(player){
+	this.assignPlayerTeam = function(player) {
 		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
 		if (this.teams[this.availableTeams[0]].length === this.teams[this.availableTeams[1]].length) player.appearance = this.availableTeams[Math.random() > 0.5 ? 1 : 0];
 		else player.appearance = this.availableTeams[this.teams[this.availableTeams[0]].length > this.teams[this.availableTeams[1]].length ? 1 : 0];
@@ -537,7 +537,7 @@ wss.on("connection", function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 
-					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid), wsOptions);
+					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height), wsOptions);
 					ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
 					//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
 					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
