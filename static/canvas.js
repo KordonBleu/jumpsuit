@@ -11,6 +11,7 @@ var context = canvas.getContext("2d"),
 	planets = [],
 	enemies = [],
 	shots = [],
+	particles = [],
 	universe = new Rectangle(new Point(0, 0), null, null),//these parameters will be
 	windowBox = new Rectangle(new Point(null, null), canvas.clientWidth, canvas.clientHeight),//overwritten later
 	game = {
@@ -19,7 +20,7 @@ var context = canvas.getContext("2d"),
 		dragSmoothed: new Vector(0,0),
 		offset: new Vector(0, 0),
 		connectionProblems: false,
-		animationFrameId: null,
+		animationFrameId: null,		
 		start: function() {
 			game.started = true;
 			chatElement.classList.remove("hidden");
@@ -224,7 +225,20 @@ function loop() {
 			(enemy.box.center.y + universe.height/2 - windowBox.center.y)%universe.height -universe.height/2 + windowBox.height/2,
 			enemy.box.angle, false);
 	});
-
+	
+	//particles
+	particles.forEach(function(particle, index, array){
+		if (particle.lifetime >= particle.maxLifetime) {
+			array.splice(index, 1);
+			return;
+		}
+		particle.lifetime++;
+		particle.box.center.x += particle.velocity.x;
+		particle.box.center.y -= particle.velocity.y;
+		particle.box.angle += particle.rotSpeed;
+		particle.size *= 0.95;
+		drawRotatedImage(resources["jetpackParticle"], particle.box.center.x - game.offset.x, particle.box.center.y - game.offset.y, particle.box.angle, false, particle.size, particle.size);
+	});
 
 	//players
 	context.fillStyle = "#eee";
@@ -251,17 +265,27 @@ function loop() {
 			drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 			if (player.jetpack) {
 				if(player.panner !== undefined) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
+				
+				var jetpackFireOneX = jetpackX - 53 * Math.sin(player.box.angle - Math.PI / 11),
+					jetpackFireOneY = jetpackY + 53 * Math.cos(player.box.angle - Math.PI / 11),
+					jetpackFireTwoX = jetpackX - 53 * Math.sin(player.box.angle + Math.PI / 11),
+					jetpackFireTwoY = jetpackY + 53 * Math.cos(player.box.angle + Math.PI / 11);
 
-				drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle - Math.PI/11), jetpackY + 53*Math.cos(player.box.angle - Math.PI/11), player.box.angle);
-				drawRotatedImage(resources["jetpackFire"], jetpackX -53*Math.sin(player.box.angle + Math.PI/11), jetpackY + 53*Math.cos(player.box.angle + Math.PI/11), player.box.angle);
+				if (Math.random() < 0.7){
+					particles.push(new Particle(18, jetpackFireOneX + game.offset.x, jetpackFireOneY + game.offset.y, 80));
+					particles.push(new Particle(18, jetpackFireTwoX + game.offset.x, jetpackFireTwoY + game.offset.y, 80));
+				}
+				
+				drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, player.box.angle);
+				drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, player.box.angle);
 			}
 			context.globalAlpha = 1;
-
 
 			//body
 			drawRotatedImage(res, playerX, playerY, player.box.angle, player.looksLeft);
 		}
 	});
+
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 
@@ -294,3 +318,12 @@ function loop() {
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 init();
+
+function Particle(size, startX, startY, lifetime) {
+	this.box = new Rectangle(new Point(startX, startY), 0, 0, Math.random() * 2 * Math.PI);
+	this.size = size;
+	this.maxLifetime = lifetime;
+	this.lifetime = 0;
+	this.rotSpeed = Math.random() * Math.PI * 0.04;
+	this.velocity = {x: (Math.random() * 2 - 1) * 2 * Math.sin(this.box.angle), y: (Math.random() * 2 - 1) * 2 * Math.cos(this.box.angle)};
+}
