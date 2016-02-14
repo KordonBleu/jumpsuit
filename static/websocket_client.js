@@ -67,17 +67,6 @@ Connection.prototype.messageHandler = function(message) {
 	//try {
 		var msg = JSON.parse(message.data);
 		switch(msg.msgType) {
-			case MESSAGE.WORLD_DATA:
-				planets.length = 0;
-				msg.data.planets.forEach(function(planet) {
-					planets.push(new Planet(planet.x, planet.y, planet.radius));
-				});
-
-				enemies.length = 0;
-				msg.data.enemies.forEach(function(enemy) {
-					enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));
-				});
-				break;
 			case MESSAGE.GAME_DATA:
 				msg.data.planets.forEach(function(planet, i) {
 					planets[i].progress = planet;
@@ -218,6 +207,38 @@ Connection.prototype.messageHandler = function(message) {
 
 				history.pushState(null, "Main menu", "/");
 				alert("Error:\n" + errDesc);
+				break;
+			case MESSAGE.WORLD.value:
+				var val = MESSAGE.WORLD.deserialize(message.data);
+
+				planets.length = 0;
+				val.planets.forEach(function(planet) {
+					planets.push(new Planet(planet.x, planet.y, planet.radius));
+				});
+
+				enemies.length = 0;
+				val.enemies.forEach(function(enemy) {
+					enemies.push(new Enemy(enemy.x, enemy.y, "enemyBlack5"));//TODO: rework appearance with an enum on the enemies
+				});
+
+				shots.length = 0;
+				val.shots.forEach(function(shot) {
+					shots.push({box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: 200});
+				});
+
+				players.length = 0;
+				val.players.forEach(function(_player) {
+					var player = new Player(_player.name)
+					player.box = new Rectangle(new Point(_player.x, _player.y), 40, 40, _player.angle);//TODO: remove placeholder width and height
+					player.attachedPlanet = _player.attachedPlanet;
+					player.jetpack = _player.jetpack;
+					player.looksLeft = _player.looksLeft;
+					player.appearance = "alienBeige";//TODO: remove placeholder
+					player.walkFrame = "_stand";//TODO: remove placeholder
+					player.health = _player.health;//TODO: remove placeholder
+					player.fuel = _player.fuel;
+					players.push(player);
+				});
 				break;
 			case MESSAGE.LOBBY_LIST.value:
 				if (printLobbies.list === undefined) {//first time data is inserted

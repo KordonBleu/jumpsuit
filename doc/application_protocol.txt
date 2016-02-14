@@ -1,7 +1,7 @@
 # JumpSuit's protocol specification
 
 Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
-Strings used by the JumpSuit's protocol are always encoded as UTF-8.
+Strings used by the JumpSuit's protocol are always encoded as UTF-8. When the protocol mandates the length of a string, it is implied it is an amount of bytes.
 
 ## Notation
 
@@ -55,7 +55,73 @@ They might be used several times in a packet or in packets with different types.
 | lobby ID | amount of connected player | maximum amount of players | length of the lobby name | lobby name |
 +----------+----------------------------+---------------------------+--------------------------+------------+
 
-The length of the lobby name is an amount of bytes.
+
+### PLANET
+
+       2B            2B           2B
++--------------+--------------+--------+
+| x-coordinate | y-coordinate | radius |
++--------------+--------------+--------+
+
+### ENEMY
+
+      2B              2B           1B
++--------------+--------------+------------+
+| x-coordinate | y-coordinate | Appearance |
++--------------+--------------+------------+
+
+Appearance must be either:
+ 0. enemyBlack1
+ 1. enemyBlack2
+ 2. enemyBlack3
+ 3. enemyBlack4
+ 4. enemyBlack5
+ 5. enemyBlue1
+ 6. enemyBlue2
+ 7. enemyBlue3
+ 8. enemyBlue4
+ 9. enemyBlue5
+ 10. enemyGreen1
+ 11. enemyGreen2
+ 12. enemyGreen3
+ 13. enemyGreen4
+ 14. enemyGreen5
+ 15. enemyRed1
+ 16. enemyRed2
+ 17. enemyRed3
+ 18. enemyRed4
+ 19. enemyRed5
+
+
+### PLAYER
+
+      2B             2B               1B            4B        1b         1b          3b           3b         1B      2B        1B       0-255B
++--------------+--------------+-----------------+-------+------------+---------+------------+------------+--------+------+-------------+------+
+| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Appearance | Walk Frame | health | fuel | name length | name |
++--------------+--------------+-----------------+-------+------------+---------+------------+------------+--------+------+-------------+------+
+
+If attached planet's value is 255, the player is not attached to a planet.
+Walk Frame must be either:
+ 0. duck
+ 1. hurt
+ 2. jump
+ 3. stand
+ 4. walk1
+ 5. walk2
+Appearance must be either:
+ 0. blue
+ 1. beige
+ 2. green
+ 3. pink
+ 4. yellow
+
+
+### SHOT
+
+      2B              2B         4B        1B
++-------------------------------------------------+
+| x-coordinate | y-coordinate | angle | life time |
++--------------+--------------+-------+-----------+
 
 
 
@@ -160,10 +226,10 @@ Lobby State must be either:
 
 This packet represents the initial collection of entities.
 
-  1B
-+----+---------------+========+--------------+=======+---------------+========+======+
-| 10 | planet amount | PLANET | enemy amount | ENEMY | player amount | PLAYER | SHOT |
-+----+---------------+========+--------------+=======+---------------+========+======+
+  1B       1B           ?*6B         1B        ?*5B         1B       ?*9B     ?B
++----+---------------+========+--------------+=======+-------------+======+========+
+| 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
++----+---------------+========+--------------+=======+-------------+======+========+
 
 Note: this is yet encoded as JSON.
 
@@ -205,8 +271,6 @@ Note: two unused bits are present to complete a byte.
 | 14 | player ID | message |
 +----+-----------+---------+
 
-Note: this is yet encoded as JSON.
-
 
 ### ADD_ENTITY (server -> client)
 
@@ -231,7 +295,7 @@ Note: this is yet encoded as JSON.
 | 17 | First Team | Second Team | first team score | second team score |
 +----+------------+-------------+------------------+-------------------+
 
-The First Team and Second Team must be:
+The First Team and Second Team must be either:
  0. beige team
  1. blue team
  2. green team

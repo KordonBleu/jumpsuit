@@ -307,7 +307,7 @@ function Lobby(name, maxPlayers) {
 			this.availableTeams.push(_teams[_t]);
 			_teams.splice(_t, 1);
 		}
-		this.gameProgress = {ticks: 0};
+		this.gameProgress = {};
 		this.gameProgress[this.availableTeams[0]] = 0;
 		this.gameProgress[this.availableTeams[1]] = 0;
 
@@ -349,7 +349,7 @@ Lobby.prototype.update = function() {
 		this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.state, this.stateTimer), wsOptions);
 		if (this.stateTimer <= 0) {
 			this.resetWorld();
-			this.broadcast(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: this.planets.getWorldData(), enemies: this.enemies.getWorldData()}}));
+			this.broadcast(MESSAGE.WORLD.serialize(this.planets, this.enemies, this.shots, this.players), wsOptions);
 			this.state = this.stateEnum.PLAYING;
 			this.stateTimer = 60;
 		}
@@ -376,12 +376,6 @@ Lobby.prototype.update = function() {
 	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.gameProgress);
 
 	this.processTime = Date.now() - oldDate;
-	if (this.gameProgress.ticks++ === 50){
-		this.planets.forEach(function(planet){
-			if (planet.progress.value >= 80) this.gameProgress[planet.progress.team]++;
-		}.bind(this));
-		this.gameProgress.ticks = 0;
-	}
 
 	this.broadcast(JSON.stringify({msgType: MESSAGE.PLAY_SOUND, data: sounds}));//TODO: add them to a queue so they can be all sent together
 
@@ -451,6 +445,14 @@ setInterval(function() {
 		lobby.update();
 	});
 }, 16);
+
+setInterval(function() {
+	lobbies.forEach(function(lobby) {
+		lobby.planets.forEach(function(planet) {
+			if (planet.progress.value >= 80) this.gameProgress[planet.progress.team]++;
+		}, lobby);
+	});
+}, 1000)
 
 setInterval(function() {
 	lobbies.forEach(function(lobby) {
@@ -538,7 +540,7 @@ wss.on("connection", function(ws) {
 					player.lobby = lobby;
 
 					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height), wsOptions);
-					ws.send(JSON.stringify({msgType: MESSAGE.WORLD_DATA, data: {planets: lobby.planets.getWorldData(), enemies: lobby.enemies.getWorldData()}}));
+					ws.send(MESSAGE.WORLD.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players), wsOptions);
 					//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
 					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 				}

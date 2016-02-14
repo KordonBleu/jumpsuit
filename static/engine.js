@@ -2,7 +2,7 @@
 
 var resPaths = [
 	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
-	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg",
+	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg", "planet.svg",
 	"heartFilled.svg", "heartHalfFilled.svg", "heartNotFilled.svg",
 	"goldCoin.svg", "silverCoin.svg", "bronzeCoin.svg",
 	"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
@@ -13,7 +13,7 @@ var resPaths = [
 	"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
-	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg", "planet.svg", "jetpackParticle.svg"
+	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg"
 	],
 	resources = {};
 
@@ -33,7 +33,7 @@ function Player(name, ws) {
 	this._walkCounter = 0;
 	this.name = name;
 	this.ws = ws;
-	this.box = undefined;
+	this.box = new Rectangle(new Point(0, 0), 0, 0); ;
 	this.boxInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
@@ -87,10 +87,10 @@ Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "
 
 
 var _doPrediction = {};
-function doPrediction(universe, players, enemies, shots){
+function doPrediction(universe, players, enemies, shots) {
 	_doPrediction._newTimestamp = Date.now();
 	_doPrediction._oldTimestamp = _doPrediction._oldTimestamp || Date.now();
-	
+
 	var fps = 1000 / (_doPrediction._newTimestamp - _doPrediction._oldTimestamp);
 	game.fps = fps;
 	players.forEach(function(player) {
