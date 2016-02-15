@@ -85,7 +85,7 @@ Connection.prototype.messageHandler = function(message) {
 					}
 				});
 
-				for (var i = 0; i !== Math.max(msg.data.players.length, players.length); i++) {
+				for (var i = 0; i !== msg.data.players.length; i++) {
 					if (msg.data.players[i] === undefined && players[i] !== undefined) {
 						delete players[i];
 						continue;
@@ -99,7 +99,6 @@ Connection.prototype.messageHandler = function(message) {
 							players[i] = new Player(msg.data.players[i].name);
 							players[i].box = new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle);
 							players[i].appearance = msg.data.players[i].appearance;
-							players[i].setBoxSize();
 						} else continue;
 					}
 
@@ -132,7 +131,6 @@ Connection.prototype.messageHandler = function(message) {
 
 					players[i].looksLeft = msg.data.players[i].looksLeft;
 					players[i].walkFrame = msg.data.players[i].walkFrame;
-					players[i].setBoxSize();
 					players[i].name = msg.data.players[i].name;
 					players[i].appearance = msg.data.players[i].appearance;
 					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
@@ -218,7 +216,7 @@ Connection.prototype.messageHandler = function(message) {
 
 				enemies.length = 0;
 				val.enemies.forEach(function(enemy) {
-					enemies.push(new Enemy(enemy.x, enemy.y, "enemyBlack5"));//TODO: rework appearance with an enum on the enemies
+					enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));//TODO: rework appearance with an enum on the enemies
 				});
 
 				shots.length = 0;
@@ -228,15 +226,9 @@ Connection.prototype.messageHandler = function(message) {
 
 				players.length = 0;
 				val.players.forEach(function(_player) {
-					var player = new Player(_player.name)
-					player.box = new Rectangle(new Point(_player.x, _player.y), 40, 40, _player.angle);//TODO: remove placeholder width and height
-					player.attachedPlanet = _player.attachedPlanet;
-					player.jetpack = _player.jetpack;
+					var player = new Player(_player.name, _player.appearance, "_" + _player.walkFrame, _player.attachedPlanet, _player.jetpack, _player.health, _player.fuel);
 					player.looksLeft = _player.looksLeft;
-					player.appearance = "alienBeige";//TODO: remove placeholder
-					player.walkFrame = "_stand";//TODO: remove placeholder
-					player.health = _player.health;//TODO: remove placeholder
-					player.fuel = _player.fuel;
+					player.box = new Rectangle(new Point(_player.x, _player.y), resources[player.appearance + player.walkFrame].width, resources[player.appearance + player.walkFrame].height, _player.angle);
 					players.push(player);
 				});
 				break;

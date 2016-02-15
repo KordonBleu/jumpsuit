@@ -221,13 +221,6 @@ function Lobby(name, maxPlayers) {
 		});
 		return plData;
 	};
-	this.enemies.getWorldData = function() {
-		var enemData = [];
-		for (var i = 0; i < this.length; i++){
-			enemData.push({x: this[i].box.center.x, y: this[i].box.center.y, appearance: this[i].appearance});
-		}
-		return enemData;
-	};
 	this.enemies.getGameData = function() {
 		var enemData = [], enemShotData;
 		for (var i = 0; i < this.length; i++){
@@ -241,13 +234,6 @@ function Lobby(name, maxPlayers) {
 			shotData.push({x: shot.box.center.x, y: shot.box.center.y, angle: shot.box.angle, lt: shot.lt});
 		});
 		return shotData;
-	};
-	this.planets.getWorldData = function() {
-		var pltData = [];
-		for (var i = 0; i < this.length; i++){
-			pltData.push({x: this[i].box.center.x, y: this[i].box.center.y, radius: this[i].box.radius});
-		}
-		return pltData;
 	};
 	this.planets.getGameData = function() {
 		var pltData = [];
@@ -265,9 +251,6 @@ function Lobby(name, maxPlayers) {
 
 
 	this.universe = new vinage.Rectangle(new vinage.Point(0, 0), 6400, 6400);
-	this.universe.getWorldData = function() {
-		return {x: this.universe.center.x, y: this.universe.center.y, width: this.universe.width, height: this.universe.height};
-	}
 	//generate world structure
 	this.resetWorld = function() {
 		this.planets.length = 0;
@@ -301,7 +284,7 @@ function Lobby(name, maxPlayers) {
 		this.teams = {};
 		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
 
-		while (this.availableTeams.length !== 2){
+		while (this.availableTeams.length !== 2) {
 			var _t = Math.floor(Math.random() * _teams.length);
 			this.teams[_teams[_t]] = [];
 			this.availableTeams.push(_teams[_t]);
@@ -311,8 +294,10 @@ function Lobby(name, maxPlayers) {
 		this.gameProgress[this.availableTeams[0]] = 0;
 		this.gameProgress[this.availableTeams[1]] = 0;
 
-		this.players.forEach(function(player){
-			player = new engine.Player(player.name, player.ws); //resetPlayers for team-reassignment
+		this.players.forEach(function(player) {//TODO: This. Better.
+			var ws = player.ws;
+			player = new engine.Player(player.name); //resetPlayers for team-reassignment
+			player.ws = ws;
 		}.bind(this));
 	};
 	this.assignPlayerTeam = function(player) {
@@ -321,7 +306,6 @@ function Lobby(name, maxPlayers) {
 		else player.appearance = this.availableTeams[this.teams[this.availableTeams[0]].length > this.teams[this.availableTeams[1]].length ? 1 : 0];
 		this.teams[player.appearance].push(player.pid);
 		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
-		player.setBoxSize();
 		player.box.angle = Math.random() * Math.PI;
 		player.attachedPlanet = -1;
 	};
@@ -519,7 +503,8 @@ wss.on("connection", function(ws) {
 			case MESSAGE.SET_NAME.value:
 				let name = MESSAGE.SET_NAME.deserialize(message);
 				if (player === undefined) {
-					player = new engine.Player(name, this);
+					player = new engine.Player(name);
+					player.ws = this;
 				} else {
 					player.name = name;
 					if (player.lobby !== undefined) player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));

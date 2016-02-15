@@ -2,7 +2,7 @@
 
 var resPaths = [
 	"meteorBig1.svg", "meteorBig2.svg", "meteorBig3.svg", "meteorBig4.svg", "meteorMed1.svg", "meteorMed2.svg", "meteorSmall1.svg", "meteorSmall2.svg", "meteorTiny1.svg", "meteorTiny2.svg",
-	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg", "planet.svg",
+	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg", "jetpackParticle.svg", "planet.svg",
 	"heartFilled.svg", "heartHalfFilled.svg", "heartNotFilled.svg",
 	"goldCoin.svg", "silverCoin.svg", "bronzeCoin.svg",
 	"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
@@ -29,44 +29,65 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-function Player(name, ws) {
+function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel) {
 	this._walkCounter = 0;
 	this.name = name;
-	this.ws = ws;
-	this.box = new Rectangle(new Point(0, 0), 0, 0); ;
+	this.box = new Rectangle(new Point(0, 0), 0, 0);
 	this.boxInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
-	this.setWalkframe = function(){
-		if (this.box === undefined) return;
-		if (this.attachedPlanet === -1){
-			this.walkFrame = "_jump";
-		} else {
-			var leftOrRight = (this.controls["moveLeft"] || this.controls["moveRight"]);
-			if (!leftOrRight) this.walkFrame = (this.controls["crouch"]) ? "_duck" : "_stand";
-			else if (this._walkCounter++ >= (this.controls["run"] > 0 ? 6 : 10)){
-				this._walkCounter = 0;
-				this.walkFrame = (this.walkFrame === "_walk1") ? "_walk2" : "_walk1";
+
+	this._appearance = appearance;
+	this._walkFrame = "_stand";
+	Object.defineProperties(this, {
+		appearance: {
+			get: function() {
+				return this._appearance;
+			},
+			set: function(newAppearance) {
+				this._appearance = newAppearance;
+				this.setBoxSize();
 			}
-			this.setBoxSize();
+		},
+		walkFrame: {
+			get: function() {
+				return this._walkFrame;
+			},
+			set: function(newWalkFrame) {
+				this._walkFrame = newWalkFrame;
+				this.setBoxSize();
+			}
 		}
-	};
-	this.setBoxSize = function(){
-		this.box.width = resources[this.appearance + this.walkFrame].width
-		this.box.height = resources[this.appearance + this.walkFrame].height;
-	}
-	this.walkFrame = "_stand";
-	this.jetpack = false;
-	this.health = 8;
-	this.fuel = 400;
-	this.attachedPlanet = -1;
-	this.planet = 0;
+	});
+
+	this.jetpack = jetpack || false;
+	this.health = health || 8;
+	this.fuel = fuel || 400;
+	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
 
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
 }
+Player.prototype.setWalkFrame = function() {
+	if (this.box === undefined) return;
+	if (this.attachedPlanet === -1){
+		this.walkFrame = "_jump";
+	} else {
+		var leftOrRight = (this.controls["moveLeft"] || this.controls["moveRight"]);
+		if (!leftOrRight) this.walkFrame = (this.controls["crouch"]) ? "_duck" : "_stand";
+		else if (this._walkCounter++ >= (this.controls["run"] > 0 ? 6 : 10)){
+			this._walkCounter = 0;
+			this.walkFrame = (this.walkFrame === "_walk1") ? "_walk2" : "_walk1";
+		}
+		this.setBoxSize();
+	}
+};
+Player.prototype.setBoxSize = function() {
+	this.box.width = resources[this.appearance + this.walkFrame].width
+	this.box.height = resources[this.appearance + this.walkFrame].height;
+};
 
 function Planet(x, y, radius) {
 	this.box = new Circle(new Point(x, y), radius);
@@ -144,20 +165,19 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;
 			player.jetpack = false;
 			var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].box.radius);
-			if (player.controls["moveLeft"] > 0){
+			if (player.controls["moveLeft"] > 0) {
 				stepSize = stepSize * player.controls["moveLeft"];
-				player.planet += (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
+				player.box.angle -= (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = true;
 			}
-			if (player.controls["moveRight"] > 0){
+			if (player.controls["moveRight"] > 0) {
 				stepSize = stepSize * player.controls["moveRight"];
-				player.planet -= (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
+				player.box.angle += (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = false;
 			}
 
-			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(player.planet) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
-			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(player.planet) * (planets[player.attachedPlanet].box.radius + player.box.height / 2)
-			player.box.angle = Math.PI - player.planet;
+			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
+			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2)
 			player.velocity.x = 0;
 			player.velocity.y = 0;
 			player.fuel = 400;
@@ -179,7 +199,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 				player.velocity.y += 9000 * planets[j].box.radius * deltaY / distPowFour;
 				if (universe.collide(planets[j].box, player.box)) {
 					player.attachedPlanet = j;
-					player.planet = -Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 + Math.atan2(deltaX, deltaY) + Math.PI;
+					player.box.angle = Math.PI + Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 - Math.atan2(deltaX, deltaY) - Math.PI;
 				}
 			}
 			if (player.controls["jetpack"] > 0 && player.fuel > 0 && player.controls["crouch"] < 1){
@@ -201,7 +221,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 			player.box.center.x = (6400 + player.box.center.x) % 6400;
 			player.box.center.y = (6400 + player.box.center.y) % 6400;
 		}
-		player.setWalkframe();
+		player.setWalkFrame();
 
 		shots.forEach(function(shot, si) {
 			if (universe.collide(new Circle(shot.box.center, 40), player.box)) {
@@ -211,7 +231,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 					planets.forEach(function(planet, pi){
 						if (planet.progress.team === player.appearance) suitablePlanets.push(pi);
 					});
-					player.planet = Math.PI;
+					player.box.angle = 0;
 					if (suitablePlanets.length === 0) player.attachedPlanet = Math.floor(Math.random() * planets.length);
 					else player.attachedPlanet = suitablePlanets[Math.floor(Math.random() * suitablePlanets.length)];
 					player.health = 8;

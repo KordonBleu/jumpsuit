@@ -170,13 +170,13 @@ const MESSAGE = {
 	},
 	CONNECT_ACCEPTED: {
 		value: 6,
-		serialize: function(playerId, univWidth, univHeigth) {
+		serialize: function(playerId, univWidth, univHeight) {
 			var buffer = new ArrayBuffer(10),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 			view.setUint8(1, playerId);
 			view.setUint32(2, univWidth);
-			view.setUint32(6, univHeigth);
+			view.setUint32(6, univHeight);
 
 			return buffer;
 		},
@@ -253,6 +253,13 @@ const MESSAGE = {
 			enemyRed4: 18,
 			enemyRed5: 19
 		},
+		PLAYER_APPEARANCE: {
+			alienBlue: 0,
+			alienBeige: 1,
+			alienGreen: 2,
+			alienPink: 3,
+			alienYellow: 4
+		},
 		WALK_FRAME: {
 			duck: 0,
 			hurt: 1,
@@ -307,7 +314,7 @@ const MESSAGE = {
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
 				view.setFloat32(5 + offset, player.box.angle);
-				var enumByte = this.ENEMY_APPEARANCE[player.appearance];
+				var enumByte = this.PLAYER_APPEARANCE[player.appearance];
 				enumByte <<= 3;
 				enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
@@ -345,7 +352,7 @@ const MESSAGE = {
 				enemies.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
-					appearance: view.getUint8(i + 4)
+					appearance: Object.keys(this.ENEMY_APPEARANCE)[view.getUint8(i + 4)]
 				});
 			}
 
@@ -369,8 +376,8 @@ const MESSAGE = {
 					angle: view.getFloat32(i + 5),
 					looksLeft: enumByte & this.MASK.LOOKS_LEFT ? true : false,
 					jetpack: enumByte & this.MASK.JETPACK ? true : false,
-					appearance: enumByte << 2 >>> 5,
-					walkFrame: enumByte << 5 >>> 5,
+					appearance: Object.keys(this.PLAYER_APPEARANCE)[enumByte << 26 >>> 29],
+					walkFrame: Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29],//we operate on 32 bits
 					health: view.getUint8(i + 10),
 					fuel: view.getUint16(i + 11),
 					name: bufferToString(buffer.slice(i + 14, i + 14 + nameLgt))

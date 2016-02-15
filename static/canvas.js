@@ -225,7 +225,7 @@ function loop() {
 			(enemy.box.center.y + universe.height/2 - windowBox.center.y)%universe.height -universe.height/2 + windowBox.height/2,
 			enemy.box.angle, false);
 	});
-	
+
 	//particles
 	particles.forEach(function(particle, index, array){
 		if (particle.lifetime >= particle.maxLifetime) {
@@ -255,7 +255,6 @@ function loop() {
 
 
 			//jetpack
-			context.globalAlpha = 0.8;
 			var shift = player.looksLeft === true ? -14 : 14,
 				playerX = (player.box.center.x + universe.width/2 - windowBox.center.x)%universe.width -universe.width/2 + windowBox.width/2,
 				playerY = (player.box.center.y + universe.height/2 - windowBox.center.y)%universe.height -universe.height/2 + windowBox.height/2,
@@ -265,7 +264,7 @@ function loop() {
 			drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 			if (player.jetpack) {
 				if(player.panner !== undefined) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
-				
+
 				var jetpackFireOneX = jetpackX - 53 * Math.sin(player.box.angle - Math.PI / 11),
 					jetpackFireOneY = jetpackY + 53 * Math.cos(player.box.angle - Math.PI / 11),
 					jetpackFireTwoX = jetpackX - 53 * Math.sin(player.box.angle + Math.PI / 11),
@@ -275,11 +274,10 @@ function loop() {
 					particles.push(new Particle(18, jetpackFireOneX + game.offset.x, jetpackFireOneY + game.offset.y, 80));
 					particles.push(new Particle(18, jetpackFireTwoX + game.offset.x, jetpackFireTwoY + game.offset.y, 80));
 				}
-				
+
 				drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, player.box.angle);
 				drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, player.box.angle);
 			}
-			context.globalAlpha = 1;
 
 			//body
 			drawRotatedImage(res, playerX, playerY, player.box.angle, player.looksLeft);

@@ -1,13 +1,13 @@
-//load this file in Node's command prompt by typing .load message_world.js
+//load this file in Node's command prompt by typing .load tests/message_world.js
 
-delete require.cache[require.resolve("./static/engine.js")];
-var engine = require("./static/engine.js");
+delete require.cache[require.resolve("../static/engine.js")];
+var engine = require("../static/engine.js");
 
-delete require.cache[require.resolve("./static/message.js")];
-var message = require("./static/message.js").MESSAGE;
+delete require.cache[require.resolve("../static/message.js")];
+var message = require("../static/message.js").MESSAGE;
 
-delete require.cache[require.resolve("./static/vinage/vinage.js")];
-var vinage = require("./static/vinage/vinage.js");
+delete require.cache[require.resolve("../static/vinage/vinage.js")];
+var vinage = require("../static/vinage/vinage.js");
 
 
 var planets = [
