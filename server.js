@@ -318,9 +318,9 @@ Lobby.prototype.stateEnum = {
 	PLAYING: 1,
 	END: 2
 };
-Lobby.prototype.broadcast = function(message, options) {
+Lobby.prototype.broadcast = function(message, options, exclude) {
 	this.players.forEach(function(player) {
-		try {
+		if (player !== exclude) try {//exclude a players from the broadcast
 			player.ws.send(message, options);
 		} catch(e) {/*Ignore errors*/}
 	});
@@ -333,7 +333,7 @@ Lobby.prototype.update = function() {
 		this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.state, this.stateTimer), wsOptions);
 		if (this.stateTimer <= 0) {
 			this.resetWorld();
-			this.broadcast(MESSAGE.WORLD.serialize(this.planets, this.enemies, this.shots, this.players), wsOptions);
+			this.broadcast(MESSAGE.ADD_ENTITY.serialize(this.planets, this.enemies, this.shots, this.players), wsOptions);//uh oh this code seems to be quite out of date
 			this.state = this.stateEnum.PLAYING;
 			this.stateTimer = 60;
 		}
@@ -478,9 +478,9 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function(lobby) {
 			lobby.players.some(function(player, i) {
 				if (player.ws === ws) {
-					//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + player.name + "' has left the game"}}))
+					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player:" + lobby.players[i].name);
 					delete lobby.players[i];
-					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic);
+					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]), wsOptions);
 					return true;
 				}
 			});
@@ -524,9 +524,8 @@ wss.on("connection", function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 
-					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height), wsOptions);
-					ws.send(MESSAGE.WORLD.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players), wsOptions);
-					//TODO: replace lobby.broadcast(JSON.stringify({msgType: MESSAGE.CHAT, data: {content: "'" + msg.data.name + "' connected"}}));
+					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players), wsOptions);
+					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), wsOptions, player)
 					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 				}
 				break;

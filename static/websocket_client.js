@@ -159,21 +159,6 @@ Connection.prototype.messageHandler = function(message) {
 				}
 				if (!game.started) game.start();
 				break;
-			case MESSAGE.LOBBY_STATE:
-				msg.data.timer = Math.floor(msg.data.timer);
-				if (msg.data.state === 0){
-					statusElement.textContent = "Waiting for players... " + msg.data.timer;
-					teamListElement.className = "hidden";
-				} else if (msg.data.state === 1){
-					if (!game.started && players.length !== 0) game.start();
-					teamListElement.className = "hidden";
-					statusElement.textContent = "Match is running " + msg.data.timer;
-				} else if (msg.data.state === 2){
-					if (game.started) game.stop();
-					teamListElement.className = "";
-					statusElement.textContent = "Match is over " + msg.data.timer;
-				}
-				break;
 			case MESSAGE.PLAY_SOUND:
 				msg.data.forEach(function(sound) {
 					switch(sound.type) {
@@ -187,88 +172,114 @@ Connection.prototype.messageHandler = function(message) {
 	/*} catch(err) {
 		console.error(err, err.stack);
 	}*/
-	} else {//binary message
-		switch (new Uint8Array(message.data, 0, 1)[0]) {
-			case MESSAGE.ERROR.value:
-				var errDesc;
-				switch(MESSAGE.ERROR.deserialize(message.data)) {
-					case MESSAGE.ERROR.NO_LOBBY:
-						errDesc = "This lobby doesn't exist (anymore)";
-						break;
-					case MESSAGE.ERROR.NO_SLOT:
-						errDesc = "There's no slot left in the lobby";
-						break;
-					case MESSAGE.ERROR.NAME_TAKEN:
-						errDesc = "The name " + localStorage.getItem("settings.name") + " is already taken";
-						break;
-				}
+	} else switch (new Uint8Array(message.data, 0, 1)[0]) {
+		case MESSAGE.ERROR.value:
+			var errDesc;
+			switch(MESSAGE.ERROR.deserialize(message.data)) {
+				case MESSAGE.ERROR.NO_LOBBY:
+					errDesc = "This lobby doesn't exist (anymore)";
+					break;
+				case MESSAGE.ERROR.NO_SLOT:
+					errDesc = "There's no slot left in the lobby";
+					break;
+				case MESSAGE.ERROR.NAME_TAKEN:
+					errDesc = "The name " + localStorage.getItem("settings.name") + " is already taken";
+					break;
+			}
 
-				history.pushState(null, "Main menu", "/");
-				alert("Error:\n" + errDesc);
-				break;
-			case MESSAGE.WORLD.value:
-				var val = MESSAGE.WORLD.deserialize(message.data);
+			history.pushState(null, "Main menu", "/");
+			alert("Error:\n" + errDesc);
+			break;
+		case MESSAGE.LOBBY_STATE.value:
+			var val = MESSAGE.LOBBY_LIST.deserialize(message.data);
+			if (val.state === 0){
+				statusElement.textContent = "Waiting for players... " + val.timer;
+				teamListElement.className = "hidden";
+			} else if (val.state === 1){
+				if (!game.started && players.length !== 0) game.start();
+				teamListElement.className = "hidden";
+				statusElement.textContent = "Match is running " + val.timer;
+			} else if (val.state === 2){
+				if (game.started) game.stop();
+				teamListElement.className = "";
+				statusElement.textContent = "Match is over " + val.timer;
+			}
+			break;
+		case MESSAGE.CONNECT_ACCEPTED.value:
+			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
+			ownIdx = val.playerId;
+			universe.width = val.univWidth;
+			universe.height = val.univHeight;
 
-				planets.length = 0;
-				val.planets.forEach(function(planet) {
-					planets.push(new Planet(planet.x, planet.y, planet.radius));
-				});
 
-				enemies.length = 0;
-				val.enemies.forEach(function(enemy) {
-					enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));//TODO: rework appearance with an enum on the enemies
-				});
+			planets.length = 0;
+			val.world.planets.forEach(function(planet) {
+				planets.push(new Planet(planet.x, planet.y, planet.radius));
+			});
 
-				shots.length = 0;
-				val.shots.forEach(function(shot) {
-					shots.push({box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: 200});
-				});
+			enemies.length = 0;
+			val.world.enemies.forEach(function(enemy) {
+				enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));//TODO: rework appearance with an enum on the enemies
+			});
 
-				players.length = 0;
-				val.players.forEach(function(_player) {
-					var player = new Player(_player.name, _player.appearance, "_" + _player.walkFrame, _player.attachedPlanet, _player.jetpack, _player.health, _player.fuel);
-					player.looksLeft = _player.looksLeft;
-					player.box = new Rectangle(new Point(_player.x, _player.y), resources[player.appearance + player.walkFrame].width, resources[player.appearance + player.walkFrame].height, _player.angle);
-					players.push(player);
-				});
-				break;
-			case MESSAGE.LOBBY_LIST.value:
-				if (printLobbies.list === undefined) {//first time data is inserted
-					printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
-					printLobbies();
-					applyLobbySearch();//in case the page was refreshed and the
-					applyEmptinessCheck();//inputs left in a modified state
-				} else {
-					printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
-					printLobbies();
-				}
-				break;
-			case MESSAGE.CHAT_BROADCAST.value:
-				var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
-				printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
-				break;
-			case MESSAGE.CONNECT_ACCEPTED.value:
-				var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
-				ownIdx = val.playerId;
-				universe.width = val.univWidth;
-				universe.height = val.univHeight;
-				break;
-			case MESSAGE.SET_NAME_BROADCAST.value:
-				var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);
-				printChatMessage(undefined, undefined, "\"" + players[val.id].name + "\" is now known as \"" + val.name + "\"");
-				players[val.id].name = val.name;
-				printPlayerList();
-				break;
-			case MESSAGE.SCORES.value:
-				var val = MESSAGE.SCORES.deserialize(message.data),
-					b = [], a;
-				for (a in val) b.push([a, val[a]]);
-				b.sort(function(a, c){ return a[1]-c[1]; });
-				b.forEach(function(a, i){
-					if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
-				});
-				break;
-		}
+			shots.length = 0;
+			val.world.shots.forEach(function(shot) {
+				shots.push({box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: 200});
+			});
+
+			players.length = 0;
+			val.world.players.forEach(function(_player) {
+				var player = new Player(_player.name, _player.appearance, "_" + _player.walkFrame, _player.attachedPlanet, _player.jetpack);
+				player.looksLeft = _player.looksLeft;
+				player.box = new Rectangle(new Point(_player.x, _player.y), resources[player.appearance + player.walkFrame].width, resources[player.appearance + player.walkFrame].height, _player.angle);
+				players.push(player);
+			});
+			break;
+		case MESSAGE.ADD_ENTITY.value:
+			var val = MESSAGE.ADD_ENTITY.deserialize(message.data);
+
+			val.players.forEach(function(player) {
+				printChatMessage(undefined, undefined, player.name + " joined the game");
+			});
+			break;
+		case MESSAGE.REMOVE_ENTITY.value:
+			var val = MESSAGE.REMOVE_ENTITY.deserialize(message.data);
+			val.playerIds.forEach(function(id) {
+				printChatMessage(undefined, undefined, players[id].name + " has left the game");
+				console.log(players);
+				delete players[id];
+				console.log(players);
+			});
+		case MESSAGE.LOBBY_LIST.value:
+			if (printLobbies.list === undefined) {//first time data is inserted
+				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
+				printLobbies();
+				applyLobbySearch();//in case the page was refreshed and the
+				applyEmptinessCheck();//inputs left in a modified state
+			} else {
+				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
+				printLobbies();
+			}
+			break;
+		case MESSAGE.CHAT_BROADCAST.value:
+			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
+			printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
+			break;
+		case MESSAGE.SET_NAME_BROADCAST.value:
+			var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);
+			printChatMessage(undefined, undefined, "\"" + players[val.id].name + "\" is now known as \"" + val.name + "\"");
+			players[val.id].name = val.name;
+			printPlayerList();
+			break;
+		case MESSAGE.SCORES.value:
+			var val = MESSAGE.SCORES.deserialize(message.data),
+				b = [], a;
+			for (a in val) b.push([a, val[a]]);
+			b.sort(function(a, c){ return a[1]-c[1]; });
+			b.forEach(function(a, i){
+				if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
+			});
+			break;
 	}
 };
 

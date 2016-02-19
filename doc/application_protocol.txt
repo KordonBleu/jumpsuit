@@ -20,13 +20,13 @@ The equal sign (=) indicates the value is optional and repeated.
 | value |
 +-------+
 
-+================+
-| repeated value |
-+================+
-
 +~~~~~~~~~~~~~~~~+
 | optional value |
 +~~~~~~~~~~~~~~~~+
+
++================+
+| repeated value |
++================+
 
 
 ## Packet type
@@ -38,7 +38,7 @@ The first byte of every packet determines its type. A payload may be placed afte
 | Type | payload...
 +------+-----------
 
-There are 16 packet types.
+There are 17 packet types.
 
 
 
@@ -52,7 +52,7 @@ They might be used several times in a packet or in packets with different types.
 
      4B                 1B                           1B                         1B                 0B-255B
 +----------+----------------------------+---------------------------+--------------------------+------------+
-| lobby ID | amount of connected player | maximum amount of players | length of the lobby name | lobby name |
+| lobby id | amount of connected player | maximum amount of players | length of the lobby name | lobby name |
 +----------+----------------------------+---------------------------+--------------------------+------------+
 
 
@@ -95,10 +95,10 @@ Appearance must be either:
 
 ### PLAYER
 
-      2B             2B               1B            4B        1b         1b          3b           3b         1B      2B        1B       0-255B
-+--------------+--------------+-----------------+-------+------------+---------+------------+------------+--------+------+-------------+------+
-| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Appearance | Walk Frame | health | fuel | name length | name |
-+--------------+--------------+-----------------+-------+------------+---------+------------+------------+--------+------+-------------+------+
+      2B             2B               1B            4B        1b         1b          3b           3b           1B       0-255B
++--------------+--------------+-----------------+-------+------------+---------+------------+------------+-------------+------+
+| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Appearance | Walk Frame | name length | name |
++--------------+--------------+-----------------+-------+------------+---------+------------+------------+-------------+------+
 
 If attached planet's value is 255, the player is not attached to a planet.
 Walk Frame must be either:
@@ -163,7 +163,7 @@ Appearance must be either:
 
  1B      1B          0B-?B
 +---+-----------+-------------+
-| 4 | player ID | player name |
+| 4 | player id | player name |
 +---+-----------+-------------+
 
 
@@ -171,7 +171,7 @@ Appearance must be either:
 
  1B      4B
 +---+----------+
-| 5 | lobby ID |
+| 5 | lobby id |
 +---+----------+
 
 The server will respond with either CONNECT_ACCEPTED or an ERROR.
@@ -180,9 +180,9 @@ The server will respond with either CONNECT_ACCEPTED or an ERROR.
 ### CONNECT_ACCEPTED (server -> client)
 
  1B       1B            4B                4B
-+---+-----------+----------------+-----------------+
-| 6 | player ID | universe width | universe height |
-+---+-----------+----------------+-----------------+
++---+-----------+----------------+-----------------+------------+
+| 6 | player id | universe width | universe height | ADD_ENTITY |
++---+-----------+----------------+-----------------+------------+
 
 
 ### ERROR (server -> client)
@@ -203,18 +203,18 @@ Error Type must be either:
 
  1B      4B
 +---+----------+
-| 8 | lobby ID |
+| 8 | lobby id |
 +---+----------+
 
-Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby ID will be assumed to be the only lobby the player is connected to.
+Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby id will be assumed to be the only lobby the player is connected to.
 
 
 ### LOBBY_STATE (server -> client)
 
  1B       1B         1B
-+---+-------------+-------+
++---+-------------+~~~~~~~+
 | 9 | Lobby State | timer |
-+---+-------------+-------+
++---+-------------+~~~~~~~+
 
 Lobby State must be either:
  0. waiting for players
@@ -222,24 +222,28 @@ Lobby State must be either:
  2. game over
 
 
-### WORLD (server -> client)
-
-This packet represents the initial collection of entities.
+### ADD_ENTITY (server -> client)
 
   1B       1B           ?*6B         1B        ?*5B         1B       ?*9B     ?B
 +----+---------------+========+--------------+=======+-------------+======+========+
 | 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
 +----+---------------+========+--------------+=======+-------------+======+========+
 
-Note: this is yet encoded as JSON.
+
+### REMOVE_ENTITY (server -> client)
+
+  1B        1B           ?*1B           1B          ?*1B         1B         ?*1B       ?*1B
++----+---------------+===========+--------------+==========+-------------+=========+===========+
+| 11 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
++----+---------------+===========+--------------+==========+-------------+=========+===========+
 
 
 ### GAME_STATE (server -> client)
 
-  1B
-+----+---
-| 11 |
-+----+--
+  1B       1B           1B
++----+-------------+-----------+----
+| 12 | your health | your fuel | ...
++----+-------------+-----------+----
 
 Note: this is yet encoded as JSON.
 
@@ -248,19 +252,18 @@ Note: this is yet encoded as JSON.
 
   1B      2b         1b    1b      1b       1b         1b           1b
 +----+-------------+------+-----+--------+---------+-----------+------------+
-| 12 | unused bits | jump | run | crouch | jetpack | move left | move right |
+| 13 | unused bits | jump | run | crouch | jetpack | move left | move right |
 +----+-------------+------+-----+--------+---------+-----------+------------+
 
 The values of jump, run, crouch, jetpack, move left and move right are 1 if enabled, 0 if not.
-This is a bit field.
-Note: two unused bits are present to complete a byte.
+Note: two unused bits are present out of necessity to complete a byte.
 
 
 ### CHAT (client -> server)
 
   1B     1B
 +----+---------+
-| 13 | message |
+| 14 | message |
 +----+---------+
 
 
@@ -268,31 +271,15 @@ Note: two unused bits are present to complete a byte.
 
   1B      1B         ?B
 +----+-----------+---------+
-| 14 | player ID | message |
+| 15 | player id | message |
 +----+-----------+---------+
-
-
-### ADD_ENTITY (server -> client)
-
-  1B
-+----+---------
-| 15 |
-+----+---------
-
-
-### REMOVE_ENTITY (server -> client)
-
-  1B
-+----+---------
-| 16 |
-+----+---------
 
 
 ### SCORES (server -> client)
 
   1B       1B            1B           4B                  4B
 +----+------------+-------------+------------------+-------------------+
-| 17 | First Team | Second Team | first team score | second team score |
+| 16 | First Team | Second Team | first team score | second team score |
 +----+------------+-------------+------------------+-------------------+
 
 The First Team and Second Team must be either:

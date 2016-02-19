@@ -1,4 +1,4 @@
-//load this file in Node's command prompt by typing .load tests/message_world.js
+//load this file in Node's command prompt by typing .load tests/message_add_entity.js
 
 delete require.cache[require.resolve("../static/engine.js")];
 var engine = require("../static/engine.js");
@@ -26,7 +26,9 @@ var planets = [
 	],
 	players = [
 		new engine.Player("Charles"),
-		new engine.Player("Lucette")
+		new engine.Player("Lucette"),
+		,
+		,
 	];
 players[0].box = new vinage.Rectangle(new vinage.Point(12, 444), 55, 92);
 players[1].box = new vinage.Rectangle(new vinage.Point(98, 342), 58, 102);
@@ -34,6 +36,11 @@ players[0].fuel = 255;
 players[0].jetpack = true;
 players[1].looksLeft = true;
 
-var buf = message.WORLD.serialize(planets, enemies, shots, players);
+//var buf = message.ADD_ENTITY.serialize(planets, enemies, shots, players);
 
-var res = message.WORLD.deserialize(buf);
+//var res = message.ADD_ENTITY.deserialize(buf);
+
+
+var buf = message.CONNECT_ACCEPTED.serialize(10, 6400, 6400, planets, enemies, shots, players);
+
+var res = message.CONNECT_ACCEPTED.deserialize(buf);
