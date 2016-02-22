@@ -174,26 +174,45 @@ const MESSAGE = {
 	},
 	CONNECT_ACCEPTED: {
 		value: 6,
-		serialize: function(playerId, univWidth, univHeight, planets, enemies, shots, players) {
+		TEAM_MASK: {
+			alienBeige: 16,
+			alienBlue: 8,
+			alienGreen: 4,
+			alienPink: 2,
+			alienYellow: 1
+		},
+		serialize: function(playerId, univWidth, univHeight, planets, enemies, shots, players, teams) {//teams is an object with team names as keys. The values do not matter
 			var entityBuf = MESSAGE.ADD_ENTITY.serialize(planets, enemies, shots, players),
-				buffer = new ArrayBuffer(9 + entityBuf.byteLength),//10 + entityBuf.byteLength - 1 because the packet id is removed
-				view = new DataView(buffer);
+				buffer = new ArrayBuffer(10 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
+				view = new DataView(buffer),
+				enabledTeams = 0;
 			view.setUint8(0, this.value);
 			view.setUint8(1, playerId);
 			view.setUint32(2, univWidth);
 			view.setUint32(6, univHeight);
 
-			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 10);
+			teams.forEach(function(team) {
+				enabledTeams |= this.TEAM_MASK[team];
+			}, this);
+			view.setInt8(10, enabledTeams);
+
+			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 11);
 
 			return buffer;
 		},
 		deserialize: function(buffer) {
-			var view = new DataView(buffer);
+			var view = new DataView(buffer),
+				enabledTeamsByte = view.getUint8(10),
+				enabledTeams = [];
+			for (let team in this.TEAM_MASK) {
+				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
+			}
 			return {
 				playerId: view.getUint8(1),
 				univWidth: view.getUint32(2),
 				univHeight: view.getUint32(6),
-				world: MESSAGE.ADD_ENTITY.deserialize(buffer.slice(9))//9 because the packet id is removed
+				enabledTeams: enabledTeams,
+				world: MESSAGE.ADD_ENTITY.deserialize(buffer.slice(10))//lil' hack: 10 because the packet id is removed
 			};
 		}
 	},
@@ -534,24 +553,21 @@ const MESSAGE = {
 	SCORES: {
 		value: 16,
 		serialize: function(scoresObj) {
-			var buffer = new ArrayBuffer(21), //5 teams * 4 bytes + 1 byte
-				teamView = new DataView(buffer, 1),
-				i = 0;
-			new Uint8ClampedArray(buffer, 0, 1)[0] = this.value;//packet type
-			for (team in scoresObj) {
-				teamView.setUint32(i, scoresObj[team]);
-				i += 4;
-			}
+			var teams = Object.keys(scoresObj).sort(),
+				buffer = new ArrayBuffer(1 + teams.length*4),
+				view = new DataView(buffer);
+			view.setUint8(0, this.value);
+			teams.forEach(function(team, i) {
+				view.setUint32(1 + i*4, scoresObj[team]);
+			});
+
 			return buffer;
 		},
-		deserialize: function(buffer) {
-			var teamView = new DataView(buffer, 1),
-				teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"],
-				val = {},
-				i = 0;
-			teams.forEach(function(team) {
-				val[team] = teamView.getUint32(i);
-				i += 4;
+		deserialize: function(buffer, definedTeams) {
+			var view = new DataView(buffer, 1),
+				val = {};
+			definedTeams.sort().forEach(function(team, i) {
+				val[team] = view.getUint32(i*4);
 			});
 
 			return val;
@@ -565,4 +581,4 @@ const MESSAGE = {
 	PLAY_SOUND: 666,
 };
 
-if (isNode) module.exports.MESSAGE = MESSAGE;
+if (isNode) module.exports = MESSAGE;

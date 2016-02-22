@@ -129,7 +129,7 @@ function doPrediction(universe, players, enemies, shots) {
 	});
 	_doPrediction._oldTimestamp = _doPrediction._newTimestamp;
 };
-function doPhysics(universe, players, planets, enemies, shots, isClient, gameProgress) {
+function doPhysics(universe, players, planets, enemies, shots, isClient, teamScores) {
 	var sounds = [];
 	var playersOnPlanets = new Array(planets.length);
 
@@ -236,7 +236,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, gamePro
 					else player.attachedPlanet = suitablePlanets[Math.floor(Math.random() * suitablePlanets.length)];
 					player.health = 8;
 					player.fuel = 400;
-					gameProgress[player.appearance] -= 5;
+					teamScores[player.appearance] -= 5;
 				}
 				shots.splice(si, 1);
 			}

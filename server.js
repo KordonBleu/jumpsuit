@@ -4,7 +4,7 @@ var fs = require("fs"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
 	colors = require("colors"),
-	MESSAGE = require("./static/message.js").MESSAGE,
+	MESSAGE = require("./static/message.js"),
 	engine = require("./static/engine.js"),
 	vinage = require("./static/vinage/vinage.js"),
 
@@ -245,7 +245,7 @@ function Lobby(name, maxPlayers) {
 	this.getScores = function() {
 		//TODO: send player scores too
 		var i = {}, a;
-		for (a in this.gameProgress) if (a.indexOf("alien") !== -1) i[a] = this.gameProgress[a];
+		for (a in this.teamScores) if (a.indexOf("alien") !== -1) i[a] = this.teamScores[a];
 		return i;
 	};
 
@@ -271,39 +271,36 @@ function Lobby(name, maxPlayers) {
 			this.enemies.forEach(function (enemy){
 				if (!wellPositioned) return;
 				if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
-			}.bind(this));
+			}, this);
 			this.planets.forEach(function (planet){
 				if (!wellPositioned) return;
 				if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
-			}.bind(this));
+			}, this);
 			if (wellPositioned) this.enemies.push(newEnemy);
 			iterations++;
 		}
 
-		this.availableTeams = [];
 		this.teams = {};
+		this.teamScores = {};
 		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
 
-		while (this.availableTeams.length !== 2) {
-			var _t = Math.floor(Math.random() * _teams.length);
-			this.teams[_teams[_t]] = [];
-			this.availableTeams.push(_teams[_t]);
-			_teams.splice(_t, 1);
+		for (let teamNumber = 0; teamNumber !== 2; ++teamNumber) {
+			let teamIndex = Math.floor(Math.random() * _teams.length);
+			this.teams[_teams[teamIndex]] = [];
+			this.teamScores[_teams[teamIndex]] = 0;
+			_teams.splice(teamIndex, 1);
 		}
-		this.gameProgress = {};
-		this.gameProgress[this.availableTeams[0]] = 0;
-		this.gameProgress[this.availableTeams[1]] = 0;
 
 		this.players.forEach(function(player) {//TODO: This. Better.
 			var ws = player.ws;
 			player = new engine.Player(player.name); //resetPlayers for team-reassignment
 			player.ws = ws;
-		}.bind(this));
+		}, this);
 	};
 	this.assignPlayerTeam = function(player) {
-		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
-		if (this.teams[this.availableTeams[0]].length === this.teams[this.availableTeams[1]].length) player.appearance = this.availableTeams[Math.random() > 0.5 ? 1 : 0];
-		else player.appearance = this.availableTeams[this.teams[this.availableTeams[0]].length > this.teams[this.availableTeams[1]].length ? 1 : 0];
+		var teamsPlaying = Object.keys(this.teams);
+		if (this.teams[teamsPlaying[0]].length === this.teams[teamsPlaying[1]].length) player.appearance = teamsPlaying[Math.round(Math.random())];
+		else player.appearance = teamsPlaying[this.teams[teamsPlaying[0]].length > this.teams[teamsPlaying[1]].length ? 1 : 0];
 		this.teams[player.appearance].push(player.pid);
 		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 		player.box.angle = Math.random() * Math.PI;
@@ -357,7 +354,7 @@ Lobby.prototype.update = function() {
 	for (var i = 0; i < this.players.length; i++) if (this.players[i] !== undefined && this.players[i].appearance === undefined) this.assignPlayerTeam(this.players[i]);
 
 	var oldDate = Date.now(), playerData = [],
-	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.gameProgress);
+	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
 
 	this.processTime = Date.now() - oldDate;
 
@@ -383,7 +380,6 @@ Lobby.prototype.update = function() {
 						planets: this.planets.getGameData(),
 						enemies: this.enemies.getGameData(),
 						shots: this.shots.getGameData(),
-						gameProgress: this.gameProgress
 					}
 				}));
 				player.needsUpdate = true;
@@ -393,7 +389,7 @@ Lobby.prototype.update = function() {
 			player.needsUpdate = false;
 			setTimeout(updPlayer.bind(this), 40);
 		}
-	}.bind(this));
+	}, this);
 };
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
@@ -433,8 +429,9 @@ setInterval(function() {
 setInterval(function() {
 	lobbies.forEach(function(lobby) {
 		lobby.planets.forEach(function(planet) {
-			if (planet.progress.value >= 80) this.gameProgress[planet.progress.team]++;
+			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
 		}, lobby);
+		lobby.broadcast(MESSAGE.SCORES.serialize(lobby.teamScores), wsOptions);
 	});
 }, 1000)
 
@@ -478,7 +475,7 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function(lobby) {
 			lobby.players.some(function(player, i) {
 				if (player.ws === ws) {
-					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player:" + lobby.players[i].name);
+					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + lobby.players[i].name);
 					delete lobby.players[i];
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]), wsOptions);
 					return true;
@@ -524,7 +521,7 @@ wss.on("connection", function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 
-					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players), wsOptions);
+					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), wsOptions, player)
 					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 				}

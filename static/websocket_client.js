@@ -1,6 +1,7 @@
 "use strict";
 
-var ownIdx = null;
+var ownIdx = null,
+	enabledTeams = [];
 
 function Connection(address) {
 	this.lastControls = {};
@@ -150,13 +151,6 @@ Connection.prototype.messageHandler = function(message) {
 						fuelElement.value = msg.data.players[i].fuel;
 					}
 				}
-				for (var i in msg.data.gameProgress){
-					var element = document.getElementById("gui-points-" + i);
-					if (element !== null){
-						element.textContent = msg.data.gameProgress[i];
-						element.style.display = "inline-block";
-					}
-				}
 				if (!game.started) game.start();
 				break;
 			case MESSAGE.PLAY_SOUND:
@@ -208,6 +202,7 @@ Connection.prototype.messageHandler = function(message) {
 		case MESSAGE.CONNECT_ACCEPTED.value:
 			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
 			ownIdx = val.playerId;
+			enabledTeams = val.enabledTeams;
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
 
@@ -246,9 +241,7 @@ Connection.prototype.messageHandler = function(message) {
 			var val = MESSAGE.REMOVE_ENTITY.deserialize(message.data);
 			val.playerIds.forEach(function(id) {
 				printChatMessage(undefined, undefined, players[id].name + " has left the game");
-				console.log(players);
 				delete players[id];
-				console.log(players);
 			});
 		case MESSAGE.LOBBY_LIST.value:
 			if (printLobbies.list === undefined) {//first time data is inserted
@@ -272,13 +265,22 @@ Connection.prototype.messageHandler = function(message) {
 			printPlayerList();
 			break;
 		case MESSAGE.SCORES.value:
-			var val = MESSAGE.SCORES.deserialize(message.data),
-				b = [], a;
-			for (a in val) b.push([a, val[a]]);
+			var val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
+
+			for (let team in val) {
+				var element = document.getElementById("gui-points-" + team);
+				if (element !== null) {
+					element.textContent = val[team];
+					element.style.display = "inline-block";
+				}
+			}
+			//TODO: when game ends, display scores
+			//below is some old code that used to do this
+			/*for (a in val) b.push([a, val[a]]);
 			b.sort(function(a, c){ return a[1]-c[1]; });
 			b.forEach(function(a, i){
 				if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
-			});
+			});*/
 			break;
 	}
 };

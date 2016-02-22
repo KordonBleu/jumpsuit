@@ -5,11 +5,12 @@ Strings used by the JumpSuit's protocol are always encoded as UTF-8. When the pr
 
 ## Notation
 
+Referring to a value is done by enclosing it between backticks.
 Possible values for a field are noted:
- * with a number for the packet type (ex: 4)
- * with lowercase words for variables (ex: player name)
- * with lowercase words starting with a uppercase character for enumerations (ex: Error Type)
- * with uppercase snake case for packets and subpayloads (ex: CREATE_LOBBY)
+ * with a number for the packet type (ex: `4`)
+ * with lowercase words for variables (ex: `player name`)
+ * with lowercase words starting with a uppercase character for enumerations (ex: `Error Type`)
+ * with uppercase snake case for packets and subpayloads (ex: `CREATE_LOBBY`)
 
 Values are enclosed in boxes.
 The minus signs (-) indicates the value is required and not repeated.
@@ -27,19 +28,6 @@ The equal sign (=) indicates the value is optional and repeated.
 +================+
 | repeated value |
 +================+
-
-
-## Packet type
-
-The first byte of every packet determines its type. A payload may be placed after this first byte.
-
-   1B       ?B
-+------+-----------
-| Type | payload...
-+------+-----------
-
-There are 17 packet types.
-
 
 
 ## Subpayloads
@@ -70,7 +58,7 @@ They might be used several times in a packet or in packets with different types.
 | x-coordinate | y-coordinate | Appearance |
 +--------------+--------------+------------+
 
-Appearance must be either:
+`Appearance` must be either:
  0. enemyBlack1
  1. enemyBlack2
  2. enemyBlack3
@@ -95,20 +83,20 @@ Appearance must be either:
 
 ### PLAYER
 
-      2B             2B               1B            4B        1b         1b          3b           3b           1B       0-255B
-+--------------+--------------+-----------------+-------+------------+---------+------------+------------+-------------+------+
-| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Appearance | Walk Frame | name length | name |
-+--------------+--------------+-----------------+-------+------------+---------+------------+------------+-------------+------+
+      2B             2B               1B            4B        1b         1b       3b        3b           1B       0-255B
++--------------+--------------+-----------------+-------+------------+---------+------+------------+-------------+------+
+| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Team | Walk Frame | name length | name |
++--------------+--------------+-----------------+-------+------------+---------+------+------------+-------------+------+
 
-If attached planet's value is 255, the player is not attached to a planet.
-Walk Frame must be either:
+If `attached planet`'s value is 255, the player is not attached to a planet.
+`Walk Frame` must be either:
  0. duck
  1. hurt
  2. jump
  3. stand
  4. walk1
  5. walk2
-Appearance must be either:
+`Team must` be either:
  0. blue
  1. beige
  2. green
@@ -125,7 +113,17 @@ Appearance must be either:
 
 
 
-## Payload
+## Packets
+
+The first byte of every packet determines its type. A payload may be placed after this first byte. The payload may contain subpayloads or payloads.
+
+   1B       ?B
++------+-----------
+| Type | payload...
++------+-----------
+
+There are 17 packet types.
+
 
 ### GET_LOBBY_LIST (client -> server)
 
@@ -179,10 +177,13 @@ The server will respond with either CONNECT_ACCEPTED or an ERROR.
 
 ### CONNECT_ACCEPTED (server -> client)
 
- 1B       1B            4B                4B
-+---+-----------+----------------+-----------------+------------+
-| 6 | player id | universe width | universe height | ADD_ENTITY |
-+---+-----------+----------------+-----------------+------------+
+ 1B       1B            4B                4B              3b           1b          1b           1b          1b           1b            ?B
++---+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
+| 6 | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
++---+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
+
+The values of `beige team`, `blue team`, `green team`, `pink team`, `yellow team` are 1 if enabled, 0 if not.
+Note: three unused bits are present out of necessity to complete a byte.
 
 
 ### ERROR (server -> client)
@@ -192,7 +193,7 @@ The server will respond with either CONNECT_ACCEPTED or an ERROR.
 | 7 | Error Type |
 +---+------------+
 
-Error Type must be either:
+`Error Type` must be either:
  0. no lobby avalaible
  1. no slot avalaible
  2. name taken
@@ -216,7 +217,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 | 9 | Lobby State | timer |
 +---+-------------+~~~~~~~+
 
-Lobby State must be either:
+`Lobby State` must be either:
  0. waiting for players
  1. game started
  2. game over
@@ -255,7 +256,7 @@ Note: this is yet encoded as JSON.
 | 13 | unused bits | jump | run | crouch | jetpack | move left | move right |
 +----+-------------+------+-----+--------+---------+-----------+------------+
 
-The values of jump, run, crouch, jetpack, move left and move right are 1 if enabled, 0 if not.
+The values of `jump`, `run`, `crouch`, `jetpack`, `move left` and `move right` are 1 if enabled, 0 if not.
 Note: two unused bits are present out of necessity to complete a byte.
 
 
@@ -277,14 +278,10 @@ Note: two unused bits are present out of necessity to complete a byte.
 
 ### SCORES (server -> client)
 
-  1B       1B            1B           4B                  4B
-+----+------------+-------------+------------------+-------------------+
-| 16 | First Team | Second Team | first team score | second team score |
-+----+------------+-------------+------------------+-------------------+
+  1B       4B
++----+============+
+| 16 | team score |
++----+============+
 
-The First Team and Second Team must be either:
- 0. beige team
- 1. blue team
- 2. green team
- 3. pink team
- 4. yellow team
+There are as many `team score`s as there are teams. Which teams are playing has already been sent with a CONNECT_ACCEPTED message.
+The order `team score`s can be mapped to teams is as follow (provided the teams are enabled): beige team, blue team, green team, pink team, yellow team.

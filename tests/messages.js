@@ -1,10 +1,10 @@
-//load this file in Node's command prompt by typing .load tests/message_add_entity.js
+//load this file in Node's command prompt by typing .load tests/messages.js
 
 delete require.cache[require.resolve("../static/engine.js")];
 var engine = require("../static/engine.js");
 
 delete require.cache[require.resolve("../static/message.js")];
-var message = require("../static/message.js").MESSAGE;
+var message = require("../static/message.js");
 
 delete require.cache[require.resolve("../static/vinage/vinage.js")];
 var vinage = require("../static/vinage/vinage.js");
@@ -36,11 +36,15 @@ players[0].fuel = 255;
 players[0].jetpack = true;
 players[1].looksLeft = true;
 
-//var buf = message.ADD_ENTITY.serialize(planets, enemies, shots, players);
+var teams = ["alienBlue", "alienGreen", "alienYellow"];
 
-//var res = message.ADD_ENTITY.deserialize(buf);
+/* ADD_ENTITY */
+var buf1 = message.ADD_ENTITY.serialize(planets, enemies, shots, players);
+
+var res1 = message.ADD_ENTITY.deserialize(buf1);
 
 
-var buf = message.CONNECT_ACCEPTED.serialize(10, 6400, 6400, planets, enemies, shots, players);
+/* CONNECT_ACCEPTED */
+var buf2 = message.CONNECT_ACCEPTED.serialize(10, 6400, 6400, planets, enemies, shots, players, teams);
 
-var res = message.CONNECT_ACCEPTED.deserialize(buf);
+var res2 = message.CONNECT_ACCEPTED.deserialize(buf2);
