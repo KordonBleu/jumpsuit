@@ -601,15 +601,14 @@ label.range-label{
 	width: 80px;
 	display: inline-block;
 }
-#gui-chat:empty:before {
+#gui-chat p:first-child:nth-last-child(1):before {
 	cursor: inherit;
 	position: relative;
 	left: 50%;
 	content: "No messages";
 	color: rgba(120, 120, 120, 0.8);
 	font-size: 14px;
-	width: 120px;
-	margin-left: -60px;
+	transform: translateX(-50%);
 }
 #gui-chat {
 	position: fixed;
@@ -617,7 +616,7 @@ label.range-label{
 	left: 18px;
 	font-size: 14px;
 	width: 300px;
-	height: 60%;
+	height: calc(100vh - 4vh - 270px); /*div ends 15px above controls*/
 	-webkit-user-select: initial;
 	-moz-user-select: initial;
 	-ms-user-select: initial;

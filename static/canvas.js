@@ -185,8 +185,8 @@ function loop() {
 
 	game.offset.x = (players[ownIdx].box.center.x - canvas.width / 2 + game.dragSmoothed.x);
 	game.offset.y = (players[ownIdx].box.center.y - canvas.height / 2 + game.dragSmoothed.y);
-	windowBox.center.x = canvas.clientWidth/2 + game.offset.x;
-	windowBox.center.y = canvas.clientHeight/2 + game.offset.y;
+	windowBox.center.x = canvas.clientWidth / 2 + game.offset.x;
+	windowBox.center.y = canvas.clientHeight / 2 + game.offset.y;
 
 	//planet
 	var playerInAtmos = false;
@@ -236,16 +236,8 @@ function loop() {
 
 	//particles
 	particles.forEach(function(particle, index, array){
-		if (particle.lifetime >= particle.maxLifetime) {
-			array.splice(index, 1);
-			return;
-		}
-		particle.lifetime++;
-		particle.box.center.x += particle.velocity.x;
-		particle.box.center.y -= particle.velocity.y;
-		particle.box.angle += particle.rotSpeed;
-		particle.size *= 0.95;
-		drawRotatedImage(resources["jetpackParticle"], particle.box.center.x - game.offset.x, particle.box.center.y - game.offset.y, particle.box.angle, false, particle.size, particle.size);
+		if (particle.update()) array.splice(index, 1);
+		else drawRotatedImage(resources["jetpackParticle"], particle.box.center.x - game.offset.x, particle.box.center.y - game.offset.y, particle.box.angle, false, particle.size, particle.size);
 	});
 
 	//players
@@ -332,4 +324,12 @@ function Particle(size, startX, startY, lifetime) {
 	this.lifetime = 0;
 	this.rotSpeed = Math.random() * Math.PI * 0.04;
 	this.velocity = {x: (Math.random() * 2 - 1) * 2 * Math.sin(this.box.angle), y: (Math.random() * 2 - 1) * 2 * Math.cos(this.box.angle)};
+	this.update = function(){
+		this.lifetime++;
+		this.box.center.x += this.velocity.x;
+		this.box.center.y += this.velocity.y;
+		this.box.angle += this.rotSpeed;
+		this.size *= 0.95;
+		return this.lifetime >= this.maxLifetime;
+	}
 }

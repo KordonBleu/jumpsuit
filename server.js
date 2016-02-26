@@ -313,7 +313,6 @@ Lobby.prototype.update = function() {
 	if (this.players.length !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
 	//actually this is just a hack to make set the timer interval to 1s... maybe move it to a new function that runs a 1s interval
 	if (this.state === this.stateEnum.WAITING) {
-
 		this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.state, this.stateTimer), wsOptions);
 		if (this.stateTimer <= 0) {
 			this.resetWorld();
@@ -342,13 +341,16 @@ Lobby.prototype.update = function() {
 		if (player.appearance === undefined) this.assignPlayerTeam(player);
 	}, this);
 
-	var oldDate = Date.now(), playerData = [],
+
+	var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
 		shotsDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
+
 
 	this.processTime = Date.now() - oldDate;
 
 	if (shotsDelta.removed.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], shotsDelta.removed, []));
 	if (shotsDelta.added.length != 0) this.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], shotsDelta.added, []));
+
 
 	this.players.forEach(function(player, i) {
 		function truncTo(number, decimalNbr) {
@@ -360,6 +362,7 @@ Lobby.prototype.update = function() {
 			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft, jetpack: player.jetpack
 		};
 	});
+
 	this.players.forEach(function(player) {
 		function updPlayer() {
 			try {
@@ -380,6 +383,7 @@ Lobby.prototype.update = function() {
 			setTimeout(updPlayer.bind(this), 40);
 		}
 	}, this);
+	this.processTime = Date.now() - oldDate;
 };
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
