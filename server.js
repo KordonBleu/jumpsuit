@@ -194,26 +194,14 @@ var lobbies = [],
 	wss = new WebSocketServer({server: server});
 
 function Lobby(name, maxPlayers) {
-	this.players = new Array(maxPlayers || 8);
+	this.players = [];
+	this.maxPlayers = maxPlayers;
 	this.planets = [];
 	this.enemies = [];
 	this.shots = [];
 	this.processTime = 2;
 	this.state = this.stateEnum.WAITING;
 	this.stateTimer = config.dev ? 0 : 30;
-	this.players.firstEmpty = function() {
-		for (var i = 0; i < this.length; i++){
-			if (this[i] === undefined) return i;
-		}
-		return -1;
-	};
-	this.players.amount = function() {
-		var amount = 0;
-		this.forEach(function(player) {
-			if (player !== undefined) amount++;
-		});
-	 	return amount;
-	};
 	this.players.getData = function() {
 		var plData = [];
 		this.forEach(function(player) {
@@ -231,7 +219,7 @@ function Lobby(name, maxPlayers) {
 	this.shots.getGameData = function() {
 		var shotData = [];
 		this.forEach(function(shot) {
-			shotData.push({x: shot.box.center.x, y: shot.box.center.y, angle: shot.box.angle, lt: shot.lt});
+			shotData.push({x: shot.box.center.x, y: shot.box.center.y, angle: shot.box.angle});
 		});
 		return shotData;
 	};
@@ -308,7 +296,6 @@ function Lobby(name, maxPlayers) {
 	};
 	this.resetWorld();
 	this.name = name;
-	this.maxPlayers = maxPlayers;
 }
 Lobby.prototype.stateEnum = {
 	WAITING: 0,
@@ -323,7 +310,7 @@ Lobby.prototype.broadcast = function(message, options, exclude) {
 	});
 };
 Lobby.prototype.update = function() {
-	if (this.players.amount() !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
+	if (this.players.length !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
 	//actually this is just a hack to make set the timer interval to 1s... maybe move it to a new function that runs a 1s interval
 	if (this.state === this.stateEnum.WAITING) {
 
@@ -351,30 +338,33 @@ Lobby.prototype.update = function() {
 		}
 	}
 
-	for (var i = 0; i < this.players.length; i++) if (this.players[i] !== undefined && this.players[i].appearance === undefined) this.assignPlayerTeam(this.players[i]);
+	this.players.forEach(function(player) {
+		if (player.appearance === undefined) this.assignPlayerTeam(player);
+	}, this);
 
 	var oldDate = Date.now(), playerData = [],
-	sounds = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
+		shotsDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
 
 	this.processTime = Date.now() - oldDate;
 
-	this.broadcast(JSON.stringify({msgType: MESSAGE.PLAY_SOUND, data: sounds}));//TODO: add them to a queue so they can be all sent together
+	if (shotsDelta.removed.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], shotsDelta.removed, []));
+	if (shotsDelta.added.length != 0) this.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], shotsDelta.added, []));
 
 	this.players.forEach(function(player, i) {
 		function truncTo(number, decimalNbr) {
 			var lel = Math.pow(10, decimalNbr);
 			return Math.round(number * lel) / lel;
 		}
-		playerData[i] = (player !== undefined) ? {x: truncTo(player.box.center.x, 3), y: truncTo(player.box.center.y, 3), attachedPlanet: player.attachedPlanet,
+		playerData[i] = {x: truncTo(player.box.center.x, 3), y: truncTo(player.box.center.y, 3), attachedPlanet: player.attachedPlanet,
 			angle: truncTo(player.box.angle, 4), walkFrame: player.walkFrame, health: player.health, fuel: player.fuel,
 			name: player.name, appearance: player.appearance, looksLeft: player.looksLeft, jetpack: player.jetpack
-		} : null;
+		};
 	});
 	this.players.forEach(function(player) {
 		function updPlayer() {
 			try {
 				player.ws.send(JSON.stringify({
-					msgType: MESSAGE.GAME_DATA,
+					msgType: MESSAGE.GAME_STATE,
 					data: {
 						players: playerData,
 						planets: this.planets.getGameData(),
@@ -393,7 +383,6 @@ Lobby.prototype.update = function() {
 };
 Lobby.prototype.pingPlayers = function() {
 	this.players.forEach(function(player) {
-		if (player === undefined) return;
 		player.lastPing = Date.now();
 		player.ws.ping(undefined, undefined, true);
 	});
@@ -458,7 +447,7 @@ function monitoring() {
 	console.log(header);
 	lobbies.forEach(function(lobby) {
 		var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
-			amount = lobby.players.amount().toString(),
+			amount = lobby.players.length.toString(),
 			processTime = lobby.processTime.toString();
 		info += " | " + amount + genSpaces(headerSizes[1] - amount.length);
 		info += " | " + processTime;
@@ -473,10 +462,10 @@ if(config.monitor) {
 wss.on("connection", function(ws) {
 	function cleanup() {
 		lobbies.forEach(function(lobby) {
-			lobby.players.some(function(player, i) {
+			lobby.players.some(function(player, i, players) {
 				if (player.ws === ws) {
-					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + lobby.players[i].name);
-					delete lobby.players[i];
+					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
+					players.splice(i, 1);
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]), wsOptions);
 					return true;
 				}
@@ -489,7 +478,7 @@ wss.on("connection", function(ws) {
 			case MESSAGE.GET_LOBBIES.value:
 				var lobbyList = [];
 				lobbies.forEach(function(lobby, i) {
-					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.amount(), maxPlayers: lobby.maxPlayers});
+					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.length, maxPlayers: lobby.maxPlayers});
 				});
 				ws.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
 				break;
@@ -513,15 +502,14 @@ wss.on("connection", function(ws) {
 
 				if (player === undefined) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN), wsOptions);
 				else if (lobby === undefined) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY), wsOptions);
-				else if (lobby.players.amount() === lobby.maxPlayers) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT), wsOptions);
+				else if (lobby.players.length === lobby.maxPlayers) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT), wsOptions);
 				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN), wsOptions);
 				else {
-					var pid = lobby.players.firstEmpty();
-					lobby.players.splice(pid, 1, player);
+					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 
-					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
+					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), wsOptions, player)
 					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 				}

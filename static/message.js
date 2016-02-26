@@ -325,7 +325,7 @@ const MESSAGE = {
 				view.setUint8(5 + offset + i*5, this.ENEMY_APPEARANCE[enemy.appearance]);
 			}, this);
 
-			offset += 5*enemies.length;
+			offset += 1 + 5*enemies.length;
 			view.setUint8(offset, shots.length);
 			shots.forEach(function(shot, i) {
 				view.setUint16(1 + offset + i*9, shot.box.center.x);
@@ -364,7 +364,7 @@ const MESSAGE = {
 				shots = [],
 				players = [];
 
-			for(var i = 2; i !== 6*view.getUint8(1) + 2; i += 6) {
+			for (var i = 2; i !== 6*view.getUint8(1) + 2; i += 6) {
 				planets.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
@@ -381,8 +381,8 @@ const MESSAGE = {
 				});
 			}
 
-			lim = i + 9*view.getUint8(i -1);
-			for (; i !== lim; i+= 9) {
+			lim = i + 1 + 9*view.getUint8(i);
+			for (++i; i !== lim; i+= 9) {
 				shots.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
@@ -391,7 +391,7 @@ const MESSAGE = {
 				});
 			}
 
-			while (i !== buffer.byteLength - 1) {
+			while (i !== buffer.byteLength) {
 				var nameLgt = view.getUint8(i + 10),
 					enumByte = view.getUint8(i + 9);
 				players.push({
@@ -472,7 +472,7 @@ const MESSAGE = {
 		}
 	},
 
-	GAME_DATA: 12,
+	GAME_STATE: 12,
 
 	PLAYER_CONTROLS: {
 		value: 13,
@@ -572,13 +572,14 @@ const MESSAGE = {
 
 			return val;
 		}
-	},
-	toString: function(val) {
+	}
+};
+Object.defineProperty(MESSAGE, "toString", {
+	value: function(val) {
 		var res = Object.keys(this);
 		return res !== undefined && res[val] !== undefined ? res[val] : "UNKNOWN";
 	},
-
-	PLAY_SOUND: 666,
-};
+	enumerable: false
+});
 
 if (isNode) module.exports = MESSAGE;

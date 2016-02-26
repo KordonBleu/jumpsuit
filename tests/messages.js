@@ -13,7 +13,7 @@ var vinage = require("../static/vinage/vinage.js");
 var planets = [
 		new engine.Planet(12, 434, 23),
 		new engine.Planet(654, 12, 38),
-		new engine.Planet(43, 487, 76),
+		new engine.Planet(43, 487, 76)
 	],
 	enemies = [
 		new engine.Enemy(38, 98),
@@ -27,8 +27,6 @@ var planets = [
 	players = [
 		new engine.Player("Charles"),
 		new engine.Player("Lucette"),
-		,
-		,
 	];
 players[0].box = new vinage.Rectangle(new vinage.Point(12, 444), 55, 92);
 players[1].box = new vinage.Rectangle(new vinage.Point(98, 342), 58, 102);
@@ -45,6 +43,6 @@ var res1 = message.ADD_ENTITY.deserialize(buf1);
 
 
 /* CONNECT_ACCEPTED */
-var buf2 = message.CONNECT_ACCEPTED.serialize(10, 6400, 6400, planets, enemies, shots, players, teams);
+//var buf2 = message.CONNECT_ACCEPTED.serialize(10, 6400, 6400, planets, enemies, shots, players, teams);
 
-var res2 = message.CONNECT_ACCEPTED.deserialize(buf2);
+//var res2 = message.CONNECT_ACCEPTED.deserialize(buf2);

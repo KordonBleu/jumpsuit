@@ -68,7 +68,7 @@ Connection.prototype.messageHandler = function(message) {
 	//try {
 		var msg = JSON.parse(message.data);
 		switch(msg.msgType) {
-			case MESSAGE.GAME_DATA:
+			case MESSAGE.GAME_STATE:
 				msg.data.planets.forEach(function(planet, i) {
 					planets[i].progress = planet;
 				});
@@ -87,21 +87,10 @@ Connection.prototype.messageHandler = function(message) {
 				});
 
 				for (var i = 0; i !== msg.data.players.length; i++) {
-					if (msg.data.players[i] === undefined && players[i] !== undefined) {
-						delete players[i];
-						continue;
-					}
 
 					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
 					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
 					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
-					if (players[i] === undefined) {
-						if (msg.data.players[i] !== undefined) {
-							players[i] = new Player(msg.data.players[i].name);
-							players[i].box = new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle);
-							players[i].appearance = msg.data.players[i].appearance;
-						} else continue;
-					}
 
 					if (i === ownIdx) {
 						if(!players[i].jetpack && msg.data.players[i].jetpack) {
@@ -153,15 +142,6 @@ Connection.prototype.messageHandler = function(message) {
 				}
 				if (!game.started) game.start();
 				break;
-			case MESSAGE.PLAY_SOUND:
-				msg.data.forEach(function(sound) {
-					switch(sound.type) {
-						case "laser":
-							laserModel.makeSound(makePanner(sound.position.x - players[ownIdx].box.center.x, sound.position.y - players[ownIdx].box.center.y)).start(0);
-							break;
-					}
-				});
-				break;
 		}
 	/*} catch(err) {
 		console.error(err, err.stack);
@@ -185,15 +165,15 @@ Connection.prototype.messageHandler = function(message) {
 			alert("Error:\n" + errDesc);
 			break;
 		case MESSAGE.LOBBY_STATE.value:
-			var val = MESSAGE.LOBBY_LIST.deserialize(message.data);
+			var val = MESSAGE.LOBBY_STATE.deserialize(message.data);
 			if (val.state === 0){
 				statusElement.textContent = "Waiting for players... " + val.timer;
 				teamListElement.className = "hidden";
-			} else if (val.state === 1){
+			} else if (val.state === 1) {
 				if (!game.started && players.length !== 0) game.start();
 				teamListElement.className = "hidden";
 				statusElement.textContent = "Match is running " + val.timer;
-			} else if (val.state === 2){
+			} else if (val.state === 2) {
 				if (game.started) game.stop();
 				teamListElement.className = "";
 				statusElement.textContent = "Match is over " + val.timer;
@@ -235,14 +215,26 @@ Connection.prototype.messageHandler = function(message) {
 
 			val.players.forEach(function(player) {
 				printChatMessage(undefined, undefined, player.name + " joined the game");
+				players.push(new Player(player.name, player.appearance, player.walkFrame, player.attachedPlanet, player.jetpack, player.health));
+			});
+			val.shots.forEach(function(shot) {
+				laserModel.makeSound(makePanner(shot.x - players[ownIdx].box.center.x, shot.y - players[ownIdx].box.center.y)).start(0);
+				shots.push(new Shot(shot.x, shot.y, shot.angle));
 			});
 			break;
 		case MESSAGE.REMOVE_ENTITY.value:
 			var val = MESSAGE.REMOVE_ENTITY.deserialize(message.data);
 			val.playerIds.forEach(function(id) {
 				printChatMessage(undefined, undefined, players[id].name + " has left the game");
-				delete players[id];
+				players.splice(id, 1);
+				if (id < ownIdx) --ownIdx;
 			});
+			val.shotIds.forEach(function(id) {
+				deadShots.push(shots[id]);
+				deadShots[deadShots.length - 1].lifeTime = 0;
+				shots.splice(id, 1);
+			});
+			break;
 		case MESSAGE.LOBBY_LIST.value:
 			if (printLobbies.list === undefined) {//first time data is inserted
 				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);

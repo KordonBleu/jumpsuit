@@ -96,15 +96,18 @@ function Planet(x, y, radius) {
 }
 Planet.prototype.teamColors = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
 
-
 function Enemy(x, y, appearance) {
 	this.appearance = appearance || "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
 	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
 	this.aggroBox = new Circle(new Point(x, y), 350);
 	this.fireRate = 0;
-	this.shots = [];
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
+
+function Shot(x, y, angle) {
+	this.box = new Rectangle(new Point(x, y), resources["laserBeam"].width, resources["laserBeam"].height, angle);
+	this.lifeTime = 100;
+}
 
 
 var _doPrediction = {};
@@ -130,35 +133,13 @@ function doPrediction(universe, players, enemies, shots) {
 	_doPrediction._oldTimestamp = _doPrediction._newTimestamp;
 };
 function doPhysics(universe, players, planets, enemies, shots, isClient, teamScores) {
-	var sounds = [];
-	var playersOnPlanets = new Array(planets.length);
+	var playersOnPlanets = new Array(planets.length),
+		shotsDelta = {
+			added: [],
+			removed: []
+		};
 
 
-	shots.forEach(function(shot, si) {
-		shot.box.center.x += (shot.lt <= 0) ? 0 : Math.sin(shot.box.angle) * 18;
-		shot.box.center.y += (shot.lt <= 0) ? 0 : -Math.cos(shot.box.angle) * 18;
-		if(--shot.lt <= -20) shots.splice(si, 1);
-	});
-	enemies.forEach(function(enemy) {
-		var playerToHit = null;
-		players.forEach(function(player) {
-			if (universe.collide(enemy.aggroBox, player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
-				playerToHit = player;
-			}
-		});
-		if(playerToHit === null) {
-			enemy.fireRate = 0;
-			enemy.box.angle += Math.PI/150;
-		} else {
-			enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - playerToHit.box.center.x, enemy.box.center.y - playerToHit.box.center.y);
-			if (++enemy.fireRate >= 20) {
-				playerToHit.lastlyAimedAt = Date.now();
-				enemy.fireRate = 0;
-				shots.push({box: new Rectangle(new Point(enemy.box.center.x, enemy.box.center.y), resources["laserBeam"].width, resources["laserBeam"].height, enemy.box.angle - Math.PI), lt: 200});
-				sounds.push({type: "laser", position: {x: enemy.box.center.x, y: enemy.box.center.y}});
-			}
-		}
-	});
 	players.forEach(function(player) {
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === "undefined") playersOnPlanets[player.attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
@@ -222,13 +203,19 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			player.box.center.y = (6400 + player.box.center.y) % 6400;
 		}
 		player.setWalkFrame();
-
-		shots.forEach(function(shot, si) {
-			if (universe.collide(new Circle(shot.box.center, 40), player.box)) {
+	});
+	shots.forEach(function(shot, si) {
+		shot.box.center.x += Math.sin(shot.box.angle) * 18;
+		shot.box.center.y += -Math.cos(shot.box.angle) * 18;
+		if (--shot.lifeTime <= 0) {
+			shotsDelta.removed.push(shot);
+			shots.splice(si, 1);
+		} else players.forEach(function(player) {
+			if (universe.collide(new Circle(shot.box.center, 40), player.box)) {//needed as long as Node.js doesn't support Proxies
 				player.health -= (player.health = 0) ? 0 : 1;
-				if (player.health <= 0){
+				if (player.health <= 0) {
 					var suitablePlanets = [];
-					planets.forEach(function(planet, pi){
+					planets.forEach(function(planet, pi) {
 						if (planet.progress.team === player.appearance) suitablePlanets.push(pi);
 					});
 					player.box.angle = 0;
@@ -238,11 +225,34 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 					player.fuel = 400;
 					teamScores[player.appearance] -= 5;
 				}
+				shotsDelta.removed.push(shot);
 				shots.splice(si, 1);
 			}
 		});
 	});
-	if (isClient) return sounds;
+	enemies.forEach(function(enemy) {
+		var playerToHit = null;
+		players.forEach(function(player) {
+			if (universe.collide(enemy.aggroBox, player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
+				playerToHit = player;
+			}
+		});
+		if (playerToHit === null) {
+			enemy.fireRate = 0;
+			enemy.box.angle += Math.PI/150;
+		} else {
+			enemy.box.angle = Math.PI - Math.atan2(enemy.box.center.x - playerToHit.box.center.x, enemy.box.center.y - playerToHit.box.center.y);
+			if (++enemy.fireRate >= 20) {
+				playerToHit.lastlyAimedAt = Date.now();
+				enemy.fireRate = 0;
+				let newShot = new Shot(enemy.box.center.x, enemy.box.center.y, enemy.box.angle - Math.PI)
+				shots.push(newShot);
+				shotsDelta.added.push(newShot);
+			}
+		}
+	});
+
+	if (isClient) return shotsDelta;
 	for (var i = 0; i < playersOnPlanets.length; i++){
 		if (typeof playersOnPlanets[i] === "undefined") continue;
 		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
@@ -251,12 +261,12 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 
 		if (max > 0){
 			var team, a, b = 0;
-			while (toArray.indexOf(max) !== -1){
+			while (toArray.indexOf(max) !== -1) {
 				a = toArray.indexOf(max);
 				b++;
 				toArray.splice(a, 1);
 			}
-			if (b >= 2) return sounds;
+			if (b >= 2) return shotsDelta;
 			team = teams[a];
 			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
 			else {
@@ -269,7 +279,8 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			planets[i].progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
 		}
 	}
-	return sounds;
+
+	return shotsDelta;
 }
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {

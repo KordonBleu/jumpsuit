@@ -97,11 +97,11 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
  4. walk1
  5. walk2
 `Team must` be either:
- 0. blue
- 1. beige
- 2. green
- 3. pink
- 4. yellow
+ 0. blue team
+ 1. beige team
+ 2. green team
+ 3. pink team
+ 4. yellow team
 
 
 ### SHOT
@@ -110,6 +110,36 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
 +-------------------------------------------------+
 | x-coordinate | y-coordinate | angle | life time |
 +--------------+--------------+-------+-----------+
+
+
+### LESSER_PLANET
+
+     1B         2B
++----------+----------+
+| Owned By | progress |
++----------+----------+
+
+Owned By must be either:
+ 0. blue team
+ 1. beige team
+ 2. green team
+ 3. pink team
+ 4. yellow team
+
+
+### LESSER_SHOT
+
+      2B              2B
++--------------+--------------+
+| x-coordinate | y-coordinate |
++--------------+--------------+
+
+### LESSER_PLAYER
+
+      2B             2B               1B            4B        1b         1b           3b            3b
++--------------+--------------+-----------------+-------+------------+---------+--------------+------------+
+| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | useless bits | Walk Frame |
++--------------+--------------+-----------------+-------+------------+---------+--------------+------------+
 
 
 
@@ -241,12 +271,10 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 
 ### GAME_STATE (server -> client)
 
-  1B       1B           1B
-+----+-------------+-----------+----
-| 12 | your health | your fuel | ...
-+----+-------------+-----------+----
-
-Note: this is yet encoded as JSON.
+  1B       1B           1B           ?*3B           ?*4B          ?*4B           ?*10B
++----+-------------+-----------+===============+=============+=============+===============+
+| 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
++----+-------------+-----------+===============+=============+=============+===============+
 
 
 ### PLAYER_CONTROLS (client -> server)

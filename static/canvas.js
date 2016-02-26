@@ -11,6 +11,7 @@ var context = canvas.getContext("2d"),
 	planets = [],
 	enemies = [],
 	shots = [],
+	deadShots = [],
 	particles = [],
 	universe = new Rectangle(new Point(0, 0), null, null),//these parameters will be
 	windowBox = new Rectangle(new Point(null, null), canvas.clientWidth, canvas.clientHeight),//overwritten later
@@ -207,10 +208,17 @@ function loop() {
 
 	//shots
 	shots.forEach(function (shot) {
-		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources[(shot.lt <= 0) ? "laserBeamDead" : "laserBeam"],
+		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources["laserBeam"],
 			(shot.box.center.x + universe.width/2 - windowBox.center.x)%universe.width -universe.width/2 + windowBox.width/2,
 			(shot.box.center.y + universe.height/2 - windowBox.center.y)%universe.height -universe.height/2 + windowBox.height/2,
 			shot.box.angle, false);
+	});
+	deadShots.forEach(function(shot, si) {
+		if (universe.collide(windowBox, shot.box)) drawRotatedImage(resources["laserBeamDead"],
+			(shot.box.center.x + universe.width/2 - windowBox.center.x)%universe.width -universe.width/2 + windowBox.width/2,
+			(shot.box.center.y + universe.height/2 - windowBox.center.y)%universe.height -universe.height/2 + windowBox.height/2,
+			shot.box.angle, false);
+		if (++shot.lifeTime <= 60) deadShots.splice(si, 1);
 	});
 
 	//enemies
