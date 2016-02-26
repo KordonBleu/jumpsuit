@@ -29,14 +29,14 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel) {
+function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, ws) {
 	this._walkCounter = 0;
 	this.name = name;
 	this.box = new Rectangle(new Point(0, 0), 0, 0);
 	this.boxInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
-
+	this.ws = ws;
 	this._appearance = appearance;
 	this._walkFrame = "_stand";
 	Object.defineProperties(this, {

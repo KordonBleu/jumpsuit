@@ -280,9 +280,7 @@ function Lobby(name, maxPlayers) {
 		}
 
 		this.players.forEach(function(player) {//TODO: This. Better.
-			var ws = player.ws;
-			player = new engine.Player(player.name); //resetPlayers for team-reassignment
-			player.ws = ws;
+			player = new engine.Player(player.name, undefined, undefined, undefined, undefined, undefined, undefined, player.ws); //resetPlayers for team-reassignment
 		}, this);
 	};
 	this.assignPlayerTeam = function(player) {
@@ -345,12 +343,8 @@ Lobby.prototype.update = function() {
 	var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
 		shotsDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
 
-
-	this.processTime = Date.now() - oldDate;
-
 	if (shotsDelta.removed.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], shotsDelta.removed, []));
 	if (shotsDelta.added.length != 0) this.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], shotsDelta.added, []));
-
 
 	this.players.forEach(function(player, i) {
 		function truncTo(number, decimalNbr) {
@@ -493,8 +487,7 @@ wss.on("connection", function(ws) {
 			case MESSAGE.SET_NAME.value:
 				let name = MESSAGE.SET_NAME.deserialize(message);
 				if (player === undefined) {
-					player = new engine.Player(name);
-					player.ws = this;
+					player = new engine.Player(name, undefined, undefined, undefined, undefined, undefined, undefined, this);
 				} else {
 					player.name = name;
 					if (player.lobby !== undefined) player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
