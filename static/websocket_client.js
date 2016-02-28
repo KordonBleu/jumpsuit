@@ -64,89 +64,7 @@ Connection.prototype.errorHandler = function() {
 	this.close();
 };
 Connection.prototype.messageHandler = function(message) {
-	if (typeof message.data === "string") {//JSON message
-	//try {
-		var msg = JSON.parse(message.data);
-		switch(msg.msgType) {
-			case MESSAGE.GAME_STATE:
-				msg.data.planets.forEach(function(planet, i) {
-					planets[i].progress = planet;
-				});
-				msg.data.enemies.forEach(function(enemy, i) {
-					enemies[i].box.angle = enemy.angle;
-				});
-				shots.length = msg.data.shots.length;
-				msg.data.shots.forEach(function(shot, i) {
-					if (typeof shots[i] === "undefined") shots[i] = {box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: shot.lt};
-					else {
-						shots[i].box.center.x = shot.x;
-						shots[i].box.center.y = shot.y;
-						shots[i].box.angle = shot.angle;
-						shots[i].lt = shot.lt;
-					}
-				});
-
-				for (var i = 0; i !== msg.data.players.length; i++) {
-					if (msg.data.players[i] === null || players[i] === undefined) continue;
-					msg.data.players[i].x = parseFloat(msg.data.players[i].x);
-					msg.data.players[i].y = parseFloat(msg.data.players[i].y);
-					msg.data.players[i].angle = parseFloat(msg.data.players[i].angle);
-					
-					if (i === ownIdx) {
-						if(!players[i].jetpack && msg.data.players[i].jetpack) {
-							players[i].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
-							players[i].jetpackSound.start(0);
-						} else if(players[i].jetpack && !msg.data.players[i].jetpack && players[ownIdx].jetpackSound !== undefined) {
-							players[i].jetpackSound.stop();
-						}
-					} else {
-						if(!players[i].jetpack && msg.data.players[i].jetpack) {
-							setPanner(players[i].panner, players[i].box.center.x - players[ownIdx].box.center.x, players[i].box.center.y - players[ownIdx].box.center.y);
-							players[i].jetpackSound = jetpackModel.makeSound(players[i].panner, 1);
-							players[i].jetpackSound.start(0);
-						} else if(players[i].jetpack && !msg.data.players[i].jetpack && players[i].jetpackSound !== undefined) {
-							players[i].jetpackSound.stop();
-						}
-					}
-
-					var p = 1;
-					if (players[i].boxInformations[0] === undefined) p = 0;
-					if (p === 1) {
-						players[i].boxInformations[0].box.center.x = players[i].box.center.x;
-						players[i].boxInformations[0].box.center.y = players[i].box.center.y;
-						players[i].boxInformations[0].box.angle = players[i].box.angle;
-						players[i].boxInformations[0].timestamp = (players[i].boxInformations[1] !== undefined) ? players[i].boxInformations[1].timestamp : Date.now();
-					}
-					players[i].boxInformations[p] = {box: new Rectangle(new Point(msg.data.players[i].x, msg.data.players[i].y), 0, 0, msg.data.players[i].angle), timestamp: Date.now()};
-
-					players[i].looksLeft = msg.data.players[i].looksLeft;
-					players[i].walkFrame = msg.data.players[i].walkFrame;
-					players[i].name = msg.data.players[i].name;
-					players[i].appearance = msg.data.players[i].appearance;
-					players[i].attachedPlanet = msg.data.players[i].attachedPlanet;
-					players[i].jetpack = msg.data.players[i].jetpack;
-
-					if (i === ownIdx) {
-						players[i].health = msg.data.players[i].health;
-						[].forEach.call(document.querySelectorAll("#gui-health div"), function (element, index){
-							var state = "heartFilled";
-							if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
-							else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";
-							else state = "heartNotFilled";
-							element.className = state;
-						});
-
-						players[i].fuel = msg.data.players[i].fuel;
-						fuelElement.value = msg.data.players[i].fuel;
-					}
-				}
-				if (!game.started) game.start();
-				break;
-		}
-	/*} catch(err) {
-		console.error(err, err.stack);
-	}*/
-	} else switch (new Uint8Array(message.data, 0, 1)[0]) {
+	switch (new Uint8Array(message.data, 0, 1)[0]) {
 		case MESSAGE.ERROR.value:
 			var errDesc;
 			switch(MESSAGE.ERROR.deserialize(message.data)) {
@@ -194,7 +112,7 @@ Connection.prototype.messageHandler = function(message) {
 
 			enemies.length = 0;
 			val.world.enemies.forEach(function(enemy) {
-				enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));//TODO: rework appearance with an enum on the enemies
+				enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));
 			});
 
 			shots.length = 0;
@@ -234,6 +152,68 @@ Connection.prototype.messageHandler = function(message) {
 				deadShots[deadShots.length - 1].lifeTime = 0;
 				shots.splice(id, 1);
 			});
+			break;
+		case MESSAGE.GAME_STATE.value:
+			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, shots.length, players.length);
+
+			players[ownIdx].health = val.yourHealth;
+			players[ownIdx].fuel = val.yourFuel;
+
+			[].forEach.call(document.querySelectorAll("#gui-health div"), function(element, index) {
+				var state = "heartFilled";
+				if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
+				else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";
+				else state = "heartNotFilled";
+				element.className = state;
+			});
+			fuelElement.value = val.yourFuel;
+
+			val.planets.forEach(function(planet, i) {
+				planets[i].progress.team = planet.ownedBy;
+				planets[i].progress.value = planet.progress;
+				planets[i].updateColor();
+			});
+			val.enemies.forEach(function(enemyAngle, i) {
+				enemies[i].box.angle = enemyAngle;
+			});
+			val.shots.forEach(function(shot, i) {
+				shots[i].box.center.x = shot.x;
+				shots[i].box.center.y = shot.y;
+			});
+			val.players.forEach(function(player, i) {
+				if (i === ownIdx) {
+					if (!players[i].jetpack && player.jetpack) {
+						players[i].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+						players[i].jetpackSound.start(0);
+					} else if (players[i].jetpack && !player.jetpack && players[ownIdx].jetpackSound !== undefined) {
+						players[i].jetpackSound.stop();
+					}
+				} else {
+					if(!players[i].jetpack && player.jetpack) {
+						setPanner(players[i].panner, players[i].box.center.x - players[ownIdx].box.center.x, players[i].box.center.y - players[ownIdx].box.center.y);
+						players[i].jetpackSound = jetpackModel.makeSound(players[i].panner, 1);
+						players[i].jetpackSound.start(0);
+					} else if(players[i].jetpack && !player.jetpack && players[i].jetpackSound !== undefined) {
+						players[i].jetpackSound.stop();
+					}
+				}
+
+				var p = 1;
+				if (players[i].boxInformations[0] === undefined) p = 0;
+				if (p === 1) {
+					players[i].boxInformations[0].box.center.x = players[i].box.center.x;
+					players[i].boxInformations[0].box.center.y = players[i].box.center.y;
+					players[i].boxInformations[0].box.angle = players[i].box.angle;
+					players[i].boxInformations[0].timestamp = (players[i].boxInformations[1] !== undefined) ? players[i].boxInformations[1].timestamp : Date.now();
+				}
+				players[i].boxInformations[p] = {box: new Rectangle(new Point(player.x, player.y), 0, 0, player.angle), timestamp: Date.now()};
+
+				players[i].looksLeft = player.looksLeft;
+				players[i].walkFrame = "_" + player.walkFrame;
+				players[i].attachedPlanet = player.attachedPlanet;
+				players[i].jetpack = player.jetpack;
+			});
+			if (!game.started) game.start();
 			break;
 		case MESSAGE.LOBBY_LIST.value:
 			if (printLobbies.list === undefined) {//first time data is inserted

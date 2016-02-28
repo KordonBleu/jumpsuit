@@ -342,6 +342,7 @@ const MESSAGE = {
 				view.setUint8(4 + offset, player.attachedPlanet);
 				view.setFloat32(5 + offset, player.box.angle);
 				var enumByte = this.PLAYER_APPEARANCE[player.appearance];
+				console.log("snriean", player.appearance, player);
 				enumByte <<= 3;
 				enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
@@ -471,9 +472,117 @@ const MESSAGE = {
 			};
 		}
 	},
+	GAME_STATE: {
+		value: 12,
+		OWNED_BY: {
+			neutral: 0,
+			alienBlue: 1,
+			alienBeige: 2,
+			alienGreen: 3,
+			alienPink: 4,
+			alienYellow: 5
+		},
+		WALK_FRAME: {
+			duck: 0,
+			hurt: 1,
+			jump: 2,
+			stand: 3,
+			walk1: 4,
+			walk2: 5
+		},
+		MASK: {
+			LOOKS_LEFT: 128,
+			JETPACK: 64
+		},
+		serialize: function(yourHealth, yourFuel, planets, enemies, shots, players) {
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length*4 + shots.length*4 + players.length*10),
+				view = new DataView(buffer);
 
-	GAME_STATE: 12,
+			view.setUint8(0, this.value);
+			view.setUint8(1, yourHealth);
+			view.setUint16(2, yourFuel);
 
+			planets.forEach(function(planet, i) {
+				view.setUint8(4 + i*2, this.OWNED_BY[planet.progress.team]);
+				view.setUint8(5 + i*2, planet.progress.value);
+			}, this);
+
+			var offset = 4 + planets.length*2;
+			enemies.forEach(function(enemy, i) {
+				view.setFloat32(offset + i*4, enemy.box.angle);
+			});
+
+			offset += enemies.length*4;
+			shots.forEach(function(shot, i) {
+				view.setUint16(offset + i*4, shot.box.center.x);
+				view.setUint16(2 + offset + i*4, shot.box.center.y);
+			});
+
+			offset += shots.length*4;
+			players.forEach(function(player, i) {
+				view.setUint16(offset + i*10, player.box.center.x);
+				view.setUint16(2 + offset + i*10, player.box.center.y);
+				view.setUint8(4 + offset + i*10, player.attachedPlanet);
+				view.setFloat32(5 + offset + i*10, player.box.angle);
+				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)];
+				if (player.jetpack) enumByte |= this.MASK.JETPACK;
+				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
+				view.setUint8(9 + offset + i*10, enumByte);
+			}, this);
+
+			return buffer;
+		},
+		deserialize: function(buffer, planetAmount, enemyAmount, shotAmount, playerAmount) {
+			var view = new DataView(buffer),
+				planets = [],
+				enemies = [],
+				shots = [],
+				players = [];
+
+			for (var i = 4; i !== 4 + planetAmount*2; i += 2) {
+				planets.push({
+					ownedBy: Object.keys(this.OWNED_BY)[view.getUint8(i)],
+					progress: view.getUint8(i + 1)
+				});
+			}
+
+			var limit = i + enemyAmount*4;
+			for (; i !== limit; i += 4) {
+				enemies.push(view.getFloat32(i));
+			}
+
+			limit += shotAmount*4;
+			for (; i !== limit; i+= 4) {
+				shots.push({
+					x: view.getUint16(i),
+					y: view.getUint16(i + 2)
+				});
+			}
+
+			limit += playerAmount*10;
+			for (; i !== limit; i += 10) {
+				var enumByte = view.getUint8(9 + i);
+				players.push({
+					x: view.getUint16(i),
+					y: view.getUint16(2 + i),
+					attachedPlanet: view.getUint8(4 + i),
+					angle: view.getFloat32(5 + i),
+					looksLeft: enumByte & this.MASK.LOOKS_LEFT ? true : false,
+					jetpack: enumByte & this.MASK.JETPACK ? true : false,
+					walkFrame: Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29]
+				});
+			}
+
+			return {
+				yourHealth: view.getUint8(1),
+				yourFuel: view.getUint16(2),
+				planets: planets,
+				enemies: enemies,
+				shots: shots,
+				players: players
+			};
+		}
+	},
 	PLAYER_CONTROLS: {
 		value: 13,
 		MASK: {
@@ -558,7 +667,7 @@ const MESSAGE = {
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 			teams.forEach(function(team, i) {
-				view.setUint32(1 + i*4, scoresObj[team]);
+				view.setInt32(1 + i*4, scoresObj[team]);
 			});
 
 			return buffer;
@@ -567,7 +676,7 @@ const MESSAGE = {
 			var view = new DataView(buffer, 1),
 				val = {};
 			definedTeams.sort().forEach(function(team, i) {
-				val[team] = view.getUint32(i*4);
+				val[team] = view.getInt32(i*4);
 			});
 
 			return val;

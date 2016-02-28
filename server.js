@@ -202,41 +202,12 @@ function Lobby(name, maxPlayers) {
 	this.processTime = 2;
 	this.state = this.stateEnum.WAITING;
 	this.stateTimer = config.dev ? 0 : 30;
-	this.players.getData = function() {
-		var plData = [];
-		this.forEach(function(player) {
-			plData.push({name: player.name, appearance: player.appearance});
-		});
-		return plData;
-	};
-	this.enemies.getGameData = function() {
-		var enemData = [], enemShotData;
-		for (var i = 0; i < this.length; i++){
-			enemData.push({angle: this[i].box.angle});
-		}
-		return enemData;
-	};
-	this.shots.getGameData = function() {
-		var shotData = [];
-		this.forEach(function(shot) {
-			shotData.push({x: shot.box.center.x, y: shot.box.center.y, angle: shot.box.angle});
-		});
-		return shotData;
-	};
-	this.planets.getGameData = function() {
-		var pltData = [];
-		for (var i = 0; i < this.length; i++){
-			pltData.push({color: this[i].progress.color, value: this[i].progress.value, team: this[i].progress.team});
-		}
-		return pltData;
-	};
 	this.getScores = function() {
 		//TODO: send player scores too
 		var i = {}, a;
 		for (a in this.teamScores) if (a.indexOf("alien") !== -1) i[a] = this.teamScores[a];
 		return i;
 	};
-
 
 	this.universe = new vinage.Rectangle(new vinage.Point(0, 0), 6400, 6400);
 	//generate world structure
@@ -280,7 +251,9 @@ function Lobby(name, maxPlayers) {
 		}
 
 		this.players.forEach(function(player) {//TODO: This. Better.
-			player = new engine.Player(player.name, undefined, undefined, undefined, undefined, undefined, undefined, player.ws); //resetPlayers for team-reassignment
+			var ws = player.ws;
+			player = new engine.Player(player.name);//resetPlayers for team-reassignment
+			player.ws = ws;
 		}, this);
 	};
 	this.assignPlayerTeam = function(player) {
@@ -335,9 +308,9 @@ Lobby.prototype.update = function() {
 		}
 	}
 
-	this.players.forEach(function(player) {
+	/*this.players.forEach(function(player) {
 		if (player.appearance === undefined) this.assignPlayerTeam(player);
-	}, this);
+	}, this);*/
 
 
 	var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
@@ -360,15 +333,7 @@ Lobby.prototype.update = function() {
 	this.players.forEach(function(player) {
 		function updPlayer() {
 			try {
-				player.ws.send(JSON.stringify({
-					msgType: MESSAGE.GAME_STATE,
-					data: {
-						players: playerData,
-						planets: this.planets.getGameData(),
-						enemies: this.enemies.getGameData(),
-						shots: this.shots.getGameData(),
-					}
-				}));
+				player.ws.send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.shots, this.players));
 				player.needsUpdate = true;
 			} catch(e) {/*Ignore errors*/}
 		}
@@ -487,7 +452,8 @@ wss.on("connection", function(ws) {
 			case MESSAGE.SET_NAME.value:
 				let name = MESSAGE.SET_NAME.deserialize(message);
 				if (player === undefined) {
-					player = new engine.Player(name, undefined, undefined, undefined, undefined, undefined, undefined, this);
+					player = new engine.Player(name);
+					player.ws = this;
 				} else {
 					player.name = name;
 					if (player.lobby !== undefined) player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
@@ -505,6 +471,7 @@ wss.on("connection", function(ws) {
 					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
+					lobby.assignPlayerTeam(player);
 
 					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), wsOptions, player)

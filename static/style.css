@@ -180,7 +180,7 @@ input[type=range]:active{
 	cursor: -moz-grabbing;
 	cursor: grabbing;
 }
-input[type=checkbox]:before{
+input[type=checkbox]::before{
 	content: " ";
 	height: 14px;
 	width: 14px;
@@ -193,7 +193,7 @@ input[type=checkbox]:before{
 	left: -3px;		
 	cursor: pointer;
 }
-input[type=checkbox]:after{
+input[type=checkbox]::after{
 	content: " ";
 	transition: transform .15s .1s, opacity .2s;
 	transform: scale(0.4);
@@ -207,7 +207,7 @@ input[type=checkbox]:after{
 	top: -17px;
 	left: 1px;
 }
-input[type=checkbox]:checked:after {
+input[type=checkbox]:checked::after {
 	transform: scale(1);
 	opacity: 1;
 }
@@ -217,7 +217,7 @@ label {
 	-ms-user-select: none;
 	user-select: none;
 }
-label.checkbox-label[data-beta]:after {
+label.checkbox-label[data-beta]::after {
 	font-size: 10px;
 	content: "BETA";
 	display: inline-block;
@@ -317,7 +317,7 @@ label.range-label{
 	display: flex;
 	flex-wrap: wrap;
 }
-#player-list:after {/* CSS arrow trick */
+#player-list::after {/* CSS arrow trick */
 	content: " ";
     position: absolute;
     border-left: 8px solid transparent;
@@ -594,21 +594,18 @@ label.range-label{
 	left: calc(100% - 158px);
 	color: #eee;
 }
-#gui-ping:before {
+#gui-ping::before {
 	line-height: 100%;
 	height: 22.5px;
 	content: "Latency: ";
 	width: 80px;
 	display: inline-block;
 }
-#gui-chat p:first-child:nth-last-child(1):before {
+#gui-chat p:first-child:nth-last-child(1)::before {
 	cursor: inherit;
-	position: relative;
-	left: 50%;
 	content: "No messages";
 	color: rgba(120, 120, 120, 0.8);
 	font-size: 14px;
-	transform: translateX(-50%);
 }
 #gui-chat {
 	position: fixed;
@@ -677,7 +674,7 @@ label.range-label{
 	left: 8px;
 	color: #eee;
 }
-#gui-health:before{
+#gui-health::before{
 	content: "Health:";
 	width: 77px;
 	display: inline-block;

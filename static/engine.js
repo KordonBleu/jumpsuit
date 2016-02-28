@@ -29,14 +29,13 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, ws) {
+function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel) {
 	this._walkCounter = 0;
 	this.name = name;
 	this.box = new Rectangle(new Point(0, 0), 0, 0);
 	this.boxInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0};
 	this.velocity = new Vector(0, 0);
-	this.ws = ws;
 	this._appearance = appearance;
 	this._walkFrame = "_stand";
 	Object.defineProperties(this, {
@@ -95,6 +94,15 @@ function Planet(x, y, radius) {
 	this.progress = {team: "neutral", value: 0, color: "rgb(80,80,80)"};
 }
 Planet.prototype.teamColors = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
+Planet.prototype.updateColor = function() {
+	if (this.progress.team === "neutral") this.progress.color = "rgb(80,80,80)";
+	else {
+		var fadeRGB = [];
+		for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.round(this.progress.value / 100 * (parseInt(this.teamColors[this.progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
+
+		this.progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
+	}
+};
 
 function Enemy(x, y, appearance) {
 	this.appearance = appearance || "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
@@ -259,7 +267,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			max = Math.max.apply(null, toArray),
 			teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
 
-		if (max > 0){
+		if (max > 0) {
 			var team, a, b = 0;
 			while (toArray.indexOf(max) !== -1) {
 				a = toArray.indexOf(max);
@@ -273,10 +281,6 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				planets[i].progress.value -= max / 3;
 				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
 			}
-			var fadeRGB = [];
-			for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.round(planets[i].progress.value / 100 * (parseInt(Planet.prototype.teamColors[planets[i].progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
-
-			planets[i].progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
 		}
 	}
 
@@ -287,6 +291,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") modu
 	doPhysics: doPhysics,
 	Player: Player,
 	Planet: Planet,
-	Enemy: Enemy
+	Enemy: Enemy,
+	Shot: Shot
 };
 
