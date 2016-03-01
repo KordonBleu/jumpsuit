@@ -65,54 +65,60 @@ resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
 
-function init() {//init is done differently in the server
-	function loadProcess() {
-		function resizeHandler() {
-			context.textBaseline = "top";
-			context.textAlign = "center";
-
-			context.fillStyle = "#121012";
-			context.fillRect(0, 0, canvas.width, canvas.height);
-
-			context.fillStyle = "#eee";
-			context.font = "60px Open Sans";
-			context.fillText("JumpSuit", canvas.width / 2, canvas.height * 0.35);
-			context.font = "28px Open Sans";
-			context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
-			drawBar();
-		}
-		function drawBar() {
-			context.fillStyle = "#007d6c";
-			context.fillRect(0, 0, ((loadProcess.progress + 1) / resPaths.length) * canvas.width, 15);
-		}
-
-		if (loadProcess.progress === undefined) {
-			resizeHandler();
-			loadProcess.progress = 0;
-			window.addEventListener("resize", resizeHandler);
-		}
-
-		function eHandler(e) {
-			e.target.removeEventListener("load", eHandler);
-			loadProcess.progress++;
-			if (loadProcess.progress !== resPaths.length) {
-				loadProcess();
-			} else {
-				window.removeEventListener("resize", resizeHandler);
-				document.dispatchEvent(new Event("res loaded"));
-			}
-		}
-
-		drawBar();
-		var img = new Image();
-		img.addEventListener("load", eHandler);
-		img.src = "/assets/images/" + resPaths[loadProcess.progress];
-		resources[resPaths[loadProcess.progress].slice(0, resPaths[loadProcess.progress].lastIndexOf("."))] = img;
-	}
-
-	document.addEventListener("res loaded", game.stop);
-	loadProcess();
+/* Load image assets */
+function drawBar() {
+	context.fillStyle = "#007d6c";
+	context.fillRect(0, 0, ((drawBar.progress) / resPaths.length) * canvas.width, 15);
 }
+drawBar.progress = 0;
+function resizeHandler() {
+	context.textBaseline = "top";
+	context.textAlign = "center";
+
+	context.fillStyle = "#121012";
+	context.fillRect(0, 0, canvas.width, canvas.height);
+
+	context.fillStyle = "#eee";
+	context.font = "60px Open Sans";
+	context.fillText("JumpSuit", canvas.width / 2, canvas.height * 0.35);
+	context.font = "28px Open Sans";
+	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
+	drawBar();
+}
+
+resizeHandler();
+window.addEventListener("resize", resizeHandler);
+
+var imgPromises = [];
+resPaths.forEach(function(path) {//init resources
+	var promise = new Promise(function(resolve, reject) {
+		var img = new Image();
+		img.addEventListener("load", function(e) {
+			resources[path.substring(0, path.lastIndexOf("."))] = e.target;
+			resolve();
+		});
+		img.addEventListener("error", function(e) {
+			reject(e);
+		})
+		img.src = "/assets/images/" + path;
+	});
+	promise.then(function() {
+		++drawBar.progress;
+		drawBar();
+	})
+	.catch(function(err) {
+		alert("Something went wrong. Try reloading this page.\n" +
+			"If it still doesn't work, please open an issue on GitHub with a copy of the text in this message.\n" +
+			"Error type: " + err.type + "\n" +
+			"Failed to load " + err.target.src);
+	});
+	imgPromises.push(promise);
+});
+var allImagesLoaded = Promise.all(imgPromises).then(function() {
+	game.stop();
+	window.removeEventListener("resize", resizeHandler);
+});
+
 function loop() {
 	handleGamepad();
 	function drawRotatedImage(image, x, y, angle, mirror, sizeX, sizeY) {
@@ -315,7 +321,6 @@ function loop() {
 	chatElement.style.clip = "rect(0px," + chatElement.clientWidth + "px," + chatElement.clientHeight + "px,0px)";
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
-init();
 
 function Particle(size, startX, startY, lifetime) {
 	this.box = new Rectangle(new Point(startX, startY), 0, 0, Math.random() * 2 * Math.PI);

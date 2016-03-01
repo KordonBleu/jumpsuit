@@ -258,16 +258,17 @@ Connection.prototype.messageHandler = function(message) {
 };
 
 var currentConnection = new Connection();
-function autoConnect() {
-	if(autoConnect.counter === 1) {//resources loaded & socket open
+Promise.all([
+	allImagesLoaded,
+	new Promise(function(resolve, reject) {
+		currentConnection.socket.addEventListener("open", function() {
+			resolve();
+		});
+	})
+]).then(function() {
 		var lobbyUid = location.pathname.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
 		if(location.pathname !== lobbyUid) currentConnection.connectLobby(lobbyUid);
-	}
-	else autoConnect.counter += 1;
-}
-autoConnect.counter = 0;
-currentConnection.socket.addEventListener("open", autoConnect);
-document.addEventListener("res loaded", autoConnect);
+});
 
 function refreshLobbies() {
 	if (!currentConnection.alive()) return;

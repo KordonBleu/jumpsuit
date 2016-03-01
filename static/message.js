@@ -342,7 +342,6 @@ const MESSAGE = {
 				view.setUint8(4 + offset, player.attachedPlanet);
 				view.setFloat32(5 + offset, player.box.angle);
 				var enumByte = this.PLAYER_APPEARANCE[player.appearance];
-				console.log("snriean", player.appearance, player);
 				enumByte <<= 3;
 				enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
