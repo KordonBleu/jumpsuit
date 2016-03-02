@@ -4,7 +4,6 @@ var fs = require("fs"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
 	colors = require("colors"),
-	sizeof = require("object-sizeof"),
 	MESSAGE = require("./static/message.js"),
 	engine = require("./static/engine.js"),
 	vinage = require("./static/vinage/vinage.js"),
@@ -15,9 +14,7 @@ var fs = require("fs"),
 		monitor: false,
 		port: 8080
 	},
-	configPath = process.argv[2] || "./config.json",
-
-	wsOptions = { binary: true, mask: false };
+	configPath = process.argv[2] || "./config.json";
 
 try {
 	fs.statSync(configPath);
@@ -75,7 +72,7 @@ function loadConfig(firstRun) {
 	 console.log("[INFO] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
 	 config = configSkeleton;
  }
- if(previousConfig !== undefined) {
+ if (previousConfig !== undefined) {
 	 if(config.port !== previousConfig.port) {
 		 server.close();
 		 server.listen(config.port);
@@ -194,6 +191,15 @@ server.listen(config.port);
 var lobbies = [],
 	wss = new WebSocketServer({server: server});
 
+engine.Player.prototype.send = function(data) {
+	try {
+		this.ws.send(data, { binary: true, mask: false });
+		if (config.monitor) {
+			monitoring.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
+		}
+	} catch (err) { /* Maybe log this error somewhere? */ }
+};
+
 function Lobby(name, maxPlayers) {
 	this.players = [];
 	this.maxPlayers = maxPlayers;
@@ -203,69 +209,8 @@ function Lobby(name, maxPlayers) {
 	this.processTime = 2;
 	this.state = this.stateEnum.WAITING;
 	this.stateTimer = config.dev ? 0 : 30;
-	this.getScores = function() {
-		//TODO: send player scores too
-		var i = {}, a;
-		for (a in this.teamScores) if (a.indexOf("alien") !== -1) i[a] = this.teamScores[a];
-		return i;
-	};
 
 	this.universe = new vinage.Rectangle(new vinage.Point(0, 0), 6400, 6400);
-	//generate world structure
-	this.resetWorld = function() {
-		this.planets.length = 0;
-		this.enemies.length = 0;
-
-		var chunkSize = 1600;
-		for (var y = 0; y < this.universe.height; y += chunkSize){
-			for (var x = 0; x < this.universe.width; x += chunkSize){
-				var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
-					py = Math.floor(Math.random() * (chunkSize - 400) + 200),
-					radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
-				this.planets.push(new engine.Planet(x + px, y + py, radius));
-			}
-		}
-		var iterations = 0;
-		while (iterations < 250 && this.enemies.length < 15){
-			var newEnemy = new engine.Enemy(Math.floor(Math.random() * this.universe.width), Math.floor(Math.random() * this.universe.height)), wellPositioned = true;
-			this.enemies.forEach(function (enemy){
-				if (!wellPositioned) return;
-				if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
-			}, this);
-			this.planets.forEach(function (planet){
-				if (!wellPositioned) return;
-				if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
-			}, this);
-			if (wellPositioned) this.enemies.push(newEnemy);
-			iterations++;
-		}
-
-		this.teams = {};
-		this.teamScores = {};
-		var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
-
-		for (let teamNumber = 0; teamNumber !== 2; ++teamNumber) {
-			let teamIndex = Math.floor(Math.random() * _teams.length);
-			this.teams[_teams[teamIndex]] = [];
-			this.teamScores[_teams[teamIndex]] = 0;
-			_teams.splice(teamIndex, 1);
-		}
-
-		this.players.forEach(function(player) {//TODO: This. Better.
-			var ws = player.ws;
-			player = new engine.Player(player.name);//resetPlayers for team-reassignment
-			player.ws = ws;
-		}, this);
-	};
-	this.assignPlayerTeam = function(player) {
-		var teamsPlaying = Object.keys(this.teams);
-		if (this.teams[teamsPlaying[0]].length === this.teams[teamsPlaying[1]].length) player.appearance = teamsPlaying[Math.round(Math.random())];
-		else player.appearance = teamsPlaying[this.teams[teamsPlaying[0]].length > this.teams[teamsPlaying[1]].length ? 1 : 0];
-		this.teams[player.appearance].push(player.pid);
-		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
-		player.box.angle = Math.random() * Math.PI;
-		player.attachedPlanet = -1;
-	};
 	this.resetWorld();
 	this.name = name;
 }
@@ -274,46 +219,12 @@ Lobby.prototype.stateEnum = {
 	PLAYING: 1,
 	END: 2
 };
-Lobby.prototype.broadcast = function(message, options, exclude) {
+Lobby.prototype.broadcast = function(message, exclude) {
 	this.players.forEach(function(player) {
-		if (player !== exclude) try {//exclude a players from the broadcast
-			player.ws._send(message, options);
-		} catch(e) {/*Ignore errors*/}
+		if (player !== exclude) player.send(message);
 	});
 };
 Lobby.prototype.update = function() {
-	if (this.players.length !== 0 && !config.dev) this.stateTimer -= (16 / 1000);
-	//actually this is just a hack to make set the timer interval to 1s... maybe move it to a new function that runs a 1s interval
-	if (this.state === this.stateEnum.WAITING) {
-		this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.state, this.stateTimer), wsOptions);
-		if (this.stateTimer <= 0) {
-			this.resetWorld();
-			this.broadcast(MESSAGE.ADD_ENTITY.serialize(this.planets, this.enemies, this.shots, this.players), wsOptions);//uh oh this code seems to be quite out of date
-			this.state = this.stateEnum.PLAYING;
-			this.stateTimer = 60;
-		}
-		return;
-	} else if (this.state === this.stateEnum.END) {
-		this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.state, this.stateTimer), wsOptions);
-		if (this.stateTimer <= 0){
-			this.state = this.stateEnum.WAITING;
-			this.stateTimer = 30;
-			//TODO: if there are too few players, keep waiting until certain amount is reached - otherwise close the lobby(?)
-		}
-		return;
-	} else {
-		if (this.stateTimer <= 0) {
-			this.state = this.stateEnum.END;
-			this.stateTimer = 10;
-			this.broadcast(MESSAGE.SCORES.serialize(this.getScores()), wsOptions);
-		}
-	}
-
-	/*this.players.forEach(function(player) {
-		if (player.appearance === undefined) this.assignPlayerTeam(player);
-	}, this);*/
-
-
 	var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
 		shotsDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
 
@@ -333,10 +244,8 @@ Lobby.prototype.update = function() {
 
 	this.players.forEach(function(player) {
 		function updPlayer() {
-			try {
-				player.ws._send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.shots, this.players));
-				player.needsUpdate = true;
-			} catch(e) {/*Ignore errors*/}
+			player.send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.shots, this.players));
+			player.needsUpdate = true;
 		}
 		if (player.needsUpdate || player.needsUpdate === undefined) {
 			player.needsUpdate = false;
@@ -361,6 +270,66 @@ Lobby.prototype.getPlayerId = function(player) {
 	});
 	return id;
 };
+Lobby.prototype.getScores = function() {
+	var i = {}, a;
+	for (a in this.teamScores) if (a.indexOf("alien") !== -1) i[a] = this.teamScores[a];
+	return i;
+};
+Lobby.prototype.resetWorld = function() {//generate world
+	this.planets.length = 0;
+	this.enemies.length = 0;
+
+	var chunkSize = 1600;
+	for (var y = 0; y < this.universe.height; y += chunkSize){
+		for (var x = 0; x < this.universe.width; x += chunkSize){
+			var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
+				py = Math.floor(Math.random() * (chunkSize - 400) + 200),
+				radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
+			this.planets.push(new engine.Planet(x + px, y + py, radius));
+		}
+	}
+	var iterations = 0;
+	while (iterations < 250 && this.enemies.length < 15){
+		var newEnemy = new engine.Enemy(Math.floor(Math.random() * this.universe.width), Math.floor(Math.random() * this.universe.height)), wellPositioned = true;
+		this.enemies.forEach(function (enemy){
+			if (!wellPositioned) return;
+			if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
+		}, this);
+		this.planets.forEach(function (planet){
+			if (!wellPositioned) return;
+			if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
+		}, this);
+		if (wellPositioned) this.enemies.push(newEnemy);
+		iterations++;
+	}
+
+	this.teams = {};
+	this.teamScores = {};
+	var _teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
+
+	for (let teamNumber = 0; teamNumber !== 2; ++teamNumber) {
+		let teamIndex = Math.floor(Math.random() * _teams.length);
+		this.teams[_teams[teamIndex]] = [];
+		this.teamScores[_teams[teamIndex]] = 0;
+		_teams.splice(teamIndex, 1);
+	}
+
+	this.players.forEach(function(player) {//TODO: This. Better.
+		var ws = player.ws;
+		player = new engine.Player(player.name);//resetPlayers for team-reassignment
+		player.ws = ws;
+	}, this);
+};
+Lobby.prototype.assignPlayerTeam = function(player) {
+	var teamsPlaying = Object.keys(this.teams);
+	if (this.teams[teamsPlaying[0]].length === this.teams[teamsPlaying[1]].length) player.appearance = teamsPlaying[Math.round(Math.random())];
+	else player.appearance = teamsPlaying[this.teams[teamsPlaying[0]].length > this.teams[teamsPlaying[1]].length ? 1 : 0];
+	this.teams[player.appearance].push(player.pid);
+	player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
+	player.box.angle = Math.random() * Math.PI;
+	player.attachedPlanet = -1;
+};
+
 lobbies.getUid = function(index) {
 	var uid = index.toString(16);
 	while(uid.length !== 6) {
@@ -381,10 +350,38 @@ setInterval(function() {
 
 setInterval(function() {
 	lobbies.forEach(function(lobby) {
+		if (lobby.players.length !== 0 && !config.dev) lobby.stateTimer -= 1;
+
+		if (lobby.state === lobby.stateEnum.WAITING) {
+			lobby.broadcast(MESSAGE.LOBBY_STATE.serialize(lobby.state, lobby.stateTimer));
+			if (lobby.stateTimer <= 0) {
+				lobby.resetWorld();
+				lobby.broadcast(MESSAGE.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));//uh oh lobby code seems to be quite out of date
+				lobby.state = lobby.stateEnum.PLAYING;
+				lobby.stateTimer = 60;
+			}
+			return;
+		} else if (lobby.state === lobby.stateEnum.END) {
+			lobby.broadcast(MESSAGE.LOBBY_STATE.serialize(lobby.state, lobby.stateTimer));//TODO: send player scores
+			if (lobby.stateTimer <= 0){
+				lobby.state = lobby.stateEnum.WAITING;
+				lobby.stateTimer = 30;
+				//TODO: if there are too few players, keep waiting until certain amount is reached - otherwise close the lobby(?)
+			}
+			return;
+		} else {
+			if (lobby.stateTimer <= 0) {
+				lobby.state = lobby.stateEnum.END;
+				lobby.stateTimer = 10;
+				lobby.broadcast(MESSAGE.SCORES.serialize(lobby.getScores()));
+			}
+		}
+
+
 		lobby.planets.forEach(function(planet) {
 			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
 		}, lobby);
-		lobby.broadcast(MESSAGE.SCORES.serialize(lobby.teamScores), wsOptions);
+		lobby.broadcast(MESSAGE.SCORES.serialize(lobby.teamScores));
 	});
 }, 1000)
 
@@ -394,8 +391,6 @@ setInterval(function() {
 	});
 }, 500);
 
-var monitoringTraffic = {i: 0, o: 0, timer: 0};
-
 function monitoring() {
 	function genSpaces(amount) {
 		for(var spaces = ""; spaces.length !== amount; spaces += " ");
@@ -404,13 +399,20 @@ function monitoring() {
 	function printProperty(caption, content){
 		console.log(caption.bold + ":" + genSpaces(20 - caption.length) + content);
 	}
+
+	if (++monitoring.traffic.timer === 2) {
+		monitoring.traffic.previous = monitoring.traffic.beingConstructed;
+		monitoring.traffic.beingConstructed = {in: 0, out: 0};
+		monitoring.traffic.timer = 0;
+	}
+
 	process.stdout.write("\u001B[2J\u001B[0;0f");
-	console.log("Jumpsuit Server version 0.0.0.0".bold.yellow);
-	printProperty("Traffic", (monitoringTraffic.i / 1024).toFixed(2) + " kByte/s (in) | " + (monitoringTraffic.o / 1024).toFixed(2) + " kByte/s (out)");
+	console.log("Jumpsuit Server version 0.0.0".bold.yellow);
+	printProperty("Traffic", (monitoring.traffic.previous.in / 1024).toFixed(2) + " kByte/s (in) | " + (monitoring.traffic.previous.out / 1024).toFixed(2) + " kByte/s (out)");
 	printProperty("Port", config.port);
 	printProperty("Development Mode", (config.dev) ? "Enabled" : "Disabled");
 	printProperty("Interactive Mode", (config.interactive) ? "Enabled" : "Disabled");
-	
+
 	console.log(); //newline
 	var headerSizes = [35, 10, 15],
 		headerNames = ["lobby name", "players", "process time", "lifetime"],
@@ -419,28 +421,27 @@ function monitoring() {
 		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
 	});
 	console.log(header);
-	
+
 	var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height
-	lobbies.some(function(lobby, index, array) { 
+	lobbies.some(function(lobby, index, array) {
 		if (lobbyAmount >= 8) {
 			console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
 			return true; //some can be quitted with return, but it needs to return something so just return; doesnt work
-		}	
+		}
 		var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
 			amount = lobby.players.length.toString(),
 			processTime = lobby.processTime.toString();
 		info += "   " + amount + genSpaces(headerSizes[1] - amount.length);
 		info += "   " + processTime;
 		console.log(info);
-		lobbyAmount++;		
+		lobbyAmount++;
 	});
-	
-	if (++monitoringTraffic.timer === 2) {
-		monitoringTraffic.i = 0;
-		monitoringTraffic.o = 0;
-		monitoringTraffic.timer = 0;
-	}
 }
+monitoring.traffic = {
+	previous: {in: 0, out: 0},
+	beingConstructed: {in: 0, out: 0},
+	timer: 0
+};
 if(config.monitor) {
 	process.stdout.write("\u001b[?1049h\u001b[H");
 	var monitorTimerID = setInterval(monitoring, 500);
@@ -453,7 +454,7 @@ wss.on("connection", function(ws) {
 				if (player.ws === ws) {
 					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
 					players.splice(i, 1);
-					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]), wsOptions);
+					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]));
 					return true;
 				}
 			});
@@ -461,14 +462,14 @@ wss.on("connection", function(ws) {
 	}
 	var player;
 	ws.on("message", function(message, flags) {
-		if (config.monitor) monitoringTraffic.i += message.length;
+		if (config.monitor) monitoring.traffic.beingConstructed.in += message.byteLength;
 		switch (new Uint8Array(message, 0, 1)[0]) {
 			case MESSAGE.GET_LOBBIES.value:
 				var lobbyList = [];
 				lobbies.forEach(function(lobby, i) {
 					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.length, maxPlayers: lobby.maxPlayers});
 				});
-				ws._send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
+				player.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
 				break;
 			case MESSAGE.CREATE_LOBBY.value:
 				var data = MESSAGE.CREATE_LOBBY.deserialize(message);
@@ -488,19 +489,19 @@ wss.on("connection", function(ws) {
 				let lobbyId = MESSAGE.CONNECT.deserialize(message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength)),
 					lobby = lobbies.getByUid(lobbyId);
 
-				if (player === undefined) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN), wsOptions);
-				else if (lobby === undefined) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY), wsOptions);
-				else if (lobby.players.length === lobby.maxPlayers) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT), wsOptions);
-				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN), wsOptions);
+				if (player === undefined) engine.Player.prototype.send.call({ws: ws}, MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN));//we have to resort to this to use .send() even though the player is undefined
+				else if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
+				else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
+				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN));
 				else {
 					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 					lobby.assignPlayerTeam(player);
 
-					ws._send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
-					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), wsOptions, player)
-					ws._send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
+					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
+					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
+					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
 				}
 				break;
 			case MESSAGE.LEAVE_LOBBY.value:
@@ -518,14 +519,6 @@ wss.on("connection", function(ws) {
 		player.latency = (Date.now() - player.lastPing) / 2;
 	});
 	ws.on("close", cleanup);
-	ws._send = (function() { //function records every sent traffic for logging
-		if (config.monitor) {
-			let i, o = 0;
-			for (i = 0; i < arguments.length; i++) o += sizeof(arguments[i]); 
-			monitoringTraffic.o += o;
-		}
-		this.send.apply(this, arguments);
-	});
 });
 lobbies.push(new Lobby("Lobby No. 1", 8));
 

@@ -2,7 +2,7 @@
 A sweet 2D canvas game.
 With your awesome suit, you can jump from planet to planet to conquer them!
 
-Try it [here](http://getkey.eu:8000/)!
+Try it [here](http://jumpsuit.space/)!
 
 ## Why the name?
 ```
