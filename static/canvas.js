@@ -277,8 +277,8 @@ function loop() {
 					jetpackFireTwoY = jetpackY + 53 * Math.cos(player.box.angle + Math.PI / 11);
 
 				if (Math.random() < 0.7){
-					particles.push(new Particle(18, jetpackFireOneX + game.offset.x, jetpackFireOneY + game.offset.y, 80));
-					particles.push(new Particle(18, jetpackFireTwoX + game.offset.x, jetpackFireTwoY + game.offset.y, 80));
+					particles.push(new Particle(18, jetpackFireOneX + game.offset.x, jetpackFireOneY + game.offset.y, undefined, 5.2 * Math.cos(player.box.angle), 80));
+					particles.push(new Particle(18, jetpackFireTwoX + game.offset.x, jetpackFireTwoY + game.offset.y, undefined, 5.2 * Math.cos(player.box.angle), 80));
 				}
 
 				drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, player.box.angle);
@@ -322,13 +322,13 @@ function loop() {
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 
-function Particle(size, startX, startY, lifetime) {
+function Particle(size, startX, startY, velocityX, velocityY, lifetime) {
 	this.box = new Rectangle(new Point(startX, startY), 0, 0, Math.random() * 2 * Math.PI);
 	this.size = size;
 	this.maxLifetime = lifetime;
 	this.lifetime = 0;
 	this.rotSpeed = Math.random() * Math.PI * 0.04;
-	this.velocity = {x: (Math.random() * 2 - 1) * 2 * Math.sin(this.box.angle), y: (Math.random() * 2 - 1) * 2 * Math.cos(this.box.angle)};
+	this.velocity = {x: velocityX || (Math.random() * 2 - 1) * 2 * Math.sin(this.box.angle), y: velocityY || (Math.random() * 2 - 1) * 2 * Math.cos(this.box.angle)};
 	this.update = function(){
 		this.lifetime++;
 		this.box.center.x += this.velocity.x;

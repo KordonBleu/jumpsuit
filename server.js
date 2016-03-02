@@ -4,6 +4,7 @@ var fs = require("fs"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
 	colors = require("colors"),
+	sizeof = require("object-sizeof"),
 	MESSAGE = require("./static/message.js"),
 	engine = require("./static/engine.js"),
 	vinage = require("./static/vinage/vinage.js"),
@@ -276,7 +277,7 @@ Lobby.prototype.stateEnum = {
 Lobby.prototype.broadcast = function(message, options, exclude) {
 	this.players.forEach(function(player) {
 		if (player !== exclude) try {//exclude a players from the broadcast
-			player.ws.send(message, options);
+			player.ws._send(message, options);
 		} catch(e) {/*Ignore errors*/}
 	});
 };
@@ -333,7 +334,7 @@ Lobby.prototype.update = function() {
 	this.players.forEach(function(player) {
 		function updPlayer() {
 			try {
-				player.ws.send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.shots, this.players));
+				player.ws._send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.shots, this.players));
 				player.needsUpdate = true;
 			} catch(e) {/*Ignore errors*/}
 		}
@@ -393,29 +394,52 @@ setInterval(function() {
 	});
 }, 500);
 
+var monitoringTraffic = {i: 0, o: 0, timer: 0};
+
 function monitoring() {
 	function genSpaces(amount) {
 		for(var spaces = ""; spaces.length !== amount; spaces += " ");
 		return spaces;
 	}
+	function printProperty(caption, content){
+		console.log(caption.bold + ":" + genSpaces(20 - caption.length) + content);
+	}
 	process.stdout.write("\u001B[2J\u001B[0;0f");
-	console.log("Jumpsuit Server [STATUS: RUNNING]");
-	console.log("\nMonitoring Lobbies:");
-	var headerSizes = [40, 10, 15],
+	console.log("Jumpsuit Server version 0.0.0.0".bold.yellow);
+	printProperty("Traffic", (monitoringTraffic.i / 1024).toFixed(2) + " kByte/s (in) | " + (monitoringTraffic.o / 1024).toFixed(2) + " kByte/s (out)");
+	printProperty("Port", config.port);
+	printProperty("Development Mode", (config.dev) ? "Enabled" : "Disabled");
+	printProperty("Interactive Mode", (config.interactive) ? "Enabled" : "Disabled");
+	
+	console.log(); //newline
+	var headerSizes = [35, 10, 15],
 		headerNames = ["lobby name", "players", "process time", "lifetime"],
 		header = "";
 	headerSizes.forEach(function(hSize, i) {
 		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
 	});
 	console.log(header);
-	lobbies.forEach(function(lobby) {
+	
+	var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height
+	lobbies.some(function(lobby, index, array) { 
+		if (lobbyAmount >= 8) {
+			console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
+			return true; //some can be quitted with return, but it needs to return something so just return; doesnt work
+		}	
 		var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
 			amount = lobby.players.length.toString(),
 			processTime = lobby.processTime.toString();
-		info += " | " + amount + genSpaces(headerSizes[1] - amount.length);
-		info += " | " + processTime;
+		info += "   " + amount + genSpaces(headerSizes[1] - amount.length);
+		info += "   " + processTime;
 		console.log(info);
+		lobbyAmount++;		
 	});
+	
+	if (++monitoringTraffic.timer === 2) {
+		monitoringTraffic.i = 0;
+		monitoringTraffic.o = 0;
+		monitoringTraffic.timer = 0;
+	}
 }
 if(config.monitor) {
 	process.stdout.write("\u001b[?1049h\u001b[H");
@@ -437,13 +461,14 @@ wss.on("connection", function(ws) {
 	}
 	var player;
 	ws.on("message", function(message, flags) {
+		if (config.monitor) monitoringTraffic.i += message.length;
 		switch (new Uint8Array(message, 0, 1)[0]) {
 			case MESSAGE.GET_LOBBIES.value:
 				var lobbyList = [];
 				lobbies.forEach(function(lobby, i) {
 					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.length, maxPlayers: lobby.maxPlayers});
 				});
-				ws.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
+				ws._send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
 				break;
 			case MESSAGE.CREATE_LOBBY.value:
 				var data = MESSAGE.CREATE_LOBBY.deserialize(message);
@@ -463,19 +488,19 @@ wss.on("connection", function(ws) {
 				let lobbyId = MESSAGE.CONNECT.deserialize(message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength)),
 					lobby = lobbies.getByUid(lobbyId);
 
-				if (player === undefined) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN), wsOptions);
-				else if (lobby === undefined) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY), wsOptions);
-				else if (lobby.players.length === lobby.maxPlayers) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT), wsOptions);
-				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) ws.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN), wsOptions);
+				if (player === undefined) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN), wsOptions);
+				else if (lobby === undefined) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY), wsOptions);
+				else if (lobby.players.length === lobby.maxPlayers) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT), wsOptions);
+				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) ws._send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN), wsOptions);
 				else {
 					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 					lobby.assignPlayerTeam(player);
 
-					ws.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
+					ws._send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)), wsOptions);
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), wsOptions, player)
-					ws.send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
+					ws._send(MESSAGE.LOBBY_STATE.serialize(lobby.state), wsOptions);
 				}
 				break;
 			case MESSAGE.LEAVE_LOBBY.value:
@@ -493,6 +518,14 @@ wss.on("connection", function(ws) {
 		player.latency = (Date.now() - player.lastPing) / 2;
 	});
 	ws.on("close", cleanup);
+	ws._send = (function() { //function records every sent traffic for logging
+		if (config.monitor) {
+			let i, o = 0;
+			for (i = 0; i < arguments.length; i++) o += sizeof(arguments[i]); 
+			monitoringTraffic.o += o;
+		}
+		this.send.apply(this, arguments);
+	});
 });
 lobbies.push(new Lobby("Lobby No. 1", 8));
 
