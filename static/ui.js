@@ -306,7 +306,6 @@ playerListElement.addEventListener("click", function(e) {
 function printPlayerList(filter) {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	players.forEach(function(player, index) {
-		console.log(player);
 		if (filter !== "" && player.name.indexOf(filter) === -1) return;
 		var li = document.createElement("li");
 		li.textContent = player.name;

@@ -480,9 +480,14 @@ wss.on("connection", function(ws) {
 				if (player === undefined) {
 					player = new engine.Player(name);
 					player.ws = this;
-				} else {
-					player.name = name;
-					if (player.lobby !== undefined) player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
+				} else if (player.lobby !== undefined) {
+					if (player.lobby.players.some(function(_player) {
+						return _player.name === name;
+					})) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN));
+					else {
+						player.name = name;
+						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
+					}
 				}
 				break;
 			case MESSAGE.CONNECT.value:

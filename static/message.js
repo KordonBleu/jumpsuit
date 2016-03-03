@@ -21,9 +21,6 @@ function bufferToString(arrayBuffer) {
 		return decoder.decode(arrayBuffer);
 	}
 }
-function filter(value) {
-	return value !== undefined;
-}
 
 const MESSAGE = {
 	GET_LOBBIES: {
@@ -121,16 +118,13 @@ const MESSAGE = {
 	SET_NAME: {
 		value: 3,
 		serialize: function(name) {
-			var bufMsg = stringToBuffer(name),
-				buffer = new ArrayBuffer(bufMsg.length + 1),
-				view = new DataView(buffer);
+			var bufName = stringToBuffer(name),
+				view = new Uint8Array(bufName.length + 1);
 
-			view.setUint8(0, this.value);
-			new Uint8Array(bufMsg).forEach(function(val, i) {
-				view.setUint8(i + 1, val);
-			});
+			view[0] = this.value;
+			view.set(bufName, 1);
 
-			return buffer;
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			return bufferToString(buffer.slice(1));
@@ -139,17 +133,14 @@ const MESSAGE = {
 	SET_NAME_BROADCAST: {
 		value: 4,
 		serialize: function(id, name) {
-			var bufMsg = stringToBuffer(name),
-				buffer = new ArrayBuffer(bufMsg.length + 2),
-				view = new DataView(buffer);
+			var bufName = stringToBuffer(name),
+				view = new Uint8Array(bufName.length + 2);
 
-			view.setUint8(0, this.value);
-			view.setUint8(1, id);
-			new Uint8Array(bufMsg).forEach(function(val, i) {
-				view.setUint8(i + 2, val);
-			});
+			view[0] = this.value;
+			view[1] = id;
+			view.set(bufName, 2);
 
-			return buffer;
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			return {
@@ -239,19 +230,19 @@ const MESSAGE = {
 	LOBBY_STATE: {
 		value: 9,
 		serialize: function(state, timer) {
-			var data = new Uint8ClampedArray(timer === undefined ? 2 : 3);
-			data[0] = MESSAGE.LOBBY_STATE.value;
-			data[1] = state;
-			if (timer !== undefined) data[2] = timer;
+			var view = new Uint8ClampedArray(timer === undefined ? 2 : 3);
+			view[0] = MESSAGE.LOBBY_STATE.value;
+			view[1] = state;
+			if (timer !== undefined) view[2] = timer;
 
-			return data.buffer;
+			return view.buffer;
 		},
-		deserialize: function(data) {
-			var view = new Uint8ClampedArray(data),
+		deserialize: function(buffer) {
+			var view = new Uint8Array(buffer),
 				val = {
 					state: view[1],
 				};
-			if (data.length === 3) val.timer = view[2];
+			if (buffer.length === 3) val.timer = view[2];
 
 			return val;
 		}
@@ -306,35 +297,36 @@ const MESSAGE = {
 				playerNameBufs.push(stringToBuffer(player.name));
 				totalNameSize += playerNameBufs[i].byteLength;
 			})
-			var buffer = new ArrayBuffer(4 + planets.filter(filter).length*6 + enemies.filter(filter).length*5 + shots.filter(filter).length*9 + players.filter(filter).length*11 + totalNameSize),//actual length, not what .length says
+			var buffer = new ArrayBuffer(4 + planets.length*6 + enemies.length*5 + shots.length*9 + players.length*11 + totalNameSize),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
 			view.setUint8(1, planets.length);
-			planets.forEach(function(planet, i) {
-				view.setUint16(2 + i*6, planet.box.center.x);
-				view.setUint16(4 + i*6, planet.box.center.y);
-				view.setUint16(6 + i*6, planet.box.radius);
+			var offset = 2;
+			planets.forEach(function(planet) {
+				view.setUint16(offset, planet.box.center.x);
+				view.setUint16(2 + offset, planet.box.center.y);
+				view.setUint16(4 + offset, planet.box.radius);
+				offset += 6;
 			});
 
-			var offset = 2 + 6*planets.length;
-			view.setUint8(offset, enemies.length);
-			enemies.forEach(function(enemy, i) {
-				view.setUint16(1 + offset + i*5, enemy.box.center.x);
-				view.setUint16(3 + offset + i*5, enemy.box.center.y);
-				view.setUint8(5 + offset + i*5, this.ENEMY_APPEARANCE[enemy.appearance]);
+			view.setUint8(offset++, enemies.length);
+			enemies.forEach(function(enemy) {
+				view.setUint16(offset, enemy.box.center.x);
+				view.setUint16(2 + offset, enemy.box.center.y);
+				view.setUint8(4 + offset, this.ENEMY_APPEARANCE[enemy.appearance]);
+				offset += 5;
 			}, this);
 
-			offset += 1 + 5*enemies.length;
-			view.setUint8(offset, shots.length);
+			view.setUint8(offset++, shots.length);
 			shots.forEach(function(shot, i) {
-				view.setUint16(1 + offset + i*9, shot.box.center.x);
-				view.setUint16(3 + offset + i*9, shot.box.center.y);
-				view.setFloat32(5 + offset + i*9, shot.box.angle);
-				view.setUint8(9 + offset + i*9, shot.lt);
+				view.setUint16(offset, shot.box.center.x);
+				view.setUint16(2 + offset, shot.box.center.y);
+				view.setFloat32(4 + offset, shot.box.angle);
+				view.setUint8(8 + offset, shot.lt);
+				offset += 9;
 			});
 
-			offset += 1 + 9*shots.length;
 			players.forEach(function(player, i) {
 				view.setUint16(offset, player.box.center.x);
 
@@ -372,8 +364,8 @@ const MESSAGE = {
 				});
 			}
 
-			var lim = i + 1 + 5*view.getUint8(i);
-			for (++i; i !== lim; i += 5) {
+			var lim = 5*view.getUint8(i) + ++i;
+			for (; i !== lim; i += 5) {
 				enemies.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
@@ -381,8 +373,8 @@ const MESSAGE = {
 				});
 			}
 
-			lim = i + 1 + 9*view.getUint8(i);
-			for (++i; i !== lim; i+= 9) {
+			lim = 9*view.getUint8(i) + ++i;
+			for (; i !== lim; i+= 9) {
 				shots.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
@@ -419,9 +411,9 @@ const MESSAGE = {
 	REMOVE_ENTITY: {
 		value: 11,
 		serialize: function(planetIds, enemyIds, shotIds, playerIds) {
-			var buffer = new ArrayBuffer(4 + planetIds.filter(filter).length + enemyIds.filter(filter).length + shotIds.filter(filter).length + playerIds.filter(filter).length),
-				view = new Uint8Array(buffer);
-				view[0] = this.value;
+			var view = new Uint8Array(4 + planetIds.length + enemyIds.length + shotIds.length + playerIds.length);
+
+			view[0] = this.value;
 
 			view[1] = planetIds.length;
 			planetIds.forEach(function(id, i) {
@@ -442,7 +434,7 @@ const MESSAGE = {
 				view[3 + planetIds.length + enemyIds.length + shotIds.length + 1 + i] = id;
 			});
 
-			return buffer;
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			var planetIds = [],
@@ -453,13 +445,16 @@ const MESSAGE = {
 			for (var i = 2; i !== view[1] + 2; ++i) {
 				planetIds.push(view[i]);
 			}
-			for (var j = i + 1; j !== i + 1 + view[i]; ++j) {
-				enemyIds.push(view[j]);
+			var limit = view[i] + ++i;
+			for (; i !== limit; ++i) {
+				enemyIds.push(view[i]);
 			}
-			for (i = j + 1; i !== j + 1 + view[j]; ++i) {
+			limit = view[i] + ++i;
+			for (; i !== limit; ++i) {
 				shotIds.push(view[i]);
 			}
 			for (; i !== buffer.byteLength; ++i) {
+				if (i > 30) break;
 				playerIds.push(view[i]);
 			}
 
@@ -501,32 +496,34 @@ const MESSAGE = {
 			view.setUint8(1, yourHealth);
 			view.setUint16(2, yourFuel);
 
+			var offset = 4;
 			planets.forEach(function(planet, i) {
-				view.setUint8(4 + i*2, this.OWNED_BY[planet.progress.team]);
-				view.setUint8(5 + i*2, planet.progress.value);
+				view.setUint8(offset, this.OWNED_BY[planet.progress.team]);
+				view.setUint8(1 + offset, planet.progress.value);
+				offset += 2;
 			}, this);
 
-			var offset = 4 + planets.length*2;
-			enemies.forEach(function(enemy, i) {
-				view.setFloat32(offset + i*4, enemy.box.angle);
+			enemies.forEach(function(enemy) {
+				view.setFloat32(offset, enemy.box.angle);
+				offset += 4;
 			});
 
-			offset += enemies.length*4;
 			shots.forEach(function(shot, i) {
-				view.setUint16(offset + i*4, shot.box.center.x);
-				view.setUint16(2 + offset + i*4, shot.box.center.y);
+				view.setUint16(offset, shot.box.center.x);
+				view.setUint16(2 + offset, shot.box.center.y);
+				offset += 4;
 			});
 
-			offset += shots.length*4;
 			players.forEach(function(player, i) {
-				view.setUint16(offset + i*10, player.box.center.x);
-				view.setUint16(2 + offset + i*10, player.box.center.y);
-				view.setUint8(4 + offset + i*10, player.attachedPlanet);
-				view.setFloat32(5 + offset + i*10, player.box.angle);
+				view.setUint16(offset, player.box.center.x);
+				view.setUint16(2 + offset, player.box.center.y);
+				view.setUint8(4 + offset, player.attachedPlanet);
+				view.setFloat32(5 + offset, player.box.angle);
 				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-				view.setUint8(9 + offset + i*10, enumByte);
+				view.setUint8(9 + offset, enumByte);
+				offset += 10;
 			}, this);
 
 			return buffer;
@@ -593,63 +590,48 @@ const MESSAGE = {
 			MOVE_RIGHT: 32
 		},
 		serialize: function(controls) {
-			var bitField = new Uint8Array([this.value, 0]);
+			var view = new Uint8Array(2),
+				enumByte = 0;
 
-			if (controls.jump) bitField[1] |= this.MASK.JUMP;
-			if (controls.run) bitField[1] |= this.MASK.RUN;
-			if (controls.crouch) bitField[1] |= this.MASK.CROUCH;
-			if (controls.jetpack) bitField[1] |= this.MASK.JETPACK;
-			if (controls.moveLeft) bitField[1] |= this.MASK.MOVE_LEFT;
-			if (controls.moveRight) bitField[1] |= this.MASK.MOVE_RIGHT;
+			if (controls.jump) enumByte |= this.MASK.JUMP;
+			if (controls.run) enumByte |= this.MASK.RUN;
+			if (controls.crouch) enumByte |= this.MASK.CROUCH;
+			if (controls.jetpack) enumByte |= this.MASK.JETPACK;
+			if (controls.moveLeft) enumByte |= this.MASK.MOVE_LEFT;
+			if (controls.moveRight) enumByte |= this.MASK.MOVE_RIGHT;
 
-			return bitField.buffer;
+			view[0] = this.value;
+			view[1] = enumByte;
+
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
-			var view = new Uint8Array(buffer),
+			var enumByte = new Uint8Array(buffer)[1],
 				controls = {};
 
-			controls.jump = view[1] & this.MASK.JUMP ? true : false;
-			controls.run = view[1] & this.MASK.RUN ? true : false;
-			controls.crouch = view[1] & this.MASK.CROUCH ? true : false;
-			controls.jetpack = view[1] & this.MASK.JETPACK ? true : false;
-			controls.moveLeft = view[1] & this.MASK.MOVE_LEFT ? true : false;
-			controls.moveRight = view[1] & this.MASK.MOVE_RIGHT ? true : false;
+			controls.jump = enumByte & this.MASK.JUMP ? true : false;
+			controls.run = enumByte & this.MASK.RUN ? true : false;
+			controls.crouch = enumByte & this.MASK.CROUCH ? true : false;
+			controls.jetpack = enumByte & this.MASK.JETPACK ? true : false;
+			controls.moveLeft = enumByte & this.MASK.MOVE_LEFT ? true : false;
+			controls.moveRight = enumByte & this.MASK.MOVE_RIGHT ? true : false;
 
 			return controls;
 		}
 	},
-	CHAT: {
+	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
 		value: 14,
 		serialize: function(message) {
-			var bufMsg = stringToBuffer(message),
-				buffer = new ArrayBuffer(bufMsg.length + 1),
-				view = new DataView(buffer);
-
-			view.setUint8(0, this.value);
-			new Uint8Array(bufMsg).forEach(function(val, i) {
-				view.setUint8(i + 1, val);
-			});
-
-			return buffer;
+			return MESSAGE.SET_NAME.serialize.call(this, message);
 		},
 		deserialize: function(buffer) {
-			return bufferToString(buffer.slice(1));
+			return MESSAGE.SET_NAME.deserialize(buffer);
 		}
 	},
-	CHAT_BROADCAST: {
+	CHAT_BROADCAST: {//CHAT_BROADCAST and SET_NAME_BROADCAST are coincidentally serialized the same way
 		value: 15,
 		serialize: function(id, message) {
-			var bufMsg = stringToBuffer(message),
-				buffer = new ArrayBuffer(bufMsg.length + 2),
-				view = new DataView(buffer);
-
-			view.setUint8(0, this.value);
-			view.setUint8(1, id);
-			new Uint8Array(bufMsg).forEach(function(val, i) {
-				view.setUint8(i + 2, val);
-			});
-
-			return buffer;
+			return MESSAGE.SET_NAME_BROADCAST.serialize.call(this, id, message);
 		},
 		deserialize: function(buffer) {
 			return {
