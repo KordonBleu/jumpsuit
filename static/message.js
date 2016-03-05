@@ -21,6 +21,12 @@ function bufferToString(arrayBuffer) {
 		return decoder.decode(arrayBuffer);
 	}
 }
+function radToBrad(rad) {
+	return Math.round(rad/(2*Math.PI) * 255);
+}
+function bradToRad(brad) {
+	return brad/255 * (2*Math.PI);
+}
 
 const MESSAGE = {
 	GET_LOBBIES: {
@@ -96,22 +102,18 @@ const MESSAGE = {
 	CREATE_LOBBY: {
 		value: 2,
 		serialize: function(name, playerAmount) {
-			var bufdStr = stringToBuffer(name),
-				buffer = new ArrayBuffer(2 + bufdStr.length),
-				viewOne = new Uint8ClampedArray(buffer, 0, 2),
-				viewName = new Uint8Array(buffer, 2);
-			viewOne[0] = this.value;
-			viewOne[1] = playerAmount;
-			bufdStr.forEach(function(elem, i) {
-				viewName[i] = elem;
-			});
+			var bufLobbyName = stringToBuffer(name),
+				view = new Uint8Array(2 + bufLobbyName.byteLength);
+			view[0] = this.value;
+			view[1] = playerAmount;
+			view.set(bufLobbyName, 2);
 
-			return buffer;
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			return {
-				playerAmount: new Uint8ClampedArray(buffer, 1)[0],
-				name: bufferToString(new Uint8Array(buffer.slice(2)))
+				playerAmount: new Uint8Array(buffer)[1],
+				name: bufferToString(buffer.slice(2))
 			};
 		}
 	},
@@ -172,38 +174,38 @@ const MESSAGE = {
 			alienPink: 2,
 			alienYellow: 1
 		},
-		serialize: function(playerId, univWidth, univHeight, planets, enemies, shots, players, teams) {//teams is an object with team names as keys. The values do not matter
+		serialize: function(playerId, univWidth, univHeight, planets, enemies, shots, players, teams) {
 			var entityBuf = MESSAGE.ADD_ENTITY.serialize(planets, enemies, shots, players),
-				buffer = new ArrayBuffer(10 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
+				buffer = new ArrayBuffer(6 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
 				view = new DataView(buffer),
 				enabledTeams = 0;
 			view.setUint8(0, this.value);
 			view.setUint8(1, playerId);
-			view.setUint32(2, univWidth);
-			view.setUint32(6, univHeight);
+			view.setUint16(2, univWidth);
+			view.setUint16(4, univHeight);
 
 			teams.forEach(function(team) {
 				enabledTeams |= this.TEAM_MASK[team];
 			}, this);
-			view.setInt8(10, enabledTeams);
+			view.setInt8(6, enabledTeams);
 
-			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 11);
+			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 7);
 
 			return buffer;
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),
-				enabledTeamsByte = view.getUint8(10),
+				enabledTeamsByte = view.getUint8(6),
 				enabledTeams = [];
 			for (let team in this.TEAM_MASK) {
 				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
 			}
 			return {
 				playerId: view.getUint8(1),
-				univWidth: view.getUint32(2),
-				univHeight: view.getUint32(6),
+				univWidth: view.getUint16(2),
+				univHeight: view.getUint16(4),
 				enabledTeams: enabledTeams,
-				world: MESSAGE.ADD_ENTITY.deserialize(buffer.slice(10))//lil' hack: 10 because the packet id is removed
+				world: MESSAGE.ADD_ENTITY.deserialize(buffer.slice(6))//lil' hack: 10 because the packet id is removed
 			};
 		}
 	},
@@ -297,7 +299,7 @@ const MESSAGE = {
 				playerNameBufs.push(stringToBuffer(player.name));
 				totalNameSize += playerNameBufs[i].byteLength;
 			})
-			var buffer = new ArrayBuffer(4 + planets.length*6 + enemies.length*5 + shots.length*9 + players.length*11 + totalNameSize),
+			var buffer = new ArrayBuffer(4 + planets.length*6 + enemies.length*5 + shots.length*5 + players.length*8 + totalNameSize),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
@@ -322,9 +324,8 @@ const MESSAGE = {
 			shots.forEach(function(shot, i) {
 				view.setUint16(offset, shot.box.center.x);
 				view.setUint16(2 + offset, shot.box.center.y);
-				view.setFloat32(4 + offset, shot.box.angle);
-				view.setUint8(8 + offset, shot.lt);
-				offset += 9;
+				view.setUint8(4 + offset, radToBrad(shot.box.angle));
+				offset += 5;
 			});
 
 			players.forEach(function(player, i) {
@@ -332,19 +333,19 @@ const MESSAGE = {
 
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
-				view.setFloat32(5 + offset, player.box.angle);
+				view.setUint8(5 + offset, radToBrad(player.box.angle));
 				var enumByte = this.PLAYER_APPEARANCE[player.appearance];
 				enumByte <<= 3;
 				enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-				view.setUint8(9 + offset, enumByte);
-				view.setUint8(10 + offset, playerNameBufs[i].length);
+				view.setUint8(6 + offset, enumByte);
+				view.setUint8(7 + offset, playerNameBufs[i].length);
 				var name = new Uint8Array(playerNameBufs[i]);
 				for (let i = 0; i != name.length; i++) {
-					view.setUint8(11 + offset + i, name[i]);
+					view.setUint8(8 + offset + i, name[i]);
 				}
-				offset += 11 + name.length;
+				offset += 8 + name.length;
 			}, this);
 
 			return buffer;
@@ -373,31 +374,30 @@ const MESSAGE = {
 				});
 			}
 
-			lim = 9*view.getUint8(i) + ++i;
-			for (; i !== lim; i+= 9) {
+			lim = 5*view.getUint8(i) + ++i;
+			for (; i !== lim; i+= 5) {
 				shots.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
-					angle: view.getFloat32(i + 4),
-					lt: view.getUint8(i + 8)
+					angle: bradToRad(view.getUint8(i + 4)),
 				});
 			}
 
 			while (i !== buffer.byteLength) {
-				var nameLgt = view.getUint8(i + 10),
-					enumByte = view.getUint8(i + 9);
+				var nameLgt = view.getUint8(i + 7),
+					enumByte = view.getUint8(i + 6);
 				players.push({
 					x: view.getUint16(i),
 					y: view.getUint16(i + 2),
 					attachedPlanet: view.getUint8(i + 4),
-					angle: view.getFloat32(i + 5),
+					angle: radToBrad(view.getUint8(i + 5)),
 					looksLeft: enumByte & this.MASK.LOOKS_LEFT ? true : false,
 					jetpack: enumByte & this.MASK.JETPACK ? true : false,
 					appearance: Object.keys(this.PLAYER_APPEARANCE)[enumByte << 26 >>> 29],
 					walkFrame: Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29],//we operate on 32 bits
-					name: bufferToString(buffer.slice(i + 11, i + 11 + nameLgt))
+					name: bufferToString(buffer.slice(i + 8, i + 8 + nameLgt))
 				});
-				i += nameLgt + 11;
+				i += nameLgt + 8;
 			}
 
 			return {
@@ -489,7 +489,7 @@ const MESSAGE = {
 			JETPACK: 64
 		},
 		serialize: function(yourHealth, yourFuel, planets, enemies, shots, players) {
-			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length*4 + shots.length*4 + players.length*10),
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + shots.length*4 + players.length*7),
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
@@ -504,8 +504,8 @@ const MESSAGE = {
 			}, this);
 
 			enemies.forEach(function(enemy) {
-				view.setFloat32(offset, enemy.box.angle);
-				offset += 4;
+				view.setUint8(offset, radToBrad(enemy.box.angle));
+				offset += 1;
 			});
 
 			shots.forEach(function(shot, i) {
@@ -518,12 +518,12 @@ const MESSAGE = {
 				view.setUint16(offset, player.box.center.x);
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
-				view.setFloat32(5 + offset, player.box.angle);
+				view.setUint8(5 + offset, radToBrad(player.box.angle));
 				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-				view.setUint8(9 + offset, enumByte);
-				offset += 10;
+				view.setUint8(6 + offset, enumByte);
+				offset += 7;
 			}, this);
 
 			return buffer;
@@ -542,9 +542,9 @@ const MESSAGE = {
 				});
 			}
 
-			var limit = i + enemyAmount*4;
-			for (; i !== limit; i += 4) {
-				enemies.push(view.getFloat32(i));
+			var limit = i + enemyAmount;
+			for (; i !== limit; i += 1) {
+				enemies.push(bradToRad(view.getUint8(i)));
 			}
 
 			limit += shotAmount*4;
@@ -555,14 +555,14 @@ const MESSAGE = {
 				});
 			}
 
-			limit += playerAmount*10;
-			for (; i !== limit; i += 10) {
-				var enumByte = view.getUint8(9 + i);
+			limit += playerAmount*7;
+			for (; i !== limit; i += 7) {
+				let enumByte = view.getUint8(6 + i);
 				players.push({
 					x: view.getUint16(i),
 					y: view.getUint16(2 + i),
 					attachedPlanet: view.getUint8(4 + i),
-					angle: view.getFloat32(5 + i),
+					angle: bradToRad(view.getUint8(5 + i)),
 					looksLeft: enumByte & this.MASK.LOOKS_LEFT ? true : false,
 					jetpack: enumByte & this.MASK.JETPACK ? true : false,
 					walkFrame: Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29]

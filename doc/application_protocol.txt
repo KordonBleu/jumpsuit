@@ -106,10 +106,10 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
 
 ### SHOT
 
-      2B              2B         4B        1B
-+-------------------------------------------------+
-| x-coordinate | y-coordinate | angle | life time |
-+--------------+--------------+-------+-----------+
+      2B              2B         1B
++--------------+--------------+-------+
+| x-coordinate | y-coordinate | angle |
++--------------+--------------+-------+
 
 
 ### LESSER_PLANET
@@ -137,7 +137,7 @@ Owned By must be either:
 
 ### LESSER_PLAYER
 
-      2B             2B               1B            4B        1b         1b           3b            3b
+      2B             2B               1B           1B         1b         1b           3b            3b
 +--------------+--------------+-----------------+-------+------------+---------+--------------+------------+
 | x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | useless bits | Walk Frame |
 +--------------+--------------+-----------------+-------+------------+---------+--------------+------------+
@@ -208,7 +208,7 @@ The server will respond with either CONNECT_ACCEPTED or an ERROR.
 
 ### CONNECT_ACCEPTED (server -> client)
 
- 1B       1B            4B                4B              3b           1b          1b           1b          1b           1b            ?B
+ 1B       1B            2B                2B              3b           1b          1b           1b          1b           1b            ?B
 +---+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
 | 6 | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
 +---+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
@@ -256,7 +256,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 
 ### ADD_ENTITY (server -> client)
 
-  1B       1B           ?*6B         1B        ?*5B         1B       ?*9B     ?B
+  1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
 +----+---------------+========+--------------+=======+-------------+======+========+
 | 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
 +----+---------------+========+--------------+=======+-------------+======+========+
@@ -272,7 +272,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 
 ### GAME_STATE (server -> client)
 
-  1B       1B           2B           ?*3B           ?*4B          ?*4B           ?*10B
+  1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*7B
 +----+-------------+-----------+===============+=============+=============+===============+
 | 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+=============+===============+

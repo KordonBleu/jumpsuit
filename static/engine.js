@@ -50,9 +50,11 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 		},
 		walkFrame: {
 			get: function() {
+				if (this._hurtDate + 300 > Date.now()) return "_hurt";
 				return this._walkFrame;
 			},
 			set: function(newWalkFrame) {
+				if (newWalkFrame === "_hurt") this._hurtDate = Date.now();
 				this._walkFrame = newWalkFrame;
 				this.setBoxSize();
 			}
@@ -233,6 +235,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 					player.fuel = 400;
 					teamScores[player.appearance] -= 5;
 				}
+				player.walkFrame = "_hurt";
 				shotsDelta.removed.push(shot);
 				shots.splice(si, 1);
 			}

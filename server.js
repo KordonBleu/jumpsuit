@@ -521,7 +521,7 @@ wss.on("connection", function(ws) {
 		}
 	});
 	ws.on("pong", function() {
-		player.latency = (Date.now() - player.lastPing) / 2;
+		if (player !== undefined) player.latency = (Date.now() - player.lastPing) / 2;
 	});
 	ws.on("close", cleanup);
 });
