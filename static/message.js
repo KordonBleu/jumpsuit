@@ -193,19 +193,19 @@ const MESSAGE = {
 
 			return buffer;
 		},
-		deserialize: function(buffer) {
+		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
 			var view = new DataView(buffer),
 				enabledTeamsByte = view.getUint8(6),
 				enabledTeams = [];
 			for (let team in this.TEAM_MASK) {
 				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
 			}
+			MESSAGE.ADD_ENTITY.deserialize(buffer.slice(6), planetsCbk, enemiesCbk, shotsCbk, playersCbk)//lil' hack: 6 because the packet id is removed
 			return {
 				playerId: view.getUint8(1),
 				univWidth: view.getUint16(2),
 				univHeight: view.getUint16(4),
-				enabledTeams: enabledTeams,
-				world: MESSAGE.ADD_ENTITY.deserialize(buffer.slice(6))//lil' hack: 10 because the packet id is removed
+				enabledTeams: enabledTeams
 			};
 		}
 	},
@@ -350,62 +350,51 @@ const MESSAGE = {
 
 			return buffer;
 		},
-		deserialize: function(buffer) {
-			var view = new DataView(buffer),
-				planets = [],
-				enemies = [],
-				shots = [],
-				players = [];
+		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+			var view = new DataView(buffer);
 
 			for (var i = 2; i !== 6*view.getUint8(1) + 2; i += 6) {
-				planets.push({
-					x: view.getUint16(i),
-					y: view.getUint16(i + 2),
-					radius: view.getUint16(i + 4)
-				});
+				planetsCbk(
+					view.getUint16(i),//x
+					view.getUint16(i + 2),//y
+					view.getUint16(i + 4)//radius
+				);
 			}
 
 			var lim = 5*view.getUint8(i) + ++i;
 			for (; i !== lim; i += 5) {
-				enemies.push({
-					x: view.getUint16(i),
-					y: view.getUint16(i + 2),
-					appearance: Object.keys(this.ENEMY_APPEARANCE)[view.getUint8(i + 4)]
-				});
+				enemiesCbk(
+					view.getUint16(i),//x
+					view.getUint16(i + 2),//y
+					Object.keys(this.ENEMY_APPEARANCE)[view.getUint8(i + 4)]//appearance
+				);
 			}
 
 			lim = 5*view.getUint8(i) + ++i;
 			for (; i !== lim; i+= 5) {
-				shots.push({
-					x: view.getUint16(i),
-					y: view.getUint16(i + 2),
-					angle: bradToRad(view.getUint8(i + 4)),
-				});
+				shotsCbk(
+					view.getUint16(i),
+					view.getUint16(i + 2),
+					bradToRad(view.getUint8(i + 4))
+				);
 			}
 
 			while (i !== buffer.byteLength) {
 				var nameLgt = view.getUint8(i + 7),
 					enumByte = view.getUint8(i + 6);
-				players.push({
-					x: view.getUint16(i),
-					y: view.getUint16(i + 2),
-					attachedPlanet: view.getUint8(i + 4),
-					angle: radToBrad(view.getUint8(i + 5)),
-					looksLeft: enumByte & this.MASK.LOOKS_LEFT ? true : false,
-					jetpack: enumByte & this.MASK.JETPACK ? true : false,
-					appearance: Object.keys(this.PLAYER_APPEARANCE)[enumByte << 26 >>> 29],
-					walkFrame: Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29],//we operate on 32 bits
-					name: bufferToString(buffer.slice(i + 8, i + 8 + nameLgt))
-				});
+				playersCbk(
+					view.getUint16(i),
+					view.getUint16(i + 2),
+					view.getUint8(i + 4),
+					radToBrad(view.getUint8(i + 5)),
+					enumByte & this.MASK.LOOKS_LEFT ? true : false,
+					enumByte & this.MASK.JETPACK ? true : false,
+					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 26 >>> 29],
+					Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29],//we operate on 32 bits
+					bufferToString(buffer.slice(i + 8, i + 8 + nameLgt))
+				);
 				i += nameLgt + 8;
 			}
-
-			return {
-				planets: planets,
-				enemies: enemies,
-				shots: shots,
-				players: players
-			};
 		}
 	},
 	REMOVE_ENTITY: {
@@ -436,34 +425,22 @@ const MESSAGE = {
 
 			return view.buffer;
 		},
-		deserialize: function(buffer) {
-			var planetIds = [],
-				enemyIds = [],
-				shotIds = [],
-				playerIds = [],
-				view = new Uint8Array(buffer);
+		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+			var view = new Uint8Array(buffer);
 			for (var i = 2; i !== view[1] + 2; ++i) {
-				planetIds.push(view[i]);
+				planetsCbk(view[i]);
 			}
 			var limit = view[i] + ++i;
 			for (; i !== limit; ++i) {
-				enemyIds.push(view[i]);
+				enemiesCbk(view[i]);
 			}
 			limit = view[i] + ++i;
 			for (; i !== limit; ++i) {
-				shotIds.push(view[i]);
+				shotsCbk(view[i]);
 			}
 			for (; i !== buffer.byteLength; ++i) {
-				if (i > 30) break;
-				playerIds.push(view[i]);
+				playersCbk(view[i]);
 			}
-
-			return {
-				planetIds: planetIds,
-				enemyIds: enemyIds,
-				shotIds: shotIds,
-				playerIds: playerIds
-			};
 		}
 	},
 	GAME_STATE: {
@@ -528,54 +505,47 @@ const MESSAGE = {
 
 			return buffer;
 		},
-		deserialize: function(buffer, planetAmount, enemyAmount, shotAmount, playerAmount) {
-			var view = new DataView(buffer),
-				planets = [],
-				enemies = [],
-				shots = [],
-				players = [];
+		deserialize: function(buffer, planetAmount, enemyAmount, shotAmount, playerAmount, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+			var view = new DataView(buffer);
 
-			for (var i = 4; i !== 4 + planetAmount*2; i += 2) {
-				planets.push({
-					ownedBy: Object.keys(this.OWNED_BY)[view.getUint8(i)],
-					progress: view.getUint8(i + 1)
-				});
+			var i = 4;
+			for (let id = 0; i !== 4 + planetAmount*2; i += 2, ++id) {
+				planetsCbk(id,
+					Object.keys(this.OWNED_BY)[view.getUint8(i)],//ownedBy
+					view.getUint8(i + 1)//progress
+				);
 			}
 
 			var limit = i + enemyAmount;
-			for (; i !== limit; i += 1) {
-				enemies.push(bradToRad(view.getUint8(i)));
+			for (let id = 0; i !== limit; ++i, ++id) {
+				enemiesCbk(id, bradToRad(view.getUint8(i)));//angle
 			}
 
 			limit += shotAmount*4;
-			for (; i !== limit; i+= 4) {
-				shots.push({
-					x: view.getUint16(i),
-					y: view.getUint16(i + 2)
-				});
+			for (let id = 0; i !== limit; i+= 4, ++id) {
+				shotsCbk(id,
+					view.getUint16(i),//x
+					view.getUint16(i + 2)//y
+				);
 			}
 
 			limit += playerAmount*7;
-			for (; i !== limit; i += 7) {
+			for (let id = 0; i !== limit; i += 7, ++id) {
 				let enumByte = view.getUint8(6 + i);
-				players.push({
-					x: view.getUint16(i),
-					y: view.getUint16(2 + i),
-					attachedPlanet: view.getUint8(4 + i),
-					angle: bradToRad(view.getUint8(5 + i)),
-					looksLeft: enumByte & this.MASK.LOOKS_LEFT ? true : false,
-					jetpack: enumByte & this.MASK.JETPACK ? true : false,
-					walkFrame: Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29]
-				});
+				playersCbk(id,
+					view.getUint16(i),//x
+					view.getUint16(2 + i),//y
+					view.getUint8(4 + i),//attachedPlanet
+					bradToRad(view.getUint8(5 + i)),//angle
+					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
+					enumByte & this.MASK.JETPACK ? true : false,//jetpack
+					Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29]//walkframe
+				);
 			}
 
 			return {
 				yourHealth: view.getUint8(1),
-				yourFuel: view.getUint16(2),
-				planets: planets,
-				enemies: enemies,
-				shots: shots,
-				players: players
+				yourFuel: view.getUint16(2)
 			};
 		}
 	},

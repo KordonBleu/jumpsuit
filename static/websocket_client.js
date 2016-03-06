@@ -98,63 +98,114 @@ Connection.prototype.messageHandler = function(message) {
 			}
 			break;
 		case MESSAGE.CONNECT_ACCEPTED.value:
-			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
+			planets.length = 0;
+			enemies.length = 0;
+			shots.length = 0;
+			players.length = 0;
+			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data,
+				function(x, y, radius) {//add planets
+					planets.push(new Planet(x, y, radius));
+				},
+				function(x, y, appearance) {//add enemies
+					enemies.push(new Enemy(x, y, appearance));
+				},
+				function(x, y, angle) {//add shots
+					shots.push(new Shot(x, y, angle));
+				},
+				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
+					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
+					player.looksLeft = looksLeft;
+					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
+					players.push(player);
+				}
+			);
 			ownIdx = val.playerId;
 			enabledTeams = val.enabledTeams;
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
 
-
-			planets.length = 0;
-			val.world.planets.forEach(function(planet) {
-				planets.push(new Planet(planet.x, planet.y, planet.radius));
-			});
-
-			enemies.length = 0;
-			val.world.enemies.forEach(function(enemy) {
-				enemies.push(new Enemy(enemy.x, enemy.y, enemy.appearance));
-			});
-
-			shots.length = 0;
-			val.world.shots.forEach(function(shot) {
-				shots.push({box: new Rectangle(new Point(shot.x, shot.y), resources["laserBeam"].width, resources["laserBeam"].height, shot.angle), lt: 200});
-			});
-
-			players.length = 0;
-			val.world.players.forEach(function(_player) {
-				var player = new Player(_player.name, _player.appearance, "_" + _player.walkFrame, _player.attachedPlanet, _player.jetpack);
-				player.looksLeft = _player.looksLeft;
-				player.box = new Rectangle(new Point(_player.x, _player.y), resources[player.appearance + player.walkFrame].width, resources[player.appearance + player.walkFrame].height, _player.angle);
-				players.push(player);
-			});
 			break;
 		case MESSAGE.ADD_ENTITY.value:
-			var val = MESSAGE.ADD_ENTITY.deserialize(message.data);
-
-			val.players.forEach(function(player) {
-				printChatMessage(undefined, undefined, player.name + " joined the game");
-				players.push(new Player(player.name, player.appearance, player.walkFrame, player.attachedPlanet, player.jetpack, player.health));
-			});
-			val.shots.forEach(function(shot) {
-				laserModel.makeSound(makePanner(shot.x - players[ownIdx].box.center.x, shot.y - players[ownIdx].box.center.y)).start(0);
-				shots.push(new Shot(shot.x, shot.y, shot.angle));
-			});
+			MESSAGE.ADD_ENTITY.deserialize(message.data,
+				function(x, y, radius) {},//add planets
+				function(x, y, appearance) {},//add enemies
+				function(x, y, angle) {//add shots
+					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
+					shots.push(new Shot(x, y, angle));
+				},
+				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
+					printChatMessage(undefined, undefined, name + " joined the game");
+					players.push(new Player(name, appearance, walkFrame, attachedPlanet, jetpack));
+					players[players.length - 1].box.center.x = x;
+					players[players.length - 1].box.center.y = y;
+					players[players.length - 1].looksLeft = looksLeft;
+				}
+			);
 			break;
 		case MESSAGE.REMOVE_ENTITY.value:
-			var val = MESSAGE.REMOVE_ENTITY.deserialize(message.data);
-			val.playerIds.forEach(function(id) {
-				printChatMessage(undefined, undefined, players[id].name + " has left the game");
-				players.splice(id, 1);
-				if (id < ownIdx) --ownIdx;
-			});
-			val.shotIds.forEach(function(id) {
-				deadShots.push(shots[id]);
-				deadShots[deadShots.length - 1].lifeTime = 0;
-				shots.splice(id, 1);
-			});
+			MESSAGE.REMOVE_ENTITY.deserialize(message.data,
+				function(id) {},//remove planets
+				function(id) {},//remove enemies
+				function(id) {//remove shots
+					deadShots.push(shots[id]);
+					deadShots[deadShots.length - 1].lifeTime = 0;
+					shots.splice(id, 1);
+				},
+				function(id) {//remove players
+					printChatMessage(undefined, undefined, players[id].name + " has left the game");
+					players.splice(id, 1);
+					if (id < ownIdx) --ownIdx;
+				}
+			);
 			break;
 		case MESSAGE.GAME_STATE.value:
-			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, shots.length, players.length);
+			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, shots.length, players.length,
+				function(id, ownedBy, progress) {
+					planets[id].progress.team = ownedBy;
+					planets[id].progress.value = progress;
+					planets[id].updateColor();
+				},
+				function(id, angle) {
+					enemies[id].box.angle = angle;
+				},
+				function(id, x, y) {
+					shots[id].box.center.x = x;
+					shots[id].box.center.y = y;
+				},
+				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame) {
+					if (id === ownIdx) {
+						if (!players[id].jetpack && jetpack) {
+							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+							players[id].jetpackSound.start(0);
+						} else if (players[id].jetpack && !jetpack && players[ownIdx].jetpackSound !== undefined) {
+							players[id].jetpackSound.stop();
+						}
+					} else {
+						if(!players[id].jetpack && jetpack) {
+							setPanner(players[id].panner, players[id].box.center.x - players[ownIdx].box.center.x, players[id].box.center.y - players[ownIdx].box.center.y);
+							players[id].jetpackSound = jetpackModel.makeSound(players[id].panner, 1);
+							players[id].jetpackSound.start(0);
+						} else if(players[id].jetpack && !jetpack && players[id].jetpackSound !== undefined) {
+							players[id].jetpackSound.stop();
+						}
+					}
+
+					var p = 1;
+					if (players[id].boxInformations[0] === undefined) p = 0;
+					if (p === 1) {
+						players[id].boxInformations[0].box.center.x = players[id].box.center.x;
+						players[id].boxInformations[0].box.center.y = players[id].box.center.y;
+						players[id].boxInformations[0].box.angle = players[id].box.angle;
+						players[id].boxInformations[0].timestamp = (players[id].boxInformations[1] !== undefined) ? players[id].boxInformations[1].timestamp : Date.now();
+					}
+					players[id].boxInformations[p] = {box: new Rectangle(new Point(x, y), 0, 0, angle), timestamp: Date.now()};
+
+					players[id].looksLeft = looksLeft;
+					players[id].walkFrame = "_" + walkFrame;
+					players[id].attachedPlanet = attachedPlanet;
+					players[id].jetpack = jetpack;
+				}
+			);
 
 			players[ownIdx].health = val.yourHealth;
 			players[ownIdx].fuel = val.yourFuel;
@@ -168,51 +219,6 @@ Connection.prototype.messageHandler = function(message) {
 			});
 			fuelElement.value = val.yourFuel;
 
-			val.planets.forEach(function(planet, i) {
-				planets[i].progress.team = planet.ownedBy;
-				planets[i].progress.value = planet.progress;
-				planets[i].updateColor();
-			});
-			val.enemies.forEach(function(enemyAngle, i) {
-				enemies[i].box.angle = enemyAngle;
-			});
-			val.shots.forEach(function(shot, i) {
-				shots[i].box.center.x = shot.x;
-				shots[i].box.center.y = shot.y;
-			});
-			val.players.forEach(function(player, i) {
-				if (i === ownIdx) {
-					if (!players[i].jetpack && player.jetpack) {
-						players[i].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
-						players[i].jetpackSound.start(0);
-					} else if (players[i].jetpack && !player.jetpack && players[ownIdx].jetpackSound !== undefined) {
-						players[i].jetpackSound.stop();
-					}
-				} else {
-					if(!players[i].jetpack && player.jetpack) {
-						setPanner(players[i].panner, players[i].box.center.x - players[ownIdx].box.center.x, players[i].box.center.y - players[ownIdx].box.center.y);
-						players[i].jetpackSound = jetpackModel.makeSound(players[i].panner, 1);
-						players[i].jetpackSound.start(0);
-					} else if(players[i].jetpack && !player.jetpack && players[i].jetpackSound !== undefined) {
-						players[i].jetpackSound.stop();
-					}
-				}
-
-				var p = 1;
-				if (players[i].boxInformations[0] === undefined) p = 0;
-				if (p === 1) {
-					players[i].boxInformations[0].box.center.x = players[i].box.center.x;
-					players[i].boxInformations[0].box.center.y = players[i].box.center.y;
-					players[i].boxInformations[0].box.angle = players[i].box.angle;
-					players[i].boxInformations[0].timestamp = (players[i].boxInformations[1] !== undefined) ? players[i].boxInformations[1].timestamp : Date.now();
-				}
-				players[i].boxInformations[p] = {box: new Rectangle(new Point(player.x, player.y), 0, 0, player.angle), timestamp: Date.now()};
-
-				players[i].looksLeft = player.looksLeft;
-				players[i].walkFrame = "_" + player.walkFrame;
-				players[i].attachedPlanet = player.attachedPlanet;
-				players[i].jetpack = player.jetpack;
-			});
 			if (!game.started) game.start();
 			break;
 		case MESSAGE.LOBBY_LIST.value:
