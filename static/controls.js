@@ -236,6 +236,11 @@ function handleGamepad() {
 	}
 }
 
+document.addEventListener("wheel", function(e) {
+	windowBox.zoomFactor *= 1 - e.deltaY/10;
+	resizeCanvas();
+});
+
 if (!matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
 	//only supported by webkit as of today, the whole statement returns true in other browsers
 	handleInput.loadKeySettings();

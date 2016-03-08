@@ -31,6 +31,9 @@ html, body {
 	-ms-user-select: text;
 	user-select: text;
 }
+#gui-fuel, #gui-health, #gui-chat, #gui-points {
+	pointer-events: none;
+}
 html {
 	background-image: url("/assets/images/background.png");
 }
@@ -42,7 +45,7 @@ html {
 	filter: url("#MotionBlur");
 	-webkit-filter: url("#MotionBlur");
 }
-#minimap-canvas{
+#minimap-canvas {
 	position: fixed;
 	top: 52px;
 	right: 8px;
@@ -63,7 +66,7 @@ html {
 	font-size: 130px;
 	text-align: center;
 }
-#minimap-overlay i{ position: relative; top: -13px;}
+#minimap-overlay i { position: relative; top: -13px;}
 .hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
@@ -175,12 +178,12 @@ input[type=range]::-ms-track {
 	height: 2.4px;
 	background: #ccc;
 }
-input[type=range]:active{
+input[type=range]:active {
 	cursor: -webkit-grabbing;
 	cursor: -moz-grabbing;
 	cursor: grabbing;
 }
-input[type=checkbox]::before{
+input[type=checkbox]::before {
 	content: " ";
 	height: 14px;
 	width: 14px;
@@ -193,7 +196,7 @@ input[type=checkbox]::before{
 	left: -3px;		
 	cursor: pointer;
 }
-input[type=checkbox]::after{
+input[type=checkbox]::after {
 	content: " ";
 	transition: transform .15s .1s, opacity .2s;
 	transform: scale(0.4);
@@ -231,7 +234,7 @@ label.checkbox-label {
 	margin: 8px 2px;
 	cursor: pointer;
 }
-label.range-label{
+label.range-label {
 	min-width: 150px;
 	margin: 0 8px 8px 0;
 	display: inline-block;
@@ -283,7 +286,7 @@ label.range-label{
 	width: 230px;
 }
 
-#gui-chat-first{
+#gui-chat-first {
 	height: 1px;
 }
 #chat-input-container {
@@ -305,7 +308,7 @@ label.range-label{
 	border-top-left-radius: 4px;
 	border-top-right-radius: 4px;
 }
-#chat-input:focus{
+#chat-input:focus {
 	background: rgba(0, 0, 0, 0.3);	
 }
 #player-list {
@@ -332,7 +335,7 @@ label.range-label{
 	padding-left: 1%;
 	cursor: pointer;
 }
-#shade-box{
+#shade-box {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -341,7 +344,7 @@ label.range-label{
 	height: 100%;
 	background: rgba(0, 0, 0, 0.5);	
 }
-#shade-box.hidden{
+#shade-box.hidden {
 	display: none;
 }
 #settings-box, #info-box {
@@ -362,7 +365,7 @@ label.range-label{
 	height: calc(100% - 190px);
 	max-width: 900px;
 }
-#settings-box.hidden, #info-box.hidden{
+#settings-box.hidden, #info-box.hidden {
 	display: block;
 	transform: scale(0) translate(-50%, -50%);
 	opacity: 0;
@@ -378,7 +381,7 @@ label.range-label{
 	top: 0.5%;
 	right: 0.5%;
 }
-#settings-box h3, #info-box h3{
+#settings-box h3, #info-box h3 {
 	float: left;
 	width: 100%;
 }
@@ -395,7 +398,7 @@ label.range-label{
 	background: #ebedf4;
 	color: #333;
 }
-#menu-box.hidden{
+#menu-box.hidden {
 	transform: scale(0);
 	opacity: 0;
 	display: block;
@@ -407,7 +410,7 @@ label.range-label{
 	padding: 0 8px;	
 	box-sizing: border-box;
 }
-#status{
+#status {
 	margin-left: 8px;
 }
 #lobby-table {
@@ -433,7 +436,7 @@ label.range-label{
 	padding: 0.5rem;
 	text-transform: uppercase;
 }
-#lobby-table th:last-child{
+#lobby-table th:last-child {
 	width: 150px;
 }
 #lobby-table th img {
@@ -446,7 +449,7 @@ label.range-label{
 #lobby-list tr:nth-child(even) {
 	background-color: rgba(0, 0, 0, 0.1);
 }
-#lobby-list tr td:first-child{
+#lobby-list tr td:first-child {
 	text-align: left;
 	padding-left: 1.8%;
 }
@@ -487,7 +490,7 @@ label.range-label{
 	font-weight: normal;
 	margin: 0.5em 0px;
 }
-#search-input{
+#search-input {
 	margin-top: 12px;
 	padding: 2px;
 	width: calc(100% - 8px);
@@ -501,13 +504,13 @@ label.range-label{
 	width: 565px;
 	margin: 0 auto;
 }
-#team-list li{
+#team-list li {
 	display: inline-block;
 	margin: 10px;
 	width: 88px;
 	text-align: center;
 }
-#team-list li img{
+#team-list li img {
 	width: 88px;
 	height: 88px;
 }
@@ -531,7 +534,7 @@ label.range-label{
 #key-settings td {
 	padding: 3px;
 }
-#key-settings tr:not(.selected):hover{
+#key-settings tr:not(.selected):hover {
 	background: #AD3726;
 	color: #ddd;
 }
@@ -658,7 +661,7 @@ label.range-label{
 #gui-fuel::-moz-meter-bar {
 	background: #5493ce;
 }
-#gui-fuel::-webkit-meter-optimum-value, #gui-fuel::-webkit-meter-suboptimum-value, #gui-fuel::-webkit-meter-even-less-good-value{
+#gui-fuel::-webkit-meter-optimum-value, #gui-fuel::-webkit-meter-suboptimum-value, #gui-fuel::-webkit-meter-even-less-good-value {
 	background: #5493ce;
 }
 #gui-fuel::before {
@@ -674,7 +677,7 @@ label.range-label{
 	left: 8px;
 	color: #eee;
 }
-#gui-health::before{
+#gui-health::before {
 	content: "Health:";
 	width: 77px;
 	display: inline-block;
@@ -692,7 +695,7 @@ label.range-label{
 #gui-health div.heartHalfFilled { background-image: url("/assets/images/heartHalfFilled.svg"); }
 #gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
 
-#gui-bad-connection{
+#gui-bad-connection {
 	font-size: 44px;
 	position: fixed;
 	top: 50%;
@@ -702,7 +705,7 @@ label.range-label{
 	margin-left: -250px;
 	color: #eee;
 }
-#gui-points{
+#gui-points {
 	position: fixed;
 	top: 4px;
 	left: 50%;
@@ -711,17 +714,17 @@ label.range-label{
 	font-size: 32px;
 	background: rgba(0, 0, 0, 0.7);
 }
-#gui-points th{
+#gui-points th {
 	width: 120px;
 	margin: 0 5px;
 	padding: 0;
 	text-align: center;
 }
-#gui-points-alienBeige{ color: #e5d9be; }
-#gui-points-alienBlue{ color: #a2c2ea; }
-#gui-points-alienGreen{ color: #8aceb9; }
-#gui-points-alienPink{ color: #f19cb7; }
-#gui-points-alienYellow{ color: #fed532; }
+#gui-points-alienBeige { color: #e5d9be; }
+#gui-points-alienBlue { color: #a2c2ea; }
+#gui-points-alienGreen { color: #8aceb9; }
+#gui-points-alienPink { color: #f19cb7; }
+#gui-points-alienYellow { color: #fed532; }
 
 #gui-options {
 	position: fixed;
