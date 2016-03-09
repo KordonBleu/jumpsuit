@@ -56,57 +56,23 @@ function mod(dividend, divisor) {
 	return (dividend%divisor + divisor) % divisor;
 }
 windowBox.wrapX = function(entityX) {//get the position where the entity can be drawn on the screen
-	return mod(entityX + universe.width/2 - this.center.x, universe.width) -universe.width/2 + canvas.width/2;
+	return (mod(entityX + universe.width/2 - this.center.x, universe.width) -universe.width/2 + canvas.width/2 - (this.width*this.zoomFactor - this.width)/2) * this.zoomFactor;
 };
 windowBox.wrapY = function(entityY) {//get the position where the entity can be drawn on the screen
-	return mod(entityY + universe.height/2 - this.center.y, universe.height) -universe.height/2 + canvas.height/2;
+	return (mod(entityY + universe.height/2 - this.center.y, universe.height) -universe.height/2 + canvas.height/2 - (this.height*this.zoomFactor - this.height)/2) * this.zoomFactor;
 };
 windowBox.zoomFactor = 1;
-windowBox.drawPlanet = function(cx, cy, r) {
-	var cxCopy = cx,
-		cyCopy = cy,
-		rCopy = r;
-	this.strokeAtmos(cx, cy, r*1.75, 2);
-
-	cx *= this.zoomFactor;
-	cy *= this.zoomFactor;
-	r *= this.zoomFactor;
-
-	context.beginPath();
-	context.arc(cx, cy, r, 0, 2 * Math.PI, false);
-	context.closePath();
-	context.fill();
-	this.drawRotatedImage(resources["planet"], cxCopy, cyCopy, r / 200 * Math.PI, false, 2*rCopy, 2*rCopy);
-}
 windowBox.strokeAtmos = function(cx, cy, r, sw) {
-	cx *= this.zoomFactor;
-	cy *= this.zoomFactor;
-	r *= this.zoomFactor;
-
 	context.beginPath();
-	context.arc(cx, cy, r, 0, 2 * Math.PI, false);
+	context.arc(cx, cy, r*this.zoomFactor, 0, 2 * Math.PI, false);
 	context.globalAlpha = 0.1;
 	context.fill();
 	context.globalAlpha = 1;
-	context.strokeStyle = context.fillStyle;
-	context.lineWidth = sw;
-	context.stroke();
-	context.closePath();
-}
-windowBox.drawCircleBar = function(x, y, val) {
-	x *= this.zoomFactor;
-	y *= this.zoomFactor;
-
-	context.beginPath();
-	context.arc(x, y, 50, -Math.PI * 0.5, (val / 100) * Math.PI * 2 - Math.PI * 0.5, false);
-	context.lineWidth = 10;
-	context.strokeStyle = "rgba(0, 0, 0, 0.2)";
+	context.lineWidth = sw*this.zoomFactor;
 	context.stroke();
 	context.closePath();
 }
 windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) {
-	x *= this.zoomFactor;
-	y *= this.zoomFactor;
 	sizeX *= this.zoomFactor;
 	sizeY *= this.zoomFactor;
 
@@ -116,6 +82,102 @@ windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) 
 	var wdt = sizeX || image.width*this.zoomFactor, hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 	context.resetTransform();
+}
+Planet.prototype.draw = function() {
+	var cx = windowBox.wrapX(this.box.center.x),
+		cy = windowBox.wrapY(this.box.center.y);
+
+	//draw planet
+	context.beginPath();
+	context.arc(cx, cy, this.box.radius*windowBox.zoomFactor, 0, 2 * Math.PI, false);
+	context.closePath();
+	context.fill();
+
+	//apply texture
+	windowBox.drawRotatedImage(resources["planet"], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, false, 2*this.box.radius, 2*this.box.radius);
+
+	//draw progress indicator
+	context.beginPath();
+	context.arc(cx, cy, 50*windowBox.zoomFactor, -Math.PI * 0.5, (this.progress.value / 100) * Math.PI * 2 - Math.PI * 0.5, false);
+	context.lineWidth = 10*windowBox.zoomFactor;
+	context.strokeStyle = "rgba(0, 0, 0, 0.2)";
+	context.stroke();
+	context.closePath();
+}
+Planet.prototype.drawAtmos = function() {
+	context.fillStyle = this.progress.color;
+	context.strokeStyle = context.fillStyle;
+
+	windowBox.strokeAtmos(
+		windowBox.wrapX(this.box.center.x),
+		windowBox.wrapY(this.box.center.y),
+		this.box.radius*1.75, 2);
+}
+Enemy.prototype.draw = function() {
+	windowBox.drawRotatedImage(resources[this.appearance],
+		windowBox.wrapX(this.box.center.x),
+		windowBox.wrapY(this.box.center.y),
+		this.box.angle, false);
+}
+Enemy.prototype.drawAtmos = function() {
+	context.fillStyle = "#aaa";
+	context.strokeStyle = context.fillStyle;
+
+	windowBox.strokeAtmos(
+		windowBox.wrapX(this.box.center.x),
+		windowBox.wrapY(this.box.center.y),
+		350, 4);
+}
+Shot.prototype.draw = function(dead) {
+	windowBox.drawRotatedImage(resources[dead ? "laserBeamDead" : "laserBeam"],
+		windowBox.wrapX(this.box.center.x),
+		windowBox.wrapY(this.box.center.y),
+		this.box.angle, false);
+}
+Player.prototype.draw = function(showName) {
+	var res = resources[this.appearance + this.walkFrame],
+		playerX = windowBox.wrapX(this.box.center.x),
+		playerY = windowBox.wrapY(this.box.center.y);
+
+	//name
+	if (showName) {
+		let distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
+		context.fillText(this.name, this, this - distance*windowBox.zoomFactor);
+	}
+
+	//jetpack
+	var shift = this.looksLeft === true ? -14*windowBox.zoomFactor : 14*windowBox.zoomFactor,
+		jetpackX = playerX - shift*Math.sin(this.box.angle + Math.PI/2),
+		jetpackY = playerY + shift*Math.cos(this.box.angle + Math.PI/2);
+
+	windowBox.drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, this.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+	if (this.jetpack) {
+		var jetpackFireOneX = jetpackX - 53 * Math.sin(this.box.angle - Math.PI / 11)*windowBox.zoomFactor,
+			jetpackFireOneY = jetpackY + 53 * Math.cos(this.box.angle - Math.PI / 11)*windowBox.zoomFactor,
+			jetpackFireTwoX = jetpackX - 53 * Math.sin(this.box.angle + Math.PI / 11)*windowBox.zoomFactor,
+			jetpackFireTwoY = jetpackY + 53 * Math.cos(this.box.angle + Math.PI / 11)*windowBox.zoomFactor;
+
+		if (Math.random() < 0.6) {//TODO: this should be dependent on speed, which can be calculated with predictBox
+			particles.push(new Particle(18,
+				this.box.center.x - shift*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
+				this.box.center.y + shift*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle - Math.PI / 11),
+				undefined,
+				5.2 * Math.cos(this.box.angle),
+				80));
+			particles.push(new Particle(18,
+				this.box.center.x - shift*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle + Math.PI / 11),
+				this.box.center.y + shift*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle + Math.PI / 11),
+				undefined,
+				5.2 * Math.cos(this.box.angle),
+				80));
+		}
+
+		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, this.box.angle);
+		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, this.box.angle);
+	}
+
+	//body
+	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, this.looksLeft);
 }
 
 minimapCanvas.width = 150;
@@ -215,27 +277,18 @@ function loop() {
 
 	//layer 1: the game
 	doPrediction(universe, players, enemies, shots);
-	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) + game.dragSmoothed.x * 4) / 5;
-	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) + game.dragSmoothed.y * 4) / 5;
+	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) * 1/windowBox.zoomFactor + game.dragSmoothed.x * 4) / 5;
+	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) * 1/windowBox.zoomFactor + game.dragSmoothed.y * 4) / 5;
 
-	windowBox.center.x = players[ownIdx].box.center.x + game.dragSmoothed.x - (windowBox.width - windowBox.width*windowBox.zoomFactor)/2;
-	windowBox.center.y = players[ownIdx].box.center.y + game.dragSmoothed.y - (windowBox.height - windowBox.height*windowBox.zoomFactor)/2;
+	windowBox.center.x = players[ownIdx].box.center.x + game.dragSmoothed.x;
+	windowBox.center.y = players[ownIdx].box.center.y + game.dragSmoothed.y;
 
 	//planet
 	var playerInAtmos = false;
 	planets.forEach(function (planet, pi) {
-		context.fillStyle = planet.progress.color;
+		if (universe.collide(windowBox, planet.atmosBox)) planet.drawAtmos();
+		if (universe.collide(windowBox, planet.box)) planet.draw();
 
-		if (universe.collide(windowBox, planet.atmosBox)) {
-			windowBox.drawPlanet(
-				windowBox.wrapX(planet.box.center.x),
-				windowBox.wrapY(planet.box.center.y),
-			   	planet.box.radius);
-			windowBox.drawCircleBar(
-				windowBox.wrapX(planet.box.center.x),
-				windowBox.wrapY(planet.box.center.y),
-			   	planet.progress.value);
-		}
 		if (!playerInAtmos && universe.collide(planet.atmosBox, players[ownIdx].box)) playerInAtmos = true;
 	});
 	if(playerInAtmos) bgFilter.frequency.value = Math.min(4000, bgFilter.frequency.value * 1.05);
@@ -243,30 +296,17 @@ function loop() {
 
 	//shots
 	shots.forEach(function (shot) {
-		if (universe.collide(windowBox, shot.box)) windowBox.drawRotatedImage(resources["laserBeam"],
-			windowBox.wrapX(shot.box.center.x),
-			windowBox.wrapY(shot.box.center.y),
-			shot.box.angle, false);
+		if (universe.collide(windowBox, shot.box)) shot.draw(false);
 	});
 	deadShots.forEach(function(shot, si) {
-		if (universe.collide(windowBox, shot.box)) windowBox.drawRotatedImage(resources["laserBeamDead"],
-			windowBox.wrapX(shot.box.center.x),
-			windowBox.wrapY(shot.box.center.y),
-			shot.box.angle, false);
+		if (universe.collide(windowBox, shot.box)) shot.draw(true);
 		if (++shot.lifeTime <= 60) deadShots.splice(si, 1);
 	});
 
 	//enemies
 	enemies.forEach(function (enemy, ei) {
-		context.fillStyle = "#aaa";
-		if (universe.collide(windowBox, enemy.aggroBox)) windowBox.strokeAtmos(
-			windowBox.wrapX(enemy.box.center.x),
-			windowBox.wrapY(enemy.box.center.y),
-			350, 4);
-		if (universe.collide(windowBox, enemy.box)) windowBox.drawRotatedImage(resources[enemy.appearance],
-			windowBox.wrapX(enemy.box.center.x),
-			windowBox.wrapY(enemy.box.center.y),
-			enemy.box.angle, false);
+		if (universe.collide(windowBox, enemy.aggroBox)) enemy.drawAtmos();
+		if (universe.collide(windowBox, enemy.box)) enemy.draw();
 	});
 
 	//particles
@@ -283,43 +323,9 @@ function loop() {
 	context.font = "22px Open Sans";
 	context.textAlign = "center";
 	players.forEach(function (player, i) {
-		if (universe.collide(windowBox, player.box)) {
-			var res = resources[player.appearance + player.walkFrame],
-				playerX = windowBox.wrapX(player.box.center.x),
-				playerY = windowBox.wrapY(player.box.center.y);
+		if (universe.collide(windowBox, player.box)) player.draw(i !== ownIdx);
 
-			//name
-			if (i !== ownIdx) {
-				let distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
-				context.fillText(player.name, playerX, playerY - distance);
-			}
-
-			//jetpack
-			var shift = player.looksLeft === true ? -14 : 14,
-				jetpackX = playerX -shift*Math.sin(player.box.angle + Math.PI/2),
-				jetpackY = playerY + shift*Math.cos(player.box.angle + Math.PI/2);
-
-			windowBox.drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, player.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
-			if (player.jetpack) {
-				if(player.panner !== undefined) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
-
-				var jetpackFireOneX = jetpackX - 53 * Math.sin(player.box.angle - Math.PI / 11),
-					jetpackFireOneY = jetpackY + 53 * Math.cos(player.box.angle - Math.PI / 11),
-					jetpackFireTwoX = jetpackX - 53 * Math.sin(player.box.angle + Math.PI / 11),
-					jetpackFireTwoY = jetpackY + 53 * Math.cos(player.box.angle + Math.PI / 11);
-
-				if (Math.random() < 0.6) {//TODO: this should be dependent on speed, which can be calculated with predictBox
-					particles.push(new Particle(18, player.box.center.x + jetpackFireOneX - windowBox.width/2, player.box.center.y + jetpackFireOneY - windowBox.height/2, undefined, 5.2 * Math.cos(player.box.angle), 80));
-					particles.push(new Particle(18, player.box.center.x + jetpackFireTwoX - windowBox.width/2, player.box.center.y + jetpackFireTwoY - windowBox.height/2, undefined, 5.2 * Math.cos(player.box.angle), 80));
-				}
-
-				windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, player.box.angle);
-				windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, player.box.angle);
-			}
-
-			//body
-			windowBox.drawRotatedImage(res, playerX, playerY, player.box.angle, player.looksLeft);
-		}
+		if(player.panner !== undefined && player.jetpack) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 	});
 
 	//layer 2: HUD / GUI

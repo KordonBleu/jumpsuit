@@ -1,7 +1,8 @@
 # JumpSuit's protocol specification
 
 Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
-Strings used by the JumpSuit's protocol are always encoded as UTF-8. When the protocol mandates the length of a string, it is implied it is an amount of bytes.
+Strings are always encoded as UTF-8. When the protocol mandates the length of a string, it is implied the length is an amount of bytes.
+Angles are always encoded as brads.
 
 ## Notation
 
