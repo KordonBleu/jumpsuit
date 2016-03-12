@@ -21,11 +21,11 @@ function bufferToString(arrayBuffer) {
 		return decoder.decode(arrayBuffer);
 	}
 }
-function radToBrad(rad) {
-	return Math.round(rad/(2*Math.PI) * 255);
+function radToBrad(rad, precision) {
+	return Math.round(rad/(2*Math.PI) * ((1 << precision*8) - 1));
 }
-function bradToRad(brad) {
-	return brad/255 * (2*Math.PI);
+function bradToRad(brad, precision) {
+	return brad/((1 << precision*8) - 1) * (2*Math.PI);
 }
 
 const MESSAGE = {
@@ -324,7 +324,7 @@ const MESSAGE = {
 			shots.forEach(function(shot, i) {
 				view.setUint16(offset, shot.box.center.x);
 				view.setUint16(2 + offset, shot.box.center.y);
-				view.setUint8(4 + offset, radToBrad(shot.box.angle));
+				view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
 				offset += 5;
 			});
 
@@ -333,7 +333,7 @@ const MESSAGE = {
 
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
-				view.setUint8(5 + offset, radToBrad(player.box.angle));
+				view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
 				var enumByte = this.PLAYER_APPEARANCE[player.appearance];
 				enumByte <<= 3;
 				enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
@@ -375,7 +375,7 @@ const MESSAGE = {
 				shotsCbk(
 					view.getUint16(i),
 					view.getUint16(i + 2),
-					bradToRad(view.getUint8(i + 4))
+					bradToRad(view.getUint8(i + 4), 1)
 				);
 			}
 
@@ -386,7 +386,7 @@ const MESSAGE = {
 					view.getUint16(i),
 					view.getUint16(i + 2),
 					view.getUint8(i + 4),
-					radToBrad(view.getUint8(i + 5)),
+					radToBrad(view.getUint8(i + 5), 1),
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,
 					enumByte & this.MASK.JETPACK ? true : false,
 					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 26 >>> 29],
@@ -481,7 +481,7 @@ const MESSAGE = {
 			}, this);
 
 			enemies.forEach(function(enemy) {
-				view.setUint8(offset, radToBrad(enemy.box.angle));
+				view.setUint8(offset, radToBrad(enemy.box.angle, 1));
 				offset += 1;
 			});
 
@@ -495,7 +495,7 @@ const MESSAGE = {
 				view.setUint16(offset, player.box.center.x);
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
-				view.setUint8(5 + offset, radToBrad(player.box.angle));
+				view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
 				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)];
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
@@ -518,7 +518,7 @@ const MESSAGE = {
 
 			var limit = i + enemyAmount;
 			for (let id = 0; i !== limit; ++i, ++id) {
-				enemiesCbk(id, bradToRad(view.getUint8(i)));//angle
+				enemiesCbk(id, bradToRad(view.getUint8(i), 1));//angle
 			}
 
 			limit += shotAmount*4;
@@ -536,7 +536,7 @@ const MESSAGE = {
 					view.getUint16(i),//x
 					view.getUint16(2 + i),//y
 					view.getUint8(4 + i),//attachedPlanet
-					bradToRad(view.getUint8(5 + i)),//angle
+					bradToRad(view.getUint8(5 + i), 1),//angle
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29]//walkframe
@@ -589,8 +589,34 @@ const MESSAGE = {
 			return controls;
 		}
 	},
-	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
+	ACTION_ONE: {
 		value: 14,
+		serialize: function(angle) {
+			var buffer = new ArrayBuffer(3),
+				view = new DataView(buffer);
+
+			view.setUint8(0, this.value);
+			view.setUint16(1, radToBrad(angle, 2));
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			var view = new DataView(buffer);
+
+			return bradToRad(view.getUint16(1), 2);
+		}
+	},
+	ACTION_TWO: {
+		value: 15,
+		serialize: function(angle) {
+			return MESSAGE.ACTION_ONE.serialize.call(this, angle);
+		},
+		deserialize: function(buffer) {
+			return MESSAGE.ACTION_ONE.deserialize(buffer);
+		}
+	},
+	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
+		value: 16,
 		serialize: function(message) {
 			return MESSAGE.SET_NAME.serialize.call(this, message);
 		},
@@ -599,7 +625,7 @@ const MESSAGE = {
 		}
 	},
 	CHAT_BROADCAST: {//CHAT_BROADCAST and SET_NAME_BROADCAST are coincidentally serialized the same way
-		value: 15,
+		value: 17,
 		serialize: function(id, message) {
 			return MESSAGE.SET_NAME_BROADCAST.serialize.call(this, id, message);
 		},
@@ -611,7 +637,7 @@ const MESSAGE = {
 		}
 	},
 	SCORES: {
-		value: 16,
+		value: 18,
 		serialize: function(scoresObj) {
 			var teams = Object.keys(scoresObj).sort(),
 				buffer = new ArrayBuffer(1 + teams.length*4),

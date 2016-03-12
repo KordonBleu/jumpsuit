@@ -289,9 +289,19 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 
 	return shotsDelta;
 }
+function handleActionOne(player, angle, lobby) {
+	let newShot = new Shot(player.box.center.x + 80*Math.sin(angle), player.box.center.y - 80*Math.cos(angle), angle);
+	lobby.shots.push(newShot);
+	return newShot;//TODO: make it so this function can be replaced by something else in another gamemode
+	//for example something that does not spawn shots
+}
+function handleActionTwo(player, angle, lobby) {
+}
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {
 	doPhysics: doPhysics,
+	handleActionOne,
+	handleActionTwo,
 	Player: Player,
 	Planet: Planet,
 	Enemy: Enemy,

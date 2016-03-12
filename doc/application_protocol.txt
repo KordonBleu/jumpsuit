@@ -3,6 +3,7 @@
 Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
 Strings are always encoded as UTF-8. When the protocol mandates the length of a string, it is implied the length is an amount of bytes.
 Angles are always encoded as brads.
+When a value takes only one byte, 1 means enabled and 0 means disabled.
 
 ## Notation
 
@@ -12,6 +13,7 @@ Possible values for a field are noted:
  * with lowercase words for variables (ex: `player name`)
  * with lowercase words starting with a uppercase character for enumerations (ex: `Error Type`)
  * with uppercase snake case for packets and subpayloads (ex: `CREATE_LOBBY`)
+Values dubbed `unused bits` are not used, but are present to complete a byte.
 
 Values are enclosed in boxes.
 The minus signs (-) indicates the value is required and not repeated.
@@ -154,7 +156,7 @@ The first byte of every packet determines its type. A payload may be placed afte
 | Type | payload...
 +------+-----------
 
-There are 17 packet types.
+There are 19 packet types.
 
 
 ### GET_LOBBY_LIST (client -> server)
@@ -213,9 +215,6 @@ The server will respond with either CONNECT_ACCEPTED or an ERROR.
 +---+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
 | 6 | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
 +---+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
-
-The values of `beige team`, `blue team`, `green team`, `pink team`, `yellow team` are 1 if enabled, 0 if not.
-Note: three unused bits are present out of necessity to complete a byte.
 
 
 ### ERROR (server -> client)
@@ -286,15 +285,28 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 | 13 | unused bits | jump | run | crouch | jetpack | move left | move right |
 +----+-------------+------+-----+--------+---------+-----------+------------+
 
-The values of `jump`, `run`, `crouch`, `jetpack`, `move left` and `move right` are 1 if enabled, 0 if not.
-Note: two unused bits are present out of necessity to complete a byte.
+
+### ACTION_ONE
+
+  1B    2B
++----+-------+
+| 14 | angle |
++----+-------+
+
+
+### ACTION_TWO
+
+  1B    2B
++----+-------+
+| 15 | angle |
++----+-------+
 
 
 ### CHAT (client -> server)
 
   1B     1B
 +----+---------+
-| 14 | message |
+| 16 | message |
 +----+---------+
 
 
@@ -302,7 +314,7 @@ Note: two unused bits are present out of necessity to complete a byte.
 
   1B      1B         ?B
 +----+-----------+---------+
-| 15 | player id | message |
+| 17 | player id | message |
 +----+-----------+---------+
 
 
@@ -310,7 +322,7 @@ Note: two unused bits are present out of necessity to complete a byte.
 
   1B       4B
 +----+============+
-| 16 | team score |
+| 18 | team score |
 +----+============+
 
 There are as many `team score`s as there are teams. Which teams are playing has already been sent with a CONNECT_ACCEPTED message.

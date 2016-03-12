@@ -48,6 +48,8 @@ Connection.prototype.setName = function() {
 	this.socket.send(MESSAGE.SET_NAME.serialize(settings.name));
 };
 Connection.prototype.sendChat = function(content) {
+	if(!currentConnection.alive()) return;
+
 	this.socket.send(MESSAGE.CHAT.serialize(content));
 };
 Connection.prototype.refreshControls = function(controls) {
@@ -60,6 +62,16 @@ Connection.prototype.refreshControls = function(controls) {
 	if (accordance === b) return;
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
+Connection.prototype.sendActionOne = function(angle) {
+	if(!currentConnection.alive()) return;
+
+	this.socket.send(MESSAGE.ACTION_ONE.serialize(angle));
+}
+Connection.prototype.sendActionTwo = function(angle) {
+	if(!currentConnection.alive()) return;
+
+	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
+}
 Connection.prototype.errorHandler = function() {
 	this.close();
 };

@@ -515,6 +515,17 @@ wss.on("connection", function(ws) {
 			case MESSAGE.PLAYER_CONTROLS.value:
 				player.controls = MESSAGE.PLAYER_CONTROLS.deserialize(message);
 				break;
+			case MESSAGE.ACTION_ONE.value:
+				console.log("generate shot!", message);
+				if (player !== undefined) {
+					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
+					let newShot = engine.handleActionOne(player, MESSAGE.ACTION_ONE.deserialize(msgAsArrbuf), player.lobby);
+					player.lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [newShot], []));
+				}
+				break;
+			case MESSAGE.ACTION_ONE.value:
+				console.log("do whatever!");
+				break;
 			case MESSAGE.CHAT.value:
 				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)));
 				break;

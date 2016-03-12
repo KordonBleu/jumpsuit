@@ -86,8 +86,8 @@ function handleInput(e) {
 
 	if (!changingKeys && !chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
 		let triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
-		e.preventDefault();
 		if (players[ownIdx].controls[triggered] !== undefined) {
+			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		} else if (triggered === "chat" && s === 1) chatInput.focus();
@@ -164,6 +164,7 @@ function dragStart(e) {
 	game.dragStart.y = e.pageY;
 }
 function dragEnd() {
+	//if (Math.min(Math.abs(game.dragStart.x - game.drag.x), Math.abs(game.drag.x - game.dragStart.x)) < 20 && Math.min(Math.abs(game.dragStart.y - game.drag.y), Math.abs(game.drag.y - game.dragStart.y)) < 20) console.log("FIYYA!");
 	game.drag.x = 0;
 	game.drag.y = 0;
 	game.dragStart.x = 0;
@@ -173,16 +174,43 @@ function dragMove(e) {
 	game.drag.x = game.dragStart.x !== 0 ? e.pageX : 0;
 	game.drag.y = game.dragStart.y !== 0 ? e.pageY : 0;
 }
-canvas.addEventListener("mousedown", dragStart);
-canvas.addEventListener("mousemove", dragMove);
-canvas.addEventListener("mouseup", dragEnd);
+function dragHandler(e) {
+	if (e.buttons & 4) {//middle-click enabled (and possibly other clicks too)
+		dragMove(e);
+	}
+}
+canvas.addEventListener("mousedown", function(e) {
+	switch (e.button) {
+		case 0://left-click
+			currentConnection.sendActionOne(Math.atan2(e.clientX - canvas.clientWidth/2, canvas.clientHeight/2 - e.clientY));
+			break;
+		case 1://middle-click
+			dragStart(e);
+			canvas.addEventListener("mousemove", dragHandler);
+			break;
+		case 2://right-click
+			currentConnection.sendActionTwo(Math.atan2(e.clientX - canvas.clientWidth/2, canvas.clientHeight/2 - e.clientY));
+	}
+});
+canvas.addEventListener("mouseup", function(e) {
+	if (e.button === 1) {
+		dragEnd(e);
+		canvas.removeEventListener("mousemove", dragHandler);
+	}
+});
 
-canvas.addEventListener("touchstart", dragStart);
+canvas.addEventListener("touchstart", dragStart);//TODO: action 1 on simple tap on mobile
 canvas.addEventListener("touchmove", dragMove);
 canvas.addEventListener("touchend", dragEnd);
+
 document.getElementById("controls").addEventListener("dragstart", function(e) {
 	e.preventDefault();//prevent unhandled dragging
 });
+document.addEventListener("contextmenu", function(e) {
+	e.preventDefault();//prevent right-click context menu
+	//unfortunately it also disables the context menu key
+});
+
 
 /* Gamepads */
 var usingGamepad;
