@@ -31,7 +31,7 @@ var context = canvas.getContext("2d"),
 			pointsElement.classList.remove("hidden");
 			minimapCanvas.classList.remove("hidden");
 			menuBox.classList.add("hidden");
-			[].forEach.call(document.querySelectorAll("#gui-points th"), function(element){
+			Array.prototype.forEach.call(document.querySelectorAll("#gui-points th"), function(element){
 				element.style.display = "none";
 			});
 			loop();
@@ -331,7 +331,7 @@ function loop() {
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
 
-	[].forEach.call(document.querySelectorAll("#controls img"), function (element) {
+	Array.prototype.forEach.call(document.querySelectorAll("#controls img"), function (element) {
 		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
 	});
 

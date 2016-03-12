@@ -118,7 +118,7 @@ var changingKeys = false,
 keySettingsElement.addEventListener("click", function(e) {
 	function reselect(obj){
 		document.removeEventListener("keydown", wrap);
-		[].forEach.call(keySettingsElement.childNodes, function (row){ row.classList.remove("selected"); });
+		Array.prototype.forEach.call(keySettingsElement.childNodes, function (row){ row.classList.remove("selected"); });
 		if (typeof obj !== "undefined") {
 			obj.classList.add("selected");
 			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
@@ -249,7 +249,7 @@ function printChatMessage(name, appearance, content) {
 	chatElement.appendChild(element);
 	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
 	var messageHeight = 0;
-	[].forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
+	Array.prototype.forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
 		messageHeight += element.clientHeight + 2;
 	});
 	chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";

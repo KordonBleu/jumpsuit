@@ -3,10 +3,10 @@
 var ownIdx = null,
 	enabledTeams = [];
 
-function Connection(address) {
+function Connection() {
 	this.lastControls = {};
 
-	this.socket = new WebSocket(address || "ws://" + location.hostname + (location.port === "" ? "" : ":" + location.port));
+	this.socket = new WebSocket((location.protocol === "http:" ? "ws://" : "wss://") + location.hostname + (location.port === "" ? "" : ":" + location.port));
 	this.socket.binaryType = "arraybuffer";
 
 	this.alive = function() { return this.socket.readyState === 1; };
@@ -210,7 +210,7 @@ Connection.prototype.messageHandler = function(message) {
 			players[ownIdx].health = val.yourHealth;
 			players[ownIdx].fuel = val.yourFuel;
 
-			[].forEach.call(document.querySelectorAll("#gui-health div"), function(element, index) {
+			Array.prototype.forEach.call(document.querySelectorAll("#gui-health div"), function(element, index) {
 				var state = "heartFilled";
 				if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
 				else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";

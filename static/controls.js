@@ -2,32 +2,20 @@
 
 const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch", t: "chat"};
 function sameObjects(a, b) {
-	var aProps = Object.getOwnPropertyNames(a);
-	var bProps = Object.getOwnPropertyNames(b);
-	if (aProps.length != bProps.length) {
+	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
 		return false;
 	}
-	for (var i = 0; i < aProps.length; i++) {
-		var propName = aProps[i];
-		if (a[propName] !== b[propName]) {
-			return false;
-		}
+	for (let propName in a) {
+		//hasOwnProperty is here in case `a[propName]`'s value is `undefined`
+		if (!b.hasOwnProperty(propName) || a[propName] !== b[propName]) return false;
 	}
 	return true;
 }
-function objInvisible(obj) {
-	if (typeof(obj.length) === "undefined") return (obj.className.indexOf("hidden") !== -1);
-	for (var i = 0; i < obj.length; i++){
-		if (obj[i].className.indexOf("hidden") === -1) return false;
-	}
-	return true;
-}
-
 String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
-function convertToKey(keyCode) {
+function convertToKey(keyCode) {//polyfill for Chrome
 	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
 	else if (keyCode > 95 && keyCode < 106) return keyCode - 96;//numpad
 	else if (keyCode > 64 && keyCode < 91) return convertToKey.keyMapChar.charAt(keyCode - 65);//characters
@@ -51,77 +39,58 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	39: "ArrowRight",
 	40: "ArrowDown"
 };
-function transformStyle(element, val) {
-	var vendors = ["WebkitTransform", "MozTransform", "OTransform", "transform"],
-		correctVendor, obj;
-	for (var i = 0; i < vendors.length; i++){
-		if (vendors[i] in element.style){
-			correctVendor = vendors[i];
-			break;
-		}
-	}
-	element.style["transform"] = val;
-	console.log(correctVendor, val);
-}
 
 function handleInputMobile(e) {
-	for (var t = 0; t < e.changedTouches.length; t++){
-		var touch = e.changedTouches[t];
-		if (touch.target.id === "canvas"){
-			dragging(e.type, touch.pageX, touch.pageY);
-		} else {
-			var s = (e.type.indexOf("start") !== -1 && e.type.indexOf("end") === -1);
-			if (players[ownIdx].controls[touch.target.id] !== undefined) {
-				e.preventDefault();
-				if (touch.target.id === "moveLeft" || touch.target.id === "moveRight"){
-					var value = handleInputMobile.transform(touch, e.type);
-					players[ownIdx].controls["run"] = (-value >= 38) * 1;
-				}
-				if (e.type.indexOf("move") === -1) players[ownIdx].controls[touch.target.id] = s * 1;
-				currentConnection.refreshControls(players[ownIdx].controls);
-			}
+	function transform(touch, type) {
+		var element = touch.target;
+		if (type === "touchstart") {
+			element.dataset.touchstart = touch.pageY;
+			element.dataset.touchmove = touch.pageY;
+		} else if (type === "touchmove") {
+			element.dataset.touchmove = touch.pageY;
+		} else {//touchend
+			element.dataset.touchstart = 0;
+			element.dataset.touchmove = 0;
 		}
-	}
-}
-handleInputMobile.transform = function (touch, type) {
-	var element = touch.target, ytransform;
-	if (type.indexOf("start") !== -1){
-		element.setAttribute("touchstart", touch.pageY);
-		element.setAttribute("touchmove", touch.pageY);
-	} else if (type.indexOf("move") !== -1){
-		element.setAttribute("touchmove", touch.pageY);
-	} else {
-		element.setAttribute("touchstart", 0);
-		element.setAttribute("touchmove", 0);
-	}
-	ytransform = -Math.max(0, Math.min(50, Math.floor(element.getAttribute("touchstart") - element.getAttribute("touchmove"))));
-	transformStyle(element, "translateY(" + ytransform + "px)");
-	return ytransform;
-};
+		var yTransform = -Math.max(0, Math.min(50, Math.floor(element.dataset.touchstart - element.dataset.touchmove)));
+		element.style.transform = "translateY(" + yTransform + "px)";
+		return yTransform;
+	};
 
+	Array.prototype.forEach.call(e.changedTouches, function(touch) {
+		var s = e.type !== "touchstart" && e.type === "touchend";
+		if (players[ownIdx].controls[touch.target.id] !== undefined) {
+			e.preventDefault();
+			if (touch.target.id === "moveLeft" || touch.target.id === "moveRight") {
+				var value = transform(touch, e.type);
+				players[ownIdx].controls["run"] = (-value >= 38) * 1;
+			}
+			if (e.type !== "touchmove") players[ownIdx].controls[touch.target.id] = s * 1;
+			currentConnection.refreshControls(players[ownIdx].controls);
+		}
+	});
+}
+
+/* Keyboard */
 function handleInput(e) {
+	function objsInvisible(elArr) {
+		return elArr.every(function(element) {
+			return element.classList.contains("hidden");
+		});
+	}
+
+	if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
+
 	var s = (e.type === "keydown") * 1,
-		triggered,
 		chatInUse = chatInput === document.activeElement;
 
-	if (e.target.id === "canvas") {
-		dragging(e.type, e.pageX, e.pageY);
-	} else if (!changingKeys) {
-		if(e.type.substring(0, 3) === "key"){
-			triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
-			if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
-		} else if (players[ownIdx] !== undefined && players[ownIdx].controls[e.target.id] !== undefined) {
-			e.preventDefault();
-			triggered = e.target.id;
-		}
-		if (typeof triggered !== "undefined" && e.type.indexOf("mouse") !== 0 && !chatInUse && objInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
-			//oh boy, this statement is fucked up :D
-			e.preventDefault();
-			if (players[ownIdx].controls[triggered] !== undefined){
-				players[ownIdx].controls[triggered] = s;
-				currentConnection.refreshControls(players[ownIdx].controls);
-			} else if (triggered === "chat" && s === 1) chatInput.focus();
-		}
+	if (!changingKeys && !chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
+		let triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
+		e.preventDefault();
+		if (players[ownIdx].controls[triggered] !== undefined) {
+			players[ownIdx].controls[triggered] = s;
+			currentConnection.refreshControls(players[ownIdx].controls);
+		} else if (triggered === "chat" && s === 1) chatInput.focus();
 	}
 }
 handleInput.keyMap = defaultKeymap;
@@ -184,24 +153,38 @@ handleInput.loadKeySettings = function() {
 	else handleInput.keyMap = defaultKeymap;
 	handleInput.initKeymap(presets !== null);
 };
+window.addEventListener("keydown", handleInput);
+window.addEventListener("keyup", handleInput);
 
-function dragging(ev, x, y) {
-	if (ev.indexOf("start") !== -1 || ev.indexOf("down") !== -1){
-		game.drag.x = x;
-		game.drag.y = y;
-		game.dragStart.x = x;
-		game.dragStart.y = y;
-	} else if (ev.indexOf("end") !== -1 || ev.indexOf("up") !== -1){
-		game.drag.x = 0;
-		game.drag.y = 0;
-		game.dragStart.x = 0;
-		game.dragStart.y = 0;
-	} else if (ev.indexOf("move") !== -1){
-		game.drag.x = game.dragStart.x !== 0 ? x : 0;
-		game.drag.y = game.dragStart.y !== 0 ? y : 0;
-	}
+/* Drag */
+function dragStart(e) {
+	game.drag.x = e.pageX;
+	game.drag.y = e.pageY;
+	game.dragStart.x = e.pageX;
+	game.dragStart.y = e.pageY;
 }
+function dragEnd() {
+	game.drag.x = 0;
+	game.drag.y = 0;
+	game.dragStart.x = 0;
+	game.dragStart.y = 0;
+}
+function dragMove(e) {
+	game.drag.x = game.dragStart.x !== 0 ? e.pageX : 0;
+	game.drag.y = game.dragStart.y !== 0 ? e.pageY : 0;
+}
+canvas.addEventListener("mousedown", dragStart);
+canvas.addEventListener("mousemove", dragMove);
+canvas.addEventListener("mouseup", dragEnd);
 
+canvas.addEventListener("touchstart", dragStart);
+canvas.addEventListener("touchmove", dragMove);
+canvas.addEventListener("touchend", dragEnd);
+document.getElementById("controls").addEventListener("dragstart", function(e) {
+	e.preventDefault();//prevent unhandled dragging
+});
+
+/* Gamepads */
 var usingGamepad;
 function handleGamepad() {
 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
@@ -236,6 +219,7 @@ function handleGamepad() {
 	}
 }
 
+/* Zoom */
 document.addEventListener("wheel", function(e) {
 	windowBox.zoomFactor *= 1 - e.deltaY/10;
 	resizeCanvas();
@@ -248,8 +232,3 @@ if (!matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AN
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
 window.addEventListener("touchend", handleInputMobile);
-window.addEventListener("mousedown", handleInput);
-window.addEventListener("mousemove", handleInput);
-window.addEventListener("mouseup", handleInput);
-window.addEventListener("keydown", handleInput);
-window.addEventListener("keyup", handleInput);
