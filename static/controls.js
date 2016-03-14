@@ -200,7 +200,7 @@ canvas.addEventListener("mouseup", function(e) {
 });
 
 canvas.addEventListener("touchstart", dragStart);//TODO: action 1 on simple tap on mobile
-canvas.addEventListener("touchmove", dragMove);
+//canvas.addEventListener("touchmove", dragMove);
 canvas.addEventListener("touchend", dragEnd);
 
 document.getElementById("controls").addEventListener("dragstart", function(e) {

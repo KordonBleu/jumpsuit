@@ -18,7 +18,7 @@ var resPaths = [
 	resources = {};
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-	var vinage = require("./vinage/vinage.js"),
+	var vinage = require("../../static/vinage/vinage.js"),
 		Point = vinage.Point,
 		Rectangle = vinage.Rectangle,
 		Circle = vinage.Circle,
@@ -209,8 +209,8 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
 
-			player.box.center.x = (6400 + player.box.center.x) % 6400;
-			player.box.center.y = (6400 + player.box.center.y) % 6400;
+			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
+			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 		}
 		player.setWalkFrame();
 	});
@@ -307,4 +307,3 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") modu
 	Enemy: Enemy,
 	Shot: Shot
 };
-

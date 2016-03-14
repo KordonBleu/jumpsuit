@@ -341,7 +341,7 @@ function loop() {
 
 	planets.forEach(function (planet) {
 		minimapContext.beginPath();
-		minimapContext.arc((planet.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, (planet.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
+		minimapContext.arc((planet.box.center.x*150/universe.width - players[ownIdx].box.center.x*150/universe.width + 225) % 150, (planet.box.center.y*150/universe.height - players[ownIdx].box.center.y*150/universe.height + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
 		minimapContext.closePath();
 		minimapContext.fillStyle = planet.progress.color;
 		minimapContext.fill();
@@ -351,7 +351,7 @@ function loop() {
 	players.forEach(function (player) {
 		if (player.appearance !== players[ownIdx].appearance) return;
 		minimapContext.beginPath();
-		minimapContext.arc((player.box.center.x*150/6400 - players[ownIdx].box.center.x*150/6400 + 225) % 150, (player.box.center.y*150/6400 - players[ownIdx].box.center.y*150/6400 + 225) % 150, 2.5, 0, 2*Math.PI);
+		minimapContext.arc((player.box.center.x*150/universe.width - players[ownIdx].box.center.x*150/universe.width + 225) % 150, (player.box.center.y*150/universe.height - players[ownIdx].box.center.y*150/universe.height + 225) % 150, 2.5, 0, 2*Math.PI);
 		minimapContext.closePath();
 		minimapContext.fill();
 	});
