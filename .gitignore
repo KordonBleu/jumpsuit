@@ -1,5 +1,5 @@
-node_modules/
-config.json
+/node_modules/
+/config.json
 
-static/mods/
-!static/mods/capture/*
+/mods/
+!/mods/capture/

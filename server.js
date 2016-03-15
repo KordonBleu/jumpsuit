@@ -60,7 +60,7 @@ function loadConfig(firstRun) {
 		}
 	} catch(err) {
 		console.log("[ERR] ".red.bold + err);
-		console.log("[INFO] ".yellow.bold + "Unproper config file found. " + "Loading default settings.");
+		console.log("[INFO] ".yellow.bold + "Unproper config file found. Loading default settings.");
 		config = configSkeleton;
 	}
 	if (previousConfig !== undefined) {
@@ -78,7 +78,7 @@ function loadConfig(firstRun) {
 			}
 		}
 		if (config.mod !== previousConfig.mod) {
-			console.log("[INFO] Server set to another mod. Please restart the server to apply new config.");
+			console.log("[INFO] ".yellow.bold + "Server set to another mod. Please restart the server to apply new config.");
 		}
 		if(config.interactive !== previousConfig.interactive) {
 			if(previousConfig.interactive) rl.close();
@@ -94,7 +94,37 @@ function loadConfig(firstRun) {
 loadConfig(true);
 fs.watchFile(configPath, loadConfig);//refresh config whenever the `config.json` is modified
 
-var engine = require("./mods/" + config.mod + "/engine.js");
+function plugModdedModule(moddedModule, defaultModule) {
+	let defaultEngine = require("./mods/" + configSkeleton.mod + "/engine.js");//default engine
+	for (let key in defaultEngine) {
+		if (engine[key] === undefined) engine[key] = defaultEngine[key];//use default functions and constructor when the mod doesn't implement them
+	}
+}
+var engine,
+	onMessage;
+{
+	let defaultEngine = require("./mods/" + configSkeleton.mod + "/engine.js"),
+		defaultOnMessage = require("./mods/" + configSkeleton.mod + "/on_message.js");
+
+	try {
+		engine = require("./mods/" + config.mod + "/engine.js");
+		plugModdedModule(engine, defaultEngine);
+		console.log("[INFO] ".yellow.bold + "Modded engine loaded.");
+	} catch(e) {
+		engine = defaultEngine;
+		console.log("[INFO] ".yellow.bold + "Engine loaded.");
+	}
+	try {
+		onMessage = require("./mods/" + config.mod + "/on_message.js")(engine);
+		plugModdedModule(onMessage, defaultOnMessage);
+		console.log("[INFO] ".yellow.bold + "Modded message handler loaded.");
+	} catch(e) {
+		onMessage = defaultOnMessage;
+		console.log("[INFO] ".yellow.bold + "Message handler loaded.");
+	}
+}
+
+var Lobby = require("./lobby.js")(engine);
 
 var files = {
 	"/engine.js": fs.readFileSync("./mods/capture/engine.js")//the default engine is not under `./static` because it is part of a mod
@@ -198,8 +228,6 @@ engine.Player.prototype.send = function(data) {
 		}
 	} catch (err) { /* Maybe log this error somewhere? */ }
 };
-
-var Lobby = require("./lobby.js")(engine);
 
 lobbies.getUid = function(index) {
 	var uid = index.toString(16);
@@ -389,12 +417,22 @@ wss.on("connection", function(ws) {
 			case MESSAGE.ACTION_ONE.value:
 				if (player !== undefined) {
 					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
-					let newShot = engine.handleActionOne(player, MESSAGE.ACTION_ONE.deserialize(msgAsArrbuf), player.lobby);
-					player.lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [newShot], []));
+					entityDelta(
+						onMessage.handleActionOne(player,
+							MESSAGE.ACTION_ONE.deserialize(msgAsArrbuf),
+							player.lobby),
+						player.lobby);
 				}
 				break;
-			case MESSAGE.ACTION_ONE.value:
-				console.log("do whatever!");
+			case MESSAGE.ACTION_TWO.value:
+				if (player !== undefined) {
+					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
+					entityDelta(
+						onMessage.handleActionTwo(player,
+							MESSAGE.ACTION_TWO.deserialize(msgAsArrbuf),
+							player.lobby),
+						player.lobby);
+				}
 				break;
 			case MESSAGE.CHAT.value:
 				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)));
@@ -407,3 +445,22 @@ wss.on("connection", function(ws) {
 	ws.on("close", cleanup);
 });
 lobbies.push(new Lobby("Lobby No. 1", 8, config.dev ? 0 : 30));
+
+function entityDelta(obj, lobby, excludedPlayer) {
+	if (obj.addedEnemies !== undefined || obj.addedPlanet !== undefined || obj.addedPlayer !== undefined || obj.addedShots !== undefined) {
+		lobby.broadcast(MESSAGE.ADD_ENTITY.serialize(
+			obj.addedPlanet === undefined ? [] : obj.addedPlanet,
+			obj.addedEnemies === undefined ? [] : obj.addedEnemies,
+			obj.addedShots === undefined ? [] : obj.addedShots,
+			obj.addedPlayer === undefined ? [] : obj.addedPlayer),
+			excludedPlayer);
+	}
+	if (obj.removedEnemies !== undefined || obj.removedPlanet !== undefined || obj.removedPlayer !== undefined || obj.removedShots !== undefined) {
+		lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize(
+			obj.removedPlanet === undefined ? [] : obj.removedPlanet,
+			obj.removedEnemies === undefined ? [] : obj.removedEnemies,
+			obj.removedShots === undefined ? [] : obj.removedShots,
+			obj.removedPlayer === undefined ? [] : obj.removedPlayer),
+			excludedPlayer);
+	}
+}

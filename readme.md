@@ -45,5 +45,6 @@ Parameter | Explanation | Default | Value
 --------- | ----------- | ------- | -----
 dev | Disable the countdown before joining a lobby, enable debug messages and enable the automatic reload of modified files (under `static/`). You'll have to restart the server if you create a new file | false | boolean
 interactive | Make it possible to enter Javascript commands while the server runs | false | boolean
+mod | Choose the server's gamemode | "capture" | string
 monitor | Displays a neat view of the lobbys in real-time | false | boolean
 port | Set the server's port | 8080 | integer

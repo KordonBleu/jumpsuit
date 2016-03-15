@@ -9,6 +9,39 @@ Your directory must contain a file `engine.js`, or a file `on_message.js`, or bo
 
 A mod may replace functions defined in `engine.js`, but the client uses the default version of `engine.js` for prediction. This can lead to predictions wrongly assumed on the client, which is visible on-screen. (note: it actually doesn't use it yet)
 
+All functions *may* return an object containing the removed entities. This object looks like this:
+
+```JavaScript
+{
+	addedEnemies: [/* enemy ids */],
+	removedEnemies: [/* instances of Enemy */],
+
+	addedPlanet: [/* planet ids */],
+	removedPlanet: [/* instances of Planet */],
+
+	addedPlayer: [/* player ids */],
+	removedPlayer: [/* instances of Player */],
+
+	addedShots: [/* shot ids */],
+	removedShots: [/* instances of Shot */]
+}
+```
+
+All the properties this object holds are **optional**.
+
 ## `engine.js`
 
+You can implement the following functions and constructors:
+
+* Enemy
+* Planet
+* Player
+* Shot
+* doPhysics
+
+Then export them as you would do in any node.js module.
+When a function or constructor is uniplemented, the default one, as defined in `mods/capture/engine.js` is used.
+
 ## `on_message.js`
+
+
