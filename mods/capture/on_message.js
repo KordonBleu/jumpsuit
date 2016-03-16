@@ -1,19 +1,23 @@
 "use strict";
 
 module.exports = function(engine) {
-	function handleActionOne(player, angle, lobby) {
+	function onActionOne(player, angle) {
 		let newShot = new engine.Shot(player.box.center.x + 80*Math.sin(angle), player.box.center.y - 80*Math.cos(angle), angle);
-		lobby.shots.push(newShot);
+		player.lobby.shots.push(newShot);
 
 		return {
 			addedShots: [newShot]
 		};
 	}
-	function handleActionTwo(player, angle, lobby) {
+	function onActionTwo(player, angle) {
+	}
+	function onControls(player, controlsObj) {
+		player.controls = controlsObj;
 	}
 
 	return {
-		handleActionOne,
-		handleActionTwo
+		onActionOne,
+		onActionTwo,
+		onControls
 	};
 };

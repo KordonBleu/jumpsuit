@@ -412,26 +412,24 @@ wss.on("connection", function(ws) {
 				cleanup();
 				break;
 			case MESSAGE.PLAYER_CONTROLS.value:
-				player.controls = MESSAGE.PLAYER_CONTROLS.deserialize(message);
+				player.lobby.sendEntityDelta(
+					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message))
+				);
 				break;
 			case MESSAGE.ACTION_ONE.value:
 				if (player !== undefined) {
 					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
-					entityDelta(
-						onMessage.handleActionOne(player,
-							MESSAGE.ACTION_ONE.deserialize(msgAsArrbuf),
-							player.lobby),
-						player.lobby);
+					player.lobby.sendEntityDelta(
+						onMessage.onActionOne(player, MESSAGE.ACTION_ONE.deserialize(msgAsArrbuf))
+					);
 				}
 				break;
 			case MESSAGE.ACTION_TWO.value:
 				if (player !== undefined) {
 					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
-					entityDelta(
-						onMessage.handleActionTwo(player,
-							MESSAGE.ACTION_TWO.deserialize(msgAsArrbuf),
-							player.lobby),
-						player.lobby);
+					player.lobby.sendEntityDelta(
+						onMessage.onActionTwo(player, MESSAGE.ACTION_TWO.deserialize(msgAsArrbuf))
+					);
 				}
 				break;
 			case MESSAGE.CHAT.value:
@@ -445,22 +443,3 @@ wss.on("connection", function(ws) {
 	ws.on("close", cleanup);
 });
 lobbies.push(new Lobby("Lobby No. 1", 8, config.dev ? 0 : 30));
-
-function entityDelta(obj, lobby, excludedPlayer) {
-	if (obj.addedEnemies !== undefined || obj.addedPlanet !== undefined || obj.addedPlayer !== undefined || obj.addedShots !== undefined) {
-		lobby.broadcast(MESSAGE.ADD_ENTITY.serialize(
-			obj.addedPlanet === undefined ? [] : obj.addedPlanet,
-			obj.addedEnemies === undefined ? [] : obj.addedEnemies,
-			obj.addedShots === undefined ? [] : obj.addedShots,
-			obj.addedPlayer === undefined ? [] : obj.addedPlayer),
-			excludedPlayer);
-	}
-	if (obj.removedEnemies !== undefined || obj.removedPlanet !== undefined || obj.removedPlayer !== undefined || obj.removedShots !== undefined) {
-		lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize(
-			obj.removedPlanet === undefined ? [] : obj.removedPlanet,
-			obj.removedEnemies === undefined ? [] : obj.removedEnemies,
-			obj.removedShots === undefined ? [] : obj.removedShots,
-			obj.removedPlayer === undefined ? [] : obj.removedPlayer),
-			excludedPlayer);
-	}
-}
