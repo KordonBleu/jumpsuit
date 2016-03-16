@@ -314,18 +314,18 @@ function monitoring() {
 
 	console.log(); //newline
 	var headerSizes = [35, 10, 15],
-		headerNames = ["lobby name", "players", "process time", "lifetime"],
+		headerNames = ["lobby name", "players", "process time"],
 		header = "";
 	headerSizes.forEach(function(hSize, i) {
 		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
 	});
 	console.log(header);
 
-	var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height
+	var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height and width
 	lobbies.some(function(lobby, index, array) {
 		if (lobbyAmount >= 8) {
 			console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
-			return true; //some can be quitted with return, but it needs to return something so just return; doesnt work
+			return true; //"some" function can be quitted with return, but it needs to return something so just return; wouldn't work
 		}
 		var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
 			amount = lobby.players.length.toString(),

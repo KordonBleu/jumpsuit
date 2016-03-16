@@ -49,7 +49,6 @@ Connection.prototype.setName = function() {
 };
 Connection.prototype.sendChat = function(content) {
 	if(!currentConnection.alive()) return;
-
 	this.socket.send(MESSAGE.CHAT.serialize(content));
 };
 Connection.prototype.refreshControls = function(controls) {
@@ -64,12 +63,10 @@ Connection.prototype.refreshControls = function(controls) {
 };
 Connection.prototype.sendActionOne = function(angle) {
 	if(!currentConnection.alive()) return;
-
 	this.socket.send(MESSAGE.ACTION_ONE.serialize(angle));
 }
 Connection.prototype.sendActionTwo = function(angle) {
 	if(!currentConnection.alive()) return;
-
 	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
 }
 Connection.prototype.errorHandler = function() {
@@ -135,7 +132,6 @@ Connection.prototype.messageHandler = function(message) {
 			enabledTeams = val.enabledTeams;
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
-
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
@@ -202,15 +198,16 @@ Connection.prototype.messageHandler = function(message) {
 						}
 					}
 
-					var p = 1;
-					if (players[id].boxInformations[0] === undefined) p = 0;
-					if (p === 1) {
-						players[id].boxInformations[0].box.center.x = players[id].box.center.x;
-						players[id].boxInformations[0].box.center.y = players[id].box.center.y;
-						players[id].boxInformations[0].box.angle = players[id].box.angle;
-						players[id].boxInformations[0].timestamp = (players[id].boxInformations[1] !== undefined) ? players[id].boxInformations[1].timestamp : Date.now();
-					}
-					players[id].boxInformations[p] = {box: new Rectangle(new Point(x, y), 0, 0, angle), timestamp: Date.now()};
+					var _offset = {x: 0, y: 0, angle: 0};
+					if (players[id].boxInformations[0] === undefined) players[id].boxInformations[0] = new Rectangle(new Point(x, y), 0, 0, angle);
+					if (Math.abs(x - players[id].box.center.x) >= 6000) _offset.x = (x < players[id].box.center.x) ? -6400 : 6400;
+					if (Math.abs(y - players[id].box.center.y) >= 6000) _offset.y = (y < players[id].box.center.y) ? -6400 : 6400;
+					if (Math.abs(angle - players[id].box.angle) >= 5) _offset.angle = (angle < players[id].box.angle) ? -2*Math.PI : 2*Math.PI;
+
+					players[id].boxInformations[0].center.x = players[id].box.center.x + _offset.x;
+					players[id].boxInformations[0].center.y = players[id].box.center.y + _offset.y;
+					players[id].boxInformations[0].angle = players[id].box.angle + _offset.angle;
+					players[id].boxInformations[1] = new Rectangle(new Point(x, y), 0, 0, angle);
 
 					players[id].looksLeft = looksLeft;
 					players[id].walkFrame = "_" + walkFrame;

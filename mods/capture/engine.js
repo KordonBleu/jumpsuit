@@ -128,12 +128,15 @@ function doPrediction(universe, players, enemies, shots) {
 	var fps = 1000 / (_doPrediction._newTimestamp - _doPrediction._oldTimestamp);
 	game.fps = fps;
 	players.forEach(function(player) {
-		if (player.boxInformations.length === 2 && "timestamp" in player.boxInformations[0] && "timestamp" in player.boxInformations[1]){
-			var intensity = fps * 40 / 1000; //60 is the current FPS and 50 is the server tick rate | Both should be replaced with variables, server should send the tick rate according to the client.
-			player.box.center.x += (player.boxInformations[1].box.center.x - player.boxInformations[0].box.center.x) / intensity;
-			player.box.center.y += (player.boxInformations[1].box.center.y - player.boxInformations[0].box.center.y) / intensity;
-			player.box.angle += (player.boxInformations[1].box.angle - player.boxInformations[0].box.angle) / intensity;
-
+		if (player.boxInformations.length === 2){
+			var intensity = Math.max(1, 40 * fps / 1000);
+			player.box.center.x += (player.boxInformations[1].center.x - player.boxInformations[0].center.x) / intensity;
+			player.box.center.y += (player.boxInformations[1].center.y - player.boxInformations[0].center.y) / intensity;
+			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
+			
+			player.box.center.x = (6400 + player.box.center.x) % 6400;
+			player.box.center.y = (6400 + player.box.center.y) % 6400;
+			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
 		}
 	});
 	shots.forEach(function(shot){
