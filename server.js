@@ -11,7 +11,8 @@ var fs = require("fs"),
 		interactive: false,
 		mod: "capture",
 		monitor: false,
-		port: 8080
+		port: 8080,
+		server_name: "JumpSuit server"
 	},
 	configPath = process.argv[2] || "./config.json";
 
@@ -185,13 +186,16 @@ var server = http.createServer(function (req, res){
 	case "js":
 		mime = "application/javascript";
 		break;
+	case "ogg":
+		mime = "audio/ogg";
+		break;
 	default:
 		mime = "application/octet-stream";
  }
 
-	if(files[req.url] !== undefined) {
+	if (files[req.url] !== undefined) {
 		res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
-		if(config.dev) {
+		if (config.dev) {
 			try {
 				var path = "./static" + req.url,
 					mtime = fs.statSync(path).mtime;
@@ -201,7 +205,7 @@ var server = http.createServer(function (req, res){
 				}
 			} catch(e) {/*Do nothing*/}
 		}
-		if(req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).getTime() === files[req.url].mtime.getTime()) {
+		if (req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).toUTCString() === files[req.url].mtime.toUTCString()) {
 			res.writeHead(304);
 			res.end();
 		} else {
@@ -348,18 +352,24 @@ if(config.monitor) {
 
 wss.on("connection", function(ws) {
 	function cleanup() {
-		lobbies.forEach(function(lobby) {
+		lobbies.forEach(function(lobby, lobbyI) {
 			lobby.players.some(function(player, i, players) {
 				if (player.ws === ws) {
 					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
 					players.splice(i, 1);
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]));
+					if (players.length === 0) lobbies.splice(lobbyI, 1);
+					for (let i = lobbyI; i !== lobbies.length; ++i) {
+						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
+					}
 					return true;
 				}
 			});
 		});
 	}
-	var player;
+	var player = new engine.Player();
+	player.ws = ws;
+
 	ws.on("message", function(message, flags) {
 		if (config.monitor) monitoring.traffic.beingConstructed.in += message.byteLength;
 		switch (new Uint8Array(message, 0, 1)[0]) {
@@ -376,10 +386,7 @@ wss.on("connection", function(ws) {
 				break;
 			case MESSAGE.SET_NAME.value:
 				let name = MESSAGE.SET_NAME.deserialize(message);
-				if (player === undefined) {
-					player = new engine.Player(name);
-					player.ws = this;
-				} else if (player.lobby !== undefined) {
+				if (player.lobby !== undefined) {
 					if (player.lobby.players.some(function(_player) {
 						return _player.name === name;
 					})) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN));
@@ -387,13 +394,13 @@ wss.on("connection", function(ws) {
 						player.name = name;
 						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
 					}
-				}
+				} else player.name = name;
 				break;
 			case MESSAGE.CONNECT.value:
 				let lobbyId = MESSAGE.CONNECT.deserialize(message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength)),
 					lobby = lobbies.getByUid(lobbyId);
 
-				if (player === undefined) engine.Player.prototype.send.call({ws: ws}, MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN));//we have to resort to this to use .send() even though the player is undefined
+				if (player.name === undefined) engine.Player.prototype.send.call({ws: ws}, MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN));//we have to resort to this to use .send() even though the player is undefined
 				else if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
 				else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
 				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN));
@@ -406,6 +413,11 @@ wss.on("connection", function(ws) {
 					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
 					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
+					if (lobbies.every(function(lobby) {
+						return lobby.players.length > 0;
+					})) {
+						lobbies.push(new Lobby(config.server_name + " - Lobby No." + (lobbies.length + 1), 8, config.dev ? 0 : 30));
+					}
 				}
 				break;
 			case MESSAGE.LEAVE_LOBBY.value:
@@ -442,4 +454,4 @@ wss.on("connection", function(ws) {
 	});
 	ws.on("close", cleanup);
 });
-lobbies.push(new Lobby("Lobby No. 1", 8, config.dev ? 0 : 30));
+lobbies.push(new Lobby(config.server_name + " - Lobby No." + (lobbies.length + 1), 8, config.dev ? 0 : 30));
