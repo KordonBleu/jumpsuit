@@ -147,9 +147,9 @@ function doPrediction(universe, players, enemies, shots) {
 };
 function doPhysics(universe, players, planets, enemies, shots, isClient, teamScores) {
 	var playersOnPlanets = new Array(planets.length),
-		shotsDelta = {
-			added: [],
-			removed: []
+		entitiesDelta = {
+			addedShots: [],
+			removedShots: []
 		};
 
 
@@ -221,7 +221,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 		shot.box.center.x += Math.sin(shot.box.angle) * 18;
 		shot.box.center.y += -Math.cos(shot.box.angle) * 18;
 		if (--shot.lifeTime <= 0) {
-			shotsDelta.removed.push(shot);
+			entitiesDelta.removedShots.push(shot);
 			shots.splice(si, 1);
 		} else players.forEach(function(player) {
 			if (universe.collide(new Circle(shot.box.center, 40), player.box)) {//needed as long as Node.js doesn't support Proxies
@@ -239,7 +239,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 					teamScores[player.appearance] -= 5;
 				}
 				player.walkFrame = "_hurt";
-				shotsDelta.removed.push(shot);
+				entitiesDelta.removedShots.push(shot);
 				shots.splice(si, 1);
 			}
 		});
@@ -261,12 +261,12 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				enemy.fireRate = 0;
 				let newShot = new Shot(enemy.box.center.x, enemy.box.center.y, enemy.box.angle - Math.PI)
 				shots.push(newShot);
-				shotsDelta.added.push(newShot);
+				entitiesDelta.addedShots.push(newShot);
 			}
 		}
 	});
 
-	if (isClient) return shotsDelta;
+	if (isClient) return entitiesDelta;
 	for (var i = 0; i < playersOnPlanets.length; i++){
 		if (typeof playersOnPlanets[i] === "undefined") continue;
 		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
@@ -280,7 +280,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				b++;
 				toArray.splice(a, 1);
 			}
-			if (b >= 2) return shotsDelta;
+			if (b >= 2) return entitiesDelta;
 			team = teams[a];
 			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
 			else {
@@ -290,7 +290,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 		}
 	}
 
-	return shotsDelta;
+	return entitiesDelta;
 }
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {

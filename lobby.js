@@ -31,10 +31,10 @@ module.exports = function(engine) {
 	};
 	Lobby.prototype.update = function() {
 		var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
-			shotsDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
+			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
 
-		if (shotsDelta.removed.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], shotsDelta.removed, []));
-		if (shotsDelta.added.length != 0) this.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], shotsDelta.added, []));
+		if (entitiesDelta.removedShots.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], entitiesDelta.removedShots, []));
+		if (entitiesDelta.addedShots.length != 0) this.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], entitiesDelta.addedShots, []));
 
 		this.players.forEach(function(player, i) {
 			function truncTo(number, decimalNbr) {
@@ -134,6 +134,18 @@ module.exports = function(engine) {
 		player.box.angle = Math.random() * Math.PI;
 		player.attachedPlanet = -1;
 	};
+	Lobby.prototype.sendEntityDelta = function(delta, excludedPlayer) {
+		if (delta !== undefined) {
+			if (delta.addedEnemies !== undefined || delta.addedPlanet !== undefined || delta.addedPlayer !== undefined || delta.addedShots !== undefined) {
+				this.broadcast(MESSAGE.ADD_ENTITY.serialize(delta.addedPlanet, delta.addedEnemies, delta.addedShots, delta.addedPlayer),
+					excludedPlayer);
+			}
+			if (delta.removedEnemies !== undefined || delta.removedPlanet !== undefined || delta.removedPlayer !== undefined || delta.removedShots !== undefined) {
+				this.broadcast(MESSAGE.REMOVE_ENTITY.serialize(delta.removedPlanet, delta.removedEnemies, delta.removedShots, delta.removedPlayer),
+					excludedPlayer);
+			}
+		}
+}
 
 
 	return Lobby;

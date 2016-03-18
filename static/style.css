@@ -32,8 +32,11 @@ html, body {
 	-ms-user-select: text;
 	user-select: text;
 }
-#gui-fuel, #gui-health, #gui-chat, #gui-points {
+#gui-fuel, #gui-health, #gui-chat, #gui-points, #controls {
 	pointer-events: none;
+}
+#controls li img {
+	pointer-events: auto;
 }
 html {
 	background-image: url("/assets/images/background.png");

@@ -295,58 +295,74 @@ const MESSAGE = {
 		serialize: function(planets, enemies, shots, players) {
 			var totalNameSize = 0,
 				playerNameBufs = [];
-			players.forEach(function(player, i) {
-				playerNameBufs.push(stringToBuffer(player.name));
-				totalNameSize += playerNameBufs[i].byteLength;
-			})
-			var buffer = new ArrayBuffer(4 + planets.length*6 + enemies.length*5 + shots.length*5 + players.length*8 + totalNameSize),
+			if (players !== undefined) {
+				players.forEach(function(player, i) {
+					playerNameBufs.push(stringToBuffer(player.name));
+					totalNameSize += playerNameBufs[i].byteLength;
+				});
+			}
+			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*6 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*5 : 0) + (players !== undefined ? players.length*8 + totalNameSize : 0)),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
-			view.setUint8(1, planets.length);
 			var offset = 2;
-			planets.forEach(function(planet) {
-				view.setUint16(offset, planet.box.center.x);
-				view.setUint16(2 + offset, planet.box.center.y);
-				view.setUint16(4 + offset, planet.box.radius);
-				offset += 6;
-			});
+			if (planets !== undefined) {
+				view.setUint8(1, planets.length);
+				planets.forEach(function(planet) {
+					view.setUint16(offset, planet.box.center.x);
+					view.setUint16(2 + offset, planet.box.center.y);
+					view.setUint16(4 + offset, planet.box.radius);
+					offset += 6;
+				});
+			} else {
+				view.setUint8(1, 0);
+			}
 
-			view.setUint8(offset++, enemies.length);
-			enemies.forEach(function(enemy) {
-				view.setUint16(offset, enemy.box.center.x);
-				view.setUint16(2 + offset, enemy.box.center.y);
-				view.setUint8(4 + offset, this.ENEMY_APPEARANCE[enemy.appearance]);
-				offset += 5;
-			}, this);
+			if (enemies !== undefined) {
+				view.setUint8(offset++, enemies.length);
+				enemies.forEach(function(enemy) {
+					view.setUint16(offset, enemy.box.center.x);
+					view.setUint16(2 + offset, enemy.box.center.y);
+					view.setUint8(4 + offset, this.ENEMY_APPEARANCE[enemy.appearance]);
+					offset += 5;
+				}, this);
+			} else {
+				view.setUint8(offset++, 0);
+			}
 
-			view.setUint8(offset++, shots.length);
-			shots.forEach(function(shot, i) {
-				view.setUint16(offset, shot.box.center.x);
-				view.setUint16(2 + offset, shot.box.center.y);
-				view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
-				offset += 5;
-			});
+			if (shots !== undefined) {
+				view.setUint8(offset++, shots.length);
+				shots.forEach(function(shot, i) {
+					view.setUint16(offset, shot.box.center.x);
+					view.setUint16(2 + offset, shot.box.center.y);
+					view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
+					offset += 5;
+				});
+			} else {
+				view.setUint8(offset++, 0);
+			}
 
-			players.forEach(function(player, i) {
-				view.setUint16(offset, player.box.center.x);
+			if (players !== undefined) {
+				players.forEach(function(player, i) {
+					view.setUint16(offset, player.box.center.x);
 
-				view.setUint16(2 + offset, player.box.center.y);
-				view.setUint8(4 + offset, player.attachedPlanet);
-				view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
-				var enumByte = this.PLAYER_APPEARANCE[player.appearance];
-				enumByte <<= 3;
-				enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
-				if (player.jetpack) enumByte |= this.MASK.JETPACK;
-				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-				view.setUint8(6 + offset, enumByte);
-				view.setUint8(7 + offset, playerNameBufs[i].length);
-				var name = new Uint8Array(playerNameBufs[i]);
-				for (let i = 0; i != name.length; i++) {
-					view.setUint8(8 + offset + i, name[i]);
-				}
-				offset += 8 + name.length;
-			}, this);
+					view.setUint16(2 + offset, player.box.center.y);
+					view.setUint8(4 + offset, player.attachedPlanet);
+					view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
+					var enumByte = this.PLAYER_APPEARANCE[player.appearance];
+					enumByte <<= 3;
+					enumByte += this.WALK_FRAME[player.walkFrame.slice(1)];
+					if (player.jetpack) enumByte |= this.MASK.JETPACK;
+					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
+					view.setUint8(6 + offset, enumByte);
+					view.setUint8(7 + offset, playerNameBufs[i].length);
+					var name = new Uint8Array(playerNameBufs[i]);
+					for (let i = 0; i != name.length; i++) {
+						view.setUint8(8 + offset + i, name[i]);
+					}
+					offset += 8 + name.length;
+				}, this);
+			}
 
 			return buffer;
 		},
@@ -404,23 +420,37 @@ const MESSAGE = {
 
 			view[0] = this.value;
 
-			view[1] = planetIds.length;
-			planetIds.forEach(function(id, i) {
-				view[2 + i] = id;
-			});
+			if (planetIds !== undefined) {
+				view[1] = planetIds.length;
+				planetIds.forEach(function(id, i) {
+					view[2 + i] = id;
+				});
+			} else {
+				view[1] = 0;
+			}
 
-			view[2 + planetIds.length] = enemyIds.length;
-			enemyIds.forEach(function(id, i) {
-				view[2 + planetIds.length + 1 + i] = id;
-			});
+			var offset = 2 + planetIds.length;
+			if (enemyIds !== undefined) {
+				view[offset++] = enemyIds.length;
+				enemyIds.forEach(function(id, i) {
+					view[offset + i] = id;
+				});
+			} else {
+				view[offset++] = 0;
+			}
 
-			view[3 + planetIds.length + enemyIds.length] = shotIds.length;
-			shotIds.forEach(function(id, i) {
-				view[3 + planetIds.length + enemyIds.length + 1 + i] = id;
-			});
+			offset += enemyIds.length;
+			if (shotIds !== undefined) {
+				view[offset++] = shotIds.length;
+				shotIds.forEach(function(id, i) {
+					view[offset + i] = id;
+				});
+			} else {
+				view[offset++] = 0;
+			}
 
 			playerIds.forEach(function(id, i) {
-				view[3 + planetIds.length + enemyIds.length + shotIds.length + 1 + i] = id;
+				view[offset + i] = id;
 			});
 
 			return view.buffer;
