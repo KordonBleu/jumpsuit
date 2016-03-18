@@ -31,6 +31,25 @@ function cleanup() {
 process.on('SIGINT', cleanup);
 process.on('SIGTERM', cleanup);
 
+var printEntry = {
+	print: function(type, content) {
+		if (type === undefined) return;
+		let timestamp = (config.dev) ? ("[" + Date.now() + "]").grey : "";
+		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));  
+	},
+	DEV: 0,
+	INFO: 1,
+	ERROR: 2,
+	enumToString: function (e) {
+		switch (e) {
+			case 0: return "[DEV]".cyan.bold;
+			case 1: return "[INFO]".yellow.bold;
+			case 2: return "[ERR]".red.bold;
+		}
+		return "";			
+	}
+};
+
 var config,
 	previousConfig;
 function loadConfig(firstRun) {
@@ -45,7 +64,7 @@ function loadConfig(firstRun) {
 		for(let key in config) {
 			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
 		}
-		console.log("[INFO] ".yellow.bold + "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
+		printEntry.print(printEntry.INFO, "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
 		var addedProp = [];
 		for (let key in configSkeleton) {
 			if(!config.hasOwnProperty(key)) {
@@ -56,11 +75,11 @@ function loadConfig(firstRun) {
 		if(addedProp.length !== 0) {
 			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
 			loadConfig.selfModified = true;
-			console.log("[INFO] ".yellow.bold + "New properties added to config file: " + addedProp.join(", ").bold);
+			printEntry.print(printEntry.INFO, "New properties added to config file: " + addedProp.join(", ").bold);
 		}
 	} catch(err) {
-		console.log("[ERR] ".red.bold + err);
-		console.log("[INFO] ".yellow.bold + "Unproper config file found. Loading default settings.");
+		printEntry.print(printEntry.ERROR, err);
+		printEntry.print(printEntry.INFO, "Unproper config file found. Loading default settings.");
 		config = configSkeleton;
 	}
 	if (previousConfig !== undefined) {
@@ -78,7 +97,7 @@ function loadConfig(firstRun) {
 			}
 		}
 		if (config.mod !== previousConfig.mod) {
-			console.log("[INFO] ".yellow.bold + "Server set to another mod. Please restart the server to apply new config.");
+			printEntry.print(printEntry.INFO, "Server set to another mod. Please restart the server to apply new config.");
 		}
 		if(config.interactive !== previousConfig.interactive) {
 			if(previousConfig.interactive) rl.close();
@@ -109,18 +128,18 @@ var engine,
 	try {
 		engine = require("./mods/" + config.mod + "/engine.js");
 		plugModdedModule(engine, defaultEngine);
-		console.log("[INFO] ".yellow.bold + "Modded engine loaded.");
+		printEntry.print(printEntry.INFO, "Modded engine loaded.");
 	} catch(e) {
 		engine = defaultEngine;
-		console.log("[INFO] ".yellow.bold + "Engine loaded.");
+		printEntry.print(printEntry.INFO, "Engine loaded.");
 	}
 	try {
 		onMessage = require("./mods/" + config.mod + "/on_message.js")(engine);
 		plugModdedModule(onMessage, defaultOnMessage);
-		console.log("[INFO] ".yellow.bold + "Modded message handler loaded.");
+		printEntry.print(printEntry.INFO, "Modded message handler loaded.");
 	} catch(e) {
 		onMessage = defaultOnMessage;
-		console.log("[INFO] ".yellow.bold + "Message handler loaded.");
+		printEntry.print(printEntry.INFO, "Message handler loaded.");
 	}
 }
 
@@ -351,7 +370,7 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function(lobby) {
 			lobby.players.some(function(player, i, players) {
 				if (player.ws === ws) {
-					if (config.dev) console.log("[DEV] ".cyan.bold + "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
+					if (config.dev) printEntry.print(printEntry.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
 					players.splice(i, 1);
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]));
 					return true;
@@ -361,8 +380,10 @@ wss.on("connection", function(ws) {
 	}
 	var player;
 	ws.on("message", function(message, flags) {
+		let state = new Uint8Array(message, 0, 1)[0];
 		if (config.monitor) monitoring.traffic.beingConstructed.in += message.byteLength;
-		switch (new Uint8Array(message, 0, 1)[0]) {
+		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
+		switch (state) {
 			case MESSAGE.GET_LOBBIES.value:
 				var lobbyList = [];
 				lobbies.forEach(function(lobby, i) {

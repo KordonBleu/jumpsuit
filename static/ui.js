@@ -9,7 +9,8 @@ var chatElement = document.getElementById("gui-chat"),
 	healthElement = document.getElementById("gui-health"),
 	fuelElement = document.getElementById("gui-fuel"),
 	pointsElement = document.getElementById("gui-points"),
-
+	achievementBox = document.getElementById("gui-achievement"),
+	/* boxed windows */
 	menuBox = document.getElementById("menu-box"),
 	infoBox = document.getElementById("info-box"),
 	settingsBox = document.getElementById("settings-box"),
@@ -34,19 +35,20 @@ var chatElement = document.getElementById("gui-chat"),
 	keyResetElement = document.getElementById("key-reset"),
 	/* inside info-box */
 	closeInfoButton = document.getElementById("close-info-box"),
-	/* In-game buttons */
+	/* in-game buttons */
 	guiOptionElement = document.getElementById("gui-options"),//contains the following buttons
 	settingsButton = document.getElementById("settings-button"),
 	infoButton = document.getElementById("info-button"),
-	/* New lobby dialog */
+	/* new lobby dialog */
 	dialogElement = document.getElementById("dialog"),
-	/* Canvases */
+	/* canvases */
 	canvas = document.getElementById("canvas"),
 	minimapCanvas = document.getElementById("minimap-canvas"),
 
-
 	settings = {
-		name: localStorage.getItem("settings.name") || "Unnamed Player"
+		name: localStorage.getItem("settings.name") || "Unnamed Player",
+		volMusic: localStorage.getItem("settings.volume.music") || 50,
+		volEffects: localStorage.getItem("settings.volume.effects") || 50
 	};
 
 
@@ -96,14 +98,12 @@ document.getElementById("option-performance").addEventListener("change", functio
 });
 
 /* Audio settings */
-var volMusic = localStorage.getItem("settings.volume.music"),
-	volEffects = localStorage.getItem("settings.volume.effects");
-if (volMusic !== null && volEffects !== null) {
-	musicVolumeElement.value = volMusic;
-	effectsVolumeElement.value = volEffects;
-	musicGain.gain.value = volMusic/100;
-	soundEffectGain.gain.value = volEffects/100;
-}
+
+musicVolumeElement.value = settings.volMusic;
+effectsVolumeElement.value = settings.volEffects;
+musicGain.gain.value = settings.volMusic / 100;
+soundEffectGain.gain.value = settings.volEffects / 100;
+
 musicVolumeElement.addEventListener("input", function(ev) {
 	musicGain.gain.value = ev.target.value/100;
 });
@@ -382,6 +382,14 @@ function applyEmptinessCheck() {
 }
 searchInput.addEventListener("input", applyLobbySearch);
 emptyLobbyInput.addEventListener("change", applyEmptinessCheck);
+
+function showAchievement(title, reward) {
+	if (!title && !reward) return;
+	achievementBox.setAttribute("data-title", title);
+	achievementBox.setAttribute("data-reward", reward);
+	achievementBox.classList.remove("hidden");
+	setTimeout(function() { this.classList.add("hidden");  }.bind(achievementBox), 4000);
+}
 
 window.onbeforeunload = function() {
 	localStorage.setItem("settings.name", settings.name);

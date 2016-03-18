@@ -14,6 +14,7 @@
 	src: local("Open Sans Light"), url("/assets/fonts/open_sans_300.woff2") format('woff2');
 }
 html, body {
+	font-size: 16px;
 	margin: 0;
 	height: 100%;
 	overflow: hidden;
@@ -67,7 +68,7 @@ html {
 	text-align: center;
 }
 #minimap-overlay i { position: relative; top: -13px;}
-.hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
+#gui-bad-connection.hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
 i {
@@ -95,7 +96,7 @@ button {
 	cursor: pointer;
 	margin: 5px;
 	padding: 8px;
-	min-width: 110px;
+	min-width: 100px;
 	text-transform: uppercase;
 	font-size: 0.75em;
 	color: #ebedf4;
@@ -220,6 +221,8 @@ label {
 	-ms-user-select: none;
 	user-select: none;
 }
+/*
+=== NOT IN USE ===
 label.checkbox-label[data-beta]::after {
 	font-size: 10px;
 	content: "BETA";
@@ -229,6 +232,7 @@ label.checkbox-label[data-beta]::after {
 	left: 3px;
 	top: -10px;
 }
+*/
 label.checkbox-label {
 	display: block;
 	margin: 8px 2px;
@@ -292,13 +296,16 @@ label.range-label {
 #chat-input-container {
 	position: fixed;
 	bottom: 20px;
-	left: 240px; 
-	right: 240px;
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: 1000px;
+	width: calc(100vw - 420px);
 }
 #chat-input {
-	width: 98.8%;/* 100% minus twice the padding */
-	padding: 0.6%;
-	font-size: 22px;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 5px;
+	font-size: 1.375em;
 	background: none;
 	border: none;
 	border-bottom: solid 2px #c9c9c9;
@@ -312,27 +319,28 @@ label.range-label {
 	background: rgba(0, 0, 0, 0.3);	
 }
 #player-list {
+	font-size: 0.9em;
 	background: rgba(235, 237, 244, 0.2);
 	border-radius: 4px;
 	list-style-type: none;
 	position: relative;
-	padding: 1%;	
+	padding: 8px;	
 	display: flex;
 	flex-wrap: wrap;
 }
 #player-list::after {/* CSS arrow trick */
 	content: " ";
-    position: absolute;
+    position: relative;
+	display: block;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-top: 8px solid rgba(235, 237, 244, 0.2);
-	top: 100%;
+	bottom: 0;
 }
 #player-list li {
-	min-width: 11.5%;/* 12.5 minus padding */
-	max-width: 24%;/* 25 minus padding */
+	min-width: 100px;
+	flex-grow: 1;
 	overflow: hidden;
-	padding-left: 1%;
 	cursor: pointer;
 }
 #shade-box {
@@ -414,7 +422,7 @@ label.range-label {
 	margin-left: 8px;
 }
 #lobby-table {
-	font-size: 1.4rem;
+	font-size: 1.25em;
 	max-width: calc(100% - 190px);
 	width: calc(80% - 10px);
 	min-width: calc(100% - 290px);
@@ -433,15 +441,15 @@ label.range-label {
 	user-select: none;
 }
 #lobby-table th {
-	padding: 0.5rem;
+	padding: 0.25em;
 	text-transform: uppercase;
 }
 #lobby-table th:last-child {
 	width: 150px;
 }
 #lobby-table th img {
-	width: 1.4rem;
-	height: 1.4rem;
+	width: 1em;
+	height: 1em;
 }
 #lobby-list tr {
 	font-weight: 600;
@@ -462,7 +470,7 @@ label.range-label {
 	text-transform: none;
 }
 #lobby-list input {
-	font-size: 1.4rem;
+	font-size: 1.17em;
 }
 #lobby-list input[type=text] {
 	width: 100%;
@@ -486,7 +494,7 @@ label.range-label {
 }
 #search-filter label {
 	display: block;
-	font-size: 1rem;
+	font-size: 1em;
 	font-weight: normal;
 	margin: 0.5em 0px;
 }
@@ -494,12 +502,12 @@ label.range-label {
 	margin-top: 12px;
 	padding: 2px;
 	width: calc(100% - 8px);
-	font-size: 20px;
+	font-size: 1.25em;
 }
 
 #team-list {
 	list-style-type: none;
-	font-size: 18px;
+	font-size: 1.125em;
 	padding: 0;
 	width: 565px;
 	margin: 0 auto;
@@ -587,7 +595,7 @@ label.range-label {
 #dialog input[type="text"] {
 	padding: 8px;
 	width: calc(100% - 20px); /*substract padding and border*/
-	font-size: 22px;
+	font-size: 1.375em;
 	margin-bottom: 20px
 }
 #gui-ping {
@@ -608,13 +616,13 @@ label.range-label {
 	cursor: inherit;
 	content: "No messages";
 	color: rgba(120, 120, 120, 0.8);
-	font-size: 14px;
+	font-size: 0.875px;
 }
 #gui-chat {
 	position: fixed;
 	top: 95px;
 	left: 18px;
-	font-size: 14px;
+	font-size: 0.875em;
 	width: 300px;
 	height: calc(100vh - 4vh - 270px); /*div ends 15px above controls*/
 	-webkit-user-select: initial;
@@ -671,7 +679,7 @@ label.range-label {
 	display: inline-block;
 }
 #gui-health {
-	height: 22.5px;
+	height: 1.41em;
 	position: fixed;
 	top: 20px;
 	left: 8px;
@@ -688,15 +696,15 @@ label.range-label {
 #gui-health div {
 	background-size: 100% 100%;
 	display: inline-block;
-	width: 26px;
-	height: 22.5px;
+	width: 1.625em;
+	height: 1.41em;
 }
 #gui-health div.heartFilled { background-image: url("/assets/images/heartFilled.svg"); }
 #gui-health div.heartHalfFilled { background-image: url("/assets/images/heartHalfFilled.svg"); }
 #gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
 
 #gui-bad-connection {
-	font-size: 44px;
+	font-size: 2.75em;
 	position: fixed;
 	top: 50%;
 	left: 50%;
@@ -711,13 +719,12 @@ label.range-label {
 	left: 50%;
 	transform: translate(-50%, 0);
 	color: #eee;
-	font-size: 32px;
+	font-size: 1.75em;
 	background: rgba(0, 0, 0, 0.7);
+	min-height: none;
 }
 #gui-points th {
-	width: 120px;
-	margin: 0 5px;
-	padding: 0;
+	width: 108px;
 	text-align: center;
 }
 #gui-points-alienBeige { color: #e5d9be; }
@@ -729,5 +736,38 @@ label.range-label {
 #gui-options {
 	position: fixed;
 	top: 0;
-	right: 0;
+	right: 8px;
 }
+#gui-options button {
+	margin: 6px 2px;
+}
+#gui-achievement {
+	background: #000;
+	color: #fff;
+	box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.7);
+	padding: 14px;
+	min-width: 120px;
+	width: 30vw;
+	max-width: 200px;
+	position: fixed;
+	top: 47px;
+	right: 0;
+	font-size: 0.875em;
+	transform: translateX(0);
+	transition: transform .5s;
+}
+#gui-achievement.hidden {
+	transform: translateX(100%);
+}
+#gui-achievement:before {
+	display: block;
+	content: attr(data-title);
+	font-size: 1.3em;
+	margin-right: 50px;
+}
+#gui-achievement:after {
+	content: attr(data-reward);
+	font-weight: bold;
+	color: #4dbb63;
+}
+

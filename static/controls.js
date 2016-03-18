@@ -84,7 +84,7 @@ function handleInput(e) {
 	var s = (e.type === "keydown") * 1,
 		chatInUse = chatInput === document.activeElement;
 
-	if (!changingKeys && !chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
+	if (!chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
 		let triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
 		if (players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
@@ -189,7 +189,7 @@ canvas.addEventListener("mousedown", function(e) {
 			canvas.addEventListener("mousemove", dragHandler);
 			break;
 		case 2://right-click
-			currentConnection.sendActionTwo(Math.atan2(e.clientX - canvas.clientWidth/2, canvas.clientHeight/2 - e.clientY));
+			//currentConnection.sendActionTwo(Math.atan2(e.clientX - canvas.clientWidth/2, canvas.clientHeight/2 - e.clientY));
 	}
 });
 canvas.addEventListener("mouseup", function(e) {
@@ -207,7 +207,7 @@ document.getElementById("controls").addEventListener("dragstart", function(e) {
 	e.preventDefault();//prevent unhandled dragging
 });
 document.addEventListener("contextmenu", function(e) {
-	e.preventDefault();//prevent right-click context menu
+	//e.preventDefault();//prevent right-click context menu
 	//unfortunately it also disables the context menu key
 });
 
@@ -249,8 +249,11 @@ function handleGamepad() {
 
 /* Zoom */
 document.addEventListener("wheel", function(e) {
-	windowBox.zoomFactor *= 1 - e.deltaY/10;
-	resizeCanvas();
+	if (!chatInUse && objsInvisible([infoBox, settingsBox])) {
+		var z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
+		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
+		resizeCanvas();
+	}
 });
 
 if (!matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
