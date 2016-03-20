@@ -1,7 +1,8 @@
 //load this file in Node's command prompt by typing .load tests/messages.js
+//TODO: er, fix this shit I guess
 
-delete require.cache[require.resolve("../static/engine.js")];
-var engine = require("../static/engine.js");
+delete require.cache[require.resolve("../mods/capture/engine.js")];
+var engine = require("../mods/capture/engine.js");
 
 delete require.cache[require.resolve("../static/message.js")];
 var message = require("../static/message.js");

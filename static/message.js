@@ -29,6 +29,59 @@ function bradToRad(brad, precision) {
 }
 
 const MESSAGE = {
+	REGISTER_LOBBY: {
+		value: 200,
+		serialize: function(serverName, modName, lobbyList) {
+			var serverNameBuf = stringToBuffer(serverName),
+				modNameBuf = stringToBuffer(modName),
+				buffer = new ArrayBuffer(3 + serverNameBuf.byteLength + modNameBuf.byteLength + 6*lobbyList.length),
+				view = new DataView(buffer);
+
+			view.setUint8(0, this.value);
+
+			view.setUint8(1, serverNameBuf.byteLength);
+			let offset = 2;
+			new Uint8Array(serverNameBuf).forEach(function(val) {
+				view.setUint8(offset++, val);
+			});
+
+			view.setUint8(offset++, modNameBuf.byteLength);
+			new Uint8Array(modNameBuf).forEach(function(val) {
+				view.setUint8(offset++, val);
+			});
+
+			lobbyList.forEach(function(lobby) {
+				view.setUint32(offset, lobby.uid);
+				view.setUint8(offset + 4, lobby.players.length);
+				view.setUint8(offset + 5, lobby.maxPlayers);
+				offset += 6;
+			});
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			var view = new DataView(buffer),
+				offset = 2 + view.getUint8(1),
+				serverName = bufferToString(buffer.slice(2, offset)),
+				i = view.getUint8(offset) + ++offset,
+				modName = bufferToString(buffer.slice(offset, i)),
+				lobbyList = [];
+
+			for (; i != buffer.byteLength; i += 6) {
+				lobbyList.push({
+					id: view.getUint32(i),
+					players: view.getUint8(i + 4),
+					maxPlayers: view.getUint8(i + 5)
+				});
+			}
+
+			return {
+				serverName,
+				modName,
+				lobbyList
+			};
+		}
+	},
 	GET_LOBBIES: {
 		value: 0,
 		serialize: function() {
