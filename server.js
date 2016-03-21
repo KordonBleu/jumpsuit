@@ -36,7 +36,7 @@ var printEntry = {
 	print: function(type, content) {
 		if (type === undefined) return;
 		let timestamp = (config.dev) ? ("[" + Date.now() + "]").grey : "";
-		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));  
+		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));
 	},
 	DEV: 0,
 	INFO: 1,
@@ -47,7 +47,7 @@ var printEntry = {
 			case 1: return "[INFO]".yellow.bold;
 			case 2: return "[ERR]".red.bold;
 		}
-		return "";			
+		return "";
 	}
 };
 

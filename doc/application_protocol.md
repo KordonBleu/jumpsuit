@@ -1,5 +1,6 @@
 # JumpSuit's protocol specification
 
+The protocol's endianness is big-endian.
 Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
 Strings are always encoded as UTF-8. When the protocol mandates the length of a string, it is implied the length is an amount of bytes.
 Angles are always encoded as brads.
