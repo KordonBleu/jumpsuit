@@ -71,7 +71,7 @@ html {
 	text-align: center;
 }
 #minimap-overlay i { position: relative; top: -13px;}
-#gui-bad-connection.hidden, #player-list.hidden, .search-hidden, .empty-lobby-hidden {
+#gui-bad-connection.hidden, #player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
 i {

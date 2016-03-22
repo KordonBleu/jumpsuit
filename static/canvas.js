@@ -146,9 +146,9 @@ Player.prototype.draw = function(showName) {
 	}
 
 	//jetpack
-	var shift = this.looksLeft === true ? -14*windowBox.zoomFactor : 14*windowBox.zoomFactor,
-		jetpackX = playerX - shift*Math.sin(this.box.angle + Math.PI/2),
-		jetpackY = playerY + shift*Math.cos(this.box.angle + Math.PI/2);
+	var shift = this.looksLeft === true ? -windowBox.zoomFactor : windowBox.zoomFactor,
+		jetpackX = playerX - shift*14*Math.sin(this.box.angle + Math.PI/2),
+		jetpackY = playerY + shift*14*Math.cos(this.box.angle + Math.PI/2);
 
 	windowBox.drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, this.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 	if (this.jetpack) {
@@ -159,14 +159,14 @@ Player.prototype.draw = function(showName) {
 
 		if (Math.random() < 0.6) {//TODO: this should be dependent on speed, which can be calculated with predictBox
 			particles.push(new Particle(18,
-				this.box.center.x - shift*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
-				this.box.center.y + shift*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle - Math.PI / 11),
+				this.box.center.x - shift*14*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
+				this.box.center.y + shift*14*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle - Math.PI / 11),
 				undefined,
 				5.2 * Math.cos(this.box.angle),
 				80));
 			particles.push(new Particle(18,
-				this.box.center.x - shift*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle + Math.PI / 11),
-				this.box.center.y + shift*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle + Math.PI / 11),
+				this.box.center.x - shift*14*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle + Math.PI / 11),
+				this.box.center.y + shift*14*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle + Math.PI / 11),
 				undefined,
 				5.2 * Math.cos(this.box.angle),
 				80));
@@ -175,7 +175,13 @@ Player.prototype.draw = function(showName) {
 		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, this.box.angle);
 		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, this.box.angle);
 	}
-
+	//weapon
+	var weaponResource = resources["sniper"],
+		weaponX = playerX - shift*40*Math.sin(this.box.angle - Math.PI/2),
+		weaponY = playerY + shift*40*Math.cos(this.box.angle - Math.PI/2);
+		
+		
+	windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, !this.looksLeft, weaponResource.width * 0.19, weaponResource.height * 0.19);
 	//body
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, this.looksLeft);
 }
@@ -270,7 +276,7 @@ function loop() {
 		m.x += m.speed;
 		m.rotAng += m.rotSpeed;
 		if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
-		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng);
+		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, false, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
 	});
 	context.globalAlpha = 1;
 

@@ -39,6 +39,11 @@ convertToKey.keyMapMisc = {//there are more but those are the most common
 	39: "ArrowRight",
 	40: "ArrowDown"
 };
+function objsInvisible(elArr) {
+	return elArr.every(function(element) {
+		return element.classList.contains("hidden");
+	});
+}
 
 function handleInputMobile(e) {
 	function transform(touch, type) {
@@ -73,12 +78,7 @@ function handleInputMobile(e) {
 
 /* Keyboard */
 function handleInput(e) {
-	function objsInvisible(elArr) {
-		return elArr.every(function(element) {
-			return element.classList.contains("hidden");
-		});
-	}
-
+	
 	if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
 
 	var s = (e.type === "keydown") * 1,
@@ -249,6 +249,7 @@ function handleGamepad() {
 
 /* Zoom */
 document.addEventListener("wheel", function(e) {
+	var chatInUse = chatInput === document.activeElement;
 	if (!chatInUse && objsInvisible([infoBox, settingsBox])) {
 		var z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
 		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));

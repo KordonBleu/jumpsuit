@@ -13,7 +13,8 @@ var resPaths = [
 	"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
-	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg"
+	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
+	"sniper.png"
 	],
 	resources = {};
 
@@ -206,12 +207,17 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.velocity.y = player.velocity.y * 0.987;
 			}
 			var runMultiplicator = player.controls["run"] ? 1.7 : 1;
-			if (player.controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 140) * player.controls["moveLeft"] * runMultiplicator;
-			if (player.controls["moveRight"] > 0) player.box.angle += (Math.PI / 140) * player.controls["moveRight"] * runMultiplicator;
+			if (player.controls["moveLeft"] > 0) {
+				player.box.angle -= (Math.PI / 140) * player.controls["moveLeft"] * runMultiplicator;
+				player.looksLeft = true;
+			}
+			if (player.controls["moveRight"] > 0) {
+				player.box.angle += (Math.PI / 140) * player.controls["moveRight"] * runMultiplicator;
+				player.looksLeft = false;
+			}
 
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
-
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
 			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 		}

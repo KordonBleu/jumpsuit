@@ -35,17 +35,19 @@ process.on('SIGTERM', cleanup);
 var printEntry = {
 	print: function(type, content) {
 		if (type === undefined) return;
-		let timestamp = (config.dev) ? ("[" + Date.now() + "]").grey : "";
-		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));
+		let timestamp = (config.dev) ? ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey : "";
+		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));  
 	},
 	DEV: 0,
 	INFO: 1,
 	ERROR: 2,
+	RESULT: 3,
 	enumToString: function (e) {
 		switch (e) {
 			case 0: return "[DEV]".cyan.bold;
 			case 1: return "[INFO]".yellow.bold;
 			case 2: return "[ERR]".red.bold;
+			case 3: return "[RESULT]".magenta.bold;
 		}
 		return "";
 	}
@@ -171,11 +173,15 @@ function initRl() {
 		input: process.stdin,
 		output: process.stdout
 	});
-	rl.setPrompt("[INPUT:] ".blue.bold, "[INPUT:] ".length);
+	rl.setPrompt("[INPUT] ".blue.bold, "[INPUT] ".length);
 	rl.on("line", function (cmd) {
 		//allowing to output variables on purpose
-		var result = eval(cmd);
-		if (result !== undefined) console.log("[RESULT:] ".magenta.bold, result);
+		try {
+			var result = eval(cmd);
+			if (result !== undefined) printEntry.print(printEntry.RESULT, result);
+		} catch (ex) {
+			printEntry.print(printEntry.ERROR, ex);
+		}
 	});
 }
 
@@ -232,6 +238,7 @@ var server = http.createServer(function (req, res){
 			res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
 			res.writeHead(200);
 			res.end(files[req.url]);
+			console.log(res);
 		}
 	} else {
 		res.writeHead(404);
@@ -360,8 +367,8 @@ function monitoring() {
 	});
 }
 monitoring.traffic = {
-	previous: {in: 0, out: 0},
-	beingConstructed: {in: 0, out: 0},
+	previous: {in: 0, out: 0, http: 0},
+	beingConstructed: {in: 0, out: 0, http: 0},
 	timer: 0
 };
 if(config.monitor) {
