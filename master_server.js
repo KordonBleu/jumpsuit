@@ -13,30 +13,14 @@ var fs = require("fs"),
 		monitor: false,
 		port: 8080,
 		server_name: "JumpSuit server"
-	},
-	configPath = process.argv[2] || "./config.json";
+	};
 
-try {
-	fs.statSync(configPath);
-} catch(err) {
-	if(err.code === "ENOENT") {
-		console.log("No config file (\u001b[1m" + configPath + "\u001b[0m) found. Creating it.");
-		fs.writeFileSync(configPath, JSON.stringify(configSkeleton, null, "\t"));
-	}
-}
 
-function cleanup() {
-	if(config.monitor) process.stdout.write("\u001b[?1049l");
-	process.exit();
-};
-process.on('SIGINT', cleanup);
-process.on('SIGTERM', cleanup);
-
-var printEntry = {
+global.printEntry = {
 	print: function(type, content) {
 		if (type === undefined) return;
-		let timestamp = (config.dev) ? ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey : "";
-		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));  
+		let timestamp = (config !== undefined && config.dev) ? ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey : "";
+		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));
 	},
 	DEV: 0,
 	INFO: 1,
@@ -53,68 +37,32 @@ var printEntry = {
 	}
 };
 
-var config,
-	previousConfig;
-function loadConfig(firstRun) {
-	if(config !== undefined) previousConfig = Object.assign({}, config);//clone config
-
-	if(loadConfig.selfModified === true) {
-		loadConfig.selfModified = false;
-		return;
+function changeCbk(newConfig, previousConfig) {
+	if(newConfig.port !== previousConfig.port) {
+		server.close();
+		server.listen(newConfig.port);
 	}
-	try {
-		config = JSON.parse(fs.readFileSync(configPath));
-		for(let key in config) {
-			if(configSkeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + configPath);
+	if(newConfig.monitor !== previousConfig.monitor) {
+		if(previousConfig.monitor) {
+			monitor.unsetMonitorMode();
+		} else {
+			monitor.setMonitorMode();
 		}
-		printEntry.print(printEntry.INFO, "Succesfully loaded" + (firstRun === true ? "" : " modified") + " config file.");
-		var addedProp = [];
-		for (let key in configSkeleton) {
-			if(!config.hasOwnProperty(key)) {
-				config[key] = configSkeleton[key];//all the properties must be listed in `config.json`
-				addedProp.push(key);
-			}
-		}
-		if(addedProp.length !== 0) {
-			fs.writeFileSync(configPath, JSON.stringify(config, null, "\t"));
-			loadConfig.selfModified = true;
-			printEntry.print(printEntry.INFO, "New properties added to config file: " + addedProp.join(", ").bold);
-		}
-	} catch(err) {
-		printEntry.print(printEntry.ERROR, err);
-		printEntry.print(printEntry.INFO, "Unproper config file found. Loading default settings.");
-		config = configSkeleton;
 	}
-	if (previousConfig !== undefined) {
-		if(config.port !== previousConfig.port) {
-			server.close();
-			server.listen(config.port);
-		}
-		if(config.monitor !== previousConfig.monitor) {
-			if(previousConfig.monitor) {
-				clearInterval(monitorTimerID);
-				process.stdout.write("\u001b[?1049l")
-			} else {
-				process.stdout.write("\u001b[?1049h\u001b[H");
-				monitorTimerID = setInterval(monitoring, 500);
-			}
-		}
-		if (config.mod !== previousConfig.mod) {
-			printEntry.print(printEntry.INFO, "Server set to another mod. Please restart the server to apply new config.");
-		}
-		if(config.interactive !== previousConfig.interactive) {
-			if(previousConfig.interactive) rl.close();
-			else initRl();
-		}
-		if (config.dev && !previousConfig.dev) {
-			lobbies.forEach(function(lobby) {
-				lobby.stateTimer = config.dev ? 0 : 30;
-			});
-		}
+	if (newConfig.mod !== previousConfig.mod) {
+		printEntry.print(printEntry.INFO, "Server set to another mod. Please restart the server to apply new newConfig.");
+	}
+	if(newConfig.interactive !== previousConfig.interactive) {
+		if(previousConfig.interactive) rl.close();
+		else initRl();
+	}
+	if (newConfig.dev && !previousConfig.dev) {
+		lobbies.forEach(function(lobby) {
+			lobby.stateTimer = newConfig.dev ? 0 : 30;
+		});
 	}
 }
-loadConfig(true);
-fs.watchFile(configPath, loadConfig);//refresh config whenever the `config.json` is modified
+var config = require("./config.js")(process.argv[2] || "./config.json", configSkeleton, changeCbk);
 
 function plugModdedModule(moddedModule, defaultModule) {
 	let defaultEngine = require("./mods/" + configSkeleton.mod + "/engine.js");//default engine
@@ -146,7 +94,11 @@ var engine,
 	}
 }
 
-var Lobby = require("./lobby.js")(engine);
+var Lobby = require("./lobby.js")(engine),
+	lobbies = [];
+
+var monitor = require("./monitor.js")(config, lobbies);
+if(config.monitor) monitor.setMonitorMode();
 
 var files = {
 	"/engine.js": fs.readFileSync("./mods/capture/engine.js")//the default engine is not under `./static` because it is part of a mod
@@ -247,14 +199,13 @@ var server = http.createServer(function (req, res){
 });
 server.listen(config.port);
 
-var lobbies = [],
-	wss = new WebSocketServer({server: server});
+var wss = new WebSocketServer({server: server});
 
 engine.Player.prototype.send = function(data) {
 	try {
 		this.ws.send(data, { binary: true, mask: false });
 		if (config.monitor) {
-			monitoring.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
+			monitor.getTraffic().beingConstructed.out += data.byteLength;//record outgoing traffic for logging
 		}
 	} catch (err) { /* Maybe log this error somewhere? */ }
 };
@@ -320,62 +271,6 @@ setInterval(function() {
 	});
 }, 500);
 
-function monitoring() {
-	function genSpaces(amount) {
-		for(var spaces = ""; spaces.length !== amount; spaces += " ");
-		return spaces;
-	}
-	function printProperty(caption, content){
-		console.log(caption.bold + ":" + genSpaces(20 - caption.length) + content);
-	}
-
-	if (++monitoring.traffic.timer === 2) {
-		monitoring.traffic.previous = monitoring.traffic.beingConstructed;
-		monitoring.traffic.beingConstructed = {in: 0, out: 0};
-		monitoring.traffic.timer = 0;
-	}
-
-	process.stdout.write("\u001B[2J\u001B[0;0f");
-	console.log("Jumpsuit Server version 0.0.0".bold.yellow);
-	printProperty("Traffic", (monitoring.traffic.previous.in / 1024).toFixed(2) + " kByte/s (in) | " + (monitoring.traffic.previous.out / 1024).toFixed(2) + " kByte/s (out)");
-	printProperty("Port", config.port);
-	printProperty("Development Mode", (config.dev) ? "Enabled" : "Disabled");
-	printProperty("Interactive Mode", (config.interactive) ? "Enabled" : "Disabled");
-
-	console.log(); //newline
-	var headerSizes = [35, 10, 15],
-		headerNames = ["lobby name", "players", "process time"],
-		header = "";
-	headerSizes.forEach(function(hSize, i) {
-		header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
-	});
-	console.log(header);
-
-	var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height and width
-	lobbies.some(function(lobby, index, array) {
-		if (lobbyAmount >= 8) {
-			console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
-			return true; //"some" function can be quitted with return, but it needs to return something so just return; wouldn't work
-		}
-		var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
-			amount = lobby.players.length.toString(),
-			processTime = lobby.processTime.toString();
-		info += "   " + amount + genSpaces(headerSizes[1] - amount.length);
-		info += "   " + processTime;
-		console.log(info);
-		lobbyAmount++;
-	});
-}
-monitoring.traffic = {
-	previous: {in: 0, out: 0, http: 0},
-	beingConstructed: {in: 0, out: 0, http: 0},
-	timer: 0
-};
-if(config.monitor) {
-	process.stdout.write("\u001b[?1049h\u001b[H");
-	var monitorTimerID = setInterval(monitoring, 500);
-}
-
 wss.on("connection", function(ws) {
 	function cleanup() {
 		lobbies.forEach(function(lobby, lobbyI) {
@@ -398,7 +293,7 @@ wss.on("connection", function(ws) {
 
 	ws.on("message", function(message, flags) {
 		let state = new Uint8Array(message, 0, 1)[0];
-		if (config.monitor) monitoring.traffic.beingConstructed.in += message.byteLength;
+		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
 		switch (state) {
 			case MESSAGE.GET_LOBBIES.value:
