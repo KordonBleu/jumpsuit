@@ -1,5 +1,6 @@
 /node_modules/
 /config.json
+/master_config.json
 /mods/*
 !/mods/capture
 !/mods/capture/*
