@@ -31,19 +31,22 @@ function bradToRad(brad, precision) {
 const MESSAGE = {
 	REGISTER_SERVER: {
 		value: 200,
-		serialize: function(serverName, modName, lobbyList) {
+		serialize: function(serverPort, serverName, modName, lobbyList) {
 			var serverNameBuf = stringToBuffer(serverName),
 				modNameBuf = stringToBuffer(modName),
 				lobbyListBuf = MESSAGE.REGISTER_LOBBIES.serialize(lobbyList),
-				buffer = new ArrayBuffer(3 + serverNameBuf.byteLength + modNameBuf.byteLength + 6*lobbyList.length),
-				view = new Uint8Array(buffer);
+				buffer = new ArrayBuffer(5 + serverNameBuf.byteLength + modNameBuf.byteLength + 6*lobbyList.length),
+				view = new Uint8Array(buffer),
+				dView = new DataView(buffer);
 
 			view[0] = this.value;
 
-			view[1] = serverNameBuf.byteLength;
-			view.set(new Uint8Array(serverNameBuf), 2);
+			dView.setUint16(1, serverPort);
 
-			var offset = 2 + serverNameBuf.byteLength;
+			view[3] = serverNameBuf.byteLength;
+			view.set(new Uint8Array(serverNameBuf), 4);
+
+			var offset = 4 + serverNameBuf.byteLength;
 			view[offset++] = modNameBuf.byteLength;
 			view.set(new Uint8Array(modNameBuf), offset);
 			offset += modNameBuf.byteLength;
@@ -53,12 +56,14 @@ const MESSAGE = {
 			return buffer;
 		},
 		deserialize: function(buffer) {
+			var view = new DataView(buffer);
 			var view = new DataView(buffer),
-				offset = 2 + view.getUint8(1),
-				serverName = bufferToString(buffer.slice(2, offset)),
+				offset = 4 + view.getUint8(3),
+				serverName = bufferToString(buffer.slice(4, offset)),
 				i = view.getUint8(offset) + ++offset;
 
 			return {
+				serverPort: view.getUint16(1),
 				serverName,
 				modName: bufferToString(buffer.slice(offset, i)),
 				lobbyList: MESSAGE.REGISTER_LOBBIES.deserialize(buffer.slice(i - 1))
@@ -121,74 +126,35 @@ const MESSAGE = {
 			return lobbyIds;
 		}
 	},
-	GET_LOBBIES: {
+	GET_SERVER_LIST: {
 		value: 0,
 		serialize: function() {
 			return new Uint8Array([this.value]).buffer;
 		}
 	},
-	LOBBY_LIST: {
+	SERVER_LIST: {
 		value: 1,
-		serialize: function(lobbyList) {
-			var totalNameSize = 0,
-				lobbyNameBufs = [];
-			lobbyList.forEach(function(lobby, i) {
-				lobbyNameBufs.push(stringToBuffer(lobby.name));
-				totalNameSize += lobbyNameBufs[i].byteLength;
-			});
-			var buffer = new ArrayBuffer(lobbyList.length*7 + totalNameSize + 1),
-				view = new DataView(buffer),
-				bufIndex = 1;
-			view.setUint8(0, this.value);
+		serialize: function(serverList) {
+			var serverUrlBufs = [],
+				serverUrlLength = 0,
+				partialServerBufs = [],
+				partialServerLength = 0;
 
-			lobbyList.forEach(function(lobby, i) {
-				view.setUint32(bufIndex, lobby.uid);
-				view.setUint8(bufIndex + 4, lobby.players);
-				view.setUint8(bufIndex + 5, lobby.maxPlayers);
-				view.setUint8(bufIndex + 6, lobbyNameBufs[i].length);
-				new Uint8Array(lobbyNameBufs[i]).forEach(function(val, i) {
-					view.setUint8(bufIndex + 7 + i, val);
-				});
-				bufIndex += 7 + lobbyNameBufs[i].length;
+			serverList.forEach(function(server) {
+				var serverUrlBuf = stringToBuffer(server.name);
+				serverUrlBufs.push(serverUrlBuf);
+				serverUrlLength += serverUrlBuf.byteLength;
 			});
 
-			return buffer;
+			serverList.forEach(function(server) {
+				var partialServerBuf = MESSAGE.REGISTER_SERVER.serialize(this.port, this.name, this.mod, this.lobbies).slice(1);
+				partialServerBufs.push(partialServerBuf);
+				partialServerLength += partialServerBuf.byteLength;
+			});
+
+			var buffer = new ArrayBuffer(1 + serverUrlLength + partialServerLength + 1*partialServerBufs.length);
 		},
 		deserialize: function(buffer) {
-			var view = new DataView(buffer, 1),
-				lobbyList = [],
-				lobby,
-				i = 0,
-				lobbyIndex = 0;
-			while (lobbyIndex !== buffer.byteLength - 1) {
-				switch (i) {
-					case 0:
-						lobby = {
-							uid: view.getUint32(i + lobbyIndex)
-						};
-						i += 4;
-						break;
-					case 4:
-						lobby.players = view.getUint8(i + lobbyIndex);
-						i += 1;
-						break;
-					case 5:
-						lobby.maxPlayers = view.getUint8(i + lobbyIndex);
-						i += 1;
-						break;
-					case 6:
-						var strLen = view.getUint8(i + lobbyIndex),
-							strStart = i + lobbyIndex + 2;//1 byte after the "length byte" + 1 byte because view starts with the second byte
-						lobby.name = bufferToString(buffer.slice(strStart, strStart + strLen));
-
-						lobbyList.push(lobby);
-
-						i = 0;
-						lobbyIndex += strLen + 7;
-				}
-			}
-
-			return lobbyList;
 		}
 	},
 	CREATE_LOBBY: {

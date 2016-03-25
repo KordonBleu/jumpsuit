@@ -13,7 +13,7 @@ var fs = require("fs"),
 		master: "ws://jumpsuit.space",
 		mod: "capture",
 		monitor: false,
-		port: 8080,
+		port: 7483,
 		server_name: "JumpSuit server"
 	};
 
@@ -64,7 +64,7 @@ function changeCbk(newConfig, previousConfig) {
 		});
 	}
 }
-var config = require("./config.js")(process.argv[2] || "./config.json", configSkeleton, changeCbk);
+var config = require("./config.js")(process.argv[2] || "./game_config.json", configSkeleton, changeCbk);
 
 function plugModdedModule(moddedModule, defaultModule) {
 	let defaultEngine = require("./mods/" + configSkeleton.mod + "/engine.js");//default engine
@@ -111,7 +111,7 @@ server.listen(config.port);
 
 var masterWs = new WebSocket(config.master);
 masterWs.on("open", function() {
-	console.log("yay");
+	masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
 });
 
 engine.Player.prototype.send = function(data) {
@@ -205,17 +205,11 @@ wss.on("connection", function(ws) {
 	player.ws = ws;
 
 	ws.on("message", function(message, flags) {
+		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
 		let state = new Uint8Array(message, 0, 1)[0];
 		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
 		switch (state) {
-			case MESSAGE.GET_LOBBIES.value:
-				var lobbyList = [];
-				lobbies.forEach(function(lobby, i) {
-					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.length, maxPlayers: lobby.maxPlayers});
-				});
-				player.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
-				break;
 			case MESSAGE.CREATE_LOBBY.value:
 				var data = MESSAGE.CREATE_LOBBY.deserialize(message);
 				if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.name, data.playerAmount, config.dev ? 0 : 30));
@@ -233,7 +227,7 @@ wss.on("connection", function(ws) {
 				} else player.name = name;
 				break;
 			case MESSAGE.CONNECT.value:
-				let lobbyId = MESSAGE.CONNECT.deserialize(message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength)),
+				let lobbyId = MESSAGE.CONNECT.deserialize(message),
 					lobby = lobbies.getByUid(lobbyId);
 
 				if (player.name === undefined) engine.Player.prototype.send.call({ws: ws}, MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN));//we have to resort to this to use .send() even though the player is undefined
@@ -266,17 +260,15 @@ wss.on("connection", function(ws) {
 				break;
 			case MESSAGE.ACTION_ONE.value:
 				if (player !== undefined) {
-					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
 					player.lobby.sendEntityDelta(
-						onMessage.onActionOne(player, MESSAGE.ACTION_ONE.deserialize(msgAsArrbuf))
+						onMessage.onActionOne(player, MESSAGE.ACTION_ONE.deserialize(message))
 					);
 				}
 				break;
 			case MESSAGE.ACTION_TWO.value:
 				if (player !== undefined) {
-					let msgAsArrbuf = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);
 					player.lobby.sendEntityDelta(
-						onMessage.onActionTwo(player, MESSAGE.ACTION_TWO.deserialize(msgAsArrbuf))
+						onMessage.onActionTwo(player, MESSAGE.ACTION_TWO.deserialize(message))
 					);
 				}
 				break;

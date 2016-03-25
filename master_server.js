@@ -11,7 +11,7 @@ var fs = require("fs"),
 		dev: false,
 		interactive: false,
 		monitor: false,
-		port: 8080
+		port: 80
 	};
 
 
@@ -153,23 +153,46 @@ server.listen(config.port);
 var wss = new WebSocketServer({server: server});
 
 wss.on("connection", function(ws) {
+	var gameServer;
 	ws.on("message", function(message, flags) {
+		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
 		let state = new Uint8Array(message, 0, 1)[0];
+
 		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
 
 		switch (state) {
+			/* from game server */
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
-				gameServers.push(new GameServer("fake url"), data.serverName, data.modName, data.lobbyList);
+				gameServer = new GameServer("ws://" + ws._socket.remoteAddress + data.serverPort), data.serverName, data.modName, data.lobbyList;
+				gameServers.push(gameServer);
+				console.log("server registered at " + ws._socket.remoteAddress + ":" + data.serverPort);
 				break;
 			case MESSAGE.REGISTER_LOBBIES.value:
+				gameServer.lobbies.concat(MESSAGE.REGISTER_LOBBIES.deserialize(message));
 				break;
 			case MESSAGE.UNREGISTER_LOBBIES.value:
+				MESSAGE.UNREGISTER_LOBBIES.deserialize(message).forEach(function(id) {
+					gameServer.lobbies.splice(id, 1);
+				});
+				break;
+			/* from client */
+			case MESSAGE.GET_LOBBY_LIST.value:
+				var lobbyList = [];
+				lobbies.forEach(function(lobby, i) {
+					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.length, maxPlayers: lobby.maxPlayers});
+				});
+				player.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
 				break;
 		}
 	});
 
 	ws.on("close", function() {
+		gameServers.forEach(function(gS, i) {
+			if (gameServer = gS) {
+				gameServers.splice(i, 1);
+			}
+		});
 	});
 });

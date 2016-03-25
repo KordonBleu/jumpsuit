@@ -162,10 +162,10 @@ Owned By must be either:
 
 #### PARTIAL_SERVER
 ```
-          1B               0-255B            1B            0-255B     ?*6B
-+--------------------+---------------+-----------------+------------+=======+
-| server name length | "server name" | mod name length | "mod name" | LOBBY |
-+--------------------+---------------+-----------------+------------+=======+
+      2B                1B               0-255B            1B            0-255B     ?*6B
++-------------+--------------------+---------------+-----------------+------------+=======+
+| server port | server name length | "server name" | mod name length | "mod name" | LOBBY |
++-------------+--------------------+---------------+-----------------+------------+=======+
 ```
 
 
@@ -176,6 +176,8 @@ Owned By must be either:
 | url length | "url" | PARTIAL_SERVER |
 +------------+-------+----------------+
 ```
+
+The `"url"` doesn't contain the port.
 
 
 
@@ -230,7 +232,7 @@ Game servers will attempt to connect to the master server's websocket at "/game_
 
 Clients will attempt to connect to the master server's websocket at "/clients".
 
-#### GET_LOBBY_LIST (client → master server)
+#### GET_SERVER_LIST (client → master server)
 ```
  1B
 +---+
@@ -239,7 +241,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
 
 
-#### LOBBY_LIST (master server → client)
+#### SERVER_LIST (master server → client)
 ```
  1B    ?*6B
 +---+========+
