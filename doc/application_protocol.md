@@ -43,15 +43,6 @@ Subpayloads are sequences of bytes which are always defined after the same schem
 They might be used several times in a packet or in packets with different types.
 
 
-#### LOBBY
-```
-     4B                 1B                           1B
-+----------+----------------------------+---------------------------+
-| lobby id | amount of connected player | maximum amount of players |
-+----------+----------------------------+---------------------------+
-```
-
-
 #### PLANET
 ```
        2B            2B           2B
@@ -162,10 +153,10 @@ Owned By must be either:
 
 #### PARTIAL_SERVER
 ```
-      2B                1B               0-255B            1B            0-255B     ?*6B
-+-------------+--------------------+---------------+-----------------+------------+=======+
-| server port | server name length | "server name" | mod name length | "mod name" | LOBBY |
-+-------------+--------------------+---------------+-----------------+------------+=======+
+      2B                1B               0-255B            1B            0-255B
++-------------+--------------------+---------------+-----------------+------------+
+| server port | server name length | "server name" | mod name length | "mod name" |
++-------------+--------------------+---------------+-----------------+------------+
 ```
 
 
@@ -192,7 +183,7 @@ The first byte of every packet determines its type. A payload may be placed afte
 +------+-----------
 ```
 
-There are 22 packet types.
+There are 18 packet types.
 
 
 
@@ -209,25 +200,6 @@ Game servers will attempt to connect to the master server's websocket at "/game_
 ```
 
 
-#### REGISTER_LOBBIES (game server → master server)
-```
- 1B   ?*6B
-+---+=======+
-| 1 | LOBBY |
-+---+=======+
-```
-
-
-#### UNREGISTER_LOBBIES (game server → master server)
-```
- 1B     ?*4B
-+---+==========+
-| 2 | lobby id |
-+---+==========+
-```
-
-
-
 ### Client ↔ Master server
 
 Clients will attempt to connect to the master server's websocket at "/clients".
@@ -236,7 +208,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
  1B
 +---+
-| 3 |
+| 1 |
 +---+
 ```
 
@@ -245,7 +217,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
  1B    ?*6B
 +---+========+
-| 4 | SERVER |
+| 2 | SERVER |
 +---+========+
 ```
 
@@ -253,20 +225,11 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 
 ### Client ↔ Game server
 
-#### CREATE_LOBBY (client → game server)
-```
- 1B              1B                 0B-255B
-+---+---------------------------+--------------+
-| 5 | maximum amount of players | "lobby name" |
-+---+---------------------------+--------------+
-```
-
-
 #### SET_NAME (client → game server)
 ```
  1B       0B-?B
 +---+---------------+
-| 6 | "player name" |
+| 3 | "player name" |
 +---+---------------+
 ```
 
@@ -275,63 +238,51 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
  1B      1B           0B-?B
 +---+-----------+---------------+
-| 7 | player id | "player name" |
+| 4 | player id | "player name" |
 +---+-----------+---------------+
 ```
+
+
+#### CREATE_PRIVATE_LOBBY (client → game server)
+```
+ 1B              1B
++---+---------------------------+
+| 5 | maximum amount of players |
++---+---------------------------+
+```
+
+The game server will respond with CONNECT_ACCEPTED.
 
 
 #### CONNECT (client → game server)
 ```
  1B      4B
-+---+----------+
-| 8 | lobby id |
-+---+----------+
++---+~~~~~~~~~~+
+| 6 | lobby id |
++---+~~~~~~~~~~+
 ```
 
-The game server will respond with either CONNECT_ACCEPTED or an ERROR.
+The `lobby id` must be set only if the player wishes to connect to a private lobby.
+The game server will respond with CONNECT_ACCEPTED.
 
 
 #### CONNECT_ACCEPTED (game server → client)
 ```
- 1B       1B            2B                2B              3b           1b          1b           1b          1b           1b            ?B
-+---+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
-| 9 | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
-+---+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
+ 1B      4B          1B           1B             2B                2B              3b           1b          1b           1b          1b           1b            ?B
++---+----------+-----------+--------------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
+| 7 | lobby id | player id | homograph id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
++---+----------+-----------+--------------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
 ```
 
-
-#### ERROR (game server → client)
-```
-  1B       1B
-+----+------------+
-| 10 | Error Type |
-+----+------------+
-```
-
-`Error Type` must be either:
- 0. no lobby avalaible
- 1. no slot avalaible
- 2. name taken
- 3. name unknown
-
-
-#### LEAVE_LOBBY (client → game server)
-```
-  1B      4B
-+----+----------+
-| 11 | lobby id |
-+----+----------+
-```
-
-Note: as JumpSuit's client will only need to connect to one looby at once, in future versions the lobby id will be assumed to be the only lobby the player is connected to.
+The homograph id is used to distinguish players with the same name. It is unique for every player with the same name.
 
 
 #### LOBBY_STATE (game server → client)
 ```
-  1B       1B         1B
-+----+-------------+~~~~~~~+
-| 12 | Lobby State | timer |
-+----+-------------+~~~~~~~+
+ 1B       1B         1B
++---+-------------+~~~~~~~+
+| 8 | Lobby State | timer |
++---+-------------+~~~~~~~+
 ```
 
 `Lobby State` must be either:
@@ -342,10 +293,10 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 
 #### ADD_ENTITY (game server → client)
 ```
-  1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
-+----+---------------+========+--------------+=======+-------------+======+========+
-| 13 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
-+----+---------------+========+--------------+=======+-------------+======+========+
+ 1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
++---+---------------+========+--------------+=======+-------------+======+========+
+| 9 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
++---+---------------+========+--------------+=======+-------------+======+========+
 ```
 
 
@@ -353,7 +304,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B        1B           ?*1B           1B          ?*1B         1B         ?*1B       ?*1B
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
-| 14 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
+| 10 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
 ```
 
@@ -362,7 +313,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*7B
 +----+-------------+-----------+===============+=============+=============+===============+
-| 15 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
+| 11 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+=============+===============+
 ```
 
@@ -371,7 +322,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B      2b         1b    1b      1b       1b         1b           1b
 +----+-------------+------+-----+--------+---------+-----------+------------+
-| 16 | unused bits | jump | run | crouch | jetpack | move left | move right |
+| 12 | unused bits | jump | run | crouch | jetpack | move left | move right |
 +----+-------------+------+-----+--------+---------+-----------+------------+
 ```
 
@@ -380,7 +331,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B    2B
 +----+-------+
-| 17 | angle |
+| 13 | angle |
 +----+-------+
 ```
 
@@ -389,7 +340,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B    2B
 +----+-------+
-| 18 | angle |
+| 14 | angle |
 +----+-------+
 ```
 
@@ -398,7 +349,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B      1B
 +----+-----------+
-| 19 | "message" |
+| 15 | "message" |
 +----+-----------+
 ```
 
@@ -407,7 +358,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B      1B          ?B
 +----+-----------+-----------+
-| 20 | player id | "message" |
+| 16 | player id | "message" |
 +----+-----------+-----------+
 ```
 
@@ -416,7 +367,7 @@ Note: as JumpSuit's client will only need to connect to one looby at once, in fu
 ```
   1B       4B
 +----+============+
-| 21 | team score |
+| 17 | team score |
 +----+============+
 ```
 

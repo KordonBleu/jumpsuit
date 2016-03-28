@@ -14,5 +14,5 @@ var lobbies = [new Lobby("placeholder name1", 8, 0),
 ];
 lobbies[0].uid = 24;
 
-var buf1 = message.REGISTER_SERVER.serialize("server name", "mod name", lobbies);
+var buf1 = message.REGISTER_SERVER.serialize(7483, "server name", "mod name", lobbies);
 var res1 = message.REGISTER_SERVER.deserialize(buf1);
