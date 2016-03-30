@@ -14,7 +14,7 @@ Possible values for a field are noted:
  * with lowercase words for variables (ex: `player name`)
  * with lowercase words between double quotes for strings variables (`"player name"`)
  * with lowercase words starting with a uppercase character for enumerations (ex: `Error Type`)
- * with uppercase snake case for packets and subpayloads (ex: `CREATE_LOBBY`)
+ * with uppercase snake case for packets and subpayloads (ex: `CREATE_PRIVATE_LOBBY`)
 Values dubbed `unused bits` are not used, but are present to complete a byte.
 
 Values are enclosed in boxes.
@@ -168,7 +168,8 @@ Owned By must be either:
 +------------+-------+----------------+
 ```
 
-The `"url"` doesn't contain the port.
+The `"url"` doesn't contain the port, as it is already avalaible in the PARTIAL_SERVER subpayload.
+A domain name should be prefered over an IPv4, which should be prefered over an IPv6.
 
 
 
@@ -204,21 +205,20 @@ Game servers will attempt to connect to the master server's websocket at "/game_
 
 Clients will attempt to connect to the master server's websocket at "/clients".
 
-#### GET_SERVER_LIST (client → master server)
-```
- 1B
-+---+
-| 1 |
-+---+
-```
-
-
-#### SERVER_LIST (master server → client)
+#### ADD_SERVERS (master server → client)
 ```
  1B    ?*6B
 +---+========+
-| 2 | SERVER |
+| 1 | SERVER |
 +---+========+
+```
+
+#### REMOVE_SERVERS (master server → client)
+```
+ 1B      2B
++---+===========+
+| 2 | server id |
++---+===========+
 ```
 
 

@@ -15,7 +15,6 @@ function Connection() {
 
 	this.socket.addEventListener("open", function() {
 		this.setName.call(this);
-		this.refreshLobbies.call(this)
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
@@ -33,10 +32,6 @@ Connection.prototype.connectLobby = function(lobbyId) {
 Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
-	this.refreshLobbies();
-};
-Connection.prototype.refreshLobbies = function() {
-	this.socket.send(MESSAGE.GET_LOBBIES.serialize());
 };
 Connection.prototype.leaveLobby = function() {
 	this.socket.send(MESSAGE.LEAVE_LOBBY.serialize());
@@ -285,15 +280,10 @@ Promise.all([
 		if(location.pathname !== lobbyUid) currentConnection.connectLobby(lobbyUid);
 });
 
-function refreshLobbies() {
-	if (!currentConnection.alive()) return;
-	currentConnection.refreshLobbies();
-}
 function leaveLobby() {
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
 	history.pushState(null, "Main menu", "/");
-	currentConnection.refreshLobbies();
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 }
 

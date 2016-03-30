@@ -109,7 +109,7 @@ var server = http.createServer(),//create an independent server so it is easy to
 	wss = new WebSocket.Server({server: server});//change port while running
 server.listen(config.port);
 
-var masterWs = new WebSocket(config.master);
+var masterWs = new WebSocket(config.master + "/game_servers");
 masterWs.on("open", function() {
 	masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
 });
@@ -210,9 +210,10 @@ wss.on("connection", function(ws) {
 		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
 		switch (state) {
-			case MESSAGE.CREATE_LOBBY.value:
-				var data = MESSAGE.CREATE_LOBBY.deserialize(message);
+			case MESSAGE.CREATE_PRIVATE_LOBBY.value:
+				var data = MESSAGE.CREATE_PRIVATE_LOBBY.deserialize(message);
 				if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.name, data.playerAmount, config.dev ? 0 : 30));
+				//TODO: connect client to newly created lobby
 				break;
 			case MESSAGE.SET_NAME.value:
 				let name = MESSAGE.SET_NAME.deserialize(message);

@@ -150,9 +150,11 @@ var server = http.createServer(function (req, res) {
 server.listen(config.port);
 
 
-var wss = new WebSocketServer({server: server});
+var gameServerSocket = new WebSocketServer({server: server, path: "/game_servers"}),
+	clientsSocket = new WebSocketServer({server: server, path: "/clients"}),
+	wsOptions = { binary: true, mask: false };
 
-wss.on("connection", function(ws) {
+gameServerSocket.on("connection", function(ws) {
 	var gameServer;
 	ws.on("message", function(message, flags) {
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
@@ -162,28 +164,15 @@ wss.on("connection", function(ws) {
 		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
 
 		switch (state) {
-			/* from game server */
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
-				gameServer = new GameServer("ws://" + ws._socket.remoteAddress + data.serverPort), data.serverName, data.modName, data.lobbyList;
+				gameServer = new GameServer("ws://" + ws._socket.remoteAddress + data.serverPort, data.serverName, data.modName, data.lobbyList);
 				gameServers.push(gameServer);
 				console.log("server registered at " + ws._socket.remoteAddress + ":" + data.serverPort);
-				break;
-			case MESSAGE.REGISTER_LOBBIES.value:
-				gameServer.lobbies.concat(MESSAGE.REGISTER_LOBBIES.deserialize(message));
-				break;
-			case MESSAGE.UNREGISTER_LOBBIES.value:
-				MESSAGE.UNREGISTER_LOBBIES.deserialize(message).forEach(function(id) {
-					gameServer.lobbies.splice(id, 1);
+				let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer]);
+				clientsSocket.clients.forEach(function(client) {
+					client.send(newGameServerBuf, wsOptions);
 				});
-				break;
-			/* from client */
-			case MESSAGE.GET_LOBBY_LIST.value:
-				var lobbyList = [];
-				lobbies.forEach(function(lobby, i) {
-					lobbyList.push({uid: lobbies.getUid(i), name: lobby.name, players: lobby.players.length, maxPlayers: lobby.maxPlayers});
-				});
-				player.send(MESSAGE.LOBBY_LIST.serialize(lobbyList));
 				break;
 		}
 	});
@@ -195,4 +184,8 @@ wss.on("connection", function(ws) {
 			}
 		});
 	});
+});
+
+clientsSocket.on("connection", function(ws) {
+	ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers), wsOptions);
 });

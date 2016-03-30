@@ -185,10 +185,7 @@ nameElement.addEventListener("blur", function(e) {
 });
 
 /* Buttons */
-document.getElementById("refresh").addEventListener("click", function() {//not called directly because
-	resfreshLobbies();
-});
-document.getElementById("leave-button").addEventListener("click", function() {//refreshLobbies and leaveLobby are not loaded yet
+document.getElementById("leave-button").addEventListener("click", function() {//leaveLobby is not loaded yet
 	leaveLobby();
 });
 function isDocumentInFullScreenMode() {

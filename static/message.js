@@ -64,14 +64,8 @@ const MESSAGE = {
 			};
 		}
 	},
-	GET_SERVER_LIST: {
+	ADD_SERVERS: {
 		value: 1,
-		serialize: function() {
-			return new Uint8Array([this.value]).buffer;
-		}
-	},
-	SERVER_LIST: {
-		value: 2,
 		serialize: function(serverList) {
 			var serverUrlBufs = [],
 				serverUrlLength = 0,
@@ -118,6 +112,28 @@ const MESSAGE = {
 				});
 			}
 
+		}
+	},
+	REMOVE_SERVERS: {
+		value: 2,
+		serialize: function(serverIds) {
+			var buffer = new ArrayBuffer(1 + 2*serverIds.length),
+				view = new DataView(buffer);
+
+			view.setUint8(0, this.value);
+			serverIds.forEach(function(id, i) {
+				view.setUint16(1 + i*2);
+			});
+		},
+		deserialize: function(buffer) {
+			var view = new DataView(buffer),
+				serverIds = [];
+
+			for (let offset = 1; offset !== buffer.byteLength; offset += 2) {
+				serverIds.push(view.getUint16(offset));
+			}
+
+			return serverIds;
 		}
 	},
 	SET_NAME: {
