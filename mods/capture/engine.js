@@ -14,7 +14,7 @@ var resPaths = [
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
-	"sniper.png"
+	"rifleShot.svg", "sniper.png", "shotgun.png", "assaultrifle.png"
 	],
 	resources = {};
 

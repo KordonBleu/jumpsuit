@@ -238,7 +238,6 @@ var server = http.createServer(function (req, res){
 			res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
 			res.writeHead(200);
 			res.end(files[req.url]);
-			console.log(res);
 		}
 	} else {
 		res.writeHead(404);
@@ -482,4 +481,4 @@ wss.on("connection", function(ws) {
 	});
 	ws.on("close", cleanup);
 });
-lobbies.push(new Lobby(config.server_name + " - Lobby No." + (lobbies.length + 1), 8, config.dev ? 0 : 30));
+lobbies.push(new Lobby(config.server_name + " - Initial Lobby" + (lobbies.length + 1), 8, config.dev ? 0 : 30));

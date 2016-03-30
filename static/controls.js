@@ -1,6 +1,6 @@
 "use strict";
 
-const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch", t: "chat"};
+const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch", t: "chat", "1": "changeWeapon", "2": "changeWeapon"};
 function sameObjects(a, b) {
 	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
 		return false;
@@ -91,6 +91,7 @@ function handleInput(e) {
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		} else if (triggered === "chat" && s === 1) chatInput.focus();
+		else if (triggered === "changeWeapon" && s === 1) game.currentWeapon = (game.currentWeapon + 1) % game.armedWeapons.length;
 	}
 }
 handleInput.keyMap = defaultKeymap;

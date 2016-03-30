@@ -49,8 +49,15 @@ var context = canvas.getContext("2d"),
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		},
 		started: false,
-		fps: 0
-	};
+		fps: 0,
+		armedWeapons: ["assaultrifle", "shotgun"],
+		currentWeapon: 0
+	},
+	weapons = {
+		sniper: {offset: 40, resource: null}, //resources will be filled when image is loaded
+		shotgun: {offset: 45, resource: null},
+		assaultrifle: {offset: 38, resource: null}
+	}
 
 function mod(dividend, divisor) {
 	return (dividend%divisor + divisor) % divisor;
@@ -78,7 +85,8 @@ windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) 
 
 	context.translate(x, y);
 	context.rotate(angle);
-	if (mirror === true) context.scale(-1, 1);
+	if (mirror === "x") context.scale(-1, 1);
+	else if (mirror === "y") context.scale(1, -1);
 	var wdt = sizeX || image.width*this.zoomFactor, hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 	context.resetTransform();
@@ -141,7 +149,7 @@ Player.prototype.draw = function(showName) {
 
 	//name
 	if (showName) {
-		let distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
+		var distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 		context.fillText(this.name, this, this - distance*windowBox.zoomFactor);
 	}
 
@@ -175,15 +183,24 @@ Player.prototype.draw = function(showName) {
 		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, this.box.angle);
 		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, this.box.angle);
 	}
-	//weapon
-	var weaponResource = resources["sniper"],
-		weaponX = playerX - shift*40*Math.sin(this.box.angle - Math.PI/2),
-		weaponY = playerY + shift*40*Math.cos(this.box.angle - Math.PI/2);
-		
-		
-	windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, !this.looksLeft, weaponResource.width * 0.19, weaponResource.height * 0.19);
+
+	//weapon	
+	game.armedWeapons.forEach((function (weapon, index) {
+		weapon = weapons[weapon];
+		var weaponX, weaponY;
+		if (this.attachedPlanet === 255 && index === game.currentWeapon) {	
+			weaponX = playerX - shift*weapon.offset*Math.sin(this.box.angle - Math.PI / 2);
+			weaponY = playerY + shift*weapon.offset*Math.cos(this.box.angle - Math.PI / 2);
+			windowBox.drawRotatedImage(weapon.resource, weaponX, weaponY, this.box.angle, (!this.looksLeft ? "x" : ""), weapon.resource.width * 0.2, weapon.resource.height * 0.2);
+		} else {
+			weaponX = playerX + Math.abs(shift)*weapon.offset*0.5*Math.sin(this.box.angle) + shift*(20*index-10)*Math.sin(this.box.angle - Math.PI / 2);
+			weaponY = playerY - Math.abs(shift)*weapon.offset*0.5*Math.cos(this.box.angle) - shift*(20*index-10)*Math.cos(this.box.angle - Math.PI / 2);
+			windowBox.drawRotatedImage(weapon.resource, weaponX, weaponY, this.box.angle + Math.PI / 2, (this.looksLeft ? "y" : ""), weapon.resource.width * 0.13, weapon.resource.height * 0.13);
+		}
+	}).bind(this));
+
 	//body
-	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, this.looksLeft);
+	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, (this.looksLeft ? "x" : ""));
 }
 
 minimapCanvas.width = 150;
@@ -248,29 +265,32 @@ resPaths.forEach(function(path) {//init resources
 });
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
+	for (var w in weapons) weapons[w].resource = resources[w];
 	window.removeEventListener("resize", resizeHandler);
 });
 
+var meteorSpawning = setInterval(function(){
+	console.log("a");
+	if (Math.random() > 0.3) return;
+	var m_resources = ["meteorBig1", "meteorMed2", "meteorSmall1", "meteorTiny1", "meteorTiny2"],
+		m_rand = Math.floor(m_resources.length * Math.random()),
+		chosen_img = m_resources[m_rand];
+
+	meteors[meteors.length] = {
+		x: -resources[chosen_img].width,
+		y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
+		res: chosen_img,
+		speed: Math.pow(Math.map(Math.random(), 0, 1, 0.5, 1.5), 2),
+		rotAng: 0,
+		rotSpeed: Math.map(Math.random(), 0, 1, -0.034, 0.034),
+	};
+}, 800);
 function loop() {
 	handleGamepad();
 
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//layer 0: meteors
-	if (Math.random() < 0.02){
-		var m_resources = ["meteorBig1", "meteorMed2", "meteorSmall1", "meteorTiny1", "meteorTiny2"],
-			m_rand = Math.floor(m_resources.length * Math.random()),
-			chosen_img = m_resources[m_rand];
-
-		meteors[meteors.length] = {
-			x: -resources[chosen_img].width,
-			y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
-			res: chosen_img,
-			speed: Math.map(Math.random(), 0, 1, 2, 6.5),
-			rotAng: 0,
-			rotSpeed: Math.map(Math.random(), 0, 1, -0.05, 0.05),
-		};
-	}
 	context.globalAlpha = 0.2;
 	meteors.forEach(function(m, i) {
 		m.x += m.speed;
