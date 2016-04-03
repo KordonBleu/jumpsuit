@@ -1,12 +1,39 @@
 "use strict";
 
 var ownIdx = null,
-	enabledTeams = [];
+	enabledTeams = [],
+	masterSocket = new WebSocket((location.protocol === "http:" ? "ws://" : "wss://") + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
+	serverList,
+	currentConnection;
 
-function Connection() {
+masterSocket.binaryType = "arraybuffer";
+masterSocket.addEventListener("message", function(message) {
+	switch (new Uint8Array(message.data, 0, 1)[0]) {
+		case MESSAGE.ADD_SERVERS.value:
+			console.log("Got some new servers to add ! :D");
+			if (serverList === undefined) {//first time data is inserted
+				serverList = MESSAGE.ADD_SERVERS.deserialize(message.data);
+				serverList.forEach(addServerRow);
+				applyLobbySearch();//in case the page was refreshed and the
+				applyEmptinessCheck();//inputs left in a modified state
+			} else {
+				serverList = serverList.concat(MESSAGE.ADD_SERVERS.deserialize(message.data));
+				addServerRow();
+			}
+			break;
+		case MESSAGE.REMOVE_SERVERS.value:
+			console.log("I hafta remove servers :c");
+			MESSAGE.REMOVE_SERVERS.deserialize(message.data).forEach(function(id) {
+				serverList.splice(id, 1);
+			});
+			break;
+	}
+});
+
+function Connection(address) {// a connection to a game server
 	this.lastControls = {};
 
-	this.socket = new WebSocket((location.protocol === "http:" ? "ws://" : "wss://") + location.hostname + (location.port === "" ? "" : ":" + location.port));
+	this.socket = new WebSocket(address);
 	this.socket.binaryType = "arraybuffer";
 
 	this.alive = function() { return this.socket.readyState === 1; };
@@ -18,11 +45,20 @@ function Connection() {
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
+	//this should return a Promise, dontcha think?
 }
 Connection.prototype.close = function() {
 	this.leaveLobby();
 	this.socket.close();
 };
+Connection.prototype.sendMessage = function(messageType) {
+	try {
+		this.socket.send(messageType.serialize.apply(messageType, arguments.slice(1)));//inefficient but not called often enough to matter
+	} catch(e) {
+		//TODO: display "connection lost" and get back to the main menu
+		//or is that redudant with the event listener on "error"?
+	}
+}
 Connection.prototype.connectLobby = function(lobbyId) {
 	if(!currentConnection.alive()) return;
 
@@ -38,9 +74,7 @@ Connection.prototype.leaveLobby = function() {
 	game.stop();
 };
 Connection.prototype.setName = function() {
-	if(!currentConnection.alive()) return;
-
-	this.socket.send(MESSAGE.SET_NAME.serialize(settings.name));
+	this.sendMessage(MESSAGE.SET_NAME, settings.name);
 };
 Connection.prototype.sendChat = function(content) {
 	if(!currentConnection.alive()) return;
@@ -48,7 +82,7 @@ Connection.prototype.sendChat = function(content) {
 };
 Connection.prototype.refreshControls = function(controls) {
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
-	for (var c in players[ownIdx].controls){
+	for (var c in players[ownIdx].controls) {
 		b++;
 		if (this.lastControls[c] === players[ownIdx].controls[c]) accordance++;
 		else this.lastControls[c] = players[ownIdx].controls[c];
@@ -65,6 +99,7 @@ Connection.prototype.sendActionTwo = function(angle) {
 	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
 }
 Connection.prototype.errorHandler = function() {
+	//TODO: go back to main menu
 	this.close();
 };
 Connection.prototype.messageHandler = function(message) {
@@ -225,17 +260,6 @@ Connection.prototype.messageHandler = function(message) {
 
 			if (!game.started) game.start();
 			break;
-		case MESSAGE.LOBBY_LIST.value:
-			if (printLobbies.list === undefined) {//first time data is inserted
-				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
-				printLobbies();
-				applyLobbySearch();//in case the page was refreshed and the
-				applyEmptinessCheck();//inputs left in a modified state
-			} else {
-				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
-				printLobbies();
-			}
-			break;
 		case MESSAGE.CHAT_BROADCAST.value:
 			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
 			printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
@@ -267,7 +291,7 @@ Connection.prototype.messageHandler = function(message) {
 	}
 };
 
-var currentConnection = new Connection();
+//var currentConnection = new Connection();
 Promise.all([
 	allImagesLoaded,
 	new Promise(function(resolve, reject) {

@@ -234,7 +234,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
 
 
-#### SET_NAME_BROADCAST (client → game server)
+#### SET_NAME_BROADCAST (game server → client)
 ```
  1B      1B           0B-?B
 +---+-----------+---------------+

@@ -281,36 +281,41 @@ function printPlayerList(filter) {
 }
 
 /* Lobby list */
-function printLobbies() {
-	statusElement.textContent = "Choose a lobby";
-	while (lobbyListElement.children.length > 1) lobbyListElement.removeChild(lobbyListElement.firstChild);
-	printLobbies.list.forEach(function(lobby) {
-		var row = document.createElement("tr"),
-			nameTd = document.createElement("td"),
-			playerCountTd = document.createElement("td"),
-			buttonTd = document.createElement("td"),
-			button = document.createElement("button");
+function addServerRow(server) {
+	var row = document.createElement("tr"),
+		serverNameTd = document.createElement("td"),
+		modNameTd = document.createElement("td"),
+		buttonTd = document.createElement("td"),
+		button = document.createElement("button");
 
-		nameTd.textContent = lobby.name;
-		playerCountTd.textContent = lobby.players + " of " + lobby.maxPlayers;
+		serverNameTd.textContent = server.name;
+		modNameTd.textContent = server.mod;
 
 		button.textContent = "Play!";
-		button.dataset.href = "/lobbies/" + lobby.uid + "/";
+		button.dataset.href = server.url;
+		row.setAttribute("title", server.url);
 
 		buttonTd.appendChild(button);
-		row.appendChild(nameTd);
-		row.appendChild(playerCountTd);
+		row.appendChild(serverNameTd);
+		row.appendChild(modNameTd);
 		row.appendChild(buttonTd);
+
 		lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
-	});
+		server.tr = row;
+}
+function removeServer(id) {
+	serverList[id].tr.remove();
+	serverList[id].splice(id, 1);
 }
 lobbyListElement.addEventListener("click", function(e) {
 	if (e.target.tagName === "BUTTON") {
 		if (e.target !== lobbyListElement.lastElementChild.lastElementChild.firstElementChild) {// Play!
-			var lobbyUid = e.target.dataset.href.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
+			console.log(e.target);
+			currentConnection = new Connection(e.target.dataset.href);
+			/*var lobbyUid = e.target.dataset.href.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
 			if (currentConnection.lobbyUid !== null) currentConnection.leaveLobby();
 			currentConnection.connectLobby(lobbyUid);
-			history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");
+			history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");*/
 		} else {// Create!
 			var nameInput = lobbyListElement.lastElementChild.firstElementChild.firstElementChild,
 				playerAmountInput = lobbyListElement.lastElementChild.children[1].firstElementChild;
@@ -337,12 +342,12 @@ lobbyTableHeaderRowElement.addEventListener("click", function(e) {
 
 				switch (e.target.previousSibling.data.trim()) {
 					case "Lobby name":
-						printLobbies.list.sort(function(a, b) {
+						serverList.sort(function(a, b) {
 							return b.name.trim().localeCompare(a.name.trim());
 						});
 						break;
 					case "Players":
-						printLobbies.list.sort(function(a, b) {
+						serverList.sort(function(a, b) {
 							if (a.players < b.players || a.players > b.players) return a.players < b.players ? -1 : 1;
 							else return a.maxPlayers < b.maxPlayers ? -1 : a.maxPlayers > b.maxPlayers ? 1 : 0;
 						});
@@ -350,29 +355,29 @@ lobbyTableHeaderRowElement.addEventListener("click", function(e) {
 				break;
 			case "/assets/images/sort_arrow_down.svg":
 				e.target.setAttribute("src", "/assets/images/sort_arrow_up.svg");
-				printLobbies.list.reverse();
+				serverList.reverse();
 				break;
 			case "/assets/images/sort_arrow_up.svg":
 				e.target.setAttribute("src", "/assets/images/sort_arrow_down.svg");
-				printLobbies.list.reverse();
+				serverList.reverse();
 				break;
 		}
-		printLobbies();
+		addServerRow();
 	}
 });
 /* Search filters */
 function applyLobbySearch() {
-	printLobbies.list.forEach(function(lobby, index) {
-		//lobbyListElement.children are reversed compared to printLobbies.list
-		var currentElem = lobbyListElement.children[printLobbies.list.length - index -1];
+	serverList.forEach(function(lobby, index) {
+		//lobbyListElement.children are reversed compared to serverList
+		var currentElem = lobbyListElement.children[serverList.length - index -1];
 		if (new RegExp(searchInput.value, "gi").test(lobby.name)) currentElem.classList.remove("search-hidden");
 		else currentElem.classList.add("search-hidden");
 	});
 }
 function applyEmptinessCheck() {
-	printLobbies.list.forEach(function(lobby, index) {
-		//lobbyListElement.children are reversed compared to printLobbies.list
-		var currentElem = lobbyListElement.children[printLobbies.list.length - index -1];
+	serverList.forEach(function(lobby, index) {
+		//lobbyListElement.children are reversed compared to serverList
+		var currentElem = lobbyListElement.children[serverList.length - index -1];
 		if (emptyLobbyInput.checked && lobby.players === 0) currentElem.classList.add("empty-lobby-hidden");
 		else currentElem.classList.remove("empty-lobby-hidden");
 	});

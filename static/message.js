@@ -73,7 +73,7 @@ const MESSAGE = {
 				partialServerLength = 0;
 
 			serverList.forEach(function(server) {
-				var serverUrlBuf = stringToBuffer(server.name);
+				var serverUrlBuf = stringToBuffer(server.url);
 				serverUrlBufs.push(serverUrlBuf);
 				serverUrlLength += serverUrlBuf.byteLength;
 			});
@@ -84,7 +84,22 @@ const MESSAGE = {
 				partialServerLength += partialServerBuf.byteLength;
 			});
 
-			var buffer = new ArrayBuffer(1 + serverUrlLength + partialServerLength + 1*partialServerBufs.length);
+			var buffer = new ArrayBuffer(1 + serverUrlLength + partialServerLength + 1*partialServerBufs.length),
+				view = new Uint8Array(buffer),
+				offset = 1;
+
+			view[0] = this.value;
+
+			serverUrlBufs.forEach(function(urlBuf, i) {
+				view[offset++] = urlBuf.byteLength;
+				view.set(new Uint8Array(urlBuf), offset);
+				offset += urlBuf.byteLength;
+
+				view.set(new Uint8Array(partialServerBufs[i]), offset);
+				offset += partialServerBufs[i].byteLength;
+			});
+
+			return buffer;
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),
@@ -105,13 +120,14 @@ const MESSAGE = {
 				offset += modNameBuf.byteLength + 1;
 
 				serverList.push({
-					url: bufferToString(url),
+					url: bufferToString(urlBuf),
 					port,
 					name: bufferToString(serverNameBuf),
 					mod: bufferToString(modNameBuf)
 				});
 			}
 
+			return serverList;
 		}
 	},
 	REMOVE_SERVERS: {

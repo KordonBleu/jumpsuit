@@ -140,7 +140,6 @@ var server = http.createServer(function (req, res) {
 			res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
 			res.writeHead(200);
 			res.end(files[req.url]);
-			console.log(res);
 		}
 	} else {
 		res.writeHead(404);
@@ -166,7 +165,7 @@ gameServerSocket.on("connection", function(ws) {
 		switch (state) {
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
-				gameServer = new GameServer("ws://" + ws._socket.remoteAddress + data.serverPort, data.serverName, data.modName, data.lobbyList);
+				gameServer = new GameServer("ws://[" + ws._socket.remoteAddress + "]:" + data.serverPort, data.serverName, data.modName, data.lobbyList);
 				gameServers.push(gameServer);
 				console.log("server registered at " + ws._socket.remoteAddress + ":" + data.serverPort);
 				let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer]);
