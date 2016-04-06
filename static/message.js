@@ -4,7 +4,8 @@ var isNode = typeof module !== "undefined" && typeof module.exports !== "undefin
 
 function stringToBuffer(string) {
 	if (isNode) {
-		return new Uint8Array(new Buffer(string, "utf8"));
+		let buf = new Buffer(string, "utf8");
+		return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 	} else {
 		var encoder = new TextEncoder("utf8");
 		return encoder.encode(string);
@@ -215,8 +216,19 @@ const MESSAGE = {
 			}
 		}
 	},
-	CONNECT_ACCEPTED: {
+	ERROR: {
+		NO_LOBBY: 0,
+		NO_SLOT: 1,
 		value: 7,
+		serialize: function(errorCode) {
+			return new Uint8Array([this.value, errorCode]).buffer;
+		},
+		deserialize: function(buffer) {
+			return new Uint8Array(buffer)[1];
+		}
+	},
+	CONNECT_ACCEPTED: {
+		value: 8,
 		TEAM_MASK: {
 			alienBeige: 16,
 			alienBlue: 8,
@@ -381,7 +393,6 @@ const MESSAGE = {
 			if (players !== undefined) {
 				players.forEach(function(player, i) {
 					view.setUint16(offset, player.box.center.x);
-
 					view.setUint16(2 + offset, player.box.center.y);
 					view.setUint8(4 + offset, player.attachedPlanet);
 					view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
@@ -391,12 +402,9 @@ const MESSAGE = {
 					if (player.jetpack) enumByte |= this.MASK.JETPACK;
 					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 					view.setUint8(6 + offset, enumByte);
-					view.setUint8(7 + offset, playerNameBufs[i].length);
-					var name = new Uint8Array(playerNameBufs[i]);
-					for (let i = 0; i != name.length; i++) {
-						view.setUint8(8 + offset + i, name[i]);
-					}
-					offset += 8 + name.length;
+					view.setUint8(7 + offset, playerNameBufs[i].byteLength);
+					new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 8 + offset);
+					offset += 8 + playerNameBufs[i].byteLength;
 				}, this);
 			}
 
@@ -432,6 +440,7 @@ const MESSAGE = {
 			}
 
 			while (i !== buffer.byteLength) {
+				console.log(i, buffer.byteLength);
 				var nameLgt = view.getUint8(i + 7),
 					enumByte = view.getUint8(i + 6);
 				playersCbk(

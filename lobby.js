@@ -4,7 +4,7 @@ module.exports = function(engine) {
 	var vinage = require("./static/vinage/vinage.js"),
 		MESSAGE = require("./static/message.js");
 
-	function Lobby(name, maxPlayers, stateTimer) {
+	function Lobby(maxPlayers, stateTimer) {
 		this.players = [];
 		this.maxPlayers = maxPlayers;
 		this.planets = [];
@@ -17,7 +17,6 @@ module.exports = function(engine) {
 		let univSize = (1 << 16) - 1;//this is also the max size allowed by the protocol
 		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), 6400, 6400);
 		this.resetWorld();
-		this.name = name;
 	}
 	Lobby.prototype.stateEnum = {
 		WAITING: 0,

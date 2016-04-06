@@ -212,7 +212,7 @@ wss.on("connection", function(ws) {
 		switch (state) {
 			case MESSAGE.CREATE_PRIVATE_LOBBY.value:
 				var data = MESSAGE.CREATE_PRIVATE_LOBBY.deserialize(message);
-				if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.name, data.playerAmount, config.dev ? 0 : 30));
+				if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.playerAmount, config.dev ? 0 : 30));
 				//TODO: connect client to newly created lobby
 				break;
 			case MESSAGE.SET_NAME.value:
@@ -228,31 +228,45 @@ wss.on("connection", function(ws) {
 				} else player.name = name;
 				break;
 			case MESSAGE.CONNECT.value:
-				let lobbyId = MESSAGE.CONNECT.deserialize(message),
-					lobby = lobbies.getByUid(lobbyId);
+				console.log("alright");
+				let lobbyId = MESSAGE.CONNECT.deserialize(message);
 
-				if (player.name === undefined) engine.Player.prototype.send.call({ws: ws}, MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_UNKNOWN));//we have to resort to this to use .send() even though the player is undefined
-				else if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
-				else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
-				else if (lobby.players.some(function(_player) { return _player.name === player.name; })) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN));
+				if (player.name === undefined) break;
 				else {
+					let lobby;
+					if (lobbyId !== undefined) {//joining a private lobby
+						lobby = lobbies.getByUid(lobbyId);
+
+						if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
+						else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
+						break;
+					} else {//public lobby
+						if (!lobbies.some(function(_lobby, i) {//if no not-full lobby
+							if (_lobby.players.length < _lobby.maxPlayers) {
+								lobby = _lobby;
+								lobbyId = i;
+								return true;
+							} else return false;
+						})) {//create new lobby
+							lobby = new Lobby(8, config.dev ? 0 : 30);
+							lobbies.push(lobby);
+							lobbyId = lobbies.length - 1;
+						}
+					}
+
+					let homographId = 0;
+					lobby.players.forEach(function(_player) {
+						if (_player.name === player.name) ++homographId;
+					});
 					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 					lobby.assignPlayerTeam(player);
 
-					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
+					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, homographId, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
 					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
-					if (lobbies.every(function(lobby) {
-						return lobby.players.length > 0;
-					})) {
-						lobbies.push(new Lobby(config.server_name + " - Lobby No." + (lobbies.length + 1), 8, config.dev ? 0 : 30));
-					}
 				}
-				break;
-			case MESSAGE.LEAVE_LOBBY.value:
-				cleanup();
 				break;
 			case MESSAGE.PLAYER_CONTROLS.value:
 				player.lobby.sendEntityDelta(
@@ -283,4 +297,4 @@ wss.on("connection", function(ws) {
 	});
 	ws.on("close", cleanup);
 });
-lobbies.push(new Lobby(config.server_name + " - Lobby No." + (lobbies.length + 1), 8, config.dev ? 0 : 30));
+lobbies.push(new Lobby(8, config.dev ? 0 : 30));

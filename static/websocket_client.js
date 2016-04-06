@@ -42,6 +42,7 @@ function Connection(address) {// a connection to a game server
 
 	this.socket.addEventListener("open", function() {
 		this.setName.call(this);
+		this.sendMessage.call(this, MESSAGE.CONNECT);
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
@@ -53,8 +54,10 @@ Connection.prototype.close = function() {
 };
 Connection.prototype.sendMessage = function(messageType) {
 	try {
-		this.socket.send(messageType.serialize.apply(messageType, arguments.slice(1)));//inefficient but not called often enough to matter
-	} catch(e) {
+		this.socket.send(messageType.serialize.apply(messageType,//inefficient but not called often enough to matter
+			Array.prototype.slice.call(arguments, 1)));
+	} catch(err) {
+		console.log(err);
 		//TODO: display "connection lost" and get back to the main menu
 		//or is that redudant with the event listener on "error"?
 	}
@@ -144,24 +147,29 @@ Connection.prototype.messageHandler = function(message) {
 			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data,
 				function(x, y, radius) {//add planets
 					planets.push(new Planet(x, y, radius));
+					console.log("sometimes");
 				},
 				function(x, y, appearance) {//add enemies
 					enemies.push(new Enemy(x, y, appearance));
+					console.log("shit");
 				},
 				function(x, y, angle) {//add shots
 					shots.push(new Shot(x, y, angle));
+					console.log("happens");
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
 					player.looksLeft = looksLeft;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
 					players.push(player);
+					console.log("y'know");
 				}
 			);
 			ownIdx = val.playerId;
 			enabledTeams = val.enabledTeams;
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
+			console.log(val);
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,

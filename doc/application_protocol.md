@@ -85,7 +85,7 @@ They might be used several times in a packet or in packets with different types.
 
 #### PLAYER
 ```
-      2B             2B               1B            4B        1b         1b       3b        3b           1B        0-255B
+      2B             2B               1B            1B        1b         1b       3b        3b           1B        0-255B
 +--------------+--------------+-----------------+-------+------------+---------+------+------------+-------------+--------+
 | x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Team | Walk Frame | name length | "name" |
 +--------------+--------------+-----------------+-------+------------+---------+------+------------+-------------+--------+
@@ -184,7 +184,7 @@ The first byte of every packet determines its type. A payload may be placed afte
 +------+-----------
 ```
 
-There are 18 packet types.
+There are 19 packet types.
 
 
 
@@ -233,6 +233,8 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 +---+---------------+
 ```
 
+The player must send this message before `CONNECT` or `CREATE_PRIVATE_LOBBY`.
+
 
 #### SET_NAME_BROADCAST (game server → client)
 ```
@@ -262,15 +264,29 @@ The game server will respond with CONNECT_ACCEPTED.
 +---+~~~~~~~~~~+
 ```
 
-The `lobby id` must be set only if the player wishes to connect to a private lobby.
 The game server will respond with CONNECT_ACCEPTED.
+The `lobby id` must be set only if the player wishes to connect to a private lobby. In this case the server might respond with an ERROR rather than with CONNECT_ACCEPTED.
+
+
+#### ERROR (game server → client)
+```
+ 1B       1B
++---+------------+
+| 7 | Error Type |
++---+------------+
+```
+
+`Error Type` must be either:
+ 0. no lobby avalaible
+The game server will respond with CONNECT_ACCEPTED.
+ 1. no slot avalaible
 
 
 #### CONNECT_ACCEPTED (game server → client)
 ```
  1B      4B          1B           1B             2B                2B              3b           1b          1b           1b          1b           1b            ?B
 +---+----------+-----------+--------------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
-| 7 | lobby id | player id | homograph id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
+| 8 | lobby id | player id | homograph id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
 +---+----------+-----------+--------------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
 ```
 
@@ -281,7 +297,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
  1B       1B         1B
 +---+-------------+~~~~~~~+
-| 8 | Lobby State | timer |
+| 9 | Lobby State | timer |
 +---+-------------+~~~~~~~+
 ```
 
@@ -293,10 +309,10 @@ The homograph id is used to distinguish players with the same name. It is unique
 
 #### ADD_ENTITY (game server → client)
 ```
- 1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
-+---+---------------+========+--------------+=======+-------------+======+========+
-| 9 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
-+---+---------------+========+--------------+=======+-------------+======+========+
+  1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
++----+---------------+========+--------------+=======+-------------+======+========+
+| 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
++----+---------------+========+--------------+=======+-------------+======+========+
 ```
 
 
@@ -304,7 +320,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B        1B           ?*1B           1B          ?*1B         1B         ?*1B       ?*1B
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
-| 10 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
+| 11 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
 ```
 
@@ -313,7 +329,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*7B
 +----+-------------+-----------+===============+=============+=============+===============+
-| 11 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
+| 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+=============+===============+
 ```
 
@@ -322,7 +338,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      2b         1b    1b      1b       1b         1b           1b
 +----+-------------+------+-----+--------+---------+-----------+------------+
-| 12 | unused bits | jump | run | crouch | jetpack | move left | move right |
+| 13 | unused bits | jump | run | crouch | jetpack | move left | move right |
 +----+-------------+------+-----+--------+---------+-----------+------------+
 ```
 
@@ -331,7 +347,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B    2B
 +----+-------+
-| 13 | angle |
+| 14 | angle |
 +----+-------+
 ```
 
@@ -340,7 +356,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B    2B
 +----+-------+
-| 14 | angle |
+| 15 | angle |
 +----+-------+
 ```
 
@@ -349,7 +365,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      1B
 +----+-----------+
-| 15 | "message" |
+| 16 | "message" |
 +----+-----------+
 ```
 
@@ -358,7 +374,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      1B          ?B
 +----+-----------+-----------+
-| 16 | player id | "message" |
+| 17 | player id | "message" |
 +----+-----------+-----------+
 ```
 
@@ -367,7 +383,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B       4B
 +----+============+
-| 17 | team score |
+| 18 | team score |
 +----+============+
 ```
 
