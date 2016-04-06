@@ -4,7 +4,8 @@ var isNode = typeof module !== "undefined" && typeof module.exports !== "undefin
 
 function stringToBuffer(string) {
 	if (isNode) {
-		return new Uint8Array(new Buffer(string, "utf8"));
+		let buf = new Buffer(string, "utf8");
+		return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 	} else {
 		var encoder = new TextEncoder("utf8");
 		return encoder.encode(string);
@@ -30,183 +31,126 @@ function bradToRad(brad, precision) {
 
 const MESSAGE = {
 	REGISTER_SERVER: {
-		value: 200,
-		serialize: function(serverName, modName, lobbyList) {
+		value: 0,
+		serialize: function(serverPort, serverName, modName) {
 			var serverNameBuf = stringToBuffer(serverName),
 				modNameBuf = stringToBuffer(modName),
-				lobbyListBuf = MESSAGE.REGISTER_LOBBIES.serialize(lobbyList),
-				buffer = new ArrayBuffer(3 + serverNameBuf.byteLength + modNameBuf.byteLength + 6*lobbyList.length),
-				view = new Uint8Array(buffer);
+				buffer = new ArrayBuffer(5 + serverNameBuf.byteLength + modNameBuf.byteLength),
+				view = new Uint8Array(buffer),
+				dView = new DataView(buffer);
 
 			view[0] = this.value;
 
-			view[1] = serverNameBuf.byteLength;
-			view.set(new Uint8Array(serverNameBuf), 2);
+			dView.setUint16(1, serverPort);
 
-			var offset = 2 + serverNameBuf.byteLength;
+			view[3] = serverNameBuf.byteLength;
+			view.set(new Uint8Array(serverNameBuf), 4);
+
+			var offset = 4 + serverNameBuf.byteLength;
 			view[offset++] = modNameBuf.byteLength;
 			view.set(new Uint8Array(modNameBuf), offset);
 			offset += modNameBuf.byteLength;
 
-			view.set(new Uint8Array(lobbyListBuf.slice(1)), offset);
-
 			return buffer;
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),
-				offset = 2 + view.getUint8(1),
-				serverName = bufferToString(buffer.slice(2, offset)),
-				i = view.getUint8(offset) + ++offset;
+				offset = 4 + view.getUint8(3),
+				serverName = bufferToString(buffer.slice(4, offset));
 
 			return {
+				serverPort: view.getUint16(1),
 				serverName,
-				modName: bufferToString(buffer.slice(offset, i)),
-				lobbyList: MESSAGE.REGISTER_LOBBIES.deserialize(buffer.slice(i - 1))
+				modName: bufferToString(buffer.slice(offset + 1, offset + 1 + view.getUint8(offset)))
 			};
 		}
 	},
-	REGISTER_LOBBIES: {
-		value: 201,
-		serialize: function(lobbyList) {
-			var buffer = new ArrayBuffer(1 + 6*lobbyList.length),
-				view = new DataView(buffer);
+	ADD_SERVERS: {
+		value: 1,
+		serialize: function(serverList) {
+			var serverUrlBufs = [],
+				serverUrlLength = 0,
+				partialServerBufs = [],
+				partialServerLength = 0;
 
-			view.setUint8(0, this.value);
-			var offset = 1;
-
-			lobbyList.forEach(function(lobby) {
-				view.setUint32(offset, lobby.uid);
-				view.setUint8(offset + 4, lobby.players.length);
-				view.setUint8(offset + 5, lobby.maxPlayers);
-				offset += 6;
+			serverList.forEach(function(server) {
+				var serverUrlBuf = stringToBuffer(server.url);
+				serverUrlBufs.push(serverUrlBuf);
+				serverUrlLength += serverUrlBuf.byteLength;
 			});
 
-			return buffer;
-		},
-		deserialize: function(buffer) {
-			var view  = new DataView(buffer),
-				lobbyList = [];
+			serverList.forEach(function(server) {
+				var partialServerBuf = MESSAGE.REGISTER_SERVER.serialize(server.port, server.name, server.mod).slice(1);
+				partialServerBufs.push(partialServerBuf);
+				partialServerLength += partialServerBuf.byteLength;
+			});
 
-			for (let i = 1; i !== buffer.byteLength; i += 6) {
-				lobbyList.push({
-					id: view.getUint32(i),
-					players: view.getUint8(i + 4),
-					maxPlayers: view.getUint8(i + 5)
-				});
-			}
+			var buffer = new ArrayBuffer(1 + serverUrlLength + partialServerLength + 1*partialServerBufs.length),
+				view = new Uint8Array(buffer),
+				offset = 1;
 
-			return lobbyList;
-		}
-	},
-	UNREGISTER_LOBBIES: {
-		serialize: function(lobbyList) {
-			var buffer = new ArrayBuffer(1 + 4*lobbyList.length),
-				view = new DataView(buffer);
+			view[0] = this.value;
 
-			view.setUint8(0, this.value);
-			lobbyList.forEach(function(lobby, i) {
-				view.setUint32(1 + i*4, lobby.uid);
+			serverUrlBufs.forEach(function(urlBuf, i) {
+				view[offset++] = urlBuf.byteLength;
+				view.set(new Uint8Array(urlBuf), offset);
+				offset += urlBuf.byteLength;
+
+				view.set(new Uint8Array(partialServerBufs[i]), offset);
+				offset += partialServerBufs[i].byteLength;
 			});
 
 			return buffer;
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),
-				lobbyIds = [];
+				offset = 1,
+				serverList = [];
 
-			for (let i = 1; i !== buffer.byteLength; i += 4) {
-				lobbyIds.push(view.getUint32(i));
-			}
+			while (offset !== buffer.byteLength) {
+				let urlBuf = buffer.slice(offset + 1, offset + 1 + view.getUint8(offset));
+				offset += urlBuf.byteLength + 1;
 
-			return lobbyIds;
-		}
-	},
-	GET_LOBBIES: {
-		value: 0,
-		serialize: function() {
-			return new Uint8Array([this.value]).buffer;
-		}
-	},
-	LOBBY_LIST: {
-		value: 1,
-		serialize: function(lobbyList) {
-			var totalNameSize = 0,
-				lobbyNameBufs = [];
-			lobbyList.forEach(function(lobby, i) {
-				lobbyNameBufs.push(stringToBuffer(lobby.name));
-				totalNameSize += lobbyNameBufs[i].byteLength;
-			});
-			var buffer = new ArrayBuffer(lobbyList.length*7 + totalNameSize + 1),
-				view = new DataView(buffer),
-				bufIndex = 1;
-			view.setUint8(0, this.value);
+				let port = view.getUint16(offset);
+				offset += 2;
 
-			lobbyList.forEach(function(lobby, i) {
-				view.setUint32(bufIndex, lobby.uid);
-				view.setUint8(bufIndex + 4, lobby.players);
-				view.setUint8(bufIndex + 5, lobby.maxPlayers);
-				view.setUint8(bufIndex + 6, lobbyNameBufs[i].length);
-				new Uint8Array(lobbyNameBufs[i]).forEach(function(val, i) {
-					view.setUint8(bufIndex + 7 + i, val);
+				let serverNameBuf = buffer.slice(offset + 1, offset + 1 + view.getUint8(offset));
+				offset += serverNameBuf.byteLength + 1;
+
+				let modNameBuf = buffer.slice(offset + 1, offset + 1 + view.getUint8(offset));
+				offset += modNameBuf.byteLength + 1;
+
+				serverList.push({
+					url: bufferToString(urlBuf),
+					port,
+					name: bufferToString(serverNameBuf),
+					mod: bufferToString(modNameBuf)
 				});
-				bufIndex += 7 + lobbyNameBufs[i].length;
-			});
-
-			return buffer;
-		},
-		deserialize: function(buffer) {
-			var view = new DataView(buffer, 1),
-				lobbyList = [],
-				lobby,
-				i = 0,
-				lobbyIndex = 0;
-			while (lobbyIndex !== buffer.byteLength - 1) {
-				switch (i) {
-					case 0:
-						lobby = {
-							uid: view.getUint32(i + lobbyIndex)
-						};
-						i += 4;
-						break;
-					case 4:
-						lobby.players = view.getUint8(i + lobbyIndex);
-						i += 1;
-						break;
-					case 5:
-						lobby.maxPlayers = view.getUint8(i + lobbyIndex);
-						i += 1;
-						break;
-					case 6:
-						var strLen = view.getUint8(i + lobbyIndex),
-							strStart = i + lobbyIndex + 2;//1 byte after the "length byte" + 1 byte because view starts with the second byte
-						lobby.name = bufferToString(buffer.slice(strStart, strStart + strLen));
-
-						lobbyList.push(lobby);
-
-						i = 0;
-						lobbyIndex += strLen + 7;
-				}
 			}
 
-			return lobbyList;
+			return serverList;
 		}
 	},
-	CREATE_LOBBY: {
+	REMOVE_SERVERS: {
 		value: 2,
-		serialize: function(name, playerAmount) {
-			var bufLobbyName = stringToBuffer(name),
-				view = new Uint8Array(2 + bufLobbyName.byteLength);
-			view[0] = this.value;
-			view[1] = playerAmount;
-			view.set(bufLobbyName, 2);
+		serialize: function(serverIds) {
+			var buffer = new ArrayBuffer(1 + 2*serverIds.length),
+				view = new DataView(buffer);
 
-			return view.buffer;
+			view.setUint8(0, this.value);
+			serverIds.forEach(function(id, i) {
+				view.setUint16(1 + i*2);
+			});
 		},
 		deserialize: function(buffer) {
-			return {
-				playerAmount: new Uint8Array(buffer)[1],
-				name: bufferToString(buffer.slice(2))
-			};
+			var view = new DataView(buffer),
+				serverIds = [];
+
+			for (let offset = 1; offset !== buffer.byteLength; offset += 2) {
+				serverIds.push(view.getUint16(offset));
+			}
+
+			return serverIds;
 		}
 	},
 	SET_NAME: {
@@ -243,70 +187,38 @@ const MESSAGE = {
 			};
 		}
 	},
-	CONNECT: {
+	CREATE_PRIVATE_LOBBY: {
 		value: 5,
-		serialize: function(lobbyId) {
-			var buffer = new ArrayBuffer(5),
-				view = new DataView(buffer);
-			view.setUint8(0, this.value);
-			view.setUint32(1, lobbyId);
-
-			return buffer;
+		serialize: function(playerAmount) {
+			return new Uint8Array([this.value, playerAmount]).buffer;
 		},
 		deserialize: function(buffer) {
-			return new DataView(buffer).getUint32(1);
+			return new Uint8Array(buffer)[1];
 		}
 	},
-	CONNECT_ACCEPTED: {
+	CONNECT: {
 		value: 6,
-		TEAM_MASK: {
-			alienBeige: 16,
-			alienBlue: 8,
-			alienGreen: 4,
-			alienPink: 2,
-			alienYellow: 1
-		},
-		serialize: function(playerId, univWidth, univHeight, planets, enemies, shots, players, teams) {
-			var entityBuf = MESSAGE.ADD_ENTITY.serialize(planets, enemies, shots, players),
-				buffer = new ArrayBuffer(6 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
-				view = new DataView(buffer),
-				enabledTeams = 0;
-			view.setUint8(0, this.value);
-			view.setUint8(1, playerId);
-			view.setUint16(2, univWidth);
-			view.setUint16(4, univHeight);
+		serialize: function(lobbyId) {
+			if (lobbyId !== undefined) {
+				let buffer = new ArrayBuffer(5),
+					view = new DataView(buffer);
+				view.setUint8(0, this.value);
+				view.setUint32(1, lobbyId);
 
-			teams.forEach(function(team) {
-				enabledTeams |= this.TEAM_MASK[team];
-			}, this);
-			view.setInt8(6, enabledTeams);
-
-			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 7);
-
-			return buffer;
-		},
-		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
-			var view = new DataView(buffer),
-				enabledTeamsByte = view.getUint8(6),
-				enabledTeams = [];
-			for (let team in this.TEAM_MASK) {
-				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
+				return buffer;
+			} else {
+				return new Uint8Array([this.value]).buffer;
 			}
-			MESSAGE.ADD_ENTITY.deserialize(buffer.slice(6), planetsCbk, enemiesCbk, shotsCbk, playersCbk)//lil' hack: 6 because the packet id is removed
-			return {
-				playerId: view.getUint8(1),
-				univWidth: view.getUint16(2),
-				univHeight: view.getUint16(4),
-				enabledTeams: enabledTeams
-			};
+		},
+		deserialize: function(buffer) {
+			if (buffer.byteLength === 2) {
+				return new DataView(buffer).getUint32(1);
+			}
 		}
 	},
 	ERROR: {
 		NO_LOBBY: 0,
 		NO_SLOT: 1,
-		NAME_TAKEN: 2,
-		NAME_UNKNOWN: 3,
-
 		value: 7,
 		serialize: function(errorCode) {
 			return new Uint8Array([this.value, errorCode]).buffer;
@@ -315,10 +227,54 @@ const MESSAGE = {
 			return new Uint8Array(buffer)[1];
 		}
 	},
-	LEAVE_LOBBY: {
+	CONNECT_ACCEPTED: {
 		value: 8,
-		serialize: function() {
-			return new Uint8Array([this.value]).buffer;
+		TEAM_MASK: {
+			alienBeige: 16,
+			alienBlue: 8,
+			alienGreen: 4,
+			alienPink: 2,
+			alienYellow: 1
+		},
+		serialize: function(lobbyId, playerId, homographId, univWidth, univHeight, planets, enemies, shots, players, teams) {
+			var entityBuf = MESSAGE.ADD_ENTITY.serialize(planets, enemies, shots, players),
+				buffer = new ArrayBuffer(11 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
+				view = new DataView(buffer),
+				enabledTeams = 0;
+			view.setUint8(0, this.value);
+			view.setUint32(1, lobbyId);
+
+			view.setUint8(5, playerId);
+			view.setUint8(6, homographId);
+
+			view.setUint16(7, univWidth);
+			view.setUint16(9, univHeight);
+
+			teams.forEach(function(team) {
+				enabledTeams |= this.TEAM_MASK[team];
+			}, this);
+			view.setInt8(11, enabledTeams);
+
+			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 12);
+
+			return buffer;
+		},
+		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+			var view = new DataView(buffer),
+				enabledTeamsByte = view.getUint8(11),
+				enabledTeams = [];
+			for (let team in this.TEAM_MASK) {
+				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
+			}
+			MESSAGE.ADD_ENTITY.deserialize(buffer.slice(11), planetsCbk, enemiesCbk, shotsCbk, playersCbk)//lil' hack: 11 because the packet id is removed
+			return {
+				lobbyId: view.getUint32(1),
+				playerId: view.getUint8(5),
+				homographId: view.getUint8(6),
+				univWidth: view.getUint16(7),
+				univHeight: view.getUint16(9),
+				enabledTeams: enabledTeams
+			};
 		}
 	},
 	LOBBY_STATE: {
@@ -437,7 +393,6 @@ const MESSAGE = {
 			if (players !== undefined) {
 				players.forEach(function(player, i) {
 					view.setUint16(offset, player.box.center.x);
-
 					view.setUint16(2 + offset, player.box.center.y);
 					view.setUint8(4 + offset, player.attachedPlanet);
 					view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
@@ -447,12 +402,9 @@ const MESSAGE = {
 					if (player.jetpack) enumByte |= this.MASK.JETPACK;
 					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 					view.setUint8(6 + offset, enumByte);
-					view.setUint8(7 + offset, playerNameBufs[i].length);
-					var name = new Uint8Array(playerNameBufs[i]);
-					for (let i = 0; i != name.length; i++) {
-						view.setUint8(8 + offset + i, name[i]);
-					}
-					offset += 8 + name.length;
+					view.setUint8(7 + offset, playerNameBufs[i].byteLength);
+					new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 8 + offset);
+					offset += 8 + playerNameBufs[i].byteLength;
 				}, this);
 			}
 
@@ -488,6 +440,7 @@ const MESSAGE = {
 			}
 
 			while (i !== buffer.byteLength) {
+				console.log(i, buffer.byteLength);
 				var nameLgt = view.getUint8(i + 7),
 					enumByte = view.getUint8(i + 6);
 				playersCbk(

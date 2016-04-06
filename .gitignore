@@ -1,6 +1,10 @@
 /node_modules/
-/config.json
+
+/game_config.json
+/master_config.json
+
 /mods/*
 !/mods/capture
 !/mods/capture/*
 
+/.tern-project

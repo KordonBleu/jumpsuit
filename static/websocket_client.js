@@ -1,12 +1,39 @@
 "use strict";
 
 var ownIdx = null,
-	enabledTeams = [];
+	enabledTeams = [],
+	masterSocket = new WebSocket((location.protocol === "http:" ? "ws://" : "wss://") + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
+	serverList,
+	currentConnection;
 
-function Connection() {
+masterSocket.binaryType = "arraybuffer";
+masterSocket.addEventListener("message", function(message) {
+	switch (new Uint8Array(message.data, 0, 1)[0]) {
+		case MESSAGE.ADD_SERVERS.value:
+			console.log("Got some new servers to add ! :D");
+			if (serverList === undefined) {//first time data is inserted
+				serverList = MESSAGE.ADD_SERVERS.deserialize(message.data);
+				serverList.forEach(addServerRow);
+				applyLobbySearch();//in case the page was refreshed and the
+				applyEmptinessCheck();//inputs left in a modified state
+			} else {
+				serverList = serverList.concat(MESSAGE.ADD_SERVERS.deserialize(message.data));
+				addServerRow();
+			}
+			break;
+		case MESSAGE.REMOVE_SERVERS.value:
+			console.log("I hafta remove servers :c");
+			MESSAGE.REMOVE_SERVERS.deserialize(message.data).forEach(function(id) {
+				serverList.splice(id, 1);
+			});
+			break;
+	}
+});
+
+function Connection(address) {// a connection to a game server
 	this.lastControls = {};
 
-	this.socket = new WebSocket((location.protocol === "http:" ? "ws://" : "wss://") + location.hostname + (location.port === "" ? "" : ":" + location.port));
+	this.socket = new WebSocket(address);
 	this.socket.binaryType = "arraybuffer";
 
 	this.alive = function() { return this.socket.readyState === 1; };
@@ -15,15 +42,26 @@ function Connection() {
 
 	this.socket.addEventListener("open", function() {
 		this.setName.call(this);
-		this.refreshLobbies.call(this)
+		this.sendMessage.call(this, MESSAGE.CONNECT);
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
+	//this should return a Promise, dontcha think?
 }
 Connection.prototype.close = function() {
 	this.leaveLobby();
 	this.socket.close();
 };
+Connection.prototype.sendMessage = function(messageType) {
+	try {
+		this.socket.send(messageType.serialize.apply(messageType,//inefficient but not called often enough to matter
+			Array.prototype.slice.call(arguments, 1)));
+	} catch(err) {
+		console.log(err);
+		//TODO: display "connection lost" and get back to the main menu
+		//or is that redudant with the event listener on "error"?
+	}
+}
 Connection.prototype.connectLobby = function(lobbyId) {
 	if(!currentConnection.alive()) return;
 
@@ -33,19 +71,13 @@ Connection.prototype.connectLobby = function(lobbyId) {
 Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
-	this.refreshLobbies();
-};
-Connection.prototype.refreshLobbies = function() {
-	this.socket.send(MESSAGE.GET_LOBBIES.serialize());
 };
 Connection.prototype.leaveLobby = function() {
 	this.socket.send(MESSAGE.LEAVE_LOBBY.serialize());
 	game.stop();
 };
 Connection.prototype.setName = function() {
-	if(!currentConnection.alive()) return;
-
-	this.socket.send(MESSAGE.SET_NAME.serialize(settings.name));
+	this.sendMessage(MESSAGE.SET_NAME, settings.name);
 };
 Connection.prototype.sendChat = function(content) {
 	if(!currentConnection.alive()) return;
@@ -53,7 +85,7 @@ Connection.prototype.sendChat = function(content) {
 };
 Connection.prototype.refreshControls = function(controls) {
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
-	for (var c in players[ownIdx].controls){
+	for (var c in players[ownIdx].controls) {
 		b++;
 		if (this.lastControls[c] === players[ownIdx].controls[c]) accordance++;
 		else this.lastControls[c] = players[ownIdx].controls[c];
@@ -70,6 +102,7 @@ Connection.prototype.sendActionTwo = function(angle) {
 	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
 }
 Connection.prototype.errorHandler = function() {
+	//TODO: go back to main menu
 	this.close();
 };
 Connection.prototype.messageHandler = function(message) {
@@ -114,24 +147,29 @@ Connection.prototype.messageHandler = function(message) {
 			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data,
 				function(x, y, radius) {//add planets
 					planets.push(new Planet(x, y, radius));
+					console.log("sometimes");
 				},
 				function(x, y, appearance) {//add enemies
 					enemies.push(new Enemy(x, y, appearance));
+					console.log("shit");
 				},
 				function(x, y, angle) {//add shots
 					shots.push(new Shot(x, y, angle));
+					console.log("happens");
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
 					player.looksLeft = looksLeft;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
 					players.push(player);
+					console.log("y'know");
 				}
 			);
 			ownIdx = val.playerId;
 			enabledTeams = val.enabledTeams;
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
+			console.log(val);
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
@@ -230,17 +268,6 @@ Connection.prototype.messageHandler = function(message) {
 
 			if (!game.started) game.start();
 			break;
-		case MESSAGE.LOBBY_LIST.value:
-			if (printLobbies.list === undefined) {//first time data is inserted
-				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
-				printLobbies();
-				applyLobbySearch();//in case the page was refreshed and the
-				applyEmptinessCheck();//inputs left in a modified state
-			} else {
-				printLobbies.list = MESSAGE.LOBBY_LIST.deserialize(message.data);
-				printLobbies();
-			}
-			break;
 		case MESSAGE.CHAT_BROADCAST.value:
 			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
 			printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
@@ -272,7 +299,7 @@ Connection.prototype.messageHandler = function(message) {
 	}
 };
 
-var currentConnection = new Connection();
+//var currentConnection = new Connection();
 Promise.all([
 	allImagesLoaded,
 	new Promise(function(resolve, reject) {
@@ -285,15 +312,10 @@ Promise.all([
 		if(location.pathname !== lobbyUid) currentConnection.connectLobby(lobbyUid);
 });
 
-function refreshLobbies() {
-	if (!currentConnection.alive()) return;
-	currentConnection.refreshLobbies();
-}
 function leaveLobby() {
 	if (!currentConnection.alive()) return;
 	currentConnection.leaveLobby();
 	history.pushState(null, "Main menu", "/");
-	currentConnection.refreshLobbies();
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 }
 
