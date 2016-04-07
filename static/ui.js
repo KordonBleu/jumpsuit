@@ -185,8 +185,9 @@ nameElement.addEventListener("blur", function(e) {
 });
 
 /* Buttons */
-document.getElementById("leave-button").addEventListener("click", function() {//leaveLobby is not loaded yet
-	leaveLobby();
+document.getElementById("leave-button").addEventListener("click", function() {
+	currentConnection.close();
+	game.stop();
 });
 function isDocumentInFullScreenMode() {
 	// Note that the browser fullscreen (triggered by short keys) might

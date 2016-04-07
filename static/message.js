@@ -22,11 +22,28 @@ function bufferToString(arrayBuffer) {
 		return decoder.decode(arrayBuffer);
 	}
 }
+
 function radToBrad(rad, precision) {
 	return Math.round(rad/(2*Math.PI) * ((1 << precision*8) - 1));
 }
 function bradToRad(brad, precision) {
 	return brad/((1 << precision*8) - 1) * (2*Math.PI);
+}
+
+var pChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&'()*+,;=:@";// https://tools.ietf.org/html/rfc3986#section-3.3
+function encodeLobbyNumber(lobbyNb) {
+	var upperDigit = Math.trunc(lobbyNb/pChars.length),
+		lobbyCode = pChars.charAt(lobbyNb%pChars.length);
+
+	if (upperDigit === 0) return lobbyCode;
+	else return encodeLobbyNumber(upperDigit) + lobbyCode;
+}
+function decodeLobbyNumber(lobbyCode) {
+	var lobbyNb = 0;
+
+	for (let i = 0; i !== lobbyCode.length; ++i) lobbyNb += Math.pow(pChars.length, lobbyCode.length - i -1) * pChars.indexOf(lobbyCode.charAt(i));
+
+	return lobbyNb;
 }
 
 const MESSAGE = {

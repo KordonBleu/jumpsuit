@@ -269,8 +269,7 @@ var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	window.removeEventListener("resize", resizeHandler);
 });
 
-var meteorSpawning = setInterval(function(){
-	console.log("a");
+var meteorSpawning = setInterval(function() {
 	if (Math.random() > 0.3) return;
 	var m_resources = ["meteorBig1", "meteorMed2", "meteorSmall1", "meteorTiny1", "meteorTiny2"],
 		m_rand = Math.floor(m_resources.length * Math.random()),

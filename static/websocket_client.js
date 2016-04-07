@@ -30,7 +30,7 @@ masterSocket.addEventListener("message", function(message) {
 	}
 });
 
-function Connection(address) {// a connection to a game server
+function Connection(address, lobby) {// a connection to a game server
 	this.lastControls = {};
 
 	this.socket = new WebSocket(address);
@@ -48,10 +48,6 @@ function Connection(address) {// a connection to a game server
 	this.socket.addEventListener("message", this.messageHandler);
 	//this should return a Promise, dontcha think?
 }
-Connection.prototype.close = function() {
-	this.leaveLobby();
-	this.socket.close();
-};
 Connection.prototype.sendMessage = function(messageType) {
 	try {
 		this.socket.send(messageType.serialize.apply(messageType,//inefficient but not called often enough to matter
@@ -72,9 +68,11 @@ Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
 };
-Connection.prototype.leaveLobby = function() {
-	this.socket.send(MESSAGE.LEAVE_LOBBY.serialize());
+Connection.prototype.close = function() {
+	this.socket.close();
 	game.stop();
+	history.pushState(null, "Main menu", "/");
+	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 };
 Connection.prototype.setName = function() {
 	this.sendMessage(MESSAGE.SET_NAME, settings.name);
@@ -111,13 +109,10 @@ Connection.prototype.messageHandler = function(message) {
 			var errDesc;
 			switch(MESSAGE.ERROR.deserialize(message.data)) {
 				case MESSAGE.ERROR.NO_LOBBY:
-					errDesc = "This lobby doesn't exist (anymore)";
+					errDesc = "This lobby doesn't exist anymore";//TODO: show this message in a pop-up with "See the other servers button" to get back to the menu
 					break;
 				case MESSAGE.ERROR.NO_SLOT:
 					errDesc = "There's no slot left in the lobby";
-					break;
-				case MESSAGE.ERROR.NAME_TAKEN:
-					errDesc = "The name " + localStorage.getItem("settings.name") + " is already taken";
 					break;
 			}
 
@@ -147,29 +142,28 @@ Connection.prototype.messageHandler = function(message) {
 			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data,
 				function(x, y, radius) {//add planets
 					planets.push(new Planet(x, y, radius));
-					console.log("sometimes");
 				},
 				function(x, y, appearance) {//add enemies
 					enemies.push(new Enemy(x, y, appearance));
-					console.log("shit");
 				},
 				function(x, y, angle) {//add shots
 					shots.push(new Shot(x, y, angle));
-					console.log("happens");
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
 					player.looksLeft = looksLeft;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
 					players.push(player);
-					console.log("y'know");
 				}
 			);
 			ownIdx = val.playerId;
 			enabledTeams = val.enabledTeams;
+
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
-			console.log(val);
+
+			let url = this.url.replace(/\/$/, "");
+			history.pushState(null, "Jumpsuit on server" + url, "/" + url + "/" + encodeLobbyNumber(val.lobbyId));
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
@@ -299,31 +293,22 @@ Connection.prototype.messageHandler = function(message) {
 	}
 };
 
-//var currentConnection = new Connection();
-Promise.all([
-	allImagesLoaded,
-	new Promise(function(resolve, reject) {
-		currentConnection.socket.addEventListener("open", function() {
-			resolve();
-		});
-	})
-]).then(function() {
-		var lobbyUid = location.pathname.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
-		if(location.pathname !== lobbyUid) currentConnection.connectLobby(lobbyUid);
+allImagesLoaded.then(function() {
+	let gameSrvLobby = /^\/wss?:\/\/(.+:\d+)\/.+$/.exec(window.location.pathname);
+	console.log(gameSrvLobby, window.location.pathname);
+	if (gameSrvLobby !== null) {
+		currentConnection = new Connection("ws://" + gameSrvLobby[1], gameSrvLobby[2]);
+	}
 });
-
-function leaveLobby() {
-	if (!currentConnection.alive()) return;
-	currentConnection.leaveLobby();
-	history.pushState(null, "Main menu", "/");
-	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
-}
 
 
 window.addEventListener("popstate", function(e) {
-	if(location.pathname === "/") leaveLobby();
+	if(location.pathname === "/") currentConnection.close();
 	else {
-		var lobbyUid = location.pathname.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
-		if(lobbyUid !== null && lobbyUid[0] !== undefined) currentConnection.connectLobby(lobbyUid[0]);
+		let gameSrvLobby = /^\/wss?:\/\/(.+):(\d+)\/.+$/.exec(window.location.pathname);
+		console.log(gameSrvLobby, window.location.pathname);
+		if (gameSrvLobby !== null) {
+			currentConnection = new Connection(gameSrvLobby[1], gameSrvLobby[2]);
+		}
 	}
 });

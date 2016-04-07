@@ -265,7 +265,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
 
 The game server will respond with CONNECT_ACCEPTED.
-The `lobby id` must be set only if the player wishes to connect to a private lobby. In this case the server might respond with an ERROR rather than with CONNECT_ACCEPTED.
+The `lobby id` must be set only if the player wishes to connect to a specific lobby (this is the only way to access private lobbies). In this case the server might respond with an ERROR rather than with CONNECT_ACCEPTED.
 
 
 #### ERROR (game server → client)

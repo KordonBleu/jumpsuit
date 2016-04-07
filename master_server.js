@@ -88,12 +88,13 @@ files.construct("./static", "/");//load everything under `./static` in RAM for f
 
 //send static files
 var server = http.createServer(function (req, res) {
-	var gameSrvLobby = /^\/([^\/]+)\/([0-9a-f]+)\/$/.exec(req.url);
+	var gameSrv = /^\/wss?:\/\/(.+:\d+)\/.+$/.exec(req.url);
 	if (req.url === "/") req.url = "/index.html";
-	else if (gameSrvLobby !== null) {
-		//find lobby in lobby-list
-		if (/* server is not found */ false) res.end("This server doesn't exist (anymore)!\n");//TODO: display index.html with a pop-up showing this explanation instead
-		if (/* lobby is not found */ false) res.end("This lobby doesn't exist (anymore)!\n");
+	else if (gameSrv !== null) {
+		if (!gameServers.some(function(server) {
+			console.log(server.url, gameSrv[1]);
+			return server.url === "ws://" + gameSrv[1];
+		})) res.end("This server doesn't exist (anymore)!\n");//TODO: display index.html with a pop-up showing this explanation instead
 		else req.url = "/index.html";
 	}
 
