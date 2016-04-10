@@ -288,7 +288,7 @@ wss.on("connection", function(ws) {
 				}
 				break;
 			case MESSAGE.CHAT.value:
-				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)));
+				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)), player);
 				break;
 		}
 	});

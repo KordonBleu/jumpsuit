@@ -8,6 +8,7 @@ var ownIdx = null,
 
 masterSocket.binaryType = "arraybuffer";
 masterSocket.addEventListener("message", function(message) {
+	console.log(message.data, new Uint8Array(message.data, 0, 1)[0]);
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
 		case MESSAGE.ADD_SERVERS.value:
 			console.log("Got some new servers to add ! :D");
@@ -24,7 +25,7 @@ masterSocket.addEventListener("message", function(message) {
 		case MESSAGE.REMOVE_SERVERS.value:
 			console.log("I hafta remove servers :c");
 			MESSAGE.REMOVE_SERVERS.deserialize(message.data).forEach(function(id) {
-				serverList.splice(id, 1);
+				removeServer(id);
 			});
 			break;
 	}
@@ -78,8 +79,8 @@ Connection.prototype.setName = function() {
 	this.sendMessage(MESSAGE.SET_NAME, settings.name);
 };
 Connection.prototype.sendChat = function(content) {
-	if(!currentConnection.alive()) return;
-	this.socket.send(MESSAGE.CHAT.serialize(content));
+	this.sendMessage(MESSAGE.CHAT, content);
+	printChatMessage(players[ownIdx].name, players[ownIdx].appearance, content);
 };
 Connection.prototype.refreshControls = function(controls) {
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send

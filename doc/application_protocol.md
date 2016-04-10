@@ -151,26 +151,22 @@ Owned By must be either:
 ```
 
 
-#### PARTIAL_SERVER
-```
-      2B                1B               0-255B            1B            0-255B
-+-------------+--------------------+---------------+-----------------+------------+
-| server port | server name length | "server name" | mod name length | "mod name" |
-+-------------+--------------------+---------------+-----------------+------------+
-```
-
-
 #### SERVER
 ```
-      1B      0-255B         ?B
-+------------+-------+----------------+
-| url length | "url" | PARTIAL_SERVER |
-+------------+-------+----------------+
+    1B         2B                1B
++--------+-------------+----------------+
+| secure | server port | PARTIAL_SERVER |
++--------+-------------+----------------+
 ```
 
-The `"url"` doesn't contain the port, as it is already avalaible in the PARTIAL_SERVER subpayload.
-A domain name should be prefered over an IPv4, which should be prefered over an IPv6.
 
+#### PARTIAL_SERVER
+```
+          1B               0-255B            1B            0-255B
++--------------------+---------------+-----------------+------------+
+| server name length | "server name" | mod name length | "mod name" |
++--------------------+---------------+-----------------+------------+
+```
 
 
 ## Packets
@@ -184,7 +180,7 @@ The first byte of every packet determines its type. A payload may be placed afte
 +------+-----------
 ```
 
-There are 19 packet types.
+There are 21 packet types.
 
 
 
@@ -194,10 +190,10 @@ Game servers will attempt to connect to the master server's websocket at "/game_
 
 #### REGISTER_SERVER (game server → master server)
 ```
- 1B         ?B
-+---+----------------+
-| 0 | PARTIAL_SERVER |
-+---+----------------+
+ 1B     ?B
++---+--------+
+| 0 | SERVER |
++---+--------+
 ```
 
 
@@ -207,11 +203,12 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 
 #### ADD_SERVERS (master server → client)
 ```
- 1B    ?*6B
-+---+========+
-| 1 | SERVER |
-+---+========+
+ 1B        ?*6B
++---+================+
+| 1 | PARTIAL_SERVER |
++---+================+
 ```
+
 
 #### REMOVE_SERVERS (master server → client)
 ```
@@ -222,6 +219,26 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
 
 
+#### RESOLVE (client → master server)
+```
+ 1B      2B
++---+-----------+
+| 3 | server id |
++---+-----------+
+```
+
+
+#### RESOLVED (master server → client)
+```
+ 1B     1B        2B        2B    16B
++---+--------+-----------+------+------+
+| 4 | secure | server id | port | ipv6 |
++---+--------+-----------+------+------+
+```
+
+The `server id` is sent in case the client has time to send two `RESOLVE` before a `RESOLVED` arrives.
+
+
 
 ### Client ↔ Game server
 
@@ -229,7 +246,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
  1B       0B-?B
 +---+---------------+
-| 3 | "player name" |
+| 5 | "player name" |
 +---+---------------+
 ```
 
@@ -240,7 +257,7 @@ The player must send this message before `CONNECT` or `CREATE_PRIVATE_LOBBY`.
 ```
  1B      1B           0B-?B
 +---+-----------+---------------+
-| 4 | player id | "player name" |
+| 6 | player id | "player name" |
 +---+-----------+---------------+
 ```
 
@@ -249,7 +266,7 @@ The player must send this message before `CONNECT` or `CREATE_PRIVATE_LOBBY`.
 ```
  1B              1B
 +---+---------------------------+
-| 5 | maximum amount of players |
+| 7 | maximum amount of players |
 +---+---------------------------+
 ```
 
@@ -260,7 +277,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
  1B      4B
 +---+~~~~~~~~~~+
-| 6 | lobby id |
+| 8 | lobby id |
 +---+~~~~~~~~~~+
 ```
 
@@ -272,7 +289,7 @@ The `lobby id` must be set only if the player wishes to connect to a specific lo
 ```
  1B       1B
 +---+------------+
-| 7 | Error Type |
+| 9 | Error Type |
 +---+------------+
 ```
 
@@ -284,10 +301,10 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### CONNECT_ACCEPTED (game server → client)
 ```
- 1B      4B          1B           1B             2B                2B              3b           1b          1b           1b          1b           1b            ?B
-+---+----------+-----------+--------------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
-| 8 | lobby id | player id | homograph id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
-+---+----------+-----------+--------------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
+  1B      4B          1B           1B             2B                2B              3b           1b          1b           1b          1b           1b            ?B
++----+----------+-----------+--------------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
+| 10 | lobby id | player id | homograph id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
++----+----------+-----------+--------------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
 ```
 
 The homograph id is used to distinguish players with the same name. It is unique for every player with the same name.
@@ -295,10 +312,10 @@ The homograph id is used to distinguish players with the same name. It is unique
 
 #### LOBBY_STATE (game server → client)
 ```
- 1B       1B         1B
-+---+-------------+~~~~~~~+
-| 9 | Lobby State | timer |
-+---+-------------+~~~~~~~+
+  1B       1B         1B
++----+-------------+~~~~~~~+
+| 11 | Lobby State | timer |
++----+-------------+~~~~~~~+
 ```
 
 `Lobby State` must be either:
@@ -311,7 +328,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
 +----+---------------+========+--------------+=======+-------------+======+========+
-| 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
+| 12 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
 +----+---------------+========+--------------+=======+-------------+======+========+
 ```
 
@@ -320,7 +337,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B        1B           ?*1B           1B          ?*1B         1B         ?*1B       ?*1B
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
-| 11 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
+| 13 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
 ```
 
@@ -329,7 +346,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*7B
 +----+-------------+-----------+===============+=============+=============+===============+
-| 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
+| 14 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+=============+===============+
 ```
 
@@ -338,7 +355,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      2b         1b    1b      1b       1b         1b           1b
 +----+-------------+------+-----+--------+---------+-----------+------------+
-| 13 | unused bits | jump | run | crouch | jetpack | move left | move right |
+| 15 | unused bits | jump | run | crouch | jetpack | move left | move right |
 +----+-------------+------+-----+--------+---------+-----------+------------+
 ```
 
@@ -347,7 +364,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B    2B
 +----+-------+
-| 14 | angle |
+| 16 | angle |
 +----+-------+
 ```
 
@@ -356,7 +373,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B    2B
 +----+-------+
-| 15 | angle |
+| 17 | angle |
 +----+-------+
 ```
 
@@ -365,7 +382,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      1B
 +----+-----------+
-| 16 | "message" |
+| 18 | "message" |
 +----+-----------+
 ```
 
@@ -374,16 +391,16 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      1B          ?B
 +----+-----------+-----------+
-| 17 | player id | "message" |
+| 19 | player id | "message" |
 +----+-----------+-----------+
 ```
 
-
+serverModBufs[i]
 #### SCORES (game server → client)
 ```
   1B       4B
 +----+============+
-| 18 | team score |
+| 20 | team score |
 +----+============+
 ```
 

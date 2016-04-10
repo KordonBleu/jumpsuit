@@ -1,5 +1,7 @@
 "use strict";
 
+var ipaddr = require('ipaddr.js');
+
 var isNode = typeof module !== "undefined" && typeof module.exports !== "undefined";
 
 function stringToBuffer(string) {
@@ -49,21 +51,22 @@ function decodeLobbyNumber(lobbyCode) {
 const MESSAGE = {
 	REGISTER_SERVER: {
 		value: 0,
-		serialize: function(serverPort, serverName, modName) {
+		serialize: function(secure, serverPort, serverName, modName) {
 			var serverNameBuf = stringToBuffer(serverName),
 				modNameBuf = stringToBuffer(modName),
-				buffer = new ArrayBuffer(5 + serverNameBuf.byteLength + modNameBuf.byteLength),
+				buffer = new ArrayBuffer(6 + serverNameBuf.byteLength + modNameBuf.byteLength),
 				view = new Uint8Array(buffer),
 				dView = new DataView(buffer);
 
 			view[0] = this.value;
+			view[1] = secure ? 1 : 0;
 
-			dView.setUint16(1, serverPort);
+			dView.setUint16(2, serverPort);
 
-			view[3] = serverNameBuf.byteLength;
-			view.set(new Uint8Array(serverNameBuf), 4);
+			view[4] = serverNameBuf.byteLength;
+			view.set(new Uint8Array(serverNameBuf), 5);
 
-			var offset = 4 + serverNameBuf.byteLength;
+			var offset = 5 + serverNameBuf.byteLength;
 			view[offset++] = modNameBuf.byteLength;
 			view.set(new Uint8Array(modNameBuf), offset);
 			offset += modNameBuf.byteLength;
@@ -72,11 +75,12 @@ const MESSAGE = {
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),
-				offset = 4 + view.getUint8(3),
-				serverName = bufferToString(buffer.slice(4, offset));
+				offset = 5 + view.getUint8(4),
+				serverName = bufferToString(buffer.slice(5, offset));
 
 			return {
-				serverPort: view.getUint16(1),
+				secure: view.getUint8(1) === 1 ? true : false,
+				serverPort: view.getUint16(2),
 				serverName,
 				modName: bufferToString(buffer.slice(offset + 1, offset + 1 + view.getUint8(offset)))
 			};
@@ -85,36 +89,37 @@ const MESSAGE = {
 	ADD_SERVERS: {
 		value: 1,
 		serialize: function(serverList) {
-			var serverUrlBufs = [],
-				serverUrlLength = 0,
-				partialServerBufs = [],
-				partialServerLength = 0;
+			var serverNameBufs = [],
+				serverNameLength = 0,
+				serverModBufs = [],
+				serverModLength = 0;
 
 			serverList.forEach(function(server) {
-				var serverUrlBuf = stringToBuffer(server.url);
-				serverUrlBufs.push(serverUrlBuf);
-				serverUrlLength += serverUrlBuf.byteLength;
+				var serverNameBuf = stringToBuffer(server.name);
+				serverNameBufs.push(serverNameBuf);
+				serverNameLength += serverNameBuf.byteLength;
 			});
 
 			serverList.forEach(function(server) {
-				var partialServerBuf = MESSAGE.REGISTER_SERVER.serialize(server.port, server.name, server.mod).slice(1);
-				partialServerBufs.push(partialServerBuf);
-				partialServerLength += partialServerBuf.byteLength;
+				var serverModBuf = stringToBuffer(server.mod);
+				serverModBufs.push(serverModBuf);
+				serverModLength += serverModBuf.byteLength;
 			});
 
-			var buffer = new ArrayBuffer(1 + serverUrlLength + partialServerLength + 1*partialServerBufs.length),
+			var buffer = new ArrayBuffer(1 + serverNameLength + serverModLength + 2*serverList.length),
 				view = new Uint8Array(buffer),
 				offset = 1;
 
 			view[0] = this.value;
 
-			serverUrlBufs.forEach(function(urlBuf, i) {
+			serverNameBufs.forEach(function(urlBuf, i) {
 				view[offset++] = urlBuf.byteLength;
 				view.set(new Uint8Array(urlBuf), offset);
 				offset += urlBuf.byteLength;
 
-				view.set(new Uint8Array(partialServerBufs[i]), offset);
-				offset += partialServerBufs[i].byteLength;
+				view[offset++] = serverModBufs[i].byteLength;
+				view.set(new Uint8Array(serverModBufs[i]), offset);
+				offset += serverModBufs[i].byteLength;
 			});
 
 			return buffer;
@@ -125,12 +130,6 @@ const MESSAGE = {
 				serverList = [];
 
 			while (offset !== buffer.byteLength) {
-				let urlBuf = buffer.slice(offset + 1, offset + 1 + view.getUint8(offset));
-				offset += urlBuf.byteLength + 1;
-
-				let port = view.getUint16(offset);
-				offset += 2;
-
 				let serverNameBuf = buffer.slice(offset + 1, offset + 1 + view.getUint8(offset));
 				offset += serverNameBuf.byteLength + 1;
 
@@ -138,8 +137,6 @@ const MESSAGE = {
 				offset += modNameBuf.byteLength + 1;
 
 				serverList.push({
-					url: bufferToString(urlBuf),
-					port,
 					name: bufferToString(serverNameBuf),
 					mod: bufferToString(modNameBuf)
 				});
@@ -156,8 +153,10 @@ const MESSAGE = {
 
 			view.setUint8(0, this.value);
 			serverIds.forEach(function(id, i) {
-				view.setUint16(1 + i*2);
+				view.setUint16(1 + i*2, id);
 			});
+
+			return buffer;
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),
@@ -170,8 +169,51 @@ const MESSAGE = {
 			return serverIds;
 		}
 	},
-	SET_NAME: {
+	RESOLVE: {
 		value: 3,
+		serialize: function(id) {
+			var buffer = new ArrayBuffer(3),
+				view = new DataView(buffer);
+			view.setUint8(0, this.value);
+			view.setUint16(1, id);
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			return new DataView(buffer).getUint16(1);
+		}
+	},
+	RESOLVED: {
+		value: 4,
+		serialize: function(id, secure, port, ipv6Arr) {
+			var buffer = new ArrayBuffer(22),
+				dView = new DataView(buffer),
+				view = new Uint8Array(buffer);
+
+			view[0] = this.value;
+			view[1] = secure ? 1 : 0;
+			dView.setUint16(2, port);//DataView because the endianness matters
+			dView.setUint16(4, id);
+			view.set(ipaddr.parse(ipv6Arr).toByteArray(), 6);
+
+			return buffer;
+		},
+		deserialize: function(buffer) {
+			var view = new Uint8Array(buffer),
+				dView = new DataView(buffer),
+				ip = ipaddr.fromByteArray(new Uint8Array(buffer.slice(6)));
+
+			if (ip.isIPv4MappedAddress()) ip = ip.toIPv4Address().toString();
+			else ip = "[" + ip.toString() + "]";
+
+			return {
+				url: (view[1] === 0 ? "ws://" : "wss://") + ip + ":" + dView.getUint16(2),
+				id: dView.getUint16(4)
+			}
+		}
+	},
+	SET_NAME: {
+		value: 5,
 		serialize: function(name) {
 			var bufName = stringToBuffer(name),
 				view = new Uint8Array(bufName.length + 1);
@@ -186,14 +228,14 @@ const MESSAGE = {
 		}
 	},
 	SET_NAME_BROADCAST: {
-		value: 4,
+		value: 6,
 		serialize: function(id, name) {
 			var bufName = stringToBuffer(name),
-				view = new Uint8Array(bufName.length + 2);
+				view = new Uint8Array(bufName.byteLength + 2);
 
 			view[0] = this.value;
 			view[1] = id;
-			view.set(bufName, 2);
+			view.set(new Uint8Array(bufName), 2);
 
 			return view.buffer;
 		},
@@ -205,7 +247,7 @@ const MESSAGE = {
 		}
 	},
 	CREATE_PRIVATE_LOBBY: {
-		value: 5,
+		value: 7,
 		serialize: function(playerAmount) {
 			return new Uint8Array([this.value, playerAmount]).buffer;
 		},
@@ -214,7 +256,7 @@ const MESSAGE = {
 		}
 	},
 	CONNECT: {
-		value: 6,
+		value: 8,
 		serialize: function(lobbyId) {
 			if (lobbyId !== undefined) {
 				let buffer = new ArrayBuffer(5),
@@ -236,7 +278,7 @@ const MESSAGE = {
 	ERROR: {
 		NO_LOBBY: 0,
 		NO_SLOT: 1,
-		value: 7,
+		value: 9,
 		serialize: function(errorCode) {
 			return new Uint8Array([this.value, errorCode]).buffer;
 		},
@@ -245,7 +287,7 @@ const MESSAGE = {
 		}
 	},
 	CONNECT_ACCEPTED: {
-		value: 8,
+		value: 10,
 		TEAM_MASK: {
 			alienBeige: 16,
 			alienBlue: 8,
@@ -295,7 +337,7 @@ const MESSAGE = {
 		}
 	},
 	LOBBY_STATE: {
-		value: 9,
+		value: 11,
 		serialize: function(state, timer) {
 			var view = new Uint8ClampedArray(timer === undefined ? 2 : 3);
 			view[0] = MESSAGE.LOBBY_STATE.value;
@@ -315,7 +357,7 @@ const MESSAGE = {
 		}
 	},
 	ADD_ENTITY: {
-		value: 10,
+		value: 12,
 		ENEMY_APPEARANCE: {
 			enemyBlack1: 0,
 			enemyBlack2: 1,
@@ -476,7 +518,7 @@ const MESSAGE = {
 		}
 	},
 	REMOVE_ENTITY: {
-		value: 11,
+		value: 13,
 		serialize: function(planetIds, enemyIds, shotIds, playerIds) {
 			var view = new Uint8Array(4 + planetIds.length + enemyIds.length + shotIds.length + playerIds.length);
 
@@ -536,7 +578,7 @@ const MESSAGE = {
 		}
 	},
 	GAME_STATE: {
-		value: 12,
+		value: 14,
 		OWNED_BY: {
 			neutral: 0,
 			alienBlue: 1,
@@ -642,7 +684,7 @@ const MESSAGE = {
 		}
 	},
 	PLAYER_CONTROLS: {
-		value: 13,
+		value: 15,
 		MASK: {
 			JUMP: 1,
 			RUN: 2,
@@ -682,7 +724,7 @@ const MESSAGE = {
 		}
 	},
 	ACTION_ONE: {
-		value: 14,
+		value: 16,
 		serialize: function(angle) {
 			var buffer = new ArrayBuffer(3),
 				view = new DataView(buffer);
@@ -699,7 +741,7 @@ const MESSAGE = {
 		}
 	},
 	ACTION_TWO: {
-		value: 15,
+		value: 17,
 		serialize: function(angle) {
 			return MESSAGE.ACTION_ONE.serialize.call(this, angle);
 		},
@@ -708,7 +750,7 @@ const MESSAGE = {
 		}
 	},
 	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
-		value: 16,
+		value: 18,
 		serialize: function(message) {
 			return MESSAGE.SET_NAME.serialize.call(this, message);
 		},
@@ -717,7 +759,7 @@ const MESSAGE = {
 		}
 	},
 	CHAT_BROADCAST: {//CHAT_BROADCAST and SET_NAME_BROADCAST are coincidentally serialized the same way
-		value: 17,
+		value: 19,
 		serialize: function(id, message) {
 			return MESSAGE.SET_NAME_BROADCAST.serialize.call(this, id, message);
 		},
@@ -729,7 +771,7 @@ const MESSAGE = {
 		}
 	},
 	SCORES: {
-		value: 18,
+		value: 20,
 		serialize: function(scoresObj) {
 			var teams = Object.keys(scoresObj).sort(),
 				buffer = new ArrayBuffer(1 + teams.length*4),

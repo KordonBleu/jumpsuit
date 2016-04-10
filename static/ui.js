@@ -306,7 +306,7 @@ function addServerRow(server) {
 }
 function removeServer(id) {
 	serverList[id].tr.remove();
-	serverList[id].splice(id, 1);
+	serverList.splice(id, 1);
 }
 lobbyListElement.addEventListener("click", function(e) {
 	if (e.target.tagName === "BUTTON") {

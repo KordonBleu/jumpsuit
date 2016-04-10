@@ -168,9 +168,9 @@ gameServerSocket.on("connection", function(ws) {
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
 				gameServer = new GameServer("ws://[" + ws._socket.remoteAddress + "]:" + data.serverPort, data.serverName, data.modName, data.lobbyList);
 				gameServers.push(gameServer);
-				console.log("server registered at " + ws._socket.remoteAddress + ":" + data.serverPort);
 				let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer]);
-				clientsSocket.clients.forEach(function(client) {
+				printEntry.print(printEntry.INFO, "Registered \"" + data.modName + "\" server \"" + data.serverName + "\" @ " + ws._socket.remoteAddress + ":" + data.serverPort);
+				clientsSocket.clients.forEach(function(client) {//broadcast
 					client.send(newGameServerBuf, wsOptions);
 				});
 				break;
@@ -181,6 +181,9 @@ gameServerSocket.on("connection", function(ws) {
 		gameServers.forEach(function(gS, i) {
 			if (gameServer = gS) {
 				gameServers.splice(i, 1);
+				clientsSocket.clients.forEach(function(client) {//broadcast
+					client.send(MESSAGE.REMOVE_SERVERS.serialize([i]), wsOptions);
+				});
 			}
 		});
 	});
