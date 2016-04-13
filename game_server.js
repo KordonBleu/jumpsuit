@@ -14,6 +14,7 @@ var fs = require("fs"),
 		mod: "capture",
 		monitor: false,
 		port: 7483,
+		secure: false,
 		server_name: "JumpSuit server"
 	};
 
@@ -111,7 +112,7 @@ server.listen(config.port);
 
 var masterWs = new WebSocket(config.master + "/game_servers");
 masterWs.on("open", function() {
-	masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
+	masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
 });
 
 engine.Player.prototype.send = function(data) {

@@ -54,6 +54,7 @@ master | The master server your server registers to. If your host your own maste
 mod | Choose the server's gamemode | "capture" | string
 monitor | Displays a neat view of the lobbys in real-time | false | boolean
 port | Set the game server's port | 7483 | integer
+secure | Set this to true if your server is behind ssl. If you don't know, stick to the default value | false | boolean
 server_name | The name the master associates your server with | "JumpSuit server" | string
 
 

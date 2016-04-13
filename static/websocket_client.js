@@ -8,12 +8,12 @@ var ownIdx = null,
 
 masterSocket.binaryType = "arraybuffer";
 masterSocket.addEventListener("message", function(message) {
-	console.log(message.data, new Uint8Array(message.data, 0, 1)[0]);
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
 		case MESSAGE.ADD_SERVERS.value:
 			console.log("Got some new servers to add ! :D");
 			if (serverList === undefined) {//first time data is inserted
 				serverList = MESSAGE.ADD_SERVERS.deserialize(message.data);
+				console.log(serverList);
 				serverList.forEach(addServerRow);
 				applyLobbySearch();//in case the page was refreshed and the
 				applyEmptinessCheck();//inputs left in a modified state
@@ -31,15 +31,12 @@ masterSocket.addEventListener("message", function(message) {
 	}
 });
 
-function Connection(address, lobby) {// a connection to a game server
+function Connection(url) {// a connection to a game server
 	this.lastControls = {};
 
-	this.socket = new WebSocket(address);
+
+	this.socket = new WebSocket(url);
 	this.socket.binaryType = "arraybuffer";
-
-	this.alive = function() { return this.socket.readyState === 1; };
-
-	this.lobbyUid = null;
 
 	this.socket.addEventListener("open", function() {
 		this.setName.call(this);
@@ -49,6 +46,7 @@ function Connection(address, lobby) {// a connection to a game server
 	this.socket.addEventListener("message", this.messageHandler);
 	//this should return a Promise, dontcha think?
 }
+Connection.prototype.alive = function() { return this.socket.readyState === 1; };
 Connection.prototype.sendMessage = function(messageType) {
 	try {
 		this.socket.send(messageType.serialize.apply(messageType,//inefficient but not called often enough to matter
@@ -59,12 +57,6 @@ Connection.prototype.sendMessage = function(messageType) {
 		//or is that redudant with the event listener on "error"?
 	}
 }
-Connection.prototype.connectLobby = function(lobbyId) {
-	if(!currentConnection.alive()) return;
-
-	this.socket.send(MESSAGE.CONNECT.serialize(lobbyId));
-	this.lobbyUid = lobbyId;
-};
 Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));

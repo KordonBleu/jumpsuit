@@ -36,12 +36,17 @@ global.printEntry = {
 	}
 };
 
-function GameServer(url, name, mod, lobbies) {
-	this.url = url;
+function GameServer(name, mod, secure, port, ip) {
 	this.name = name;
 	this.mod = mod;
-	this.lobbies = lobbies;
+
+	this.secure = secure;
+	this.port = port;
+	this.ip = ip;
 }
+GameServer.prototype.getUrl = function() {
+	return (this.secure ? "wss://[" : "ws://[") + this.ip + "]:" + this.port;
+};
 var gameServers = [];
 
 function changeCbk(newConfig, previousConfig) {
@@ -69,9 +74,11 @@ if(config.monitor) monitor.setMonitorMode();*/
 if (config.interactive) interactive.open();
 
 var files = {
-	"/engine.js": fs.readFileSync("./mods/capture/engine.js")//the default engine is not under `./static` because it is part of a mod
+	"/engine.js": fs.readFileSync("./mods/capture/engine.js"),//the default engine is not under `./static` because it is part of a mod
+	"/ipaddr.min.js": fs.readFileSync("./node_modules/ipaddr.js/ipaddr.min.js")
 };
 files["/engine.js"].mtime = fs.statSync("./mods/capture/engine.js").mtime;
+files["/ipaddr.min.js"].mtime = fs.statSync("./node_modules/ipaddr.js/ipaddr.min.js").mtime;
 files.construct = function(path, oName) {
 	fs.readdirSync(path).forEach(function(pPath) {
 		var cPath = path + "/" + pPath,
@@ -166,8 +173,9 @@ gameServerSocket.on("connection", function(ws) {
 		switch (state) {
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
-				gameServer = new GameServer("ws://[" + ws._socket.remoteAddress + "]:" + data.serverPort, data.serverName, data.modName, data.lobbyList);
+				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ws._socket.remoteAddress);
 				gameServers.push(gameServer);
+				console.log(gameServer);
 				let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer]);
 				printEntry.print(printEntry.INFO, "Registered \"" + data.modName + "\" server \"" + data.serverName + "\" @ " + ws._socket.remoteAddress + ":" + data.serverPort);
 				clientsSocket.clients.forEach(function(client) {//broadcast
@@ -191,4 +199,20 @@ gameServerSocket.on("connection", function(ws) {
 
 clientsSocket.on("connection", function(ws) {
 	ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers), wsOptions);
+
+	ws.on("message", function(message, flags) {
+		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
+
+		let state = new Uint8Array(message, 0, 1)[0];
+
+		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
+		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
+
+		if (state === MESSAGE.RESOLVE.value) {
+			let id = MESSAGE.RESOLVE.deserialize(message);
+			console.log("the magic happens");
+			ws.send(MESSAGE.RESOLVED.serialize(id, gameServers[id].secure, gameServers[id].port, gameServers[id].ip), wsOptions);
+		}
+	});
+
 });

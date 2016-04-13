@@ -293,8 +293,7 @@ function addServerRow(server) {
 		modNameTd.textContent = server.mod;
 
 		button.textContent = "Play!";
-		button.dataset.href = server.url;
-		row.setAttribute("title", server.url);
+		button.dataset.url = server.url;
 
 		buttonTd.appendChild(button);
 		row.appendChild(serverNameTd);
@@ -312,11 +311,8 @@ lobbyListElement.addEventListener("click", function(e) {
 	if (e.target.tagName === "BUTTON") {
 		if (e.target !== lobbyListElement.lastElementChild.lastElementChild.firstElementChild) {// Play!
 			console.log(e.target);
-			currentConnection = new Connection(e.target.dataset.href);
-			/*var lobbyUid = e.target.dataset.href.replace(/^\/lobbies\/([0-9a-f]+)\/$/, "$1");
-			if (currentConnection.lobbyUid !== null) currentConnection.leaveLobby();
-			currentConnection.connectLobby(lobbyUid);
-			history.pushState(null, "Lobby" + lobbyUid, "/lobbies/" + lobbyUid + "/");*/
+			currentConnection = new Connection(e.target.dataset.url);
+			//TODO: set URL
 		} else {// Create!
 			var nameInput = lobbyListElement.lastElementChild.firstElementChild.firstElementChild,
 				playerAmountInput = lobbyListElement.lastElementChild.children[1].firstElementChild;
