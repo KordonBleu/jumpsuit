@@ -138,7 +138,8 @@ var server = http.createServer(function (req, res) {
 				case "js":
 					mime = "application/javascript";
 					break;
-				case "ogg":
+				case "ogg"://vorbis in ogg
+				case "opus"://opus in ogg
 					mime = "audio/ogg";
 					break;
 				default:

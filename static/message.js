@@ -455,7 +455,6 @@ const MESSAGE = {
 			}
 
 			while (i !== buffer.byteLength) {
-				console.log(i, buffer.byteLength);
 				var nameLgt = view.getUint8(i + 7),
 					enumByte = view.getUint8(i + 6);
 				playersCbk(
@@ -564,15 +563,13 @@ const MESSAGE = {
 			view.setUint16(2, yourFuel);
 
 			var offset = 4;
-			planets.forEach(function(planet, i) {
-				view.setUint8(offset, this.OWNED_BY[planet.progress.team]);
-				view.setUint8(1 + offset, planet.progress.value);
-				offset += 2;
+			planets.forEach(function(planet) {
+				view.setUint8(offset++, this.OWNED_BY[planet.progress.team]);
+				view.setUint8(offset++, planet.progress.value);
 			}, this);
 
 			enemies.forEach(function(enemy) {
-				view.setUint8(offset, radToBrad(enemy.box.angle, 1));
-				offset += 1;
+				view.setUint8(offset++, radToBrad(enemy.box.angle, 1));
 			});
 
 			shots.forEach(function(shot, i) {

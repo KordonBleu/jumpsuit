@@ -39,8 +39,6 @@ var chatElement = document.getElementById("gui-chat"),
 	guiOptionElement = document.getElementById("gui-options"),//contains the following buttons
 	settingsButton = document.getElementById("settings-button"),
 	infoButton = document.getElementById("info-button"),
-	/* new lobby dialog */
-	dialogElement = document.getElementById("dialog"),
 	/* canvases */
 	canvas = document.getElementById("canvas"),
 	minimapCanvas = document.getElementById("minimap-canvas"),

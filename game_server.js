@@ -144,7 +144,7 @@ setInterval(function() {
 
 setInterval(function() {
 	lobbies.forEach(function(lobby) {
-		if (lobby.players.length !== 0 && !config.dev) lobby.stateTimer -= 1;
+		/*if (lobby.players.length !== 0 && !config.dev) lobby.stateTimer -= 1;
 
 		if (lobby.state === lobby.stateEnum.WAITING) {
 			lobby.broadcast(MESSAGE.LOBBY_STATE.serialize(lobby.state, lobby.stateTimer));
@@ -169,7 +169,7 @@ setInterval(function() {
 				lobby.stateTimer = 10;
 				lobby.broadcast(MESSAGE.SCORES.serialize(lobby.getScores()));
 			}
-		}
+		}*/
 
 
 		lobby.planets.forEach(function(planet) {

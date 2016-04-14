@@ -13,7 +13,6 @@ masterSocket.addEventListener("message", function(message) {
 			console.log("Got some new servers to add ! :D");
 			if (serverList === undefined) {//first time data is inserted
 				serverList = MESSAGE.ADD_SERVERS.deserialize(message.data);
-				console.log(serverList);
 				serverList.forEach(addServerRow);
 				applyLobbySearch();//in case the page was refreshed and the
 				applyEmptinessCheck();//inputs left in a modified state
@@ -63,6 +62,8 @@ Connection.prototype.createLobby = function(name, playerAmount) {
 };
 Connection.prototype.close = function() {
 	this.socket.close();
+	this.socket.removeEventListener("error", this.errorHandler);
+	this.socket.removeEventListener("message", this.messageHandler);
 	game.stop();
 	history.pushState(null, "Main menu", "/");
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
