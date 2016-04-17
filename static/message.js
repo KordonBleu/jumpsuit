@@ -88,7 +88,10 @@ const MESSAGE = {
 	},
 	ADD_SERVERS: {
 		value: 1,
-		serialize: function(serverList) {
+		serialize: function(serverList, clientIp) {
+			clientIp = ipaddr.parse(clientIp);
+			if (clientIp.kind() === "ipv4") clientIp = clientIp.toIPv4MappedAddress();
+
 			var partialServerBufs = [],
 				partialServerBufsLength = 0;
 
@@ -106,6 +109,7 @@ const MESSAGE = {
 
 			partialServerBufs.forEach(function(partialServerBuf, i) {
 				view.set(ipaddr.parse(serverList[i].ip).toByteArray(), offset);
+				view.set(serverList[i].effectiveIp(clientIp).toByteArray(), offset);
 				offset += 16;
 				view.set(new Uint8Array(partialServerBuf), offset);
 				offset += partialServerBuf.byteLength;

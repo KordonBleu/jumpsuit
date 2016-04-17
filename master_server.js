@@ -47,6 +47,11 @@ function GameServer(name, mod, secure, port, ip) {
 GameServer.prototype.getUrl = function() {
 	return (this.secure ? "wss://[" : "ws://[") + this.ip + "]:" + this.port;
 };
+GameServer.prototype.effectiveIp = function(clientIp) {
+	console.log(clientIp);
+	var ipaddr = require('ipaddr.js');
+	return ipPicker(ipaddr.parse(this.ip), clientIp);
+}
 var gameServers = [];
 
 function changeCbk(newConfig, previousConfig) {
@@ -155,7 +160,9 @@ var server = http.createServer(function (req, res) {
 		res.end("Error 404:\nPage not found\n");
 	}
 });
-server.listen(config.port);
+var ipPicker = require("./ip_picker.js")(function() {
+	server.listen(config.port);
+});
 
 
 var gameServerSocket = new WebSocketServer({server: server, path: "/game_servers"}),
@@ -176,10 +183,9 @@ gameServerSocket.on("connection", function(ws) {
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
 				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ws._socket.remoteAddress);
 				gameServers.push(gameServer);
-				console.log(gameServer);
-				let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer]);
-				printEntry.print(printEntry.INFO, "Registered \"" + data.modName + "\" server \"" + data.serverName + "\" @ " + ws._socket.remoteAddress + ":" + data.serverPort);
+				printEntry.print(printEntry.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
+					let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer], client.ws._socket.remoteAddress);
 					client.send(newGameServerBuf, wsOptions);
 				});
 				break;
@@ -199,7 +205,8 @@ gameServerSocket.on("connection", function(ws) {
 });
 
 clientsSocket.on("connection", function(ws) {
-	ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers), wsOptions);
+	//console.log("client addr", ws.upgradeReq.headers['x-forwarded-for'] || ws.upgradeReq.connection.remoteAddress);
+	ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers, ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress), wsOptions);
 
 	ws.on("message", function(message, flags) {
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
