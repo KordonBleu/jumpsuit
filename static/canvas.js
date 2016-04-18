@@ -188,7 +188,7 @@ Player.prototype.draw = function(showName) {
 	game.armedWeapons.forEach((function (weapon, index) {
 		weapon = weapons[weapon];
 		var weaponX, weaponY;
-		if (this.attachedPlanet === 255 && index === game.currentWeapon) {	
+		if (this.attachedPlanet === 255 && index === game.currentWeapon) {
 			weaponX = playerX - shift*weapon.offset*Math.sin(this.box.angle - Math.PI / 2);
 			weaponY = playerY + shift*weapon.offset*Math.cos(this.box.angle - Math.PI / 2);
 			windowBox.drawRotatedImage(weapon.resource, weaponX, weaponY, this.box.angle, (!this.looksLeft ? "x" : ""), weapon.resource.width * 0.2, weapon.resource.height * 0.2);

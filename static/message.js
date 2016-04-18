@@ -368,7 +368,7 @@ const MESSAGE = {
 					totalNameSize += playerNameBufs[i].byteLength;
 				});
 			}
-			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*6 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*5 : 0) + (players !== undefined ? players.length*8 + totalNameSize : 0)),
+			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*5 : 0) + (players !== undefined ? players.length*8 + totalNameSize : 0)),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
@@ -379,7 +379,8 @@ const MESSAGE = {
 					view.setUint16(offset, planet.box.center.x);
 					view.setUint16(2 + offset, planet.box.center.y);
 					view.setUint16(4 + offset, planet.box.radius);
-					offset += 6;
+					view.setUint8(6 + offset, planet.type);
+					offset += 7;
 				});
 			} else {
 				view.setUint8(1, 0);
@@ -432,11 +433,12 @@ const MESSAGE = {
 		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
 			var view = new DataView(buffer);
 
-			for (var i = 2; i !== 6*view.getUint8(1) + 2; i += 6) {
+			for (var i = 2; i !== 7*view.getUint8(1) + 2; i += 7) {
 				planetsCbk(
 					view.getUint16(i),//x
 					view.getUint16(i + 2),//y
-					view.getUint16(i + 4)//radius
+					view.getUint16(i + 4),//radius
+					view.getUint8(i + 6)//type
 				);
 			}
 

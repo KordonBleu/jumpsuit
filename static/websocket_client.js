@@ -134,8 +134,8 @@ Connection.prototype.messageHandler = function(message) {
 			shots.length = 0;
 			players.length = 0;
 			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data,
-				function(x, y, radius) {//add planets
-					planets.push(new Planet(x, y, radius));
+				function(x, y, radius, type) {//add planets
+					planets.push(new Planet(x, y, radius, type));
 				},
 				function(x, y, appearance) {//add enemies
 					enemies.push(new Enemy(x, y, appearance));
@@ -146,6 +146,7 @@ Connection.prototype.messageHandler = function(message) {
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
 					player.looksLeft = looksLeft;
+					player.lastSound = 0;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
 					players.push(player);
 				}
@@ -161,7 +162,7 @@ Connection.prototype.messageHandler = function(message) {
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
-				function(x, y, radius) {},//add planets
+				function(x, y, radius, type) {},//add planets
 				function(x, y, appearance) {},//add enemies
 				function(x, y, angle) {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
@@ -236,6 +237,17 @@ Connection.prototype.messageHandler = function(message) {
 					players[id].boxInformations[1] = new Rectangle(new Point(x, y), 0, 0, angle);
 
 					players[id].looksLeft = looksLeft;
+					if ((players[id].walkFrame === "_walk1" && walkFrame === "walk2") || (players[id].walkFrame === "_walk2" && walkFrame === "walk1")) {
+						let type = planets[players[id].attachedPlanet].type,
+							stepSound = stepModels[type][players[id].lastSound].makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y));
+						if (stepSound.buffer !== undefined) {
+							stepSound.playbackRate.value = Math.random() + 0.5;//picth is modified from 50% to 150%
+						} else {//hack for Chrome (doesn't sound as good)
+							stepSound.mediaElement.playbackRate = Math.random() + 0.5;//picth is modified from 50% to 150%
+						}
+						stepSound.start(0);
+						players[id].lastSound = (players[id].lastSound + 1)%5;
+					}
 					players[id].walkFrame = "_" + walkFrame;
 					players[id].attachedPlanet = attachedPlanet;
 					players[id].jetpack = jetpack;

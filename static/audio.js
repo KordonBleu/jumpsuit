@@ -26,17 +26,15 @@ function SoundModel(url, callback) {
 				//TODO: load with audio element
 				console.log("bim bam", err);
 
-				if(typeof callback === "function") callback.bind(that)();
+				if (typeof callback === "function") callback.call(that);
 			});
 	};
 	request.send();
 }
 SoundModel.prototype.makeSound = function(nextNode, loop) {//fails silenciously if this.buffer isn't loaded (yet)
-	console.log(this);
 	if (this.buffer !== undefined) {
 		var sound = audioContext.createBufferSource();
 		sound.buffer = this.buffer;
-		console.log(sound);
 
 		if(typeof loop === "number") {
 			sound.loopStart = loop;
@@ -65,7 +63,6 @@ SoundModel.prototype.makeSound = function(nextNode, loop) {//fails silenciously 
 	}
 
 	sound.connect(nextNode);
-	console.log(sound);
 
 	return sound;
 }
@@ -96,17 +93,13 @@ var bgFilter = audioContext.createBiquadFilter();
 
 	bgFilter.connect(musicGain);
 
-//try {
-	var laserModel = new SoundModel("/assets/audio/laser.opus"),
-		jetpackModel = new SoundModel("/assets/audio/jetpack.opus"),
-		backgroundModel = new SoundModel("/assets/audio/interstellar.opus", function() {
-			this.makeSound(bgFilter, 110.256).start(0);
-		});
-/*} catch (err) {
-	console.log(err);
-	var laserModel = new SoundModel("/assets/audio/laser.ogg"),
-		jetpackModel = new SoundModel("/assets/audio/jetpack.ogg"),
-		backgroundModel = new SoundModel("/assets/audio/interstellar.ogg", function() {
-			this.makeSound(bgFilter, 110.256).start(0);
-		});
-}*/
+var laserModel = new SoundModel("/assets/audio/laser.opus"),
+	jetpackModel = new SoundModel("/assets/audio/jetpack.opus"),
+	backgroundModel = new SoundModel("/assets/audio/interstellar.opus", function() {
+		this.makeSound(bgFilter, 110.256).start(0);
+	}),
+	stepModels = [[], []];
+for (let i = 0; i !== 5; ++i) {
+	stepModels[0].push(new SoundModel("/assets/audio/step/concrete_" + i + ".opus"));
+	stepModels[1].push(new SoundModel("/assets/audio/step/grass_" + i + ".opus"));
+}

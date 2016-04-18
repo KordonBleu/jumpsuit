@@ -91,11 +91,16 @@ Player.prototype.setBoxSize = function() {
 	this.box.height = resources[this.appearance + this.walkFrame].height;
 };
 
-function Planet(x, y, radius) {
+function Planet(x, y, radius, type) {
 	this.box = new Circle(new Point(x, y), radius);
 	this.atmosBox = new Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
 	this.progress = {team: "neutral", value: 0, color: "rgb(80,80,80)"};
+	this.type = type || Math.round(Math.random());
 }
+Planet.prototype.typeEnum = {
+	CONCRETE: 0,
+	GRASS: 1
+};
 Planet.prototype.teamColors = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
 Planet.prototype.updateColor = function() {
 	if (this.progress.team === "neutral") this.progress.color = "rgb(80,80,80)";
@@ -134,7 +139,7 @@ function doPrediction(universe, players, enemies, shots) {
 			player.box.center.x += (player.boxInformations[1].center.x - player.boxInformations[0].center.x) / intensity;
 			player.box.center.y += (player.boxInformations[1].center.y - player.boxInformations[0].center.y) / intensity;
 			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
-			
+
 			player.box.center.x = (6400 + player.box.center.x) % 6400;
 			player.box.center.y = (6400 + player.box.center.y) % 6400;
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);

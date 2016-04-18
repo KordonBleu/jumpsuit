@@ -46,10 +46,14 @@ They might be used several times in a packet or in packets with different types.
 #### PLANET
 ```
        2B            2B           2B
-+--------------+--------------+--------+
-| x-coordinate | y-coordinate | radius |
-+--------------+--------------+--------+
++--------------+--------------+--------+------+
+| x-coordinate | y-coordinate | radius | Type |
++--------------+--------------+--------+------+
 ```
+
+`Type` must be either:
+ 0. concrete
+ 1. grass
 
 
 #### ENEMY
