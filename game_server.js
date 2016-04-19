@@ -6,6 +6,7 @@ var fs = require("fs"),
 	colors = require("colors"),
 	interactive = require("./interactive.js"),
 	MESSAGE = require("./static/message.js"),
+	logger = require("./logger.js"),
 
 	configSkeleton = {
 		dev: false,
@@ -18,51 +19,21 @@ var fs = require("fs"),
 		server_name: "JumpSuit server"
 	};
 
-
-global.printEntry = {
-	print: function(type, content) {
-		if (type === undefined) return;
-		let timestamp = (config !== undefined && config.dev) ? ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey : "";
-		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));
-	},
-	DEV: 0,
-	INFO: 1,
-	ERROR: 2,
-	RESULT: 3,
-	enumToString: function (e) {
-		switch (e) {
-			case 0: return "[DEV]".cyan.bold;
-			case 1: return "[INFO]".yellow.bold;
-			case 2: return "[ERR]".red.bold;
-			case 3: return "[RESULT]".magenta.bold;
-		}
-		return "";
-	}
-};
-
 function changeCbk(newConfig, previousConfig) {
-	if(newConfig.port !== previousConfig.port) {
+	if (newConfig.port !== previousConfig.port) {
 		server.close();
 		server.listen(newConfig.port);
 	}
 	if(newConfig.monitor !== previousConfig.monitor) {
-		if(previousConfig.monitor) {
-			monitor.unsetMonitorMode();
-		} else {
-			monitor.setMonitorMode();
-		}
+		if (previousConfig.monitor) monitor.unsetMonitorMode();
+		else monitor.setMonitorMode();
 	}
 	if (newConfig.mod !== previousConfig.mod) {
-		printEntry.print(printEntry.INFO, "Server set to another mod. Please restart the server to apply new newConfig.");
+		logger(logger.INFO, "Server set to another mod. Please restart the server to apply new config.");
 	}
 	if (newConfig.interactive !== previousConfig.interactive) {
 		if (previousConfig.interactive) interactive.close();
 		else interactive.open();
-	}
-	if (newConfig.dev && !previousConfig.dev) {
-		lobbies.forEach(function(lobby) {
-			lobby.stateTimer = newConfig.dev ? 0 : 30;
-		});
 	}
 }
 var config = require("./config.js")(process.argv[2] || "./game_config.json", configSkeleton, changeCbk);
@@ -82,18 +53,18 @@ var engine,
 	try {
 		engine = require("./mods/" + config.mod + "/engine.js");
 		plugModdedModule(engine, defaultEngine);
-		printEntry.print(printEntry.INFO, "Modded engine loaded.");
+		logger(logger.INFO, "Modded engine loaded.");
 	} catch(e) {
 		engine = defaultEngine;
-		printEntry.print(printEntry.INFO, "Engine loaded.");
+		logger(logger.INFO, "Engine loaded.");
 	}
 	try {
 		onMessage = require("./mods/" + config.mod + "/on_message.js")(engine);
 		plugModdedModule(onMessage, defaultOnMessage);
-		printEntry.print(printEntry.INFO, "Modded message handler loaded.");
+		logger(logger.INFO, "Modded message handler loaded.");
 	} catch(e) {
 		onMessage = defaultOnMessage;
-		printEntry.print(printEntry.INFO, "Message handler loaded.");
+		logger(logger.INFO, "Message handler loaded.");
 	}
 }
 
@@ -190,7 +161,7 @@ wss.on("connection", function(ws) {
 		lobbies.forEach(function(lobby, lobbyI) {
 			lobby.players.some(function(player, i, players) {
 				if (player.ws === ws) {
-					if (config.dev) printEntry.print(printEntry.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
+					logger(logger.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
 					players.splice(i, 1);
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]));
 					if (players.length === 0) lobbies.splice(lobbyI, 1);
@@ -209,7 +180,7 @@ wss.on("connection", function(ws) {
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
 		let state = new Uint8Array(message, 0, 1)[0];
 		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
-		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
+		logger(logger.DEV, (MESSAGE.toString(state)).italic);
 		switch (state) {
 			case MESSAGE.CREATE_PRIVATE_LOBBY.value:
 				var data = MESSAGE.CREATE_PRIVATE_LOBBY.deserialize(message);
@@ -229,7 +200,6 @@ wss.on("connection", function(ws) {
 				} else player.name = name;
 				break;
 			case MESSAGE.CONNECT.value:
-				console.log("alright");
 				let lobbyId = MESSAGE.CONNECT.deserialize(message);
 
 				if (player.name === undefined) break;

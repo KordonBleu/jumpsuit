@@ -1,6 +1,7 @@
 "use strict";
 
-var rl;
+var rl,
+	logger = require("./logger.js");
 
 function open() {
 	rl = require("readline").createInterface({
@@ -12,9 +13,9 @@ function open() {
 		//allowing to output variables on purpose
 		try {
 			var result = eval(cmd);
-			if (result !== undefined) printEntry.print(printEntry.RESULT, result);
+			if (result !== undefined) logger(logger.RESULT, result);
 		} catch (ex) {
-			printEntry.print(printEntry.ERROR, ex);
+			logger(logger.ERROR, ex);
 		}
 	});
 }

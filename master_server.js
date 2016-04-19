@@ -6,6 +6,7 @@ var fs = require("fs"),
 	colors = require("colors"),
 	interactive = require("./interactive.js"),
 	MESSAGE = require("./static/message.js"),
+	logger = require("./logger.js"),
 
 	configSkeleton = {
 		dev: false,
@@ -13,28 +14,6 @@ var fs = require("fs"),
 		monitor: false,
 		port: 80
 	};
-
-
-global.printEntry = {
-	print: function(type, content) {
-		if (type === undefined) return;
-		let timestamp = (config !== undefined && config.dev) ? ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey : "";
-		console.log(timestamp + " " + this.enumToString(type) + " " + (content || ""));
-	},
-	DEV: 0,
-	INFO: 1,
-	ERROR: 2,
-	RESULT: 3,
-	enumToString: function (e) {
-		switch (e) {
-			case 0: return "[DEV]".cyan.bold;
-			case 1: return "[INFO]".yellow.bold;
-			case 2: return "[ERR]".red.bold;
-			case 3: return "[RESULT]".magenta.bold;
-		}
-		return "";
-	}
-};
 
 function GameServer(name, mod, secure, port, ip) {
 	this.name = name;
@@ -176,17 +155,19 @@ gameServerSocket.on("connection", function(ws) {
 		let state = new Uint8Array(message, 0, 1)[0];
 
 		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
-		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
+		logger(logger.DEV, (MESSAGE.toString(state)).italic);
 
 		switch (state) {
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
 				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ws._socket.remoteAddress);
 				gameServers.push(gameServer);
-				printEntry.print(printEntry.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
+				logger(logger.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
-					let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer], client.ws._socket.remoteAddress);
-					client.send(newGameServerBuf, wsOptions);
+					try {
+						let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer], client.ws._socket.remoteAddress);
+						client.send(newGameServerBuf, wsOptions);
+					} catch (err) {/* Do nothing */}
 				});
 				break;
 		}
@@ -197,7 +178,9 @@ gameServerSocket.on("connection", function(ws) {
 			if (gameServer = gS) {
 				gameServers.splice(i, 1);
 				clientsSocket.clients.forEach(function(client) {//broadcast
-					client.send(MESSAGE.REMOVE_SERVERS.serialize([i]), wsOptions);
+					try {
+						client.send(MESSAGE.REMOVE_SERVERS.serialize([i]), wsOptions);
+					} catch (err) {/* Do nothing */}
 				});
 			}
 		});
@@ -205,8 +188,9 @@ gameServerSocket.on("connection", function(ws) {
 });
 
 clientsSocket.on("connection", function(ws) {
-	//console.log("client addr", ws.upgradeReq.headers['x-forwarded-for'] || ws.upgradeReq.connection.remoteAddress);
-	ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers, ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress), wsOptions);
+	try {
+		ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers, ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress), wsOptions);
+	} catch (err) {/* Do nothing */}
 
 	ws.on("message", function(message, flags) {
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
@@ -214,7 +198,7 @@ clientsSocket.on("connection", function(ws) {
 		let state = new Uint8Array(message, 0, 1)[0];
 
 		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
-		if (config.dev) printEntry.print(printEntry.DEV, (MESSAGE.toString(state)).italic);
+		logger(logger.DEV, (MESSAGE.toString(state)).italic);
 
 		if (state === MESSAGE.RESOLVE.value) {
 			let id = MESSAGE.RESOLVE.deserialize(message);

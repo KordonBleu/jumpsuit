@@ -2,6 +2,8 @@
 
 module.exports = function(startServerCallback) {
 	var ipaddr = require("ipaddr.js"),
+		https = require("https"),
+		logger = require("./logger.js"),
 		localIp = "::1",// default if not on a network
 		localNetmask = "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
 		externalIp,
@@ -37,25 +39,25 @@ module.exports = function(startServerCallback) {
 	}
 
 
-	var https = require("https");
-
 	function unknownErrorHandler(err) {
-		console.log("Unknown error: " + err.message + ". Closing server.");
+		logger(logger.ERROR, "Unknown error: " + err.message + ". Closing server.");
 		process.exit(1);
 	}
 
 	https.get("https://ipv6.icanhazip.com/", function(res) {
-		console.log("Acquiring IPv6 address...");
+		logger(logger.DEV, "Acquiring IPv6 address...");
 		res.on("data", function(chunk) {
 			externalIp = ipaddr.parse(chunk.toString().trim());
+			logger(logger.INFO, "IP is: " + externalIp.toString());
 			startServerCallback();
 		});
 	}).on("error", function(err) {
 		if (err.code === "ENETUNREACH") {
-			console.log("Cannot get IPv6 address. Acquiring IPv4 instead.");
+			logger(logger.DEV, "Cannot get IPv6 address. Acquiring IPv4 instead.");
 			https.get("https://icanhazip.com/", function(res) {
 				res.on("data", function(chunk) {
 					externalIp = ipaddr.parse(chunk.toString().trim()).toIPv4MappedAddress();
+					logger(logger.INFO, "IP is: " + externalIp.toString());
 					startServerCallback();
 				});
 			}).on("error", unknownErrorHandler);
@@ -64,17 +66,12 @@ module.exports = function(startServerCallback) {
 
 
 	return function(serverIp, clientIp) {
-		console.log(serverIp, clientIp);
 		var serverOnLocalhost = serverIp.range() === "loopback" || (serverIp.range() === "ipv4Mapped" && serverIp.toIPv4Address().range() === "loopback"),
 			serverOnNetwork = localIp.match(serverIp, cidr),
 			serverOnInternet = !serverOnLocalhost && !serverOnNetwork,
 			clientOnLocalhost = clientIp.range() === "loopback" || (clientIp.range() === "ipv4Mapped" && clientIp.toIPv4Address().range() === "loopback"),
 			clientOnNetwork = localIp.match(clientIp, cidr),
 			clientOnInternet = !clientOnLocalhost && !clientOnNetwork;
-
-		console.log(clientIp);
-		console.log(serverOnLocalhost, serverOnNetwork, serverOnInternet);
-		console.log(clientOnLocalhost, clientOnNetwork, clientOnInternet);
 
 		if (serverOnLocalhost && clientOnLocalhost) return ipaddr.parse("::1");
 		else if (serverOnNetwork && (clientOnLocalhost || clientOnNetwork) ||
