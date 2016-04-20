@@ -18,11 +18,11 @@ var fs = require("fs"),
 function GameServer(name, mod, secure, port, ip) {
 	this.name = name;
 	this.mod = mod;
-
 	this.secure = secure;
 	this.port = port;
 	this.ip = ip;
 }
+
 GameServer.prototype.getUrl = function() {
 	return (this.secure ? "wss://[" : "ws://[") + this.ip + "]:" + this.port;
 };
@@ -31,6 +31,7 @@ GameServer.prototype.effectiveIp = function(clientIp) {
 	var ipaddr = require('ipaddr.js');
 	return ipPicker(ipaddr.parse(this.ip), clientIp);
 }
+
 var gameServers = [];
 
 function changeCbk(newConfig, previousConfig) {
@@ -77,18 +78,14 @@ files.construct = function(path, oName) {
 };
 files.construct("./static", "/");//load everything under `./static` in RAM for fast access
 
-//send static files
 var server = http.createServer(function (req, res) {
-	var gameSrv = /^\/wss?:\/\/(.+:\d+)\/.+$/.exec(req.url);
-	if (req.url === "/") req.url = "/index.html";
-	else if (gameSrv !== null) {
-		if (!gameServers.some(function(server) {
-			console.log(server.url, gameSrv[1]);
-			return server.url === "ws://" + gameSrv[1];
-		})) res.end("This server doesn't exist (anymore)!\n");//TODO: display index.html with a pop-up showing this explanation instead
-		else req.url = "/index.html";
-	}
+	if (req.url === "/index.html") {
+		res.writeHead(301, {"Location": "/"}); 
+		res.end();
+		return;
+	} //beautifying URL, shows foo.bar when requested foo.bar/index.html
 
+	if (req.url === "/") req.url = "/index.html";
 	if (files[req.url] !== undefined) {
 		res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
 		if (config.dev) {
@@ -105,33 +102,11 @@ var server = http.createServer(function (req, res) {
 			res.writeHead(304);
 			res.end();
 		} else {
-			let mime;
-			switch(req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1)) {//extension
-				case "html":
-					mime = "text/html";
-					break;
-				case "css":
-					mime = "text/css";
-					break;
-				case "svg":
-					mime = "image/svg+xml";
-					break;
-				case "png":
-					mime = "image/png";
-					break;
-				case "js":
-					mime = "application/javascript";
-					break;
-				case "ogg"://vorbis in ogg
-				case "opus"://opus in ogg
-					mime = "audio/ogg";
-					break;
-				default:
-					mime = "application/octet-stream";
-			}
-			res.setHeader("Content-Type", mime);
-			res.setHeader("Last-Modified", files[req.url].mtime.toUTCString());
-			res.writeHead(200);
+			let mimeList = {"html": "text/html", "css": "text/css", "svg": "image/svg+xml", "png": "image/png", "js": "application/javascript", "ogg": "audio/ogg"},
+				extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1),
+				mime = extension in mimeList ? mimeList[extension] : "application/octet-stream";
+
+			res.writeHead(200, {"Content-Type": mime, "Last-Modified": files[req.url].mtime.toUTCString()});
 			res.end(files[req.url]);
 		}
 	} else {
@@ -162,6 +137,7 @@ gameServerSocket.on("connection", function(ws) {
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
 				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ws._socket.remoteAddress);
 				gameServers.push(gameServer);
+
 				logger(logger.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
@@ -202,7 +178,6 @@ clientsSocket.on("connection", function(ws) {
 
 		if (state === MESSAGE.RESOLVE.value) {
 			let id = MESSAGE.RESOLVE.deserialize(message);
-			console.log("the magic happens");
 			ws.send(MESSAGE.RESOLVED.serialize(id, gameServers[id].secure, gameServers[id].port, gameServers[id].ip), wsOptions);
 		}
 	});

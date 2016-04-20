@@ -2,7 +2,7 @@
 
 var isNode = typeof module !== "undefined" && typeof module.exports !== "undefined";
 
-if (isNode) var ipaddr = require('ipaddr.js');
+if (isNode) var ipaddr = require("ipaddr.js");
 
 function stringToBuffer(string) {
 	if (isNode) {
@@ -15,7 +15,7 @@ function stringToBuffer(string) {
 }
 function bufferToString(arrayBuffer) {
 	if (isNode) {
-		var StringDecoder = require('string_decoder').StringDecoder,
+		var StringDecoder = require("string_decoder").StringDecoder,
 			decoder = new StringDecoder("utf8"),
 			tmpBuf = new Buffer(arrayBuffer);
 		return decoder.write(tmpBuf);
@@ -218,6 +218,7 @@ const MESSAGE = {
 	CONNECT: {
 		value: 6,
 		serialize: function(lobbyId) {
+			console.log(lobbyId);
 			if (lobbyId !== undefined) {
 				let buffer = new ArrayBuffer(5),
 					view = new DataView(buffer);

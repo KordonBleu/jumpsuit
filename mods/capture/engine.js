@@ -18,6 +18,17 @@ var resPaths = [
 	],
 	resources = {};
 
+function Weapon(offset, shotDmg, shotInterval, shotAmount) {
+	this.asset;
+	this.offset = offset || 0;
+	this.shotDmg = shotDmg || 0;
+	this.shotInterval = shotInterval || 0;
+	this.shotAmount = shotAmount || 1;
+}
+
+const weaponList = {sniper: new Weapon(40, 6, 1.5, 8), shotgun: new Weapon(45, 2, 0.75, 5), assaultrifle: new Weapon(38, 2, 0.08, 30) };
+
+
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	var vinage = require("../../static/vinage/vinage.js"),
 		Point = vinage.Point,
@@ -212,14 +223,8 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.velocity.y = player.velocity.y * 0.987;
 			}
 			var runMultiplicator = player.controls["run"] ? 1.7 : 1;
-			if (player.controls["moveLeft"] > 0) {
-				player.box.angle -= (Math.PI / 140) * player.controls["moveLeft"] * runMultiplicator;
-				player.looksLeft = true;
-			}
-			if (player.controls["moveRight"] > 0) {
-				player.box.angle += (Math.PI / 140) * player.controls["moveRight"] * runMultiplicator;
-				player.looksLeft = false;
-			}
+			if (player.controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 140) * player.controls["moveLeft"] * runMultiplicator;
+			if (player.controls["moveRight"] > 0) player.box.angle += (Math.PI / 140) * player.controls["moveRight"] * runMultiplicator;
 
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
@@ -309,5 +314,6 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") modu
 	Player: Player,
 	Planet: Planet,
 	Enemy: Enemy,
-	Shot: Shot
+	Shot: Shot,
+	weaponList: weaponList
 };

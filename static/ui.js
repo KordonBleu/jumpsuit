@@ -260,6 +260,7 @@ chatInputContainer.addEventListener("blur", function() {
 	playerListElement.classList.add("hidden");
 }, true);
 playerListElement.addEventListener("click", function(e) {
+	console.log(e.target);
 	if (e.target.tagName === "LI") {
 		chatInput.focus();
 		var cursorPos = chatInput.selectionStart + e.target.textContent.length;
@@ -307,11 +308,10 @@ function removeServer(id) {
 }
 lobbyListElement.addEventListener("click", function(e) {
 	if (e.target.tagName === "BUTTON") {
-		if (e.target !== lobbyListElement.lastElementChild.lastElementChild.firstElementChild) {// Play!
-			console.log(e.target);
+		if (e.target.dataset.url !== undefined) {
+			if (currentConnection !== undefined) currentConnection.close();
 			currentConnection = new Connection(e.target.dataset.url);
-			//TODO: set URL
-		} else {// Create!
+		} else {
 			var nameInput = lobbyListElement.lastElementChild.firstElementChild.firstElementChild,
 				playerAmountInput = lobbyListElement.lastElementChild.children[1].firstElementChild;
 			if (nameInput.value !== "" && playerAmountInput.value !== "") {
@@ -385,9 +385,8 @@ function showAchievement(title, reward) {
 	achievementBox.setAttribute("data-title", title);
 	achievementBox.setAttribute("data-reward", reward);
 	achievementBox.classList.remove("hidden");
-	setTimeout(function() { this.classList.add("hidden");  }.bind(achievementBox), 4000);
+	setTimeout(function() { this.classList.add("hidden"); }.bind(achievementBox), 4000);
 }
-
 window.onbeforeunload = function() {
 	localStorage.setItem("settings.name", settings.name);
 	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));

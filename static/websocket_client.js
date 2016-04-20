@@ -6,6 +6,9 @@ var ownIdx = null,
 	serverList,
 	currentConnection;
 
+const HISTORY_MENU = 0;
+const HISTORY_GAME = 1;
+
 masterSocket.binaryType = "arraybuffer";
 masterSocket.addEventListener("message", function(message) {
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
@@ -30,26 +33,25 @@ masterSocket.addEventListener("message", function(message) {
 	}
 });
 
-function Connection(url) {// a connection to a game server
+function Connection(url, lobbyId) {// a connection to a game server
 	this.lastControls = {};
-
-
+	console.log(lobbyId);
 	this.socket = new WebSocket(url);
 	this.socket.binaryType = "arraybuffer";
 
 	this.socket.addEventListener("open", function() {
 		this.setName.call(this);
-		this.sendMessage.call(this, MESSAGE.CONNECT);
+		this.sendMessage.call(this, MESSAGE.CONNECT, lobbyId);
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler);
 	//this should return a Promise, dontcha think?
+
 }
 Connection.prototype.alive = function() { return this.socket.readyState === 1; };
 Connection.prototype.sendMessage = function(messageType) {
 	try {
-		this.socket.send(messageType.serialize.apply(messageType,//inefficient but not called often enough to matter
-			Array.prototype.slice.call(arguments, 1)));
+		this.socket.send(messageType.serialize.apply(messageType, [].slice.call(arguments, 1)));
 	} catch(err) {
 		console.log(err);
 		//TODO: display "connection lost" and get back to the main menu
@@ -65,7 +67,7 @@ Connection.prototype.close = function() {
 	this.socket.removeEventListener("error", this.errorHandler);
 	this.socket.removeEventListener("message", this.messageHandler);
 	game.stop();
-	history.pushState(null, "Main menu", "/");
+//	history.pushState(HISTORY_MENU, "", "/");
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 };
 Connection.prototype.setName = function() {
@@ -110,7 +112,6 @@ Connection.prototype.messageHandler = function(message) {
 					break;
 			}
 
-			history.pushState(null, "Main menu", "/");
 			alert("Error:\n" + errDesc);
 			break;
 		case MESSAGE.LOBBY_STATE.value:
@@ -156,9 +157,12 @@ Connection.prototype.messageHandler = function(message) {
 
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
-
-			let url = this.url.replace(/\/$/, "");
-			history.pushState(null, "Jumpsuit on server" + url, "/" + url + "/" + encodeLobbyNumber(val.lobbyId));
+			
+			var hashSocket = this.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
+				if (p1) return "s";
+				else if (p2) return "";
+			});
+			location.hash = "#srv=" + hashSocket.substr(0, hashSocket.length - 1) + "&lobby=" + encodeLobbyNumber(val.lobbyId);
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
@@ -257,7 +261,7 @@ Connection.prototype.messageHandler = function(message) {
 			players[ownIdx].health = val.yourHealth;
 			players[ownIdx].fuel = val.yourFuel;
 
-			Array.prototype.forEach.call(document.querySelectorAll("#gui-health div"), function(element, index) {
+			[].forEach.call(document.querySelectorAll("#gui-health div"), function(element, index) {
 				var state = "heartFilled";
 				if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
 				else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";
@@ -281,7 +285,7 @@ Connection.prototype.messageHandler = function(message) {
 		case MESSAGE.SCORES.value:
 			var val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
 
-			for (let team in val) {
+			for (var team in val) {
 				var element = document.getElementById("gui-points-" + team);
 				if (element !== null) {
 					element.textContent = val[team];
@@ -299,22 +303,43 @@ Connection.prototype.messageHandler = function(message) {
 	}
 };
 
-allImagesLoaded.then(function() {
-	let gameSrvLobby = /^\/wss?:\/\/(.+:\d+)\/.+$/.exec(window.location.pathname);
-	console.log(gameSrvLobby, window.location.pathname);
-	if (gameSrvLobby !== null) {
-		currentConnection = new Connection("ws://" + gameSrvLobby[1], gameSrvLobby[2]);
-	}
-});
 
+function connectByHash() {
+	if (location.hash === "") return;
+	try {
+		var a = location.hash.substr(1).split("&"), b, url, protocol = "ws://", ws, lobbyId;
+		for (b in a) {
+			if (a[b].indexOf("srv=") === 0) url = a[b].substr(4);
+			else if (a[b].indexOf("lobby=") === 0) lobbyId = a[b].substr(6);
+		}
+		if (url.indexOf("s") === 0) {
+			protocol = "wss://";
+			url = url.substr(1);
+		}
+		ws = protocol + url + "/";
+		if (currentConnection !== undefined) {
+			if (currentConnection.socket.url !== ws) {
+				currentConnection.close();
+				currentConnection = new Connection(ws, lobbyId);
+			} else if (!currentConnection.alive()) {
+				currentConnection = new Connection(ws, lobbyId);
+			}
+		} else currentConnection = new Connection(ws, lobbyId);
+	} catch (ex) {
+		if (currentConnection !== undefined) currentConnection.close();
+		console.log(ex, ex.stack);
+	}	
+}
 
 window.addEventListener("popstate", function(e) {
-	if(location.pathname === "/") currentConnection.close();
-	else {
-		let gameSrvLobby = /^\/wss?:\/\/(.+):(\d+)\/.+$/.exec(window.location.pathname);
-		console.log(gameSrvLobby, window.location.pathname);
-		if (gameSrvLobby !== null) {
-			currentConnection = new Connection(gameSrvLobby[1], gameSrvLobby[2]);
-		}
-	}
+	//modifies default history entries due hash changes
+	if (location.hash !== "") history.replaceState(HISTORY_GAME, "", "/" + location.hash);
+	else history.replaceState(HISTORY_MENU, "", "/");
+	
+	if (history.state === HISTORY_MENU) {
+		//if navigated to / stop the game + display menu
+		if (currentConnection !== undefined) currentConnection.close();
+		game.stop();
+	} else if (history.state === HISTORY_GAME) connectByHash();
 });
+history.replaceState(HISTORY_MENU, "", "/");

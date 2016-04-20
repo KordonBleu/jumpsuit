@@ -333,12 +333,13 @@ label.range-label {
 }
 #player-list::after {/* CSS arrow trick */
 	content: " ";
-    position: relative;
+    position: absolute;
 	display: block;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-top: 8px solid rgba(235, 237, 244, 0.2);
-	bottom: 0;
+	bottom: -8px;
+	left: 19px;
 }
 #player-list li {
 	min-width: 100px;
@@ -481,6 +482,7 @@ label.range-label {
 	max-width: 100%;
 }
 #lobby-list input[type=number] {
+	padding-left: 3px;
 	width: 3.5ex;
 	font-weight: 600;
 }

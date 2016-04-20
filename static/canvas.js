@@ -50,14 +50,10 @@ var context = canvas.getContext("2d"),
 		},
 		started: false,
 		fps: 0,
-		armedWeapons: ["assaultrifle", "shotgun"],
-		currentWeapon: 0
-	},
-	weapons = {
-		sniper: {offset: 40, resource: null}, //resources will be filled when image is loaded
-		shotgun: {offset: 45, resource: null},
-		assaultrifle: {offset: 38, resource: null}
-	}
+		weapons: ["assaultrifle", "shotgun"],
+		armedWeapon: 0
+	};
+
 
 function mod(dividend, divisor) {
 	return (dividend%divisor + divisor) % divisor;
@@ -185,17 +181,18 @@ Player.prototype.draw = function(showName) {
 	}
 
 	//weapon	
-	game.armedWeapons.forEach((function (weapon, index) {
-		weapon = weapons[weapon];
-		var weaponX, weaponY;
-		if (this.attachedPlanet === 255 && index === game.currentWeapon) {
-			weaponX = playerX - shift*weapon.offset*Math.sin(this.box.angle - Math.PI / 2);
-			weaponY = playerY + shift*weapon.offset*Math.cos(this.box.angle - Math.PI / 2);
-			windowBox.drawRotatedImage(weapon.resource, weaponX, weaponY, this.box.angle, (!this.looksLeft ? "x" : ""), weapon.resource.width * 0.2, weapon.resource.height * 0.2);
+	game.weapons.forEach((function (weapon, index) {
+		if (!(weapon in weaponList)) return;
+		var weaponResource = resources[weapon],
+			weaponX, weaponY;
+		if (this.attachedPlanet === 255 && index === game.armedWeapon) {	
+			weaponX = playerX - shift*weaponList[weapon].offset*Math.sin(this.box.angle - Math.PI / 2);
+			weaponY = playerY + shift*weaponList[weapon].offset*Math.cos(this.box.angle - Math.PI / 2);
+			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, (!this.looksLeft ? "x" : ""), weaponResource.width * 0.2, weaponResource.height * 0.2);
 		} else {
-			weaponX = playerX + Math.abs(shift)*weapon.offset*0.5*Math.sin(this.box.angle) + shift*(20*index-10)*Math.sin(this.box.angle - Math.PI / 2);
-			weaponY = playerY - Math.abs(shift)*weapon.offset*0.5*Math.cos(this.box.angle) - shift*(20*index-10)*Math.cos(this.box.angle - Math.PI / 2);
-			windowBox.drawRotatedImage(weapon.resource, weaponX, weaponY, this.box.angle + Math.PI / 2, (this.looksLeft ? "y" : ""), weapon.resource.width * 0.13, weapon.resource.height * 0.13);
+			weaponX = playerX + Math.abs(shift)*weaponList[weapon].offset*0.5*Math.sin(this.box.angle) + shift*(20*index-10)*Math.sin(this.box.angle - Math.PI / 2);
+			weaponY = playerY - Math.abs(shift)*weaponList[weapon].offset*0.5*Math.cos(this.box.angle) - shift*(20*index-10)*Math.cos(this.box.angle - Math.PI / 2);
+			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, (this.looksLeft ? "y" : ""), weaponResource.width * 0.13, weaponResource.height * 0.13);
 		}
 	}).bind(this));
 
@@ -265,12 +262,12 @@ resPaths.forEach(function(path) {//init resources
 });
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
-	for (var w in weapons) weapons[w].resource = resources[w];
 	window.removeEventListener("resize", resizeHandler);
 });
 
+var canSpawnMeteor = true;
 var meteorSpawning = setInterval(function() {
-	if (Math.random() > 0.3) return;
+	if (!canSpawnMeteor || meteors.length > 30 || Math.random() > 0.3) return;
 	var m_resources = ["meteorBig1", "meteorMed2", "meteorSmall1", "meteorTiny1", "meteorTiny2"],
 		m_rand = Math.floor(m_resources.length * Math.random()),
 		chosen_img = m_resources[m_rand];
@@ -283,15 +280,15 @@ var meteorSpawning = setInterval(function() {
 		rotAng: 0,
 		rotSpeed: Math.map(Math.random(), 0, 1, -0.034, 0.034),
 	};
+	canSpawnMeteor = false;
 }, 800);
 function loop() {
-	handleGamepad();
-
 	context.clearRect(0, 0, canvas.width, canvas.height);
 
 	//layer 0: meteors
 	context.globalAlpha = 0.2;
 	meteors.forEach(function(m, i) {
+		canSpawnMeteor = true;
 		m.x += m.speed;
 		m.rotAng += m.rotSpeed;
 		if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);

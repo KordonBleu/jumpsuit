@@ -5,7 +5,7 @@ function sameObjects(a, b) {
 	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
 		return false;
 	}
-	for (let propName in a) {
+	for (var propName in a) {
 		//hasOwnProperty is here in case `a[propName]`'s value is `undefined`
 		if (!b.hasOwnProperty(propName) || a[propName] !== b[propName]) return false;
 	}
@@ -17,7 +17,7 @@ String.prototype.ucFirst = function () {
 };
 function convertToKey(keyCode) {//polyfill for Chrome
 	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
-	else if (keyCode > 95 && keyCode < 106) return keyCode - 96;//numpad
+	else if (keyCode > 95 && keyCode < 106) return "Numpad" + (keyCode - 96);//numpad
 	else if (keyCode > 64 && keyCode < 91) return convertToKey.keyMapChar.charAt(keyCode - 65);//characters
 	else if (keyCode > 111 && keyCode < 124) return "F" + (keyCode - 111);//F-keys
 	else return convertToKey.keyMapMisc[keyCode];//misc
@@ -85,7 +85,7 @@ function handleInput(e) {
 		chatInUse = chatInput === document.activeElement;
 
 	if (!chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
-		let triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
+		var triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
 		if (players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
@@ -183,14 +183,12 @@ function dragHandler(e) {
 canvas.addEventListener("mousedown", function(e) {
 	switch (e.button) {
 		case 0://left-click
-			currentConnection.sendActionOne(Math.atan2(e.clientX - canvas.clientWidth/2, canvas.clientHeight/2 - e.clientY));
+			sendShot();	
 			break;
 		case 1://middle-click
 			dragStart(e);
 			canvas.addEventListener("mousemove", dragHandler);
-			break;
-		case 2://right-click
-			//currentConnection.sendActionTwo(Math.atan2(e.clientX - canvas.clientWidth/2, canvas.clientHeight/2 - e.clientY));
+			break;		
 	}
 });
 canvas.addEventListener("mouseup", function(e) {
@@ -212,41 +210,50 @@ document.addEventListener("contextmenu", function(e) {
 	//unfortunately it also disables the context menu key
 });
 
+function sendShot(angle) {
+	var w = game.armedWeapon	
+}
 
 /* Gamepads */
-var usingGamepad;
-function handleGamepad() {
-	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
-	if (usingGamepad == -1){
-		for (var i = 0; i < gamepads.length; i++) {
-			var gp = gamepads[i];
-			if (gp) {
-				//onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
-				usingGamepad = gp.index;
+var usingGamepad = -1;
+if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) {
+	//no timed query
+	window.addEventListener("gamepadconnected", function(e) { usingGamepad = e.gamepad.index; });
+	window.addEventListener("gamepaddisconnected", function(e) { usingGamepad = -1 });
+} else {
+	setInterval(function() {
+		var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+		if (typeof gamepads[usingGamepad] === "undefined") usingGamepad = -1;
+		if (usingGamepad == -1) {
+			for (var i = 0; i < gamepads.length; i++) {
+				var gp = gamepads[i];
+				if (gp) {
+					//onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
+					usingGamepad = gp.index;
+				}
 			}
 		}
-	} else {
-		var g = gamepads[usingGamepad];
-		if (typeof(g) !== "undefined"){
-			players[ownIdx].controls["jump"] = g.buttons[0].value;
-			players[ownIdx].controls["run"] = g.buttons[1].value;
-			players[ownIdx].controls["crouch"] = g.buttons[4].value;
-			players[ownIdx].controls["jetpack"] = g.buttons[7].value;
-
-			players[ownIdx].controls["moveLeft"] = 0;
-			players[ownIdx].controls["moveRight"] = 0;
-			if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
-			if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
-			else game.drag.x = 0;
-			if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
-			else game.drag.y = 0;
-			currentConnection.refreshControls(players[ownIdx].controls);
-		} else {
-			//if (typeof usingGamepad !== "undefined") onScreenMessage.show("Gamepad " + (usingGamepad + 1).toString() + " disconnected");
-			usingGamepad = -1;
-		}
-	}
+	}, 500);
 }
+setInterval(function() {
+	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+	var g = gamepads[usingGamepad];
+	if (typeof(g) !== "undefined"){
+		players[ownIdx].controls["jump"] = g.buttons[0].value;
+		players[ownIdx].controls["run"] = g.buttons[1].value;
+		players[ownIdx].controls["crouch"] = g.buttons[4].value;
+		players[ownIdx].controls["jetpack"] = g.buttons[7].value;
+
+		players[ownIdx].controls["moveLeft"] = 0;
+		players[ownIdx].controls["moveRight"] = 0;
+		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
+		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
+		else game.drag.x = 0;
+		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
+		else game.drag.y = 0;
+		currentConnection.refreshControls(players[ownIdx].controls);
+	}
+}, 80);
 
 /* Zoom */
 document.addEventListener("wheel", function(e) {
