@@ -89,9 +89,6 @@ const MESSAGE = {
 	ADD_SERVERS: {
 		value: 1,
 		serialize: function(serverList, clientIp) {
-			clientIp = ipaddr.parse(clientIp);
-			if (clientIp.kind() === "ipv4") clientIp = clientIp.toIPv4MappedAddress();
-
 			var partialServerBufs = [],
 				partialServerBufsLength = 0;
 
@@ -103,20 +100,35 @@ const MESSAGE = {
 
 			var buffer = new ArrayBuffer(1 + serverList.length*16 + partialServerBufsLength),
 				view = new Uint8Array(buffer),
-				offset = 1;
+				offset = 1,
+				promises = [];
 
 			view[0] = this.value;
 
 			partialServerBufs.forEach(function(partialServerBuf, i) {
-				view.set(ipaddr.parse(serverList[i].ip).toByteArray(), offset);
-				view.set(serverList[i].effectiveIp(clientIp).toByteArray(), offset);
+				var offseti = offset;//a copy of offset local to this scope
+				//because by the moment the promise will be resolved, `offset` will be modified
+
+				var currentPromise = serverList[i].effectiveIp(clientIp);
+				currentPromise.then(function(ip) {
+					console.log("offset: ", offset, ip.toString(), offseti);
+					view.set(ip.toByteArray(), offseti);
+				})
+				promises.push(currentPromise);
+
 				offset += 16;
 				view.set(new Uint8Array(partialServerBuf), offset);
 				offset += partialServerBuf.byteLength;
 
 			});
 
-			return buffer;
+			return new Promise(function(resolve, reject) {
+				Promise.all(promises).then(function() {
+					resolve(buffer);
+				}).catch(function() {
+					reject();
+				});
+			});
 		},
 		deserialize: function(buffer) {
 			var view = new DataView(buffer),

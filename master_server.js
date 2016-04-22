@@ -7,6 +7,8 @@ var fs = require("fs"),
 	interactive = require("./interactive.js"),
 	MESSAGE = require("./static/message.js"),
 	logger = require("./logger.js"),
+	ipaddr = require("ipaddr.js"),
+	ipPicker = require("./ip_picker.js"),
 
 	configSkeleton = {
 		dev: false,
@@ -27,9 +29,7 @@ GameServer.prototype.getUrl = function() {
 	return (this.secure ? "wss://[" : "ws://[") + this.ip + "]:" + this.port;
 };
 GameServer.prototype.effectiveIp = function(clientIp) {
-	console.log(clientIp);
-	var ipaddr = require('ipaddr.js');
-	return ipPicker(ipaddr.parse(this.ip), clientIp);
+	return ipPicker(this.ip, clientIp);
 }
 
 var gameServers = [];
@@ -80,7 +80,7 @@ files.construct("./static", "/");//load everything under `./static` in RAM for f
 
 var server = http.createServer(function (req, res) {
 	if (req.url === "/index.html") {
-		res.writeHead(301, {"Location": "/"}); 
+		res.writeHead(301, {"Location": "/"});
 		res.end();
 		return;
 	} //beautifying URL, shows foo.bar when requested foo.bar/index.html
@@ -102,7 +102,7 @@ var server = http.createServer(function (req, res) {
 			res.writeHead(304);
 			res.end();
 		} else {
-			let mimeList = {"html": "text/html", "css": "text/css", "svg": "image/svg+xml", "png": "image/png", "js": "application/javascript", "ogg": "audio/ogg"},
+			let mimeList = {html: "text/html", css: "text/css", svg: "image/svg+xml", png: "image/png", js: "application/javascript", ogg: "audio/ogg", opus: "audio/ogg"},
 				extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1),
 				mime = extension in mimeList ? mimeList[extension] : "application/octet-stream";
 
@@ -114,9 +114,7 @@ var server = http.createServer(function (req, res) {
 		res.end("Error 404:\nPage not found\n");
 	}
 });
-var ipPicker = require("./ip_picker.js")(function() {
-	server.listen(config.port);
-});
+server.listen(config.port);
 
 
 var gameServerSocket = new WebSocketServer({server: server, path: "/game_servers"}),
@@ -135,13 +133,13 @@ gameServerSocket.on("connection", function(ws) {
 		switch (state) {
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
-				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ws._socket.remoteAddress);
+				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ipaddr.parse(ws._socket.remoteAddress));
 				gameServers.push(gameServer);
 
 				logger(logger.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
-						let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer], client.ws._socket.remoteAddress);
+						let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer], client.ipAddr);
 						client.send(newGameServerBuf, wsOptions);
 					} catch (err) {/* Do nothing */}
 				});
@@ -164,8 +162,14 @@ gameServerSocket.on("connection", function(ws) {
 });
 
 clientsSocket.on("connection", function(ws) {
+	this.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
+	if (this.ipAddr.kind() === "ipv4") this.ipAddr = this.ipAddr.toIPv4MappedAddress();
+
 	try {
-		ws.send(MESSAGE.ADD_SERVERS.serialize(gameServers, ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress), wsOptions);
+		MESSAGE.ADD_SERVERS.serialize(gameServers, this.ipAddr).then(function(value) {
+			console.log(value, value.byteLength);
+			ws.send(value, wsOptions);
+		});
 	} catch (err) {/* Do nothing */}
 
 	ws.on("message", function(message, flags) {
