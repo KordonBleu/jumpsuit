@@ -11,18 +11,12 @@ module.exports = function(engine) {
 		this.enemies = [];
 		this.shots = [];
 		this.processTime = 2;
-		this.state = this.stateEnum.WAITING;
 		this.stateTimer = stateTimer;
 
-		let univSize = (1 << 16) - 1;//this is also the max size allowed by the protocol
-		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), 6400, 6400);
+		let univSize = 10000;//(1 << 16) - 1 is also the max size allowed by the protocol
+		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize);
 		this.resetWorld();
 	}
-	Lobby.prototype.stateEnum = {
-		WAITING: 0,
-		PLAYING: 1,
-		END: 2
-	};
 	Lobby.prototype.broadcast = function(message, exclude) {
 		this.players.forEach(function(player) {
 			if (player !== exclude) player.send(message);
@@ -83,28 +77,24 @@ module.exports = function(engine) {
 		this.planets.length = 0;
 		this.enemies.length = 0;
 
-		var chunkSize = 1600;
-		for (var y = 0; y < this.universe.height; y += chunkSize){
-			for (var x = 0; x < this.universe.width; x += chunkSize){
-				var px = Math.floor(Math.random() * (chunkSize - 400) + 200),
-					py = Math.floor(Math.random() * (chunkSize - 400) + 200),
-					radius = Math.floor(Math.random() * (px <= 300 || px >= chunkSize - 300 || py <= 300 || py >= chunkSize - 300 ? 80 : 250) + 100);
-				this.planets.push(new engine.Planet(x + px, y + py, radius));
-			}
+		var planetDensity = Math.pow(6400, 2) / 26,
+			planetAmount = Math.round((this.universe.width*this.universe.height) / planetDensity),
+			enemyDensity = Math.pow(6400, 2) / 15,
+			enemyAmount = Math.round((this.universe.width*this.universe.height) / enemyDensity);
+
+		for (let i = 0; i !== planetAmount; ++i) {
+			let newPlanet = new engine.Planet(Math.random()*this.universe.width, Math.random()*this.universe.height, 100 + Math.random()*300);
+			if (this.planets.every(function(planet) {
+				return !this.universe.collide(planet.box, newPlanet.box);
+			}.bind(this))) this.planets.push(newPlanet);
 		}
-		var iterations = 0;
-		while (iterations < 250 && this.enemies.length < 15){
-			var newEnemy = new engine.Enemy(Math.floor(Math.random() * this.universe.width), Math.floor(Math.random() * this.universe.height)), wellPositioned = true;
-			this.enemies.forEach(function (enemy){
-				if (!wellPositioned) return;
-				if (this.universe.collide(new vinage.Circle(new vinage.Point(newEnemy.box.center.x, newEnemy.box.center.y), 175), new vinage.Circle(new vinage.Point(enemy.box.center.x, enemy.box.center.y), 175))) wellPositioned = false;
-			}, this);
-			this.planets.forEach(function (planet){
-				if (!wellPositioned) return;
-				if (this.universe.collide(newEnemy.aggroBox, planet.box)) wellPositioned = false;
-			}, this);
-			if (wellPositioned) this.enemies.push(newEnemy);
-			iterations++;
+		for (let i = 0; i !== enemyAmount; ++i) {
+			let newEnemy = new engine.Enemy(Math.random()*this.universe.width, Math.random()*this.universe.height);
+			if (this.planets.every(function(planet) {
+				return !this.universe.collide(planet.box, newEnemy.box);
+			}.bind(this)) && this.enemies.every(function(enemy) {
+				return !this.universe.collide(enemy.box, newEnemy.box);
+			}.bind(this))) this.enemies.push(newEnemy);
 		}
 
 		this.teams = {};

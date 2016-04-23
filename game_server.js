@@ -117,29 +117,8 @@ setInterval(function() {
 	lobbies.forEach(function(lobby) {
 		/*if (lobby.players.length !== 0 && !config.dev) lobby.stateTimer -= 1;
 
-		if (lobby.state === lobby.stateEnum.WAITING) {
-			lobby.broadcast(MESSAGE.LOBBY_STATE.serialize(lobby.state, lobby.stateTimer));
-			if (lobby.stateTimer <= 0) {
-				lobby.resetWorld();
-				lobby.broadcast(MESSAGE.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));//uh oh lobby code seems to be quite out of date
-				lobby.state = lobby.stateEnum.PLAYING;
-				lobby.stateTimer = 60;
-			}
-			return;
-		} else if (lobby.state === lobby.stateEnum.END) {
-			lobby.broadcast(MESSAGE.LOBBY_STATE.serialize(lobby.state, lobby.stateTimer));//TODO: send player scores
-			if (lobby.stateTimer <= 0){
-				lobby.state = lobby.stateEnum.WAITING;
-				lobby.stateTimer = 30;
-				//TODO: if there are too few players, keep waiting until certain amount is reached - otherwise close the lobby(?)
-			}
-			return;
-		} else {
-			if (lobby.stateTimer <= 0) {
-				lobby.state = lobby.stateEnum.END;
-				lobby.stateTimer = 10;
-				lobby.broadcast(MESSAGE.SCORES.serialize(lobby.getScores()));
-			}
+		if (lobby.stateTimer <= 0) {
+			lobby.stateTimer = 10;
 		}*/
 
 
@@ -268,4 +247,3 @@ wss.on("connection", function(ws) {
 	});
 	ws.on("close", cleanup);
 });
-lobbies.push(new Lobby(8, config.dev ? 0 : 30));

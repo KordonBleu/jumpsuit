@@ -151,8 +151,8 @@ function doPrediction(universe, players, enemies, shots) {
 			player.box.center.y += (player.boxInformations[1].center.y - player.boxInformations[0].center.y) / intensity;
 			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
 
-			player.box.center.x = (6400 + player.box.center.x) % 6400;
-			player.box.center.y = (6400 + player.box.center.y) % 6400;
+			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
+			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
 		}
 	});

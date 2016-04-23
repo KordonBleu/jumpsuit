@@ -145,6 +145,7 @@ Connection.prototype.messageHandler = function(message) {
 					shots.push(new Shot(x, y, angle));
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
+					console.log(appearance, walkFrame);
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
 					player.looksLeft = looksLeft;
 					player.lastSound = 0;
@@ -155,9 +156,10 @@ Connection.prototype.messageHandler = function(message) {
 			ownIdx = val.playerId;
 			enabledTeams = val.enabledTeams;
 
+			console.log(val.univWidth, val.univHeight);
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
-			
+
 			var hashSocket = this.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
 				if (p1) return "s";
 				else if (p2) return "";
@@ -231,8 +233,8 @@ Connection.prototype.messageHandler = function(message) {
 
 					var _offset = {x: 0, y: 0, angle: 0};
 					if (players[id].boxInformations[0] === undefined) players[id].boxInformations[0] = new Rectangle(new Point(x, y), 0, 0, angle);
-					if (Math.abs(x - players[id].box.center.x) >= 6000) _offset.x = (x < players[id].box.center.x) ? -6400 : 6400;
-					if (Math.abs(y - players[id].box.center.y) >= 6000) _offset.y = (y < players[id].box.center.y) ? -6400 : 6400;
+					if (Math.abs(x - players[id].box.center.x) >= universe.width - 400) _offset.x = (x < players[id].box.center.x) ? 0 : universe.width;
+					if (Math.abs(y - players[id].box.center.y) >= universe.height - 400) _offset.y = (y < players[id].box.center.y) ? 0 : universe.height;
 					if (Math.abs(angle - players[id].box.angle) >= 5) _offset.angle = (angle < players[id].box.angle) ? -2*Math.PI : 2*Math.PI;
 
 					players[id].boxInformations[0].center.x = players[id].box.center.x + _offset.x;
@@ -328,14 +330,14 @@ function connectByHash() {
 	} catch (ex) {
 		if (currentConnection !== undefined) currentConnection.close();
 		console.log(ex, ex.stack);
-	}	
+	}
 }
 
 window.addEventListener("popstate", function(e) {
 	//modifies default history entries due hash changes
 	if (location.hash !== "") history.replaceState(HISTORY_GAME, "", "/" + location.hash);
 	else history.replaceState(HISTORY_MENU, "", "/");
-	
+
 	if (history.state === HISTORY_MENU) {
 		//if navigated to / stop the game + display menu
 		if (currentConnection !== undefined) currentConnection.close();

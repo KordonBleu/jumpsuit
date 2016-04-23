@@ -363,7 +363,7 @@ function loop() {
 
 	planets.forEach(function (planet) {
 		minimapContext.beginPath();
-		minimapContext.arc((planet.box.center.x*150/universe.width - players[ownIdx].box.center.x*150/universe.width + 225) % 150, (planet.box.center.y*150/universe.height - players[ownIdx].box.center.y*150/universe.height + 225) % 150, planet.box.radius / 250 * 4 + 2, 0, 2*Math.PI);//225 = 75 + 150
+		minimapContext.arc((planet.box.center.x*150/universe.width - players[ownIdx].box.center.x*150/universe.width + 225) % 150, (planet.box.center.y*150/universe.height - players[ownIdx].box.center.y*150/universe.height + 225) % 150, (planet.box.radius/universe.width)*150, 0, 2*Math.PI);//225 = 75 + 150
 		minimapContext.closePath();
 		minimapContext.fillStyle = planet.progress.color;
 		minimapContext.fill();

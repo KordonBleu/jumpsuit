@@ -287,6 +287,7 @@ const MESSAGE = {
 			}, this);
 			view.setInt8(11, enabledTeams);
 
+			console.log(entityBuf.byteLength);
 			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 12);
 
 			return buffer;
@@ -476,6 +477,8 @@ const MESSAGE = {
 			while (i !== buffer.byteLength) {
 				var nameLgt = view.getUint8(i + 7),
 					enumByte = view.getUint8(i + 6);
+				console.log(enumByte << 26 >>> 29);
+				console.log(enumByte << 29 >>> 29);
 				playersCbk(
 					view.getUint16(i),
 					view.getUint16(i + 2),
