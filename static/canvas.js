@@ -30,6 +30,13 @@ var context = canvas.getContext("2d"),
 			fuelElement.classList.remove("hidden");
 			pointsElement.classList.remove("hidden");
 			minimapCanvas.classList.remove("hidden");
+			//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
+			var minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
+			//(width)x * (height)x = minimapSurface
+				unitSize = Math.sqrt(minimapSurface/(universe.width*universe.height));//in pixels
+
+			minimapCanvas.width = unitSize*universe.width;
+			minimapCanvas.height = unitSize*universe.height;
 			menuBox.classList.add("hidden");
 			Array.prototype.forEach.call(document.querySelectorAll("#gui-points th"), function(element){
 				element.style.display = "none";
@@ -185,7 +192,7 @@ Player.prototype.draw = function(showName) {
 		if (!(weapon in weaponList)) return;
 		var weaponResource = resources[weapon],
 			weaponX, weaponY;
-		if (this.attachedPlanet === 255 && index === game.armedWeapon) {	
+		if (this.attachedPlanet === 255 && index === game.armedWeapon) {
 			weaponX = playerX - shift*weaponList[weapon].offset*Math.sin(this.box.angle - Math.PI / 2);
 			weaponY = playerY + shift*weaponList[weapon].offset*Math.cos(this.box.angle - Math.PI / 2);
 			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, (!this.looksLeft ? "x" : ""), weaponResource.width * 0.2, weaponResource.height * 0.2);
@@ -200,8 +207,6 @@ Player.prototype.draw = function(showName) {
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, (this.looksLeft ? "x" : ""));
 }
 
-minimapCanvas.width = 150;
-minimapCanvas.height = 150;
 function resizeCanvas() {
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
@@ -359,11 +364,13 @@ function loop() {
 
 	//minimap	
 	minimapContext.fillStyle = "rgba(0, 0, 0, 0.7)";
-	minimapContext.fillRect(0, 0, 150, 150);
+	minimapContext.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 
 	planets.forEach(function (planet) {
 		minimapContext.beginPath();
-		minimapContext.arc((planet.box.center.x*150/universe.width - players[ownIdx].box.center.x*150/universe.width + 225) % 150, (planet.box.center.y*150/universe.height - players[ownIdx].box.center.y*150/universe.height + 225) % 150, (planet.box.radius/universe.width)*150, 0, 2*Math.PI);//225 = 75 + 150
+		minimapContext.arc((planet.box.center.x*minimapCanvas.width/universe.width - players[ownIdx].box.center.x*minimapCanvas.width/universe.width + minimapCanvas.width*1.5) % minimapCanvas.width,
+		(planet.box.center.y*minimapCanvas.height/universe.height - players[ownIdx].box.center.y*minimapCanvas.height/universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
+			(planet.box.radius/universe.width)*150, 0, 2*Math.PI);
 		minimapContext.closePath();
 		minimapContext.fillStyle = planet.progress.color;
 		minimapContext.fill();
@@ -373,7 +380,9 @@ function loop() {
 	players.forEach(function (player) {
 		if (player.appearance !== players[ownIdx].appearance) return;
 		minimapContext.beginPath();
-		minimapContext.arc((player.box.center.x*150/universe.width - players[ownIdx].box.center.x*150/universe.width + 225) % 150, (player.box.center.y*150/universe.height - players[ownIdx].box.center.y*150/universe.height + 225) % 150, 2.5, 0, 2*Math.PI);
+		minimapContext.arc((player.box.center.x*minimapCanvas.width/universe.width - players[ownIdx].box.center.x*minimapCanvas.width/universe.width + minimapCanvas.width*1.5) % minimapCanvas.width,
+			(player.box.center.y*minimapCanvas.height/universe.height - players[ownIdx].box.center.y*minimapCanvas.height/universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
+			2.5, 0, 2*Math.PI);
 		minimapContext.closePath();
 		minimapContext.fill();
 	});

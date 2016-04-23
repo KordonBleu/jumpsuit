@@ -87,14 +87,6 @@ Connection.prototype.refreshControls = function(controls) {
 	if (accordance === b) return;
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
-Connection.prototype.sendActionOne = function(angle) {
-	if(!currentConnection.alive()) return;
-	this.socket.send(MESSAGE.ACTION_ONE.serialize(angle));
-}
-Connection.prototype.sendActionTwo = function(angle) {
-	if(!currentConnection.alive()) return;
-	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
-}
 Connection.prototype.errorHandler = function() {
 	//TODO: go back to main menu
 	this.close();
@@ -113,21 +105,6 @@ Connection.prototype.messageHandler = function(message) {
 			}
 
 			alert("Error:\n" + errDesc);
-			break;
-		case MESSAGE.LOBBY_STATE.value:
-			var val = MESSAGE.LOBBY_STATE.deserialize(message.data);
-			if (val.state === 0){
-				statusElement.textContent = "Waiting for players... " + val.timer;
-				teamListElement.className = "hidden";
-			} else if (val.state === 1) {
-				if (!game.started && players.length !== 0) game.start();
-				teamListElement.className = "hidden";
-				statusElement.textContent = "Match is running " + val.timer;
-			} else if (val.state === 2) {
-				if (game.started) game.stop();
-				teamListElement.className = "";
-				statusElement.textContent = "Match is over " + val.timer;
-			}
 			break;
 		case MESSAGE.CONNECT_ACCEPTED.value:
 			planets.length = 0;
@@ -165,6 +142,7 @@ Connection.prototype.messageHandler = function(message) {
 				else if (p2) return "";
 			});
 			location.hash = "#srv=" + hashSocket.substr(0, hashSocket.length - 1) + "&lobby=" + encodeLobbyNumber(val.lobbyId);
+			if (!game.started) game.start();
 			break;
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
@@ -272,7 +250,6 @@ Connection.prototype.messageHandler = function(message) {
 			});
 			fuelElement.value = val.yourFuel;
 
-			if (!game.started) game.start();
 			break;
 		case MESSAGE.CHAT_BROADCAST.value:
 			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);

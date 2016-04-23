@@ -55,8 +55,6 @@ html {
 	right: 8px;
 	border-radius: 3px;
 	border: 2px solid #fff;
-	width: 150px;
-	height: 150px;
 }
 #minimap-overlay{
 	display: none;
@@ -421,9 +419,6 @@ label.range-label {
 	min-width: 260px;
 	padding: 0 8px;	
 	box-sizing: border-box;
-}
-#status {
-	margin-left: 8px;
 }
 #lobby-table {
 	font-size: 1.25em;

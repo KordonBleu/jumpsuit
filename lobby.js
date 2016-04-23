@@ -13,8 +13,8 @@ module.exports = function(engine) {
 		this.processTime = 2;
 		this.stateTimer = stateTimer;
 
-		let univSize = 10000;//(1 << 16) - 1 is also the max size allowed by the protocol
-		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize);
+		let univSize = 10000;//(1 << 16) - 1 is the max size allowed by the protocol
+		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize/2);
 		this.resetWorld();
 	}
 	Lobby.prototype.broadcast = function(message, exclude) {
@@ -81,12 +81,17 @@ module.exports = function(engine) {
 			planetAmount = Math.round((this.universe.width*this.universe.height) / planetDensity),
 			enemyDensity = Math.pow(6400, 2) / 15,
 			enemyAmount = Math.round((this.universe.width*this.universe.height) / enemyDensity);
+		if (planetAmount > 254) planetAmount = 254;//these limits are set
+		if (enemyAmount > 255) enemyAmount = 255;//by the protocol
+		//the ID of the planets and the enemies is stored on a single byte
+		//however, the planet ID value 255 (aka a wrapped -1) is reserved to be used when the player is not attached to a planet (player.attachedPlanet = -1)
 
 		for (let i = 0; i !== planetAmount; ++i) {
 			let newPlanet = new engine.Planet(Math.random()*this.universe.width, Math.random()*this.universe.height, 100 + Math.random()*300);
 			if (this.planets.every(function(planet) {
 				return !this.universe.collide(planet.box, newPlanet.box);
 			}.bind(this))) this.planets.push(newPlanet);
+			else --i;//failed to add it, do it again so we have the correct amount
 		}
 		for (let i = 0; i !== enemyAmount; ++i) {
 			let newEnemy = new engine.Enemy(Math.random()*this.universe.width, Math.random()*this.universe.height);
@@ -95,6 +100,7 @@ module.exports = function(engine) {
 			}.bind(this)) && this.enemies.every(function(enemy) {
 				return !this.universe.collide(enemy.box, newEnemy.box);
 			}.bind(this))) this.enemies.push(newEnemy);
+			else --i;//failed to add it, do it again so we have the correct amount
 		}
 
 		this.teams = {};

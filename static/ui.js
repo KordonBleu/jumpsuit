@@ -16,7 +16,6 @@ var chatElement = document.getElementById("gui-chat"),
 	settingsBox = document.getElementById("settings-box"),
 
 	/* inside menu-box */
-	statusElement = document.getElementById("status"),
 	lobbyTableElement = document.getElementById("lobby-table"),
 	lobbyTableHeaderRowElement = lobbyTableElement.firstElementChild.firstElementChild,
 	lobbyListElement = document.getElementById("lobby-list"),
@@ -307,18 +306,9 @@ function removeServer(id) {
 	serverList.splice(id, 1);
 }
 lobbyListElement.addEventListener("click", function(e) {
-	if (e.target.tagName === "BUTTON") {
-		if (e.target.dataset.url !== undefined) {
-			if (currentConnection !== undefined) currentConnection.close();
-			currentConnection = new Connection(e.target.dataset.url);
-		} else {
-			var nameInput = lobbyListElement.lastElementChild.firstElementChild.firstElementChild,
-				playerAmountInput = lobbyListElement.lastElementChild.children[1].firstElementChild;
-			if (nameInput.value !== "" && playerAmountInput.value !== "") {
-				currentConnection.createLobby(nameInput.value, playerAmountInput.valueAsNumber);
-				nameInput.value = "";
-			}
-		}
+	if (e.target.tagName === "BUTTON" && e.target.dataset.url !== undefined) {
+		if (currentConnection !== undefined) currentConnection.close();
+		currentConnection = new Connection(e.target.dataset.url);
 	}
 });
 

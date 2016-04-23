@@ -13,7 +13,6 @@
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
 		<canvas id="minimap-canvas" class="hidden"></canvas>
-		<div id="minimap-overlay"><i class="fa fa-mobile"></i></div>
 		<ul id="controls">
 			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
 				<img src="/assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
@@ -54,13 +53,11 @@
 		<div id="menu-box" class="hidden">
 			<button id="menu-box-info-button" style="float: right;"><i class="fa fa-info-circle"></i>Infos</button>
 			<button id="menu-box-settings-button" style="float: right;"><i class="fa fa-wrench"></i>Settings</button>
-			<h3 id="status">Waiting for other players...</h3>
 			<table id="lobby-table">
 				<thead>
 					<tr><th>Server name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Mod name <img src="/assets/images/sort_arrow_double.svg"/></th><th><button id="refresh"><i class="fa fa-refresh"></i></button></th></tr>
 				</thead>
 				<tbody id="lobby-list">
-					<tr><td><input type="text" placeholder="The name of your lobby" maxlength="32" autocomplete="off" required/></td><td>? of <input type="number" min="1" max="16" step="1" value="8" required/></td><td><button>Create!</button></td></tr>
 				</tbody>
 			</table>
 			<div id="search-filter">

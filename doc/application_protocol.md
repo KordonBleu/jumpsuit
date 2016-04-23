@@ -148,11 +148,24 @@ Owned By must be either:
 
 #### LESSER_PLAYER
 ```
-      2B             2B               1B           1B         1b         1b           3b            3b
-+--------------+--------------+-----------------+-------+------------+---------+--------------+------------+
-| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | useless bits | Walk Frame |
-+--------------+--------------+-----------------+-------+------------+---------+--------------+------------+
+      2B             2B               1B           1B         1b         1b          3b            7b             2b                2b
++--------------+--------------+-----------------+-------+------------+---------+------------+--------------+----------------+------------------+
+| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Walk Frame | useless bits | Primary Weapon | Secondary Weapon |
++--------------+--------------+-----------------+-------+------------+---------+------------+--------------+----------------+------------------+
 ```
+
+`Walk Frame` must be either:
+ 0. `duck`
+ 1. `hurt`
+ 2. `jump`
+ 3. `stand`
+ 4. `walk1`
+ 5. `walk2`
+`Primary Weapon` and `Secondary Weapon` must be either:
+ 0. `assault rifle`
+ 1. `knife`
+ 2. `shotgun`
+ 3. `sniper`
 
 
 #### SERVER
