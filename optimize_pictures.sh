@@ -69,6 +69,5 @@ if [ -z "$arglist" ]; then
 	arglist=$(pwd)
 fi
 
-echo $arglist
 depth=0
 recursive $arglist

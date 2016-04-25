@@ -113,10 +113,10 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
 
 #### SHOT
 ```
-      2B              2B         1B
-+--------------+--------------+-------+
-| x-coordinate | y-coordinate | angle |
-+--------------+--------------+-------+
+      2B              2B         1B         7b            1b
++--------------+--------------+-------+-------------+-------------+
+| x-coordinate | y-coordinate | angle | unused bits | from weapon |
++--------------+--------------+-------+-------------+-------------+
 ```
 
 
@@ -148,10 +148,10 @@ Owned By must be either:
 
 #### LESSER_PLAYER
 ```
-      2B             2B               1B           1B         1b         1b          3b            7b             2b                2b
-+--------------+--------------+-----------------+-------+------------+---------+------------+--------------+----------------+------------------+
-| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Walk Frame | useless bits | Primary Weapon | Secondary Weapon |
-+--------------+--------------+-----------------+-------+------------+---------+------------+--------------+----------------+------------------+
+      2B             2B               1B           1B         1b         1b          3b           7b             2b                2b
++--------------+--------------+-----------------+-------+------------+---------+------------+-------------+----------------+------------------+
+| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Walk Frame | unused bits | Primary Weapon | Secondary Weapon |
++--------------+--------------+-----------------+-------+------------+---------+------------+-------------+----------------+------------------+
 ```
 
 `Walk Frame` must be either:
@@ -233,6 +233,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 +---+===========+
 | 2 | server id |
 +---+===========+
+```
 
 
 ### Client ↔ Game server
@@ -321,7 +322,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 
 #### ADD_ENTITY (game server → client)
 ```
-  1B       1B           ?*6B         1B        ?*5B         1B       ?*5B     ?B
+  1B       1B           ?*6B         1B        ?*5B         1B       ?*6B     ?B
 +----+---------------+========+--------------+=======+-------------+======+========+
 | 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
 +----+---------------+========+--------------+=======+-------------+======+========+
@@ -339,7 +340,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 
 #### GAME_STATE (game server → client)
 ```
-  1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*7B
+  1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*8B
 +----+-------------+-----------+===============+=============+=============+===============+
 | 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+=============+===============+
@@ -390,7 +391,6 @@ The homograph id is used to distinguish players with the same name. It is unique
 +----+-----------+-----------+
 ```
 
-serverModBufs[i]
 #### SCORES (game server → client)
 ```
   1B       4B

@@ -199,7 +199,7 @@ Connection.prototype.messageHandler = function(message) {
 					shots[id].box.center.x = x;
 					shots[id].box.center.y = y;
 				},
-				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame) {
+				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, primaryWeapon, secondaryWeapon) {
 					if (id === ownIdx) {
 						if (!players[id].jetpack && jetpack) {
 							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);

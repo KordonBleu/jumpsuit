@@ -13,7 +13,7 @@ module.exports = function(engine) {
 		this.processTime = 2;
 		this.stateTimer = stateTimer;
 
-		let univSize = 10000;//(2 << 16) - 1 is the max size allowed by the protocol
+		let univSize = 10000;//(1 << 16) - 1 is the max size allowed by the protocol
 		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize/2);
 		this.resetWorld();
 	}

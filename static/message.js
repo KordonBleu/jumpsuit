@@ -574,8 +574,14 @@ const MESSAGE = {
 			LOOKS_LEFT: 128,
 			JETPACK: 64
 		},
+		WEAPON: {
+			assaultRifle:0,
+			gun: 1,
+			shotgun: 2,
+			knife: 3
+		},
 		serialize: function(yourHealth, yourFuel, planets, enemies, shots, players) {
-			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + shots.length*4 + players.length*7),
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + shots.length*4 + players.length*8),
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
@@ -603,11 +609,14 @@ const MESSAGE = {
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
 				view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
-				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)];
+				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)] << 3;//doesn't work directly on buffer for efficiency
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				view.setUint8(6 + offset, enumByte);
-				offset += 7;
+				var weaponByte = this.WEAPON[player.primaryWeapon] << 2;
+				weaponByte += this.WEAPON[player.secondaryWeapon];
+				view.setUint8(7 + offset, weaponByte);
+				offset += 8;
 			}, this);
 
 			return buffer;
@@ -636,9 +645,10 @@ const MESSAGE = {
 				);
 			}
 
-			limit += playerAmount*7;
-			for (let id = 0; i !== limit; i += 7, ++id) {
-				let enumByte = view.getUint8(6 + i);
+			limit += playerAmount*8;
+			for (let id = 0; i !== limit; i += 8, ++id) {
+				let enumByte = view.getUint8(6 + i),
+					weaponByte = view.getUint8(7 + i);
 				playersCbk(id,
 					view.getUint16(i),//x
 					view.getUint16(2 + i),//y
@@ -646,7 +656,9 @@ const MESSAGE = {
 					bradToRad(view.getUint8(5 + i), 1),//angle
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
-					Object.keys(this.WALK_FRAME)[enumByte << 29 >>> 29]//walkframe
+					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walkframe
+					Object.keys(this.WEAPON)[weaponByte >>> 2],//primary weapon
+					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30]//secondary weapon
 				);
 			}
 
