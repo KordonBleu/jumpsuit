@@ -211,6 +211,7 @@ wss.on("connection", function(ws) {
 					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
+					player.pid = lobby.players.findIndex(function(element) { return element === player; });
 					lobby.assignPlayerTeam(player);
 
 					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, homographId, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));

@@ -291,9 +291,6 @@ label.range-label {
 	width: 230px;
 }
 
-#gui-chat-first {
-	height: 1px;
-}
 #chat-input-container {
 	position: fixed;
 	bottom: 20px;
@@ -320,14 +317,28 @@ label.range-label {
 	background: rgba(0, 0, 0, 0.3);	
 }
 #player-list {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	cursor: inherit;
 	font-size: 0.9em;
 	background: rgba(235, 237, 244, 0.2);
 	border-radius: 4px;
 	list-style-type: none;
 	position: relative;
-	padding: 8px;	
+	padding: 22px 8px 8px 8px;	
 	display: flex;
 	flex-wrap: wrap;
+}
+#player-list::before {
+	position: absolute;
+	top: 5px;
+	content: attr(data-desc);
+	margin-right: 5px;
+	color: rgba(255, 255, 255, 0.2);
+	font-size: 0.8em;
+	text-transform: uppercase;
 }
 #player-list::after {/* CSS arrow trick */
 	content: " ";
@@ -340,10 +351,10 @@ label.range-label {
 	left: 19px;
 }
 #player-list li {
-	min-width: 100px;
-	flex-grow: 1;
+	min-width: 100px;	
+	cursor: default;
+	flex-grow: 0;
 	overflow: hidden;
-	cursor: pointer;
 }
 #shade-box {
 	position: fixed;
@@ -566,11 +577,8 @@ label.range-label {
 	width: 80px;
 	display: inline-block;
 }
-#gui-chat p:first-child:nth-last-child(1)::before {
-	cursor: inherit;
-	content: "No messages";
-	color: rgba(120, 120, 120, 0.8);
-	font-size: 0.875px;
+#gui-chat-first {
+	height: 1px;
 }
 #gui-chat {
 	position: fixed;
@@ -583,12 +591,6 @@ label.range-label {
 	-moz-user-select: initial;
 	-ms-user-select: initial;
 	user-select: initial;
-}
-#gui-chat.no-select {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
 }
 #gui-chat p {
 	margin: 2px 0;
@@ -603,7 +605,7 @@ label.range-label {
 #gui-chat p b.alienYellow{ color: #fed532; }
 #gui-fuel {
 	position: fixed;
-	top: 58px;
+	top: 50px;
 	left: 8px;
 	height: 10px;
 	width: 200px;
@@ -695,7 +697,7 @@ label.range-label {
 #gui-options button {
 	margin: 6px 2px;
 }
-#gui-achievement {
+#gui-message {
 	background: #000;
 	color: #fff;
 	box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.7);
@@ -710,17 +712,17 @@ label.range-label {
 	transform: translateX(0);
 	transition: transform .5s;
 }
-#gui-achievement.hidden {
+#gui-message.hidden {
 	transform: translateX(100%);
 }
-#gui-achievement:before {
+#gui-message:before {
 	display: block;
 	content: attr(data-title);
 	font-size: 1.3em;
 	margin-right: 50px;
 }
-#gui-achievement:after {
-	content: attr(data-reward);
+#gui-message:after {
+	content: attr(data-desc);
 	font-weight: bold;
 	color: #4dbb63;
 }

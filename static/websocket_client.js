@@ -87,6 +87,14 @@ Connection.prototype.refreshControls = function(controls) {
 	if (accordance === b) return;
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
+Connection.prototype.sendActionOne = function(angle) {
+	if (!currentConnection.alive()) return;
+	this.socket.send(MESSAGE.ACTION_ONE.serialize(angle));
+};
+Connection.prototype.sendActionTwo = function(angle) {
+	if (!currentConnection.alive()) return;
+	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
+};
 Connection.prototype.errorHandler = function() {
 	//TODO: go back to main menu
 	this.close();
@@ -148,9 +156,9 @@ Connection.prototype.messageHandler = function(message) {
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
 				function(x, y, radius, type) {},//add planets
 				function(x, y, appearance) {},//add enemies
-				function(x, y, angle) {//add shots
+				function(x, y, angle, fromWeapon) {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
-					shots.push(new Shot(x, y, angle));
+					shots.push(new Shot(x, y, angle, undefined, fromWeapon));
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
 					printChatMessage(undefined, undefined, name + " joined the game");
@@ -225,9 +233,9 @@ Connection.prototype.messageHandler = function(message) {
 						let type = planets[players[id].attachedPlanet].type,
 							stepSound = stepModels[type][players[id].lastSound].makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y));
 						if (stepSound.buffer !== undefined) {
-							stepSound.playbackRate.value = Math.random() + 0.5;//picth is modified from 50% to 150%
+							stepSound.playbackRate.value = Math.random() + 0.5;//pitch is modified from 50% to 150%
 						} else {//hack for Chrome (doesn't sound as good)
-							stepSound.mediaElement.playbackRate = Math.random() + 0.5;//picth is modified from 50% to 150%
+							stepSound.mediaElement.playbackRate = Math.random() + 0.5;
 						}
 						stepSound.start(0);
 						players[id].lastSound = (players[id].lastSound + 1)%5;
@@ -248,7 +256,7 @@ Connection.prototype.messageHandler = function(message) {
 				else state = "heartNotFilled";
 				element.className = state;
 			});
-			fuelElement.value = val.yourFuel;
+			if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
 
 			break;
 		case MESSAGE.CHAT_BROADCAST.value:

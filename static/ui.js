@@ -9,7 +9,7 @@ var chatElement = document.getElementById("gui-chat"),
 	healthElement = document.getElementById("gui-health"),
 	fuelElement = document.getElementById("gui-fuel"),
 	pointsElement = document.getElementById("gui-points"),
-	achievementBox = document.getElementById("gui-achievement"),
+	messageBox = document.getElementById("gui-message"),
 	/* boxed windows */
 	menuBox = document.getElementById("menu-box"),
 	infoBox = document.getElementById("info-box"),
@@ -44,10 +44,14 @@ var chatElement = document.getElementById("gui-chat"),
 
 	settings = {
 		name: localStorage.getItem("settings.name") || "Unnamed Player",
+		keymap: localStorage.getItem("settings.keymap") || "",
 		volMusic: localStorage.getItem("settings.volume.music") || 50,
 		volEffects: localStorage.getItem("settings.volume.effects") || 50
 	};
 
+
+const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
+		|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
 
 /* Buttons */
 function addToggleListener(button, element) {
@@ -251,23 +255,16 @@ function printChatMessage(name, appearance, content) {
 }
 
 /* Player list */
-chatInputContainer.addEventListener("focus", function() {
+chatInput.addEventListener("focus", function() {
 	playerListElement.classList.remove("hidden");
 	printPlayerList("");
-}, true);
-chatInputContainer.addEventListener("blur", function() {
+});
+chatInput.addEventListener("blur", function() {
 	playerListElement.classList.add("hidden");
-}, true);
-playerListElement.addEventListener("click", function(e) {
-	console.log(e.target);
-	if (e.target.tagName === "LI") {
-		chatInput.focus();
-		var cursorPos = chatInput.selectionStart + e.target.textContent.length;
-		chatInput.value = chatInput.value.substring(0, chatInput.selectionStart) + e.target.textContent + chatInput.value.substring(chatInput.selectionEnd, chatInput.value.length);
-		chatInput.setSelectionRange(cursorPos, cursorPos);
-	}
 });
 function printPlayerList(filter) {
+	if (isMobile) playerListElement.dataset.desc = "player list";
+	else playerListElement.dataset.desc = "press tab to complete a player's name";
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	players.forEach(function(player, index) {
 		if (filter !== "" && player.name.indexOf(filter) === -1) return;
@@ -287,19 +284,19 @@ function addServerRow(server) {
 		buttonTd = document.createElement("td"),
 		button = document.createElement("button");
 
-		serverNameTd.textContent = server.name;
-		modNameTd.textContent = server.mod;
+	serverNameTd.textContent = server.name;
+	modNameTd.textContent = server.mod;
 
-		button.textContent = "Play!";
-		button.dataset.url = server.url;
+	button.textContent = "Play!";
+	button.dataset.url = server.url;
 
-		buttonTd.appendChild(button);
-		row.appendChild(serverNameTd);
-		row.appendChild(modNameTd);
-		row.appendChild(buttonTd);
+	buttonTd.appendChild(button);
+	row.appendChild(serverNameTd);
+	row.appendChild(modNameTd);
+	row.appendChild(buttonTd);
 
-		lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
-		server.tr = row;
+	lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
+	server.tr = row;
 }
 function removeServer(id) {
 	serverList[id].tr.remove();
@@ -350,11 +347,12 @@ lobbyTableHeaderRowElement.addEventListener("click", function(e) {
 		addServerRow();
 	}
 });
+
 /* Search filters */
 function applyLobbySearch() {
 	serverList.forEach(function(lobby, index) {
 		//lobbyListElement.children are reversed compared to serverList
-		var currentElem = lobbyListElement.children[serverList.length - index -1];
+		var currentElem = lobbyListElement.children[serverList.length - index - 1];
 		if (new RegExp(searchInput.value, "gi").test(lobby.name)) currentElem.classList.remove("search-hidden");
 		else currentElem.classList.add("search-hidden");
 	});
@@ -370,16 +368,21 @@ function applyEmptinessCheck() {
 searchInput.addEventListener("input", applyLobbySearch);
 emptyLobbyInput.addEventListener("change", applyEmptinessCheck);
 
-function showAchievement(title, reward) {
-	if (!title && !reward) return;
-	achievementBox.setAttribute("data-title", title);
-	achievementBox.setAttribute("data-reward", reward);
-	achievementBox.classList.remove("hidden");
-	setTimeout(function() { this.classList.add("hidden"); }.bind(achievementBox), 4000);
+var message = {
+	previousTimeoutId: -1,
+	showMessage: function(title, desc) {
+		if (!title && !desc) return;		
+		if (message.previousTimeoutId !== -1) clearTimeout(message.previousTimeoutId);
+		messageBox.setAttribute("data-title", title);
+		messageBox.setAttribute("data-desc", desc);
+		messageBox.classList.remove("hidden");
+		message.previousTimeoutId = setTimeout(function() { messageBox.classList.add("hidden"); message.previousTimeoutId = -1; }, 4000);
+	}
 }
 window.onbeforeunload = function() {
-	localStorage.setItem("settings.name", settings.name);
-	localStorage.setItem("settings.keys", JSON.stringify(handleInput.reverseKeyMap));
+	//default values don't need to be saved
+	if (settings.name !== "Unnamed Player") localStorage.setItem("settings.name", settings.name);
+	if (settings.keymap !== "") localStorage.setItem("settings.keymap", settings.keymap);
 	localStorage.setItem("settings.volume.music", musicVolumeElement.value);
 	localStorage.setItem("settings.volume.effects", effectsVolumeElement.value);
 };

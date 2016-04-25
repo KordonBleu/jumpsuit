@@ -114,6 +114,7 @@ handleInput.updateKeyMap = function() {
 			if (keys[key] !== undefined || keys[key] !== null) handleInput.keyMap[keys[key]] = action;
 		}
 	}
+	
 };
 handleInput.initKeymap = function(fromReversed) {
 	if (fromReversed) handleInput.updateKeyMap();
@@ -146,13 +147,14 @@ handleInput.initKeymap = function(fromReversed) {
 		}
 		keySettingsElement.appendChild(rowEl);
 	}
+	
 	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
+	settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
 };
-handleInput.loadKeySettings = function() {
-	var presets = localStorage.getItem("settings.keys");
-	if (presets !== null) handleInput.reverseKeyMap = JSON.parse(presets);
+handleInput.loadKeySettings = function() {	
+	if (settings.keymap !== "") handleInput.reverseKeyMap = JSON.parse(settings.keymap);
 	else handleInput.keyMap = defaultKeymap;
-	handleInput.initKeymap(presets !== null);
+	handleInput.initKeymap(settings.keymap !== "");
 };
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
@@ -183,7 +185,7 @@ function dragHandler(e) {
 canvas.addEventListener("mousedown", function(e) {
 	switch (e.button) {
 		case 0://left-click
-			sendShot();	
+			currentConnection.sendActionOne(players[ownIdx].box.angle - Math.PI / 2 * (players[ownIdx].looksLeft ? 1 : -1));
 			break;
 		case 1://middle-click
 			dragStart(e);
@@ -210,35 +212,42 @@ document.addEventListener("contextmenu", function(e) {
 	//unfortunately it also disables the context menu key
 });
 
-function sendShot(angle) {
-	var w = game.armedWeapon	
-}
 
 /* Gamepads */
 var usingGamepad = -1;
 if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) {
 	//no timed query
-	window.addEventListener("gamepadconnected", function(e) { usingGamepad = e.gamepad.index; });
-	window.addEventListener("gamepaddisconnected", function(e) { usingGamepad = -1 });
+	window.addEventListener("gamepadconnected", function(e) {
+		usingGamepad = e.gamepad.index;
+		message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
+	});
+	window.addEventListener("gamepaddisconnected", function(e) { 
+		message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
+		usingGamepad = -1
+	});
 } else {
 	setInterval(function() {
 		var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
-		if (typeof gamepads[usingGamepad] === "undefined") usingGamepad = -1;
+		if (typeof gamepads[usingGamepad] === "undefined") {
+			if (usingGamepad !== -1) message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
+			usingGamepad = -1;
+		}
 		if (usingGamepad == -1) {
 			for (var i = 0; i < gamepads.length; i++) {
 				var gp = gamepads[i];
 				if (gp) {
-					//onScreenMessage.show("Gamepad " + (gp.index + 1).toString() + " connected");
 					usingGamepad = gp.index;
+					message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
 				}
 			}
 		}
 	}, 500);
 }
 setInterval(function() {
+	if (usingGamepad === -1) return;
 	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
 	var g = gamepads[usingGamepad];
-	if (typeof(g) !== "undefined"){
+	if (typeof(g) !== "undefined" && players.length !== 0 && ownIdx in players){
 		players[ownIdx].controls["jump"] = g.buttons[0].value;
 		players[ownIdx].controls["run"] = g.buttons[1].value;
 		players[ownIdx].controls["crouch"] = g.buttons[4].value;
@@ -253,7 +262,7 @@ setInterval(function() {
 		else game.drag.y = 0;
 		currentConnection.refreshControls(players[ownIdx].controls);
 	}
-}, 80);
+}, 50);
 
 /* Zoom */
 document.addEventListener("wheel", function(e) {
@@ -265,10 +274,8 @@ document.addEventListener("wheel", function(e) {
 	}
 });
 
-if (!matchMedia("(pointer: coarse)").matches) {//returns false if has a mouse AND a touchscreen
-	//only supported by webkit as of today, the whole statement returns true in other browsers
-	handleInput.loadKeySettings();
-}
+if (!isMobile) handleInput.loadKeySettings();
+
 window.addEventListener("touchstart", handleInputMobile);
 window.addEventListener("touchmove", handleInputMobile);
 window.addEventListener("touchend", handleInputMobile);

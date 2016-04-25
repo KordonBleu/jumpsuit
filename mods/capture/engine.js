@@ -14,20 +14,9 @@ var resPaths = [
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
-	"rifleShot.svg", "sniper.png", "shotgun.png", "assaultrifle.png"
+	"rifleShot.svg", "weapon.svg"
 	],
 	resources = {};
-
-function Weapon(offset, shotDmg, shotInterval, shotAmount) {
-	this.asset;
-	this.offset = offset || 0;
-	this.shotDmg = shotDmg || 0;
-	this.shotInterval = shotInterval || 0;
-	this.shotAmount = shotAmount || 1;
-}
-
-const weaponList = {sniper: new Weapon(40, 6, 1.5, 8), shotgun: new Weapon(45, 2, 0.75, 5), assaultrifle: new Weapon(38, 2, 0.08, 30) };
-
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	var vinage = require("../../static/vinage/vinage.js"),
@@ -78,7 +67,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.fuel = fuel || 400;
 	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
-
+	this.pid = 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
@@ -131,9 +120,11 @@ function Enemy(x, y, appearance) {
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
-function Shot(x, y, angle) {
+function Shot(x, y, angle, origin, fromWeapon) {
 	this.box = new Rectangle(new Point(x, y), resources["laserBeam"].width, resources["laserBeam"].height, angle);
 	this.lifeTime = 100;
+	this.origin = origin;
+	this.fromWeapon = fromWeapon || false;
 }
 
 
@@ -147,13 +138,20 @@ function doPrediction(universe, players, enemies, shots) {
 	players.forEach(function(player) {
 		if (player.boxInformations.length === 2){
 			var intensity = Math.max(1, 40 * fps / 1000);
-			player.box.center.x += (player.boxInformations[1].center.x - player.boxInformations[0].center.x) / intensity;
-			player.box.center.y += (player.boxInformations[1].center.y - player.boxInformations[0].center.y) / intensity;
 			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
+			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
 
+			if (player.attachedPlanet !== 255) {
+				//"angular" prediction when moving around on planets
+				player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
+				player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
+			} else {
+				//linear prediction
+				player.box.center.x += (player.boxInformations[1].center.x - player.boxInformations[0].center.x) / intensity;
+				player.box.center.y += (player.boxInformations[1].center.y - player.boxInformations[0].center.y) / intensity;
+			}
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
 			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
-			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
 		}
 	});
 	shots.forEach(function(shot){
@@ -168,7 +166,6 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			addedShots: [],
 			removedShots: []
 		};
-
 
 	players.forEach(function(player) {
 		if (player.attachedPlanet >= 0) {
@@ -240,7 +237,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			entitiesDelta.removedShots.push(shot);
 			shots.splice(si, 1);
 		} else players.forEach(function(player) {
-			if (universe.collide(new Circle(shot.box.center, 40), player.box)) {//needed as long as Node.js doesn't support Proxies
+			if (player.pid !== shot.origin && universe.collide(new Circle(shot.box.center, 40), player.box)) {//needed as long as Node.js doesn't support Proxies
 				player.health -= (player.health = 0) ? 0 : 1;
 				if (player.health <= 0) {
 					var suitablePlanets = [];
@@ -314,6 +311,6 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") modu
 	Player: Player,
 	Planet: Planet,
 	Enemy: Enemy,
-	Shot: Shot,
-	weaponList: weaponList
+	Shot: Shot
+
 };

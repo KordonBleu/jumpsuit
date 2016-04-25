@@ -83,13 +83,17 @@ windowBox.strokeAtmos = function(cx, cy, r, sw) {
 	context.closePath();
 }
 windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) {
+	var mirrorX = 1, mirrorY = 1;
+	if (mirror !== undefined) {
+		if ("x" in mirror && mirror["x"] === true) mirrorX = -1;
+		if ("y" in mirror && mirror["y"] === true) mirrorY = -1;
+	}
 	sizeX *= this.zoomFactor;
 	sizeY *= this.zoomFactor;
 
 	context.translate(x, y);
 	context.rotate(angle);
-	if (mirror === "x") context.scale(-1, 1);
-	else if (mirror === "y") context.scale(1, -1);
+	context.scale(mirrorX, mirrorY);
 	var wdt = sizeX || image.width*this.zoomFactor, hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 	context.resetTransform();
@@ -105,7 +109,7 @@ Planet.prototype.draw = function() {
 	context.fill();
 
 	//apply texture
-	windowBox.drawRotatedImage(resources["planet"], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, false, 2*this.box.radius, 2*this.box.radius);
+	windowBox.drawRotatedImage(resources["planet"], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, {}, 2*this.box.radius, 2*this.box.radius);
 
 	//draw progress indicator
 	context.beginPath();
@@ -128,7 +132,7 @@ Enemy.prototype.draw = function() {
 	windowBox.drawRotatedImage(resources[this.appearance],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle, false);
+		this.box.angle, {});
 }
 Enemy.prototype.drawAtmos = function() {
 	context.fillStyle = "#aaa";
@@ -140,10 +144,11 @@ Enemy.prototype.drawAtmos = function() {
 		350, 4);
 }
 Shot.prototype.draw = function(dead) {
-	windowBox.drawRotatedImage(resources[dead ? "laserBeamDead" : "laserBeam"],
+	console.log(this);
+	windowBox.drawRotatedImage((!this.fromWeapon ? resources[dead ? "laserBeamDead" : "laserBeam"] : resources["rifleShot"]),
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle, false);
+		this.box.angle, {});
 }
 Player.prototype.draw = function(showName) {
 	var res = resources[this.appearance + this.walkFrame],
@@ -161,7 +166,7 @@ Player.prototype.draw = function(showName) {
 		jetpackX = playerX - shift*14*Math.sin(this.box.angle + Math.PI/2),
 		jetpackY = playerY + shift*14*Math.cos(this.box.angle + Math.PI/2);
 
-	windowBox.drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, this.box.angle, false, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+	windowBox.drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, this.box.angle, {}, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
 	if (this.jetpack) {
 		var jetpackFireOneX = jetpackX - 53 * Math.sin(this.box.angle - Math.PI / 11)*windowBox.zoomFactor,
 			jetpackFireOneY = jetpackY + 53 * Math.cos(this.box.angle - Math.PI / 11)*windowBox.zoomFactor,
@@ -188,23 +193,20 @@ Player.prototype.draw = function(showName) {
 	}
 
 	//weapon	
-	game.weapons.forEach((function (weapon, index) {
-		if (!(weapon in weaponList)) return;
-		var weaponResource = resources[weapon],
-			weaponX, weaponY;
-		if (this.attachedPlanet === 255 && index === game.armedWeapon) {
-			weaponX = playerX - shift*weaponList[weapon].offset*Math.sin(this.box.angle - Math.PI / 2);
-			weaponY = playerY + shift*weaponList[weapon].offset*Math.cos(this.box.angle - Math.PI / 2);
-			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, (!this.looksLeft ? "x" : ""), weaponResource.width * 0.2, weaponResource.height * 0.2);
-		} else {
-			weaponX = playerX + Math.abs(shift)*weaponList[weapon].offset*0.5*Math.sin(this.box.angle) + shift*(20*index-10)*Math.sin(this.box.angle - Math.PI / 2);
-			weaponY = playerY - Math.abs(shift)*weaponList[weapon].offset*0.5*Math.cos(this.box.angle) - shift*(20*index-10)*Math.cos(this.box.angle - Math.PI / 2);
-			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, (this.looksLeft ? "y" : ""), weaponResource.width * 0.13, weaponResource.height * 0.13);
-		}
-	}).bind(this));
-
+	var weaponResource = resources["weapon"],
+		weaponX, weaponY;
+	if (this.attachedPlanet === 255) {
+		weaponX = playerX - shift*60*Math.sin(this.box.angle - Math.PI / 2);
+		weaponY = playerY + shift*60*Math.cos(this.box.angle - Math.PI / 2);
+		windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, {x: this.looksLeft}, weaponResource.width, weaponResource.height);
+	} else {
+		weaponX = playerX + Math.abs(shift)*40*0.5*Math.sin(this.box.angle) + shift*Math.sin(this.box.angle - Math.PI / 2);
+		weaponY = playerY - Math.abs(shift)*40*0.5*Math.cos(this.box.angle) - shift*Math.cos(this.box.angle - Math.PI / 2);
+		windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, weaponResource.width*0.93, weaponResource.height*0.93);
+	}
+	
 	//body
-	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, (this.looksLeft ? "x" : ""));
+	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
 }
 
 function resizeCanvas() {
@@ -297,7 +299,7 @@ function loop() {
 		m.x += m.speed;
 		m.rotAng += m.rotSpeed;
 		if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
-		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, false, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
+		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, {}, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
 	});
 	context.globalAlpha = 1;
 
@@ -342,7 +344,7 @@ function loop() {
 		else windowBox.drawRotatedImage(resources["jetpackParticle"],
 			windowBox.wrapX(particle.box.center.x),
 			windowBox.wrapY(particle.box.center.y),
-		   	particle.box.angle, false, particle.size, particle.size);
+		   	particle.box.angle, {}, particle.size, particle.size);
 	});
 
 	//players
