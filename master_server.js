@@ -8,13 +8,14 @@ var fs = require("fs"),
 	MESSAGE = require("./static/message.js"),
 	logger = require("./logger.js"),
 	ipaddr = require("ipaddr.js"),
-	ipPicker = require("./ip_picker.js"),
 
 	configSkeleton = {
 		dev: false,
 		interactive: false,
+		ipv4_provider: "https://icanhazip.com/",
+		ipv6_provider: "https://ipv6.icanhazip.com/",
 		monitor: false,
-		port: 80
+		port: 80,
 	};
 
 function GameServer(name, mod, secure, port, ip) {
@@ -51,7 +52,9 @@ function changeCbk(newConfig, previousConfig) {
 		else interactive.open();
 	}
 }
-var config = require("./config.js")(process.argv[2] || "./master_config.json", configSkeleton, changeCbk);
+var config = require("./config.js")(process.argv[2] || "./master_config.json", configSkeleton, changeCbk),
+	ipPicker = require("./ip_picker.js")(config);
+
 
 /*var monitor = require("./monitor.js")(config);
 if(config.monitor) monitor.setMonitorMode();*/
@@ -151,6 +154,7 @@ gameServerSocket.on("connection", function(ws) {
 		gameServers.forEach(function(gS, i) {
 			if (gameServer = gS) {
 				gameServers.splice(i, 1);
+				logger(logger.INFO, "Unregistered \"" + gS.mod + "\" server \"" + gS.name + "\" @ " + gS.ip + ":" + gS.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
 						client.send(MESSAGE.REMOVE_SERVERS.serialize([i]), wsOptions);
@@ -167,7 +171,6 @@ clientsSocket.on("connection", function(ws) {
 
 	try {
 		MESSAGE.ADD_SERVERS.serialize(gameServers, this.ipAddr).then(function(value) {
-			console.log(value, value.byteLength);
 			ws.send(value, wsOptions);
 		});
 	} catch (err) {/* Do nothing */}

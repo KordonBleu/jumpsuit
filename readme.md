@@ -72,5 +72,7 @@ Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
 dev | Enable debug messages and the automatic reload of modified files (under `static/`) | false | boolean
 interactive | Make it possible to enter JavaScript commands while the server runs | false | boolean
+ipv4_provider | The URL of a web service which should return an IPv4 as plain text | "https://icanhazip.com/" | string
+ipv6_provider | The URL of a web service which should return an IPv6 as plain text | "https://ipv6.icanhazip.com/" | string
 monitor | Displays a neat view of the connected game servers in real-time | false| boolean
 port | Set the game server's port | 80 | integer
