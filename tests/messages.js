@@ -6,8 +6,8 @@ var engine = require("../mods/capture/engine.js");
 delete require.cache[require.resolve("../static/message.js")];
 var message = require("../static/message.js");
 
-delete require.cache[require.resolve("../static/vinage/vinage.js")];
-var vinage = require("../static/vinage/vinage.js");
+delete require.cache[require.resolve("vinage")];
+var vinage = require("vinage");
 
 function printArgs() {
 	console.log(arguments);

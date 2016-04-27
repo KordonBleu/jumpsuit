@@ -19,7 +19,7 @@ var resPaths = [
 	resources = {};
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-	var vinage = require("../../static/vinage/vinage.js"),
+	var vinage = require("vinage"),
 		Point = vinage.Point,
 		Rectangle = vinage.Rectangle,
 		Circle = vinage.Circle,

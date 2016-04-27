@@ -3,6 +3,7 @@
 module.exports = function(config) {
 	var ipaddr = require("ipaddr.js"),
 		https = require("https"),
+		http = require("http"),
 		logger = require("./logger.js"),
 		externalIp,
 		localIp,
@@ -12,7 +13,8 @@ module.exports = function(config) {
 
 	for (let iname in ifaces) {
 		ifaces[iname].forEach(function(iface) {
-			if ((iface.family === "IPv4" && !iface.internal) || (iface.family === "IPv6" && (localIp === undefined || internal)) || (internal !== false && iface.internal && iface.family === "IPv4") || (internal !== false && iface.internal && iface.family === "IPv6" && localIp === undefined) ) {
+			if ((iface.family === "IPv4" && !iface.internal) || (iface.family === "IPv6" && (localIp === undefined || internal)) ||//priority to non-localhost IPs
+				(internal !== false && iface.internal && iface.family === "IPv4") || (internal !== false && iface.internal && iface.family === "IPv6" && localIp === undefined) ) {
 					localIp = iface.address;
 					localNetmask = iface.netmask;
 					internal = iface.internal;
@@ -58,24 +60,50 @@ module.exports = function(config) {
 
 		return new Promise(function(resolve, reject) {
 			if (externalIp !== undefined) resolve(externalIp);
-			else https.get(config.ipv4_provider, function(res) {
-				res.on("data", function(chunk) {
-					externalIp = ipaddr.parse(chunk.toString().trim()).toIPv4MappedAddress();
-					logger(logger.INFO, "IPv4 is: " + externalIp.toString());
+			else {
+
+				let protocol;
+				if (config.ipv4_provider.startsWith("https://")) protocol = https;
+				else if(config.ipv4_provider.startsWith("http://")) protocol = http;
+				else try {
+					externalIp = ipaddr.parse(config.ipv4_provider).toIPv4MappedAddress();
 					resolve(externalIp);
-				});
-			}).on("error", function(err) {
-				if (err.code === "ENETUNREACH") {
-					logger(logger.DEV, "Cannot get IPv4 address. Acquiring IPv6 instead...");
-					https.get(config.ipv6_provider, function(res) {
-						res.on("data", function(chunk) {
-							externalIp = ipaddr.parse(chunk.toString().trim());
-							logger(logger.INFO, "IPv6 is: " + externalIp.toString());
+				} catch (err) {
+					logger(logger.ERR, "ipv4_provider is invalid. Please edit config file.");
+					process.exit(1);
+				}
+
+				protocol.get(config.ipv4_provider, function(res) {
+					res.on("data", function(chunk) {
+						externalIp = ipaddr.parse(chunk.toString().trim()).toIPv4MappedAddress();
+						logger(logger.INFO, "IPv4 is: " + externalIp.toString());
+						resolve(externalIp);
+					});
+				}).on("error", function(err) {
+					if (err.code === "ENETUNREACH") {
+						logger(logger.DEV, "Cannot get IPv4 address. Acquiring IPv6 instead...");
+
+						let protocol;
+						if (config.ipv6_provider.startsWith("https://")) protocol = https;
+						else if(config.ipv6_provider.startsWith("http://")) protocol = http;
+						else try {
+							externalIp = ipaddr.parse(config.ipv6_provider);
 							resolve(externalIp);
-						});
-					}).on("error", errorHandler);
-				} else errorHandler(err);
-			});
+						} catch (err) {
+							logger(logger.ERR, "ipv6_provider is invalid. Please edit config file.");
+							process.exit(1);
+						}
+
+						protocol.get(config.ipv6_provider, function(res) {
+							res.on("data", function(chunk) {
+								externalIp = ipaddr.parse(chunk.toString().trim());
+								logger(logger.INFO, "IPv6 is: " + externalIp.toString());
+								resolve(externalIp);
+							});
+						}).on("error", errorHandler);
+					} else errorHandler(err);
+				});
+			}
 		});
 	}
 
@@ -91,7 +119,7 @@ module.exports = function(config) {
 			clientOnInternet = !clientOnLocalhost && !clientOnNetwork;
 
 
-		if (serverOnLocalhost && clientOnLocalhost) return Promise.resolve(ipaddr.parse("::1"));
+		if (serverOnLocalhost && clientOnLocalhost) return Promise.resolve(ipaddr.parse("::ffff:7f00:1"));
 		else if (serverOnNetwork && (clientOnLocalhost || clientOnNetwork) ||
 			(serverOnLocalhost && clientOnNetwork)) return Promise.resolve(localIp);
 		else return getExternalIp();

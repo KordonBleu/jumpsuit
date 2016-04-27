@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = function(engine) {
-	var vinage = require("./static/vinage/vinage.js"),
+	var vinage = require("vinage"),
 		MESSAGE = require("./static/message.js");
 
 	function Lobby(maxPlayers, stateTimer) {

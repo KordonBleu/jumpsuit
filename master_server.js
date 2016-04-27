@@ -63,10 +63,12 @@ if (config.interactive) interactive.open();
 
 var files = {
 	"/engine.js": fs.readFileSync("./mods/capture/engine.js"),//the default engine is not under `./static` because it is part of a mod
-	"/ipaddr.min.js": fs.readFileSync("./node_modules/ipaddr.js/ipaddr.min.js")
+	"/ipaddr.min.js": fs.readFileSync("./node_modules/ipaddr.js/ipaddr.min.js"),
+	"/vinage.js": fs.readFileSync("./node_modules/vinage/vinage.js")
 };
 files["/engine.js"].mtime = fs.statSync("./mods/capture/engine.js").mtime;
 files["/ipaddr.min.js"].mtime = fs.statSync("./node_modules/ipaddr.js/ipaddr.min.js").mtime;
+files["/vinage.js"].mtime = fs.statSync("./node_modules/vinage/vinage.js").mtime;
 files.construct = function(path, oName) {
 	fs.readdirSync(path).forEach(function(pPath) {
 		var cPath = path + "/" + pPath,
@@ -137,6 +139,9 @@ gameServerSocket.on("connection", function(ws) {
 			case MESSAGE.REGISTER_SERVER.value:
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
 				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ipaddr.parse(ws._socket.remoteAddress));
+				gameServer.pingIntervalId = setInterval(function() {
+					ws.ping();
+				}, 20000);
 				gameServers.push(gameServer);
 
 				logger(logger.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
@@ -153,6 +158,7 @@ gameServerSocket.on("connection", function(ws) {
 	ws.on("close", function() {
 		gameServers.forEach(function(gS, i) {
 			if (gameServer = gS) {
+				clearInterval(gameServer.pingIntervalId);
 				gameServers.splice(i, 1);
 				logger(logger.INFO, "Unregistered \"" + gS.mod + "\" server \"" + gS.name + "\" @ " + gS.ip + ":" + gS.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
