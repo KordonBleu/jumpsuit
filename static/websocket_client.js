@@ -154,9 +154,9 @@ Connection.prototype.messageHandler = function(message) {
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
 				function(x, y, radius, type) {},//add planets
 				function(x, y, appearance) {},//add enemies
-				function(x, y, angle, fromWeapon) {//add shots
+				function(x, y, angle, type) {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
-					shots.push(new Shot(x, y, angle, undefined, fromWeapon));
+					shots.push(new Shot(x, y, angle, undefined, type));
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
 					printChatMessage(undefined, undefined, name + " joined the game");

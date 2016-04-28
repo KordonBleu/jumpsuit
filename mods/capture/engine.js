@@ -14,7 +14,7 @@ var resPaths = [
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
-	"rifleShot.svg", "lmg.svg", "smg.svg"
+	"rifleShot.svg", "lmg.svg", "smg.svg", "knife.svg"
 	],
 	resources = {};
 
@@ -71,7 +71,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.lastlyAimedAt = Date.now();
 	this.pid = 0;
 	this.mousePos = 0;
-	this.weaponary = {armed: "lmg", carrying: "smg"};
+	this.weaponary = {armed: "svg", carrying: "knife"};
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
@@ -124,12 +124,13 @@ function Enemy(x, y, appearance) {
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
-function Shot(x, y, angle, origin, fromWeapon) {
+function Shot(x, y, angle, origin, type) {
 	this.box = new Rectangle(new Point(x, y), resources["laserBeam"].width, resources["laserBeam"].height, angle);
 	this.lifeTime = 100;
 	this.origin = origin;
-	this.fromWeapon = fromWeapon || false;
+	this.type = type || 0;
 }
+Shot.prototype.shotEnum = {laser: 0, bullet: 1, knife: 2}; //a knife is no shot but can be handled the same way
 
 var doPrediction = {
 	predict: function(universe, players, enemies, shots) {
@@ -159,7 +160,7 @@ var doPrediction = {
 		});
 		shots.forEach(function(shot){
 			shot.box.center.x += 18 * Math.sin(shot.box.angle) * (fps / 60);
-			shot.box.center.y += 18 * -Math.cos(shot.box.angle) * (fps / 60);
+			shot.box.center.y += 18 * -Math.cos(shot.box.angle) * (fps / 60);			
 		});
 		this.oldTimestamp = this.newTimestamp;
 	},
@@ -209,7 +210,8 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.weaponary.carrying = a;
 			}
 			if (player.controls["shoot"] === 1) {
-				let newShot = new Shot(player.box.center.x + 80*Math.sin(player.mousePos), player.box.center.y - 80*Math.cos(player.mousePos), player.mousePos, player.pid, true);
+				let shotType = (player.weaponary.armed === "knife" ? 2 : 1);
+				let newShot = new Shot(player.box.center.x + 80*Math.sin(player.mousePos), player.box.center.y - 80*Math.cos(player.mousePos), player.mousePos, player.pid, shotType);
 				shots.push(newShot);
 				entitiesDelta.addedShots.push(newShot);
 				//var newShot = new Shot(player.box.center.x + 80*Math.sin(player.mousePos), player.box.center.y - 80*Math.cos(player.mousePos), player.mousePos, player.pid, true);

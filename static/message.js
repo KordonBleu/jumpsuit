@@ -415,7 +415,7 @@ const MESSAGE = {
 					view.setUint16(offset, shot.box.center.x);
 					view.setUint16(2 + offset, shot.box.center.y);
 					view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
-					view.setUint8(5 + offset, shot.fromWeapon * 1);
+					view.setUint8(5 + offset, shot.type);
 					offset += 6;
 				});
 			} else {
@@ -469,7 +469,7 @@ const MESSAGE = {
 					view.getUint16(i),
 					view.getUint16(i + 2),
 					bradToRad(view.getUint8(i + 4), 1),
-					view.getUint8(i + 5) === 1
+					view.getUint8(i + 5)
 				);
 				
 			}
@@ -614,7 +614,7 @@ const MESSAGE = {
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				view.setUint8(6 + offset, enumByte);
 				var weaponByte = this.WEAPON[player.weaponary.armed] << 2;
-				weaponByte += this.WEAPON[player.weaponary.carrying];
+				weaponByte |= this.WEAPON[player.weaponary.carrying];
 				view.setUint8(7 + offset, weaponByte);
 				offset += 8;
 			}, this);

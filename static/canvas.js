@@ -59,7 +59,7 @@ var context = canvas.getContext("2d"),
 		started: false,
 		fps: 0,
 		weapons: [],
-		weaponOffset: {"lmg": 60.1, "smg": 54}
+		weaponOffset: {lmg: 60.1, smg: 54, knife: 32}
 	};
 
 
@@ -145,11 +145,17 @@ Enemy.prototype.drawAtmos = function() {
 		350, 4);
 }
 Shot.prototype.draw = function(dead) {
-	console.log(this);
-	windowBox.drawRotatedImage((!this.fromWeapon ? resources[dead ? "laserBeamDead" : "laserBeam"] : resources["rifleShot"]),
+	var resourceKey;
+	if (this.type === this.shotEnum.bullet && !dead) resourceKey = "rifleShot";
+	else if (this.type === this.shotEnum.knife && !dead) resourceKey = "knife";
+	else if (this.type === this.shotEnum.laser) resourceKey = (dead ? "laserBeamDead" : "laserBeam");
+
+	if (resourceKey === undefined) return;
+	windowBox.drawRotatedImage(resources[resourceKey],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle, {});
+		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) * Math.PI * 0.06 : 0), {});
+	this.lifeTime--;
 }
 Player.prototype.draw = function(showName) {
 	var res = resources[this.appearance + this.walkFrame],
