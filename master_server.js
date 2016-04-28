@@ -147,8 +147,9 @@ gameServerSocket.on("connection", function(ws) {
 				logger(logger.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
-						let newGameServerBuf = MESSAGE.ADD_SERVERS.serialize([gameServer], client.ipAddr);
-						client.send(newGameServerBuf, wsOptions);
+						MESSAGE.ADD_SERVERS.serialize([gameServer], client.ipAddr).then(function(buf) {
+							client.send(buf, wsOptions);
+						});
 					} catch (err) {/* Do nothing */}
 				});
 				break;
@@ -172,12 +173,12 @@ gameServerSocket.on("connection", function(ws) {
 });
 
 clientsSocket.on("connection", function(ws) {
-	this.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
-	if (this.ipAddr.kind() === "ipv4") this.ipAddr = this.ipAddr.toIPv4MappedAddress();
+	ws.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
+	if (ws.ipAddr.kind() === "ipv4") ws.ipAddr = ws.ipAddr.toIPv4MappedAddress();
 
 	try {
-		MESSAGE.ADD_SERVERS.serialize(gameServers, this.ipAddr).then(function(value) {
-			ws.send(value, wsOptions);
+		MESSAGE.ADD_SERVERS.serialize(gameServers, ws.ipAddr).then(function(buf) {
+			ws.send(buf, wsOptions);
 		});
 	} catch (err) {/* Do nothing */}
 

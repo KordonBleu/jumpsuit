@@ -78,7 +78,7 @@ function handleInputMobile(e) {
 
 
 /* Keyboard */
-function handleInput(e) {	
+function handleInput(e) {
 	if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
 
 	var s = (e.type === "keydown") * 1,
@@ -90,7 +90,7 @@ function handleInput(e) {
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
-		} else if (triggered === "chat" && s === 1) chatInput.focus();		
+		} else if (triggered === "chat" && s === 1) chatInput.focus();
 	}
 }
 handleInput.keyMap = defaultKeymap;
@@ -113,7 +113,7 @@ handleInput.updateKeyMap = function() {
 			if (keys[key] !== undefined || keys[key] !== null) handleInput.keyMap[keys[key]] = action;
 		}
 	}
-	
+
 };
 handleInput.initKeymap = function(fromReversed) {
 	if (fromReversed) handleInput.updateKeyMap();
@@ -146,11 +146,11 @@ handleInput.initKeymap = function(fromReversed) {
 		}
 		keySettingsElement.appendChild(rowEl);
 	}
-	
+
 	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
 	settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
 };
-handleInput.loadKeySettings = function() {	
+handleInput.loadKeySettings = function() {
 	if (settings.keymap !== "") handleInput.reverseKeyMap = JSON.parse(settings.keymap);
 	else handleInput.keyMap = defaultKeymap;
 	handleInput.initKeymap(settings.keymap !== "");
@@ -214,10 +214,10 @@ document.addEventListener("contextmenu", function(e) {
 });
 var mousePosX = 0, mousePosY = 0;
 document.addEventListener("mousemove", function(e) {
-	mousePosX = e.screenX;
-	mousePosY = e.screenY;
+	mousePosX = e.clientX;
+	mousePosY = e.clientY;
 });
-setInterval(function(){
+setInterval(function() {
 	if (typeof(ownIdx) !== "undefined" && ownIdx in players && currentConnection.alive() && game.started) currentConnection.sendMousePos(0.5*Math.PI + Math.atan2(mousePosY - canvas.height*0.5, mousePosX - canvas.width*0.5));
 }, 80);
 
@@ -230,7 +230,7 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) {
 		usingGamepad = e.gamepad.index;
 		message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
 	});
-	window.addEventListener("gamepaddisconnected", function(e) { 
+	window.addEventListener("gamepaddisconnected", function(e) {
 		message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
 		usingGamepad = -1
 	});

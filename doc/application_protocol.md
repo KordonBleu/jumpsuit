@@ -56,6 +56,23 @@ They might be used several times in a packet or in packets with different types.
  1. grass
 
 
+#### LESSER_PLANET
+```
+     1B         1B
++----------+----------+
+| Owned By | progress |
++----------+----------+
+```
+
+Owned By must be either:
+ 0. `neutral`
+ 1. `blue team`
+ 2. `beige team`
+ 3. `green team`
+ 4. `pink team`
+ 5. `yellow team`
+
+
 #### ENEMY
 ```
       2B              2B           1B
@@ -89,10 +106,10 @@ They might be used several times in a packet or in packets with different types.
 
 #### PLAYER
 ```
-      2B             2B               1B            1B        1b         1b       3b        3b           1B        0-255B
-+--------------+--------------+-----------------+-------+------------+---------+------+------------+-------------+--------+
-| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Team | Walk Frame | name length | "name" |
-+--------------+--------------+-----------------+-------+------------+---------+------+------------+-------------+--------+
+      2B             2B               1B            1B       1B           1b         1b          3b        3b        4b             2b              2b             1B        0-255B
++--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+-------------+--------+
+| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | Walk Frame | Team | unused bits | Armed Weapon | Carried Weapon | name length | "name" |
++--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+-------------+--------+
 ```
 
 If `attached planet`'s value is 255, the player is not attached to a planet.
@@ -109,49 +126,19 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
  2. `green team`
  3. `pink team`
  4. `yellow team`
-
-
-#### SHOT
-```
-      2B              2B         1B         7b            1b
-+--------------+--------------+-------+-------------+-------------+
-| x-coordinate | y-coordinate | angle | unused bits | from weapon |
-+--------------+--------------+-------+-------------+-------------+
-```
-
-
-#### LESSER_PLANET
-```
-     1B         1B
-+----------+----------+
-| Owned By | progress |
-+----------+----------+
-```
-
-Owned By must be either:
- 0. `neutral`
- 1. `blue team`
- 2. `beige team`
- 3. `green team`
- 4. `pink team`
- 5. `yellow team`
-
-
-#### LESSER_SHOT
-```
-      2B              2B
-+--------------+--------------+
-| x-coordinate | y-coordinate |
-+--------------+--------------+
-```
+`Armed Weapon` and `Carried Weapon` must be either:
+ 0. `lmg`
+ 1. `smg`
+ 2. `shotgun`
+ 3. `sniper`
 
 
 #### LESSER_PLAYER
 ```
-      2B             2B               1B           1B         1b         1b          3b           7b             2b                2b
-+--------------+--------------+-----------------+-------+------------+---------+------------+-------------+----------------+------------------+
-| x-coordinate | y-coordinate | attached planet | angle | looks left | jetpack | Walk Frame | unused bits | Primary Weapon | Secondary Weapon |
-+--------------+--------------+-----------------+-------+------------+---------+------------+-------------+----------------+------------------+
+      2B             2B               1B           1B        1B           1b         1b          3b           7b             2b              2b
++--------------+--------------+-----------------+-------+-----------+------------+---------+------------+-------------+--------------+----------------+
+| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | Walk Frame | unused bits | Armed Weapon | Carried Weapon |
++--------------+--------------+-----------------+-------+-----------+------------+---------+------------+-------------+--------------+----------------+
 ```
 
 `Walk Frame` must be either:
@@ -161,11 +148,29 @@ Owned By must be either:
  3. `stand`
  4. `walk1`
  5. `walk2`
-`Primary Weapon` and `Secondary Weapon` must be either:
- 0. `assault rifle`
- 1. `knife`
+`Armed Weapon` and `Carried Weapon` must be either:
+ 0. `lmg`
+ 1. `smg`
  2. `shotgun`
  3. `sniper`
+
+
+#### SHOT
+```
+      4B         1B         7b            1b
++-------------+-------+-------------+-------------+
+| LESSER_SHOT | angle | unused bits | from weapon |
++-------------+-------+-------------+-------------+
+```
+
+
+#### LESSER_SHOT
+```
+      2B              2B
++--------------+--------------+
+| x-coordinate | y-coordinate |
++--------------+--------------+
+```
 
 
 #### SERVER
@@ -340,7 +345,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 
 #### GAME_STATE (game server → client)
 ```
-  1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*8B
+  1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*9B
 +----+-------------+-----------+===============+=============+=============+===============+
 | 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+=============+===============+
@@ -356,20 +361,11 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
 
 
-#### ACTION_ONE (client → game server)
+#### AIM_ANGLE (client → game server)
 ```
-  1B    2B
+  1B    1B
 +----+-------+
 | 14 | angle |
-+----+-------+
-```
-
-
-#### ACTION_TWO (client → game server)
-```
-  1B    2B
-+----+-------+
-| 15 | angle |
 +----+-------+
 ```
 
@@ -378,7 +374,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      1B
 +----+-----------+
-| 16 | "message" |
+| 15 | "message" |
 +----+-----------+
 ```
 
@@ -387,7 +383,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B      1B          ?B
 +----+-----------+-----------+
-| 17 | player id | "message" |
+| 16 | player id | "message" |
 +----+-----------+-----------+
 ```
 
@@ -395,7 +391,7 @@ The homograph id is used to distinguish players with the same name. It is unique
 ```
   1B       4B
 +----+============+
-| 18 | team score |
+| 17 | team score |
 +----+============+
 ```
 

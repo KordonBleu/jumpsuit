@@ -315,7 +315,7 @@ function loop() {
 
 
 	//layer 1: the game
-	doPrediction.predict(universe, players, enemies, shots);
+	doPrediction(universe, players, enemies, shots);
 	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) * 1/windowBox.zoomFactor + game.dragSmoothed.x * 4) / 5;
 	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) * 1/windowBox.zoomFactor + game.dragSmoothed.y * 4) / 5;
 

@@ -225,10 +225,10 @@ wss.on("connection", function(ws) {
 			case MESSAGE.CHAT.value:
 				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)), player);
 				break;
-			case MESSAGE.PLAYER_ANGLE.value:
-				let angle = MESSAGE.PLAYER_ANGLE.deserialize(message);
+			case MESSAGE.AIM_ANGLE.value:
+				let angle = MESSAGE.AIM_ANGLE.deserialize(message);
 				player.mousePos = angle;
-				break;	
+				break
 		}
 	});
 	ws.on("pong", function() {

@@ -20,8 +20,10 @@ masterSocket.addEventListener("message", function(message) {
 				applyLobbySearch();//in case the page was refreshed and the
 				applyEmptinessCheck();//inputs left in a modified state
 			} else {
-				serverList = serverList.concat(MESSAGE.ADD_SERVERS.deserialize(message.data));
-				addServerRow();
+				console.log(MESSAGE.ADD_SERVERS.deserialize(message.data), serverList);
+				let newServers = MESSAGE.ADD_SERVERS.deserialize(message.data);
+				serverList = serverList.concat(newServers);
+				newServers.forEach(addServerRow);
 			}
 			break;
 		case MESSAGE.REMOVE_SERVERS.value:
@@ -88,9 +90,8 @@ Connection.prototype.refreshControls = function(controls) {
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
 Connection.prototype.sendMousePos = function(angle) {
-	console.log(angle);
 	if (this.lastAngle === undefined) this.lastAngle = 0;
-	if (this.lastAngle !== angle) this.sendMessage(MESSAGE.PLAYER_ANGLE, angle);
+	if (this.lastAngle !== angle) this.sendMessage(MESSAGE.AIM_ANGLE, angle);
 	this.lastAngle = angle;
 };
 Connection.prototype.errorHandler = function() {
@@ -127,19 +128,19 @@ Connection.prototype.messageHandler = function(message) {
 				function(x, y, angle) {//add shots
 					shots.push(new Shot(x, y, angle));
 				},
-				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
-					console.log(appearance, walkFrame);
-					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack);
+				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, armedWeapon, carriedWeapon) {//add players
+					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					player.looksLeft = looksLeft;
 					player.lastSound = 0;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
+					player.weaponry.armed = armedWeapon;
+					player.weaponry.armed = carriedWeapon;
 					players.push(player);
 				}
 			);
 			ownIdx = val.playerId;
 			enabledTeams = val.enabledTeams;
 
-			console.log(val.univWidth, val.univHeight);
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
 
@@ -158,9 +159,9 @@ Connection.prototype.messageHandler = function(message) {
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					shots.push(new Shot(x, y, angle, undefined, type));
 				},
-				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name) {//add players
+				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, armedWeapon, carriedWeapon) {//add players
 					printChatMessage(undefined, undefined, name + " joined the game");
-					players.push(new Player(name, appearance, walkFrame, attachedPlanet, jetpack));
+					players.push(new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon));
 					players[players.length - 1].box.center.x = x;
 					players[players.length - 1].box.center.y = y;
 					players[players.length - 1].looksLeft = looksLeft;
@@ -197,9 +198,9 @@ Connection.prototype.messageHandler = function(message) {
 					shots[id].box.center.x = x;
 					shots[id].box.center.y = y;
 				},
-				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carryingWeapon) {
-					game.weapons[0] = armedWeapon;
-					game.weapons[1] = carryingWeapon;
+				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carriedWeapon) {
+					//game.weapons[0] = armedWeapon;
+					//game.weapons[1] = carryingWeapon;
 					if (id === ownIdx) {
 						if (!players[id].jetpack && jetpack) {
 							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
@@ -245,7 +246,10 @@ Connection.prototype.messageHandler = function(message) {
 
 					players[id].attachedPlanet = attachedPlanet;
 					if (attachedPlanet === 255) players[id].predictionState = 0;
-					else players[id].predictionState = Math.min(1, players[id].predictionState + 0.34); 
+					else players[id].predictionState = Math.min(1, players[id].predictionState + 0.34);
+
+					players[id].weaponry.armed = armedWeapon;
+					players[id].weaponry.carrying = carriedWeapon;
 				}
 			);
 
@@ -283,12 +287,6 @@ Connection.prototype.messageHandler = function(message) {
 				}
 			}
 			//TODO: when game ends, display scores
-			//below is some old code that used to do this
-			/*for (a in val) b.push([a, val[a]]);
-			b.sort(function(a, c){ return a[1]-c[1]; });
-			b.forEach(function(a, i){
-				if (a[0].indexOf("alien") !== -1) document.getElementById("team" + a[0].substr(5)).textContent = "[" + (5-i) + "] " + a[1];
-			});*/
 			break;
 	}
 };
