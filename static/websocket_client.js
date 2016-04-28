@@ -87,13 +87,11 @@ Connection.prototype.refreshControls = function(controls) {
 	if (accordance === b) return;
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
-Connection.prototype.sendActionOne = function(angle) {
-	if (!currentConnection.alive()) return;
-	this.socket.send(MESSAGE.ACTION_ONE.serialize(angle));
-};
-Connection.prototype.sendActionTwo = function(angle) {
-	if (!currentConnection.alive()) return;
-	this.socket.send(MESSAGE.ACTION_TWO.serialize(angle));
+Connection.prototype.sendMousePos = function(angle) {
+	console.log(angle);
+	if (this.lastAngle === undefined) this.lastAngle = 0;
+	if (this.lastAngle !== angle) this.sendMessage(MESSAGE.PLAYER_ANGLE, angle);
+	this.lastAngle = angle;
 };
 Connection.prototype.errorHandler = function() {
 	//TODO: go back to main menu
@@ -199,7 +197,9 @@ Connection.prototype.messageHandler = function(message) {
 					shots[id].box.center.x = x;
 					shots[id].box.center.y = y;
 				},
-				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, primaryWeapon, secondaryWeapon) {
+				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carryingWeapon) {
+					game.weapons[0] = armedWeapon;
+					game.weapons[1] = carryingWeapon;
 					if (id === ownIdx) {
 						if (!players[id].jetpack && jetpack) {
 							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
@@ -238,11 +238,14 @@ Connection.prototype.messageHandler = function(message) {
 							stepSound.mediaElement.playbackRate = Math.random() + 0.5;
 						}
 						stepSound.start(0);
-						players[id].lastSound = (players[id].lastSound + 1)%5;
+						players[id].lastSound = (players[id].lastSound + 1) % 5;
 					}
 					players[id].walkFrame = "_" + walkFrame;
-					players[id].attachedPlanet = attachedPlanet;
 					players[id].jetpack = jetpack;
+
+					players[id].attachedPlanet = attachedPlanet;
+					if (attachedPlanet === 255) players[id].predictionState = 0;
+					else players[id].predictionState = Math.min(1, players[id].predictionState + 0.34); 
 				}
 			);
 

@@ -52,13 +52,14 @@ var context = canvas.getContext("2d"),
 			players.length = 0;
 			planets.length = 0;
 			enemies.length = 0;
+			game.weapons.length = 0;
 			window.cancelAnimationFrame(this.animationFrameId);
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		},
 		started: false,
 		fps: 0,
-		weapons: ["assaultrifle", "shotgun"],
-		armedWeapon: 0
+		weapons: [],
+		weaponOffset: {"lmg": 60.1, "smg": 54}
 	};
 
 
@@ -192,18 +193,21 @@ Player.prototype.draw = function(showName) {
 		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, this.box.angle);
 	}
 
-	//weapon	
-	var weaponResource = resources["weapon"],
-		weaponX, weaponY;
-	if (this.attachedPlanet === 255) {
-		weaponX = playerX - shift*60*Math.sin(this.box.angle - Math.PI / 2);
-		weaponY = playerY + shift*60*Math.cos(this.box.angle - Math.PI / 2);
-		windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, {x: this.looksLeft}, weaponResource.width, weaponResource.height);
-	} else {
-		weaponX = playerX + Math.abs(shift)*40*0.5*Math.sin(this.box.angle) + shift*Math.sin(this.box.angle - Math.PI / 2);
-		weaponY = playerY - Math.abs(shift)*40*0.5*Math.cos(this.box.angle) - shift*Math.cos(this.box.angle - Math.PI / 2);
-		windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, weaponResource.width*0.93, weaponResource.height*0.93);
-	}
+	//weapon
+	game.weapons.forEach((function(weapon, index) {
+		if (!(weapon in resources)) return;
+		var weaponResource = resources[weapon],
+			weaponX, weaponY;
+		if (this.attachedPlanet === 255 && index === 0) {
+			weaponX = playerX - shift*game.weaponOffset[weapon]*Math.sin(this.box.angle - Math.PI / 2);
+			weaponY = playerY + shift*game.weaponOffset[weapon]*Math.cos(this.box.angle - Math.PI / 2);
+			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, {x: this.looksLeft}, weaponResource.width, weaponResource.height);
+		} else {
+			weaponX = playerX + Math.abs(shift)*game.weaponOffset[weapon]*0.5*Math.sin(this.box.angle) + (20*index-10)*shift*Math.sin(this.box.angle - Math.PI / 2);
+			weaponY = playerY - Math.abs(shift)*game.weaponOffset[weapon]*0.5*Math.cos(this.box.angle) - (20*index-10)*shift*Math.cos(this.box.angle - Math.PI / 2);
+			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, weaponResource.width*0.93, weaponResource.height*0.93);
+		}
+	}).bind(this));
 	
 	//body
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
@@ -305,7 +309,7 @@ function loop() {
 
 
 	//layer 1: the game
-	doPrediction(universe, players, enemies, shots);
+	doPrediction.predict(universe, players, enemies, shots);
 	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) * 1/windowBox.zoomFactor + game.dragSmoothed.x * 4) / 5;
 	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) * 1/windowBox.zoomFactor + game.dragSmoothed.y * 4) / 5;
 

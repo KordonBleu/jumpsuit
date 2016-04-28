@@ -220,27 +220,15 @@ wss.on("connection", function(ws) {
 				}
 				break;
 			case MESSAGE.PLAYER_CONTROLS.value:
-				player.lobby.sendEntityDelta(
-					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message))
-				);
-				break;
-			case MESSAGE.ACTION_ONE.value:
-				if (player !== undefined) {
-					player.lobby.sendEntityDelta(
-						onMessage.onActionOne(player, MESSAGE.ACTION_ONE.deserialize(message))
-					);
-				}
-				break;
-			case MESSAGE.ACTION_TWO.value:
-				if (player !== undefined) {
-					player.lobby.sendEntityDelta(
-						onMessage.onActionTwo(player, MESSAGE.ACTION_TWO.deserialize(message))
-					);
-				}
+				onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
 				break;
 			case MESSAGE.CHAT.value:
 				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)), player);
 				break;
+			case MESSAGE.PLAYER_ANGLE.value:
+				let angle = MESSAGE.PLAYER_ANGLE.deserialize(message);
+				player.mousePos = angle;
+				break;	
 		}
 	});
 	ws.on("pong", function() {

@@ -575,8 +575,8 @@ const MESSAGE = {
 			JETPACK: 64
 		},
 		WEAPON: {
-			assaultRifle:0,
-			gun: 1,
+			lmg: 0,
+			smg: 1,
 			shotgun: 2,
 			knife: 3
 		},
@@ -613,8 +613,8 @@ const MESSAGE = {
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				view.setUint8(6 + offset, enumByte);
-				var weaponByte = this.WEAPON[player.primaryWeapon] << 2;
-				weaponByte += this.WEAPON[player.secondaryWeapon];
+				var weaponByte = this.WEAPON[player.weaponary.armed] << 2;
+				weaponByte += this.WEAPON[player.weaponary.carrying];
 				view.setUint8(7 + offset, weaponByte);
 				offset += 8;
 			}, this);
@@ -657,8 +657,8 @@ const MESSAGE = {
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walkframe
-					Object.keys(this.WEAPON)[weaponByte >>> 2],//primary weapon
-					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30]//secondary weapon
+					Object.keys(this.WEAPON)[weaponByte >>> 2],//armed weapon
+					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30]//carrying weapon
 				);
 			}
 
@@ -676,7 +676,9 @@ const MESSAGE = {
 			CROUCH: 4,
 			JETPACK: 8,
 			MOVE_LEFT: 16,
-			MOVE_RIGHT: 32
+			MOVE_RIGHT: 32,
+			CHANGE_WEAPON: 64,
+			SHOOT: 128
 		},
 		serialize: function(controls) {
 			var view = new Uint8Array(2),
@@ -688,54 +690,31 @@ const MESSAGE = {
 			if (controls.jetpack) enumByte |= this.MASK.JETPACK;
 			if (controls.moveLeft) enumByte |= this.MASK.MOVE_LEFT;
 			if (controls.moveRight) enumByte |= this.MASK.MOVE_RIGHT;
-
+			if (controls.changeWeapon) enumByte |= this.MASK.CHANGE_WEAPON;
+			if (controls.shoot) enumByte |= this.MASK.SHOOT;
 			view[0] = this.value;
 			view[1] = enumByte;
-
+				
 			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			var enumByte = new Uint8Array(buffer)[1],
 				controls = {};
 
-			controls.jump = enumByte & this.MASK.JUMP ? true : false;
-			controls.run = enumByte & this.MASK.RUN ? true : false;
-			controls.crouch = enumByte & this.MASK.CROUCH ? true : false;
-			controls.jetpack = enumByte & this.MASK.JETPACK ? true : false;
-			controls.moveLeft = enumByte & this.MASK.MOVE_LEFT ? true : false;
-			controls.moveRight = enumByte & this.MASK.MOVE_RIGHT ? true : false;
+			controls.jump = enumByte & this.MASK.JUMP;
+			controls.run = (enumByte & this.MASK.RUN) >> 1;
+			controls.crouch = (enumByte & this.MASK.CROUCH) >> 2;
+			controls.jetpack = (enumByte & this.MASK.JETPACK) >> 3;
+			controls.moveLeft = (enumByte & this.MASK.MOVE_LEFT) >> 4;
+			controls.moveRight = (enumByte & this.MASK.MOVE_RIGHT) >> 5;
+			controls.changeWeapon = (enumByte & this.MASK.CHANGE_WEAPON) >> 6;
+			controls.shoot = (enumByte & this.MASK.SHOOT) >> 7;
 
 			return controls;
 		}
 	},
-	ACTION_ONE: {
-		value: 14,
-		serialize: function(angle) {
-			var buffer = new ArrayBuffer(3),
-				view = new DataView(buffer);
-
-			view.setUint8(0, this.value);
-			view.setUint16(1, radToBrad(angle, 2));
-
-			return buffer;
-		},
-		deserialize: function(buffer) {
-			var view = new DataView(buffer);
-
-			return bradToRad(view.getUint16(1), 2);
-		}
-	},
-	ACTION_TWO: {
-		value: 15,
-		serialize: function(angle) {
-			return MESSAGE.ACTION_ONE.serialize.call(this, angle);
-		},
-		deserialize: function(buffer) {
-			return MESSAGE.ACTION_ONE.deserialize(buffer);
-		}
-	},
 	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
-		value: 16,
+		value: 14,
 		serialize: function(message) {
 			return MESSAGE.SET_NAME.serialize.call(this, message);
 		},
@@ -744,7 +723,7 @@ const MESSAGE = {
 		}
 	},
 	CHAT_BROADCAST: {//CHAT_BROADCAST and SET_NAME_BROADCAST are coincidentally serialized the same way
-		value: 17,
+		value: 15,
 		serialize: function(id, message) {
 			return MESSAGE.SET_NAME_BROADCAST.serialize.call(this, id, message);
 		},
@@ -756,7 +735,7 @@ const MESSAGE = {
 		}
 	},
 	SCORES: {
-		value: 18,
+		value: 16,
 		serialize: function(scoresObj) {
 			var teams = Object.keys(scoresObj).sort(),
 				buffer = new ArrayBuffer(1 + teams.length*4),
@@ -776,6 +755,19 @@ const MESSAGE = {
 			});
 
 			return val;
+		}
+	},
+	PLAYER_ANGLE: {
+		value: 17,
+		serialize: function(angle) {
+			var view = new Uint8Array(2);
+			view[0] = this.value;
+			view[1] = radToBrad(angle, 1);
+			return view.buffer;
+		},
+		deserialize: function(buffer) {
+			var angle = new Uint8Array(buffer)[1];
+			return bradToRad(angle, 1);
 		}
 	}
 };

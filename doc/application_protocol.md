@@ -349,10 +349,10 @@ The homograph id is used to distinguish players with the same name. It is unique
 
 #### PLAYER_CONTROLS (client → game server)
 ```
-  1B      2b         1b    1b      1b       1b         1b           1b
-+----+-------------+------+-----+--------+---------+-----------+------------+
-| 13 | unused bits | jump | run | crouch | jetpack | move left | move right |
-+----+-------------+------+-----+--------+---------+-----------+------------+
+  1B    1b    1b      1b       1b         1b           1b            1b          1b
++----+------+-----+--------+---------+-----------+------------+---------------+-------+
+| 13 | jump | run | crouch | jetpack | move left | move right | change weapon | shoot |
++----+------+-----+--------+---------+-----------+------------+---------------+-------+
 ```
 
 

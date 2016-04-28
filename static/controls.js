@@ -76,9 +76,9 @@ function handleInputMobile(e) {
 	});
 }
 
+
 /* Keyboard */
-function handleInput(e) {
-	
+function handleInput(e) {	
 	if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
 
 	var s = (e.type === "keydown") * 1,
@@ -90,8 +90,7 @@ function handleInput(e) {
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
-		} else if (triggered === "chat" && s === 1) chatInput.focus();
-		else if (triggered === "changeWeapon" && s === 1) game.currentWeapon = (game.currentWeapon + 1) % game.armedWeapons.length;
+		} else if (triggered === "chat" && s === 1) chatInput.focus();		
 	}
 }
 handleInput.keyMap = defaultKeymap;
@@ -159,7 +158,7 @@ handleInput.loadKeySettings = function() {
 window.addEventListener("keydown", handleInput);
 window.addEventListener("keyup", handleInput);
 
-/* Drag */
+/* Drag & Mouse */
 function dragStart(e) {
 	game.drag.x = e.pageX;
 	game.drag.y = e.pageY;
@@ -167,7 +166,6 @@ function dragStart(e) {
 	game.dragStart.y = e.pageY;
 }
 function dragEnd() {
-	//if (Math.min(Math.abs(game.dragStart.x - game.drag.x), Math.abs(game.drag.x - game.dragStart.x)) < 20 && Math.min(Math.abs(game.dragStart.y - game.drag.y), Math.abs(game.drag.y - game.dragStart.y)) < 20) console.log("FIYYA!");
 	game.drag.x = 0;
 	game.drag.y = 0;
 	game.dragStart.x = 0;
@@ -183,27 +181,30 @@ function dragHandler(e) {
 	}
 }
 canvas.addEventListener("mousedown", function(e) {
-	switch (e.button) {
-		case 0://left-click
-			currentConnection.sendActionOne(players[ownIdx].box.angle - Math.PI / 2 * (players[ownIdx].looksLeft ? 1 : -1));
-			break;
-		case 1://middle-click
-			dragStart(e);
-			canvas.addEventListener("mousemove", dragHandler);
-			break;		
+	if (e.button === 0) {
+		if (ownIdx in players && currentConnection.alive()) {
+			players[ownIdx].controls["shoot"] = 1;
+			currentConnection.refreshControls(players[ownIdx].controls);
+		}
+	} else if (e.button === 1) {
+		dragStart(e);
+		canvas.addEventListener("mousemove", dragHandler);
 	}
 });
 canvas.addEventListener("mouseup", function(e) {
 	if (e.button === 1) {
 		dragEnd(e);
 		canvas.removeEventListener("mousemove", dragHandler);
+	} else if (e.button === 0) {
+		if (ownIdx in players) {
+			players[ownIdx].controls["shoot"] = 0;
+			currentConnection.refreshControls(players[ownIdx].controls);
+		}
 	}
 });
-
 canvas.addEventListener("touchstart", dragStart);//TODO: action 1 on simple tap on mobile
 //canvas.addEventListener("touchmove", dragMove);
 canvas.addEventListener("touchend", dragEnd);
-
 document.getElementById("controls").addEventListener("dragstart", function(e) {
 	e.preventDefault();//prevent unhandled dragging
 });
@@ -211,6 +212,14 @@ document.addEventListener("contextmenu", function(e) {
 	//e.preventDefault();//prevent right-click context menu
 	//unfortunately it also disables the context menu key
 });
+var mousePosX = 0, mousePosY = 0;
+document.addEventListener("mousemove", function(e) {
+	mousePosX = e.screenX;
+	mousePosY = e.screenY;
+});
+setInterval(function(){
+	if (typeof(ownIdx) !== "undefined" && ownIdx in players && currentConnection.alive() && game.started) currentConnection.sendMousePos(0.5*Math.PI + Math.atan2(mousePosY - canvas.height*0.5, mousePosX - canvas.width*0.5));
+}, 80);
 
 
 /* Gamepads */
