@@ -140,7 +140,10 @@ gameServerSocket.on("connection", function(ws) {
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
 				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ipaddr.parse(ws._socket.remoteAddress));
 				gameServer.pingIntervalId = setInterval(function() {
-					ws.ping();
+					try {
+						ws.ping();
+					} catch (err) {/* Do nothing */}
+
 				}, 20000);
 				gameServers.push(gameServer);
 
@@ -181,19 +184,4 @@ clientsSocket.on("connection", function(ws) {
 			ws.send(buf, wsOptions);
 		});
 	} catch (err) {/* Do nothing */}
-
-	ws.on("message", function(message, flags) {
-		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
-
-		let state = new Uint8Array(message, 0, 1)[0];
-
-		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
-		logger(logger.DEV, (MESSAGE.toString(state)).italic);
-
-		if (state === MESSAGE.RESOLVE.value) {
-			let id = MESSAGE.RESOLVE.deserialize(message);
-			ws.send(MESSAGE.RESOLVED.serialize(id, gameServers[id].secure, gameServers[id].port, gameServers[id].ip), wsOptions);
-		}
-	});
-
 });

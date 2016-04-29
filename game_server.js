@@ -226,8 +226,7 @@ wss.on("connection", function(ws) {
 				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)), player);
 				break;
 			case MESSAGE.AIM_ANGLE.value:
-				let angle = MESSAGE.AIM_ANGLE.deserialize(message);
-				player.mousePos = angle;
+				player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);
 				break
 		}
 	});

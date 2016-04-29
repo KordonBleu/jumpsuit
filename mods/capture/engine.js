@@ -31,7 +31,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 }
 
 
-function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon) {
+function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 	this._walkCounter = 0;
 	this.name = name;
 	this.box = new Rectangle(new Point(0, 0), 0, 0);
@@ -70,8 +70,9 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.predictionState = 0;
 	this.lastlyAimedAt = Date.now();
 	this.pid = 0;
-	this.mousePos = 0;
+	this.aimAngle = 0;
 	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "knife"};
+	this.aimAngle = aimAngle;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
@@ -188,7 +189,10 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.box.angle += (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = false;
 			}
-			
+			if (player.controls["moveLeft"] === 0 && player.controls["moveRight"] === 0) {
+				player.looksLeft = (player.aimAngle - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
+			}
+
 			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2)
 			player.velocity.x = 0;
@@ -202,7 +206,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.box.center.y += player.velocity.y;
 			}
 		} else {
-			player.looksLeft = (player.mousePos - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
+			player.looksLeft = (player.aimAngle - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
 			player.jetpack = false;
 			for (var j = 0; j < planets.length; j++){
 				var deltaX = planets[j].box.center.x - player.box.center.x,
@@ -241,11 +245,11 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 		}
 		if (player.controls["shoot"] === 1) {
 			let shotType = (player.weaponry.armed === "knife" ? 2 : 1);
-			let newShot = new Shot(player.box.center.x + 80*Math.sin(player.mousePos), player.box.center.y - 80*Math.cos(player.mousePos), player.mousePos, player.pid, shotType);
+			let newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle, player.pid, shotType);
 			shots.push(newShot);
 			entitiesDelta.addedShots.push(newShot);
-			//var newShot = new Shot(player.box.center.x + 80*Math.sin(player.mousePos), player.box.center.y - 80*Math.cos(player.mousePos), player.mousePos, player.pid, true);
-			//console.log(newShot, player.mousePos);
+			//var newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle, player.pid, true);
+			//console.log(newShot, player.aimAngle);
 			//shots.push(newShot);
 		}
 		var needsPressState = {"changeWeapon": null, "shoot": null}; //it needs to be an Object to use the operater `in`

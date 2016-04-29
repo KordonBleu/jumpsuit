@@ -52,13 +52,11 @@ var context = canvas.getContext("2d"),
 			players.length = 0;
 			planets.length = 0;
 			enemies.length = 0;
-			game.weapons.length = 0;
 			window.cancelAnimationFrame(this.animationFrameId);
 			context.clearRect(0, 0, canvas.width, canvas.height);
 		},
 		started: false,
 		fps: 0,
-		weapons: [],
 		weaponOffset: {lmg: 60.1, smg: 54, knife: 32},
 		mousePos: {x: 0, y: 0}
 	};
@@ -201,22 +199,17 @@ Player.prototype.draw = function(showName) {
 	}
 
 	//weapon
-	var weapons = [this.weaponry.armed, this.weaponry.carrying];
-	weapons.forEach((function(weapon, index) {
-		if (!(weapon in resources)) return;
-		var weaponResource = resources[weapon],
-			weaponX, weaponY;
-		if (this.attachedPlanet === 255 && index === 0) {
-			weaponX = playerX + game.weaponOffset[weapon]*Math.sin(game.mousePos.angle);
-			weaponY = playerY - game.weaponOffset[weapon]*Math.cos(game.mousePos.angle);
-			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, game.mousePos.angle + Math.PI / 2, {x: true, y: !this.looksLeft}, weaponResource.width, weaponResource.height);
-		} else {
-			weaponX = playerX + Math.abs(shift)*game.weaponOffset[weapon]*0.5*Math.sin(this.box.angle) + (20*index-10)*shift*Math.sin(this.box.angle - Math.PI / 2);
-			weaponY = playerY - Math.abs(shift)*game.weaponOffset[weapon]*0.5*Math.cos(this.box.angle) - (20*index-10)*shift*Math.cos(this.box.angle - Math.PI / 2);
-			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, weaponResource.width*0.93, weaponResource.height*0.93);
-		}
-	}).bind(this));
-		
+	if (this.weaponry.armed in resources) {
+		let weaponX = playerX + game.weaponOffset[this.weaponry.armed]*Math.sin(this.aimAngle),
+		weaponY = playerY - game.weaponOffset[this.weaponry.armed]*Math.cos(this.aimAngle);
+		windowBox.drawRotatedImage(resources[this.weaponry.armed], weaponX, weaponY, this.aimAngle + Math.PI / 2, {x: true, y: !this.looksLeft}, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
+	}
+	if (this.weaponry.carrying in resources) {
+		let weaponX = playerX + Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.sin(this.box.angle) + 10*shift*Math.sin(this.box.angle - Math.PI / 2),
+			weaponY = playerY - Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.cos(this.box.angle) - 10*shift*Math.cos(this.box.angle - Math.PI / 2);
+		windowBox.drawRotatedImage(resources[this.weaponry.carrying], weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, resources[this.weaponry.carrying].width*0.93, resources[this.weaponry.carrying].height*0.93);
+	}
+
 	//body
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
 }

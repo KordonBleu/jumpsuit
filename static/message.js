@@ -594,7 +594,7 @@ const MESSAGE = {
 			knife: 3
 		},
 		serialize: function(yourHealth, yourFuel, planets, enemies, shots, players) {
-			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + shots.length*4 + players.length*8),
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + shots.length*4 + players.length*9),
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
@@ -622,14 +622,15 @@ const MESSAGE = {
 				view.setUint16(2 + offset, player.box.center.y);
 				view.setUint8(4 + offset, player.attachedPlanet);
 				view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
+				view.setUint8(6 + offset, radToBrad(player.aimAngle, 1));
 				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)] << 3;//doesn't work directly on buffer for efficiency
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-				view.setUint8(6 + offset, enumByte);
+				view.setUint8(7 + offset, enumByte);
 				var weaponByte = this.WEAPON[player.weaponry.armed] << 2;
 				weaponByte += this.WEAPON[player.weaponry.carrying];
-				view.setUint8(7 + offset, weaponByte);
-				offset += 8;
+				view.setUint8(8 + offset, weaponByte);
+				offset += 9;
 			}, this);
 
 			return buffer;
@@ -658,10 +659,10 @@ const MESSAGE = {
 				);
 			}
 
-			limit += playerAmount*8;
-			for (let id = 0; i !== limit; i += 8, ++id) {
-				let enumByte = view.getUint8(6 + i),
-					weaponByte = view.getUint8(7 + i);
+			limit += playerAmount*9;
+			for (let id = 0; i !== limit; i += 9, ++id) {
+				let enumByte = view.getUint8(7 + i),
+					weaponByte = view.getUint8(8 + i);
 				playersCbk(id,
 					view.getUint16(i),//x
 					view.getUint16(2 + i),//y
@@ -671,7 +672,8 @@ const MESSAGE = {
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walkframe
 					Object.keys(this.WEAPON)[weaponByte >>> 2],//armed weapon
-					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30]//carrying weapon
+					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30],//carrying weapon
+					bradToRad(view.getUint8(6 + i), 1)
 				);
 			}
 

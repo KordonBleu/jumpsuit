@@ -199,7 +199,7 @@ Connection.prototype.messageHandler = function(message) {
 					shots[id].box.center.x = x;
 					shots[id].box.center.y = y;
 				},
-				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carriedWeapon) {
+				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
 					if (id === ownIdx) {
 						if (!players[id].jetpack && jetpack) {
 							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
@@ -248,7 +248,8 @@ Connection.prototype.messageHandler = function(message) {
 					else players[id].predictionState = Math.min(1, players[id].predictionState + 0.34);
 
 					players[id].weaponry.armed = armedWeapon;
-					players[id].weaponry.carrying = carriedWeapon;				
+					players[id].weaponry.carrying = carriedWeapon;
+					players[id].aimAngle = aimAngle;
 				}
 			);
 
