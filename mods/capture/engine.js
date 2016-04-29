@@ -71,7 +71,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.lastlyAimedAt = Date.now();
 	this.pid = 0;
 	this.mousePos = 0;
-	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg"};
+	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "knife"};
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
@@ -188,7 +188,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.box.angle += (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = false;
 			}
-
+			
 			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2)
 			player.velocity.x = 0;
@@ -202,6 +202,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.box.center.y += player.velocity.y;
 			}
 		} else {
+			player.looksLeft = (player.mousePos - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
 			player.jetpack = false;
 			for (var j = 0; j < planets.length; j++){
 				var deltaX = planets[j].box.center.x - player.box.center.x,
@@ -234,9 +235,9 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 		}
 		if (player.controls["changeWeapon"] === 1) {
-			var a = player.weaponary.armed, b = player.weaponary.carrying;
-			player.weaponary.armed = b;
-			player.weaponary.carrying = a;
+			var a = player.weaponry.armed, b = player.weaponry.carrying;
+			player.weaponry.armed = b;
+			player.weaponry.carrying = a;
 		}
 		if (player.controls["shoot"] === 1) {
 			let shotType = (player.weaponry.armed === "knife" ? 2 : 1);

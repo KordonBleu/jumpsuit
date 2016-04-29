@@ -90,6 +90,7 @@ Connection.prototype.refreshControls = function(controls) {
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
 Connection.prototype.sendMousePos = function(angle) {
+	if (!currentConnection.alive()) return;
 	if (this.lastAngle === undefined) this.lastAngle = 0;
 	if (this.lastAngle !== angle) this.sendMessage(MESSAGE.AIM_ANGLE, angle);
 	this.lastAngle = angle;
@@ -199,8 +200,6 @@ Connection.prototype.messageHandler = function(message) {
 					shots[id].box.center.y = y;
 				},
 				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carriedWeapon) {
-					//game.weapons[0] = armedWeapon;
-					//game.weapons[1] = carryingWeapon;
 					if (id === ownIdx) {
 						if (!players[id].jetpack && jetpack) {
 							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
@@ -249,7 +248,7 @@ Connection.prototype.messageHandler = function(message) {
 					else players[id].predictionState = Math.min(1, players[id].predictionState + 0.34);
 
 					players[id].weaponry.armed = armedWeapon;
-					players[id].weaponry.carrying = carriedWeapon;
+					players[id].weaponry.carrying = carriedWeapon;				
 				}
 			);
 

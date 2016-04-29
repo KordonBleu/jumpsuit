@@ -214,11 +214,12 @@ document.addEventListener("contextmenu", function(e) {
 });
 var mousePosX = 0, mousePosY = 0;
 document.addEventListener("mousemove", function(e) {
-	mousePosX = e.clientX;
-	mousePosY = e.clientY;
+	game.mousePos.x = e.clientX;
+	game.mousePos.y = e.clientY;
+	game.mousePos.angle = (2.5*Math.PI + Math.atan2(game.mousePos.y - canvas.height*0.5, game.mousePos.x - canvas.width*0.5)) % (2*Math.PI);
 });
 setInterval(function() {
-	if (typeof(ownIdx) !== "undefined" && ownIdx in players && currentConnection.alive() && game.started) currentConnection.sendMousePos(0.5*Math.PI + Math.atan2(mousePosY - canvas.height*0.5, mousePosX - canvas.width*0.5));
+	if (currentConnection !== undefined) currentConnection.sendMousePos(game.mousePos.angle);
 }, 80);
 
 

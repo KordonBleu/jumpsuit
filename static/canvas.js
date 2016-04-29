@@ -59,7 +59,8 @@ var context = canvas.getContext("2d"),
 		started: false,
 		fps: 0,
 		weapons: [],
-		weaponOffset: {lmg: 60.1, smg: 54, knife: 32}
+		weaponOffset: {lmg: 60.1, smg: 54, knife: 32},
+		mousePos: {x: 0, y: 0}
 	};
 
 
@@ -154,7 +155,7 @@ Shot.prototype.draw = function(dead) {
 	windowBox.drawRotatedImage(resources[resourceKey],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) * Math.PI * 0.06 : 0), {});
+		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) * Math.PI * 0.12 : 0), {});
 	this.lifeTime--;
 }
 Player.prototype.draw = function(showName) {
@@ -200,21 +201,22 @@ Player.prototype.draw = function(showName) {
 	}
 
 	//weapon
-	game.weapons.forEach((function(weapon, index) {
+	var weapons = [this.weaponry.armed, this.weaponry.carrying];
+	weapons.forEach((function(weapon, index) {
 		if (!(weapon in resources)) return;
 		var weaponResource = resources[weapon],
 			weaponX, weaponY;
 		if (this.attachedPlanet === 255 && index === 0) {
-			weaponX = playerX - shift*game.weaponOffset[weapon]*Math.sin(this.box.angle - Math.PI / 2);
-			weaponY = playerY + shift*game.weaponOffset[weapon]*Math.cos(this.box.angle - Math.PI / 2);
-			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle, {x: this.looksLeft}, weaponResource.width, weaponResource.height);
+			weaponX = playerX + game.weaponOffset[weapon]*Math.sin(game.mousePos.angle);
+			weaponY = playerY - game.weaponOffset[weapon]*Math.cos(game.mousePos.angle);
+			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, game.mousePos.angle + Math.PI / 2, {x: true, y: !this.looksLeft}, weaponResource.width, weaponResource.height);
 		} else {
 			weaponX = playerX + Math.abs(shift)*game.weaponOffset[weapon]*0.5*Math.sin(this.box.angle) + (20*index-10)*shift*Math.sin(this.box.angle - Math.PI / 2);
 			weaponY = playerY - Math.abs(shift)*game.weaponOffset[weapon]*0.5*Math.cos(this.box.angle) - (20*index-10)*shift*Math.cos(this.box.angle - Math.PI / 2);
 			windowBox.drawRotatedImage(weaponResource, weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, weaponResource.width*0.93, weaponResource.height*0.93);
 		}
 	}).bind(this));
-	
+		
 	//body
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
 }
