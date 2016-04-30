@@ -14,7 +14,7 @@ var resPaths = [
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
-	"rifleShot.svg", "lmg.svg", "smg.svg", "knife.svg"
+	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg"
 	],
 	resources = {};
 
@@ -36,6 +36,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.name = name;
 	this.box = new Rectangle(new Point(0, 0), 0, 0);
 	this.boxInformations = [];
+	this.aimAngleInformations = [];
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0, changeWeapon: 0, shoot: 0};
 	this.velocity = new Vector(0, 0);
 	this._appearance = appearance;
@@ -70,9 +71,8 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.predictionState = 0;
 	this.lastlyAimedAt = Date.now();
 	this.pid = 0;
-	this.aimAngle = 0;
-	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "knife"};
-	this.aimAngle = aimAngle;
+	this.weaponry = {armed: armedWeapon || "shotgun", carrying: carriedWeapon || "knife"};
+	this.aimAngle = aimAngle || 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
@@ -131,7 +131,7 @@ function Shot(x, y, angle, origin, type) {
 	this.origin = origin;
 	this.type = type || 0;
 }
-Shot.prototype.shotEnum = {laser: 0, bullet: 1, knife: 2}; //a knife is no shot but can be handled the same way
+Shot.prototype.shotEnum = {laser: 0, bullet: 1, knife: 2, ball: 3}; //a knife is no shot but can be handled the same way
 
 function doPrediction(universe, players, enemies, shots) {
 	doPrediction.newTimestamp = Date.now();
@@ -144,6 +144,9 @@ function doPrediction(universe, players, enemies, shots) {
 			var intensity = Math.max(1, 40 * fps / 1000);
 			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
+	
+			player.aimAngle += (player.aimAngleInformations[1] - player.aimAngleInformations[0]) / intensity;
+			player.aimAngle = (2 * Math.PI + player.aimAngle) % (2 * Math.PI);
 
 			if (player.attachedPlanet !== 255 && player.predictionState === 1) {
 				//"angular" prediction when moving around on planets
@@ -244,13 +247,16 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			player.weaponry.carrying = a;
 		}
 		if (player.controls["shoot"] === 1) {
-			let shotType = (player.weaponry.armed === "knife" ? 2 : 1);
-			let newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle, player.pid, shotType);
-			shots.push(newShot);
-			entitiesDelta.addedShots.push(newShot);
-			//var newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle, player.pid, true);
-			//console.log(newShot, player.aimAngle);
-			//shots.push(newShot);
+			let shotType = 1;
+			if (player.weaponry.armed === "knife") shotType = 2;
+			if (player.weaponry.armed === "shotgun") shotType = 3;
+			
+			for (var i = -2; i <= 2; i++) {
+				if (shotType !== 3 && i !== 0) continue;
+				let newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle + i*0.05, player.pid, shotType);
+				shots.push(newShot);
+				entitiesDelta.addedShots.push(newShot);
+			}
 		}
 		var needsPressState = {"changeWeapon": null, "shoot": null}; //it needs to be an Object to use the operater `in`
 		for (var key in player.controls) if (player.controls[key] !== 0 && key in needsPressState) player.controls[key] = 2;

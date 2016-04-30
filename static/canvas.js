@@ -57,8 +57,8 @@ var context = canvas.getContext("2d"),
 		},
 		started: false,
 		fps: 0,
-		weaponOffset: {lmg: 60.1, smg: 54, knife: 32},
-		mousePos: {x: 0, y: 0}
+		weaponOffset: {lmg: 60, smg: 54, knife: 54, shotgun: 50},
+		mousePos: {x: 0, y: 0, angle: 0}
 	};
 
 
@@ -148,6 +148,7 @@ Shot.prototype.draw = function(dead) {
 	if (this.type === this.shotEnum.bullet && !dead) resourceKey = "rifleShot";
 	else if (this.type === this.shotEnum.knife && !dead) resourceKey = "knife";
 	else if (this.type === this.shotEnum.laser) resourceKey = (dead ? "laserBeamDead" : "laserBeam");
+	else if (this.type === this.shotEnum.ball) resourceKey = "shotgunBall";
 
 	if (resourceKey === undefined) return;
 	windowBox.drawRotatedImage(resources[resourceKey],
@@ -199,10 +200,11 @@ Player.prototype.draw = function(showName) {
 	}
 
 	//weapon
+	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle);
 	if (this.weaponry.armed in resources) {
-		let weaponX = playerX + game.weaponOffset[this.weaponry.armed]*Math.sin(this.aimAngle),
-		weaponY = playerY - game.weaponOffset[this.weaponry.armed]*Math.cos(this.aimAngle);
-		windowBox.drawRotatedImage(resources[this.weaponry.armed], weaponX, weaponY, this.aimAngle + Math.PI / 2, {x: true, y: !this.looksLeft}, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
+		let weaponX = playerX + game.weaponOffset[this.weaponry.armed]*Math.sin(weaponAngle),
+		weaponY = playerY - game.weaponOffset[this.weaponry.armed]*Math.cos(weaponAngle);
+		windowBox.drawRotatedImage(resources[this.weaponry.armed], weaponX, weaponY, weaponAngle + Math.PI / 2, {x: true, y: !this.looksLeft}, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
 	}
 	if (this.weaponry.carrying in resources) {
 		let weaponX = playerX + Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.sin(this.box.angle) + 10*shift*Math.sin(this.box.angle - Math.PI / 2),
