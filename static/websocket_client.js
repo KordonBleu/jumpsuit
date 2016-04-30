@@ -158,7 +158,9 @@ Connection.prototype.messageHandler = function(message) {
 				function(x, y, appearance) {},//add enemies
 				function(x, y, angle, type) {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
-					shots.push(new Shot(x, y, angle, undefined, type));
+					var shot = new Shot(x, y, angle, undefined, type);
+					shots.push(shot);
+					notMuzzleFlashedShots.push(shot);
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, armedWeapon, carriedWeapon) {//add players
 					printChatMessage(undefined, undefined, name + " joined the game");
@@ -199,7 +201,7 @@ Connection.prototype.messageHandler = function(message) {
 					shots[id].box.center.x = x;
 					shots[id].box.center.y = y;
 				},
-				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
+				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
 					if (id === ownIdx) {
 						if (!players[id].jetpack && jetpack) {
 							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
@@ -243,7 +245,9 @@ Connection.prototype.messageHandler = function(message) {
 						stepSound.start(0);
 						players[id].lastSound = (players[id].lastSound + 1) % 5;
 					}
+					//console.log(walkFrame);
 					players[id].walkFrame = "_" + walkFrame;
+					players[id].hurt = hurt;
 					players[id].jetpack = jetpack;
 
 					players[id].attachedPlanet = attachedPlanet;

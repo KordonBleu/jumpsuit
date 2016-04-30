@@ -1,4 +1,5 @@
 # JumpSuit
+
 A sweet 2D canvas game.
 With your awesome suit, you can jump from planet to planet to conquer them!
 
@@ -22,13 +23,27 @@ Getkey: #OMG
 Flowi: #epic
 ```
 
-## How to run
+## Supported environnements
 
+Currently, we only support Firefox and Chrome, because we use many recent additions to JavaScript.
+The server requires Node.js 6.0.0 or above.
+
+## Program architecture
+
+JumpSuit works in a decentralised way: anyone can create a game server. After registering (automatically) to the master server, your game server will be listed on [jumpsuit.space](http://jumpsuit.space/) for players, which will be able to play directly on it. For security reasons however, the assets and scripts **are serverd by the master server**.
+
+## How to run
+If you want to create a public game server, here is what you need to do:
 ```sh
 $ npm install
 $ node game_server.js
 ```
-Now you can access it at `http://localhost:8080` in your browser.
+
+But if you are developing or running a LAN, you need to **also** make your own master server.
+```sh
+$ node master_server.js
+```
+Then you can access your master server at [http://localhost](http://localhost) in your browser.
 
 ## Configuration
 
@@ -58,10 +73,9 @@ server_name | The name the master associates your server with | "JumpSuit server
 
 ### Master server configuration
 
-If you want to host a LAN or participate in JumpSuit's development, you will need to configure a master server.
 The master serever's configuration works the same way as the game server's, all parameters are saved in a file. Its default filename is `master_server.json`, but you can also choose another one:
 ```sh
-$ node game_server.js path/to/your/config.json
+$ node master_server.js path/to/your/config.json
 ```
 
 In this file you can set the following parameters:

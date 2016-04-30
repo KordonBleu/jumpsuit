@@ -5,11 +5,11 @@ var resPaths = [
 	"laserBeam.svg", "laserBeamDead.svg", "jetpack.svg", "jetpackFire.svg", "jetpackParticle.svg", "planet.svg",
 	"heartFilled.svg", "heartHalfFilled.svg", "heartNotFilled.svg",
 	"goldCoin.svg", "silverCoin.svg", "bronzeCoin.svg",
-	"alienBlue_badge.svg", "alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
-	"alienBeige_badge.svg", "alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
-	"alienGreen_badge.svg", "alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
-	"alienPink_badge.svg", "alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
-	"alienYellow_badge.svg", "alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
+	"alienBlue_duck.svg", "alienBlue_hurt.svg", "alienBlue_jump.svg", "alienBlue_mouth_happy.svg", "alienBlue_mouth_unhappy.svg", "alienBlue_stand.svg", "alienBlue_walk1.svg", "alienBlue_walk2.svg",
+	"alienBeige_duck.svg", "alienBeige_hurt.svg", "alienBeige_jump.svg", "alienBeige_mouth_happy.svg", "alienBeige_mouth_unhappy.svg", "alienBeige_stand.svg", "alienBeige_walk1.svg", "alienBeige_walk2.svg",
+	"alienGreen_duck.svg", "alienGreen_hurt.svg", "alienGreen_jump.svg", "alienGreen_mouth_happy.svg", "alienGreen_mouth_unhappy.svg", "alienGreen_stand.svg", "alienGreen_walk1.svg", "alienGreen_walk2.svg",
+	"alienPink_duck.svg", "alienPink_hurt.svg", "alienPink_jump.svg", "alienPink_mouth_happy.svg", "alienPink_mouth_unhappy.svg", "alienPink_stand.svg", "alienPink_walk1.svg", "alienPink_walk2.svg",
+	"alienYellow_duck.svg", "alienYellow_hurt.svg", "alienYellow_jump.svg", "alienYellow_mouth_happy.svg", "alienYellow_mouth_unhappy.svg", "alienYellow_stand.svg", "alienYellow_walk1.svg", "alienYellow_walk2.svg",
 	"enemyBlack1.svg", "enemyBlack2.svg", "enemyBlack3.svg", "enemyBlack4.svg", "enemyBlack5.svg",
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
@@ -53,11 +53,9 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 		},
 		walkFrame: {
 			get: function() {
-				if (this._hurtDate + 300 > Date.now()) return "_hurt";
 				return this._walkFrame;
 			},
 			set: function(newWalkFrame) {
-				if (newWalkFrame === "_hurt") this._hurtDate = Date.now();
 				this._walkFrame = newWalkFrame;
 				this.setBoxSize();
 			}
@@ -65,6 +63,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	});
 
 	this.jetpack = jetpack || false;
+	this.hurt = false;
 	this.health = health || 8;
 	this.fuel = fuel || 400;
 	this.attachedPlanet = attachedPlanet || -1;
@@ -92,6 +91,7 @@ Player.prototype.setWalkFrame = function() {
 	}
 };
 Player.prototype.setBoxSize = function() {
+//	console.log(this.appearance, this.walkFrame);
 	this.box.width = resources[this.appearance + this.walkFrame].width
 	this.box.height = resources[this.appearance + this.walkFrame].height;
 };
@@ -144,7 +144,7 @@ function doPrediction(universe, players, enemies, shots) {
 			var intensity = Math.max(1, 40 * fps / 1000);
 			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
-	
+
 			player.aimAngle += (player.aimAngleInformations[1] - player.aimAngleInformations[0]) / intensity;
 			player.aimAngle = (2 * Math.PI + player.aimAngle) % (2 * Math.PI);
 
@@ -250,7 +250,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			let shotType = 1;
 			if (player.weaponry.armed === "knife") shotType = 2;
 			if (player.weaponry.armed === "shotgun") shotType = 3;
-			
+
 			for (var i = -2; i <= 2; i++) {
 				if (shotType !== 3 && i !== 0) continue;
 				let newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle + i*0.05, player.pid, shotType);
@@ -283,7 +283,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 					player.fuel = 400;
 					teamScores[player.appearance] -= 5;
 				}
-				player.walkFrame = "_hurt";
+				player.hurt = true;
 				entitiesDelta.removedShots.push(shot);
 				shots.splice(si, 1);
 			}

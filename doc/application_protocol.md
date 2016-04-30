@@ -135,19 +135,18 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
 
 #### LESSER_PLAYER
 ```
-      2B             2B               1B           1B        1B           1b         1b          3b           7b             2b              2b
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------------+-------------+--------------+----------------+
-| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | Walk Frame | unused bits | Armed Weapon | Carried Weapon |
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------------+-------------+--------------+----------------+
+      2B             2B               1B           1B        1B           1b         1b       1b       3b           6b             2b              2b
++--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+-------------+--------------+----------------+
+| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | hurt | Walk Frame | unused bits | Armed Weapon | Carried Weapon |
++--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+-------------+--------------+----------------+
 ```
 
 `Walk Frame` must be either:
  0. `duck`
- 1. `hurt`
- 2. `jump`
- 3. `stand`
- 4. `walk1`
- 5. `walk2`
+ 1. `jump`
+ 2. `stand`
+ 3. `walk1`
+ 4. `walk2`
 `Armed Weapon` and `Carried Weapon` must be either:
  0. `lmg`
  1. `smg`

@@ -11,6 +11,7 @@ var context = canvas.getContext("2d"),
 	planets = [],
 	enemies = [],
 	shots = [],
+	notMuzzleFlashedShots = [],
 	deadShots = [],
 	particles = [],
 	universe = new Rectangle(new Point(0, 0), null, null),//these parameters will be
@@ -83,6 +84,7 @@ windowBox.strokeAtmos = function(cx, cy, r, sw) {
 	context.closePath();
 }
 windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) {
+	image.style.filter = "blur(5px)";
 	var mirrorX = 1, mirrorY = 1;
 	if (mirror !== undefined) {
 		if ("x" in mirror && mirror["x"] === true) mirrorX = -1;
@@ -202,18 +204,20 @@ Player.prototype.draw = function(showName) {
 	//weapon
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle);
 	if (this.weaponry.armed in resources) {
-		let weaponX = playerX + game.weaponOffset[this.weaponry.armed]*Math.sin(weaponAngle),
-		weaponY = playerY - game.weaponOffset[this.weaponry.armed]*Math.cos(weaponAngle);
+		let weaponX = playerX + windowBox.zoomFactor*game.weaponOffset[this.weaponry.armed]*Math.sin(weaponAngle),
+		weaponY = playerY - windowBox.zoomFactor*game.weaponOffset[this.weaponry.armed]*Math.cos(weaponAngle);
 		windowBox.drawRotatedImage(resources[this.weaponry.armed], weaponX, weaponY, weaponAngle + Math.PI / 2, {x: true, y: !this.looksLeft}, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
 	}
 	if (this.weaponry.carrying in resources) {
-		let weaponX = playerX + Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.sin(this.box.angle) + 10*shift*Math.sin(this.box.angle - Math.PI / 2),
-			weaponY = playerY - Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.cos(this.box.angle) - 10*shift*Math.cos(this.box.angle - Math.PI / 2);
+		let weaponX = playerX + windowBox.zoomFactor*(Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.sin(this.box.angle) + 10*shift*Math.sin(this.box.angle - Math.PI / 2)),
+			weaponY = playerY - windowBox.zoomFactor*(Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.cos(this.box.angle) - 10*shift*Math.cos(this.box.angle - Math.PI / 2));
 		windowBox.drawRotatedImage(resources[this.weaponry.carrying], weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, resources[this.weaponry.carrying].width*0.93, resources[this.weaponry.carrying].height*0.93);
 	}
 
 	//body
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
+	//mouth
+	windowBox.drawRotatedImage(resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : "happy")], playerX, playerY, this.box.angle, {x: this.looksLeft});
 }
 
 function resizeCanvas() {
@@ -363,6 +367,19 @@ function loop() {
 
 		if(player.panner !== undefined && player.jetpack) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 	});
+
+	//muzzle flash
+	notMuzzleFlashedShots.forEach(function(shot) {
+		var x = windowBox.wrapX(shot.box.center.x),
+			y = windowBox.wrapY(shot.box.center.y);
+
+		context.fillStyle = "#ffffff";
+		context.beginPath();
+		context.arc(x, y, 30*windowBox.zoomFactor, 0, 2 * Math.PI, false);
+		context.closePath();
+		context.fill();
+	});
+	notMuzzleFlashedShots.length = 0;
 
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
