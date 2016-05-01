@@ -245,7 +245,6 @@ Connection.prototype.messageHandler = function(message) {
 						stepSound.start(0);
 						players[id].lastSound = (players[id].lastSound + 1) % 5;
 					}
-					//console.log(walkFrame);
 					players[id].walkFrame = "_" + walkFrame;
 					players[id].hurt = hurt;
 					players[id].jetpack = jetpack;

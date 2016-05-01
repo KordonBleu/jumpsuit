@@ -664,7 +664,6 @@ const MESSAGE = {
 			for (let id = 0; i !== limit; i += 9, ++id) {
 				let enumByte = view.getUint8(7 + i),
 					weaponByte = view.getUint8(8 + i);
-				console.log(enumByte << 26 >>> 28);
 				playersCbk(id,
 					view.getUint16(i),//x
 					view.getUint16(2 + i),//y

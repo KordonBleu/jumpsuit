@@ -84,7 +84,6 @@ windowBox.strokeAtmos = function(cx, cy, r, sw) {
 	context.closePath();
 }
 windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) {
-	image.style.filter = "blur(5px)";
 	var mirrorX = 1, mirrorY = 1;
 	if (mirror !== undefined) {
 		if ("x" in mirror && mirror["x"] === true) mirrorX = -1;
@@ -96,7 +95,8 @@ windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) 
 	context.translate(x, y);
 	context.rotate(angle);
 	context.scale(mirrorX, mirrorY);
-	var wdt = sizeX || image.width*this.zoomFactor, hgt = sizeY || image.height*this.zoomFactor;
+	var wdt = sizeX || image.width*this.zoomFactor,
+		hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 	context.resetTransform();
 }
@@ -217,7 +217,9 @@ Player.prototype.draw = function(showName) {
 	//body
 	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
 	//mouth
-	windowBox.drawRotatedImage(resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : "happy")], playerX, playerY, this.box.angle, {x: this.looksLeft});
+	var mouthX = playerX + windowBox.zoomFactor*res.mouthDistance*Math.sin(this.box.angle + (this.looksLeft ? -res.mouthAngle : res.mouthAngle)),
+		mouthY = playerY - windowBox.zoomFactor*res.mouthDistance*Math.cos(this.box.angle + (this.looksLeft ? -res.mouthAngle : res.mouthAngle));
+	windowBox.drawRotatedImage(resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : "happy")], mouthX, mouthY, this.box.angle, {x: this.looksLeft});
 }
 
 function resizeCanvas() {
@@ -281,7 +283,23 @@ resPaths.forEach(function(path) {//init resources
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
 	window.removeEventListener("resize", resizeHandler);
+	//TODO: handle :o facial expression in jump and crouch
+	//setMouth(resources["alienBeige_jump"], resources["alienBeige_mouth_happy"], 22.05, 26.5);
+	setMouth(resources["alienBeige_stand"], resources["alienBeige_mouth_happy"], 22.05, 26.5);
+	setMouth(resources["alienBeige_walk1"], resources["alienBeige_mouth_happy"], 25.8, 28.8);
+	setMouth(resources["alienBeige_walk2"], resources["alienBeige_mouth_happy"], 25.8, 28.8);
+
+	//setMouth(resources["alienBlue_jump"], resources["alienBlue_mouth_happy"], 27.75, 26.3);
+	//setMouth(resources["alienBlue_stand"], resources["alienBlue_mouth_happy"], 27.75, 35.7);
+	//setMouth(resources["alienBlue_walk1"], resources["alienBlue_mouth_happy"], 27.75, 37.55);
+	//setMouth(resources["alienBlue_walk2"], resources["alienBlue_mouth_happy"], 27.75, 37.05);
 });
+function setMouth(body, mouth, mouthPosX, mouthPosY) {
+	var deltaX = mouthPosX + mouth.width/2 - body.height/2,
+		deltaY = mouthPosY + mouth.height/2 - body.width/2;
+	body.mouthAngle = Math.atan2(deltaX, deltaY) + Math.PI/2;
+	body.mouthDistance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+}
 
 var canSpawnMeteor = true;
 var meteorSpawning = setInterval(function() {
