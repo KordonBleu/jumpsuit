@@ -63,7 +63,17 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	});
 
 	this.jetpack = jetpack || false;
-	this.hurt = false;
+	if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+		this._lastHurt = 0;
+		Object.defineProperty(this, "hurt", {
+			get: function() {
+				return Date.now() - this._lastHurt < 600;
+			},
+			set: function(hurt) {
+				this._lastHurt = hurt ? Date.now() : 0;
+			}
+		});
+	} else this.hurt = false;
 	this.health = health || 8;
 	this.fuel = fuel || 400;
 	this.attachedPlanet = attachedPlanet || -1;
@@ -268,9 +278,9 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 		if (--shot.lifeTime <= 0) {
 			entitiesDelta.removedShots.push(shot);
 			shots.splice(si, 1);
-		} else players.forEach(function(player) {
-			if (player.pid !== shot.origin && universe.collide(new Circle(shot.box.center, 40), player.box)) {//needed as long as Node.js doesn't support Proxies
-				player.health -= (player.health = 0) ? 0 : 1;
+		} else if (!players.some(function(player) {
+			if (player.pid !== shot.origin && universe.collide(shot.box, player.box)) {
+				player.health -= (player.health === 0) ? 0 : 1;
 				if (player.health <= 0) {
 					var suitablePlanets = [];
 					planets.forEach(function(planet, pi) {
@@ -286,6 +296,13 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 				player.hurt = true;
 				entitiesDelta.removedShots.push(shot);
 				shots.splice(si, 1);
+				return true;
+			}
+		})) planets.some(function(planet) {
+			if (universe.collide(shot.box, planet.box)) {
+				entitiesDelta.removedShots.push(shot);
+				shots.splice(si, 1);
+				return true;
 			}
 		});
 	});
@@ -344,5 +361,4 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") modu
 	Planet: Planet,
 	Enemy: Enemy,
 	Shot: Shot
-
 };

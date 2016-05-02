@@ -37,7 +37,6 @@ masterSocket.addEventListener("message", function(message) {
 
 function Connection(url, lobbyId) {// a connection to a game server
 	this.lastControls = {};
-	console.log(lobbyId);
 	this.socket = new WebSocket(url);
 	this.socket.binaryType = "arraybuffer";
 
