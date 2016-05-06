@@ -83,18 +83,13 @@ windowBox.strokeAtmos = function(cx, cy, r, sw) {
 	context.stroke();
 	context.closePath();
 }
-windowBox.drawRotatedImage = function(image, x, y, angle, mirror, sizeX, sizeY) {
-	var mirrorX = 1, mirrorY = 1;
-	if (mirror !== undefined) {
-		if ("x" in mirror && mirror["x"] === true) mirrorX = -1;
-		if ("y" in mirror && mirror["y"] === true) mirrorY = -1;
-	}
+windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY, mirrorX, mirrorY) {
 	sizeX *= this.zoomFactor;
 	sizeY *= this.zoomFactor;
 
 	context.translate(x, y);
 	context.rotate(angle);
-	context.scale(mirrorX, mirrorY);
+	context.scale(mirrorX === true ? -1 : 1, mirrorY === true ? -1 : 1);
 	var wdt = sizeX || image.width*this.zoomFactor,
 		hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
@@ -111,7 +106,7 @@ Planet.prototype.draw = function() {
 	context.fill();
 
 	//apply texture
-	windowBox.drawRotatedImage(resources["planet"], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, {}, 2*this.box.radius, 2*this.box.radius);
+	windowBox.drawRotatedImage(resources["planet"], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, 2*this.box.radius, 2*this.box.radius);
 
 	//draw progress indicator
 	context.beginPath();
@@ -134,7 +129,7 @@ Enemy.prototype.draw = function() {
 	windowBox.drawRotatedImage(resources[this.appearance],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle, {});
+		this.box.angle);
 }
 Enemy.prototype.drawAtmos = function() {
 	context.fillStyle = "#aaa";
@@ -156,7 +151,7 @@ Shot.prototype.draw = function(dead) {
 	windowBox.drawRotatedImage(resources[resourceKey],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) * Math.PI * 0.12 : 0), {});
+		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) * Math.PI * 0.12 : 0));
 	this.lifeTime--;
 }
 Player.prototype.draw = function(showName) {
@@ -170,18 +165,22 @@ Player.prototype.draw = function(showName) {
 		context.fillText(this.name, this, this - distance*windowBox.zoomFactor);
 	}
 
-	//jetpack
-	var shift = this.looksLeft === true ? -windowBox.zoomFactor : windowBox.zoomFactor,
-		jetpackX = playerX - shift*14*Math.sin(this.box.angle + Math.PI/2),
-		jetpackY = playerY + shift*14*Math.cos(this.box.angle + Math.PI/2);
+	var wdt = res.width * windowBox.zoomFactor,
+		hgt = res.height * windowBox.zoomFactor,
+		centerX = -(wdt / 2),
+		centerY = -(hgt / 2);
 
-	windowBox.drawRotatedImage(resources["jetpack"], jetpackX, jetpackY, this.box.angle, {}, resources["jetpack"].width*0.75, resources["jetpack"].height*0.75);
+	context.translate(playerX, playerY);
+	context.rotate(this.box.angle);
+	context.scale(this.looksLeft === true ? -1 : 1, 1);
+
+	var jetpackRes = resources["jetpack"],
+		jetpackX = centerX - 5*windowBox.zoomFactor,
+		jetpackY = centerY + 16*windowBox.zoomFactor;
+	context.drawImage(resources["jetpack"], jetpackX, jetpackY, resources["jetpack"].width*0.75*windowBox.zoomFactor, resources["jetpack"].height*0.75*windowBox.zoomFactor);
+
 	if (this.jetpack) {
-		var jetpackFireOneX = jetpackX - 53 * Math.sin(this.box.angle - Math.PI / 11)*windowBox.zoomFactor,
-			jetpackFireOneY = jetpackY + 53 * Math.cos(this.box.angle - Math.PI / 11)*windowBox.zoomFactor,
-			jetpackFireTwoX = jetpackX - 53 * Math.sin(this.box.angle + Math.PI / 11)*windowBox.zoomFactor,
-			jetpackFireTwoY = jetpackY + 53 * Math.cos(this.box.angle + Math.PI / 11)*windowBox.zoomFactor;
-
+		let shift = this.looksLeft === true ? -windowBox.zoomFactor : windowBox.zoomFactor;
 		if (Math.random() < 0.6) {//TODO: this should be dependent on speed, which can be calculated with predictBox
 			particles.push(new Particle(18,
 				this.box.center.x - shift*14*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
@@ -197,29 +196,25 @@ Player.prototype.draw = function(showName) {
 				80));
 		}
 
-		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireOneX, jetpackFireOneY, this.box.angle);
-		windowBox.drawRotatedImage(resources["jetpackFire"], jetpackFireTwoX, jetpackFireTwoY, this.box.angle);
+		var jetpackFireRes = resources["jetpackFire"];
+		context.drawImage(jetpackFireRes, -(jetpackFireRes.width/2)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
+		context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 	}
 
-	//weapon
-	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle);
-	if (this.weaponry.armed in resources) {
-		let weaponX = playerX + windowBox.zoomFactor*game.weaponOffset[this.weaponry.armed]*Math.sin(weaponAngle),
-		weaponY = playerY - windowBox.zoomFactor*game.weaponOffset[this.weaponry.armed]*Math.cos(weaponAngle);
-		windowBox.drawRotatedImage(resources[this.weaponry.armed], weaponX, weaponY, weaponAngle + Math.PI / 2, {x: true, y: !this.looksLeft}, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
-	}
-	if (this.weaponry.carrying in resources) {
-		let weaponX = playerX + windowBox.zoomFactor*(Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.sin(this.box.angle) + 10*shift*Math.sin(this.box.angle - Math.PI / 2)),
-			weaponY = playerY - windowBox.zoomFactor*(Math.abs(shift)*game.weaponOffset[this.weaponry.carrying]*0.5*Math.cos(this.box.angle) - 10*shift*Math.cos(this.box.angle - Math.PI / 2));
-		windowBox.drawRotatedImage(resources[this.weaponry.carrying], weaponX, weaponY, this.box.angle + Math.PI / 2, {x: true, y: this.looksLeft}, resources[this.weaponry.carrying].width*0.93, resources[this.weaponry.carrying].height*0.93);
-	}
+	var qwf = (this.looksLeft ? -this.aimAngle : this.aimAngle);//wat
+	context.rotate(qwf);
+	context.drawImage(resources[this.weaponry.carrying], 0, 0, resources[this.weaponry.carrying].width*0.93, resources[this.weaponry.carrying].height*0.93);
+	context.rotate(-qwf);
 
-	//body
-	windowBox.drawRotatedImage(res, playerX, playerY, this.box.angle, {x: this.looksLeft});
-	//mouth
-	var mouthX = playerX + windowBox.zoomFactor*res.mouthDistance*Math.sin(this.box.angle + (this.looksLeft ? -res.mouthAngle : res.mouthAngle)),
-		mouthY = playerY - windowBox.zoomFactor*res.mouthDistance*Math.cos(this.box.angle + (this.looksLeft ? -res.mouthAngle : res.mouthAngle));
-	windowBox.drawRotatedImage(resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : "happy")], mouthX, mouthY, this.box.angle, {x: this.looksLeft});
+	context.drawImage(res, centerX, centerY, wdt, hgt);//body
+
+	var mouthRes = resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : this.walkFrame === "_jump" ? "surprise" : "happy")];
+	context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
+
+	var helmetRes = resources["astronaut_helmet"];
+	context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
+
+	context.resetTransform();
 }
 
 function resizeCanvas() {
@@ -284,24 +279,27 @@ var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
 	window.removeEventListener("resize", resizeHandler);
 	//TODO: handle :o facial expression in jump and crouch
-	//setMouth(resources["alienBeige_jump"], resources["alienBeige_mouth_happy"], 22.05, 26.5);
+	setMouth(resources["alienBeige_jump"], resources["alienBeige_mouth_surprise"], 22.05, 26.45);
 	setMouth(resources["alienBeige_stand"], resources["alienBeige_mouth_happy"], 22.05, 26.5);
 	setMouth(resources["alienBeige_walk1"], resources["alienBeige_mouth_happy"], 25.8, 28.8);
 	setMouth(resources["alienBeige_walk2"], resources["alienBeige_mouth_happy"], 25.8, 28.8);
 
-	//setMouth(resources["alienBlue_jump"], resources["alienBlue_mouth_happy"], 27.75, 26.3);
+	setMouth(resources["alienBlue_jump"], resources["alienBlue_mouth_surprise"], 27.75, 35.7);
 	setMouth(resources["alienBlue_stand"], resources["alienBlue_mouth_happy"], 27.75, 35.7);
 	setMouth(resources["alienBlue_walk1"], resources["alienBlue_mouth_happy"], 27.75, 37.55);
 	setMouth(resources["alienBlue_walk2"], resources["alienBlue_mouth_happy"], 27.75, 37.05);
 
+	setMouth(resources["alienGreen_jump"], resources["alienGreen_mouth_surprise"], 23.8, 36.1);
 	setMouth(resources["alienGreen_stand"], resources["alienGreen_mouth_happy"], 23.8, 36.1);
 	setMouth(resources["alienGreen_walk1"], resources["alienGreen_mouth_happy"], 25.556, 36.1);
 	setMouth(resources["alienGreen_walk2"], resources["alienGreen_mouth_happy"], 27.656, 36.1);
 
+	setMouth(resources["alienPink_jump"], resources["alienPink_mouth_surprise"], 30.2, 28.55);
 	setMouth(resources["alienPink_stand"], resources["alienPink_mouth_happy"], 30.2, 28.4);
 	setMouth(resources["alienPink_walk1"], resources["alienPink_mouth_happy"], 31.456, 30.25);
 	setMouth(resources["alienPink_walk2"], resources["alienPink_mouth_happy"], 33.206, 30.25);
 
+	setMouth(resources["alienYellow_jump"], resources["alienYellow_mouth_surprise"], 21.8, 40.65);
 	setMouth(resources["alienYellow_stand"], resources["alienYellow_mouth_happy"], 21.8, 40.65);
 	setMouth(resources["alienYellow_walk1"], resources["alienYellow_mouth_happy"], 25.056, 40);
 	setMouth(resources["alienYellow_walk2"], resources["alienYellow_mouth_happy"], 26.806, 40);
@@ -311,7 +309,8 @@ function setMouth(body, mouth, mouthPosX, mouthPosY) {
 		deltaY = -body.height/2 + (mouthPosY + mouth.height/2);//mouthPosY + mouth.height/2 - body.height/2;
 	body.mouthAngle = Math.atan2(deltaY, deltaX) + Math.PI/2;// - Math.PI/2 - Math.PI/4;
 	body.mouthDistance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
-	console.log(deltaX, deltaY, body.mouthAngle, body.mouthDistance);
+	body.mouthPosX = mouthPosX;
+	body.mouthPosY = mouthPosY;
 }
 
 var canSpawnMeteor = true;
@@ -341,7 +340,7 @@ function loop() {
 		m.x += m.speed;
 		m.rotAng += m.rotSpeed;
 		if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
-		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, {}, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
+		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
 	});
 	context.globalAlpha = 1;
 
@@ -386,7 +385,7 @@ function loop() {
 		else windowBox.drawRotatedImage(resources["jetpackParticle"],
 			windowBox.wrapX(particle.box.center.x),
 			windowBox.wrapY(particle.box.center.y),
-		   	particle.box.angle, {}, particle.size, particle.size);
+			particle.box.angle, particle.size, particle.size);
 	});
 
 	//players
