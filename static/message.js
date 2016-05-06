@@ -195,7 +195,7 @@ const MESSAGE = {
 			return view.buffer;
 		},
 		deserialize: function(buffer) {
-			return bufferToString(buffer.slice(1));
+			return buffer.byteLength === 1 ? "" : bufferToString(buffer.slice(1));//prevent crash when buffer empty
 		}
 	},
 	SET_NAME_BROADCAST: {

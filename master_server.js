@@ -88,7 +88,7 @@ var server = http.createServer(function (req, res) {
 		res.writeHead(301, {"Location": "/"});
 		res.end();
 		return;
-	} //beautifying URL, shows foo.bar when requested foo.bar/index.html
+	} //beautifying URL, shows foo.bar when requested foo.bar/index.html (why would someone request foo.bar/index.html though?)
 
 	if (req.url === "/") req.url = "/index.html";
 	if (files[req.url] !== undefined) {

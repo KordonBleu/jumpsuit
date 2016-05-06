@@ -13,7 +13,7 @@ module.exports = function(type, content) {
 
 	if (type === 0 && process.env.NODE_ENV !== "development") return;
 
-	let timestamp = (process.env.NODE_ENV === "development") ? ("[" + Math.round(Date.now() / 1000).toString(16) + "] ").grey : "";
+	let timestamp = ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey;
 	console.log(timestamp + enumToString(type) + " " + (content || ""));
 };
 module.exports.DEV = 0;

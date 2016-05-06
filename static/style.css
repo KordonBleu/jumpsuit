@@ -7,12 +7,6 @@
 	font-weight: 400;
 	src: local("Open Sans"), url("/assets/fonts/open_sans_400.woff2") format("woff2"), url("/assets/fonts/open_sans_400.woff") format("woff");
 }
-@font-face {
-	font-family: "Open Sans";
-	font-style: normal;
-	font-weight: 300;
-	src: local("Open Sans Light"), url("/assets/fonts/open_sans_300.woff2") format('woff2');
-}
 html, body {
 	font-size: 16px;
 	margin: 0;
@@ -123,6 +117,10 @@ button:hover {
 button:disabled:hover {
 	background: #ebedf4;
 	color: #555;
+}
+.flex-container {
+	display: flex;
+	justify-content: space-around;
 }
 input[type=range] {
 	-webkit-appearance: none;
@@ -278,10 +276,6 @@ label.range-label {
 	height: 80px;
 	opacity: 0.3;
 	transition: opacity .15s;
-}
-#refresh {
-	outline: none;
-	font-size: inherit;
 }
 #name {
 	display: block;
@@ -450,6 +444,9 @@ label.range-label {
 	-ms-user-select: none;
 	user-select: none;
 }
+#lobby-table thead tr th {
+	padding: 1em;
+}
 #lobby-table th {
 	padding: 0.25em;
 	text-transform: uppercase;
@@ -492,7 +489,7 @@ label.range-label {
 	width: 3.5ex;
 	font-weight: 600;
 }
-#search-filter {
+#sidebar {
 	display: inline-block;
 	min-width: 180px;
 	width: 20%;

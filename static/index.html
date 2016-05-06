@@ -2,13 +2,13 @@
 <html>
 	<head>
 		<title>JumpSuit</title>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1" />
-		<link href="/style.css" rel="stylesheet" type="text/css" />
-		<link href="/layout.css" rel="stylesheet" type="text/css" /> 
-		<link href="https://fonts.googleapis.com/css?family=Open+Sans:400" rel="stylesheet" type="text/css" />
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
-		<link rel="icon" href="/assets/images/cordonbleu.png" />
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1"/>
+		<meta name="description" content="Multiplayer shooter game - Take control of the galaxy!"/>
+		<link href="/style.css" rel="stylesheet" type="text/css"/>
+		<link href="/layout.css" rel="stylesheet" type="text/css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+		<link rel="icon" href="/assets/images/cordonbleu.png"/>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
@@ -50,20 +50,24 @@
 		</div>
 		<div id="gui-message" class="hidden" data-title="" data-reward=""></div>
 		<div id="menu-box" class="hidden">
-			<button id="menu-box-info-button" style="float: right;"><i class="fa fa-info-circle"></i>Infos</button>
-			<button id="menu-box-settings-button" style="float: right;"><i class="fa fa-wrench"></i>Settings</button>
 			<table id="lobby-table">
 				<thead>
-					<tr><th>Server name <img src="/assets/images/sort_arrow_double.svg"/></th><th>Mod name <img src="/assets/images/sort_arrow_double.svg"/></th><th><button id="refresh"><i class="fa fa-refresh"></i></button></th></tr>
+					<tr><th>Server name <img src="/assets/images/sort_arrow_double.svg" alt="sort icon"/></th><th>Mod name <img src="/assets/images/sort_arrow_double.svg" alt="sort icon"/></th><th></th></tr>
 				</thead>
 				<tbody id="lobby-list">
 				</tbody>
-			</table>
-			<div id="search-filter">
-			 	<h1><i class="fa fa-search"></i></h1>
-				<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp"/></label>
-				<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
-			</div>
+			</table><!--inline-block hack
+			--><div id="sidebar">
+				<div class="flex-container">
+					<button id="menu-box-info-button"><i class="fa fa-info-circle"></i>Infos</button>
+					<button id="menu-box-settings-button"><i class="fa fa-wrench"></i>Settings</button>
+				</div>
+				<div id="search-filter">
+					<h1><i class="fa fa-search"></i></h1>
+					<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp"/></label>
+					<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
+				</div>
+			<div>
 			<ul id="team-list" class="hidden">
 				<li><img src="/assets/images/alienBlue_badge.svg"/><span id="teamBlue">-</span></li>
 				<li><img src="/assets/images/alienBeige_badge.svg"/><span id="teamBeige">-</span></li>
@@ -86,13 +90,15 @@
 			<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do:</p>
 			<h3>Help us coding it!</h3>
 			<p>This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
-			If you ever plan to do this - tell us, or at least upload a video somewhere.<img src="https://twemoji.maxcdn.com/72x72/1f605.png" width=20 height=20 /></p>
-			<a class="gh-image" href="https://github.com/Getkey/jumpsuit">Go to Github</a>
+			If you ever plan to do this - tell us, or at least upload a video somewhere.<img src="https://twemoji.maxcdn.com/72x72/1f605.png" width="20" height="20"/></p>
+			<a class="gh-image" href="https://github.com/KordonBleu/jumpsuit">Go to Github</a>
 			<h3>Buy us a coffee or pizza!</h3>
 			<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
-			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where - honestly - we couldnt agree more.<br/>
+			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where - honestly - we could'nt agree more.<br/>
 			<b>TL;DR:</b> Donate us knowledge. Delicious crusty knowledge. Yum!<br/><br/>
-			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height=64 width=64 /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height=64 width=64 /></p>
+			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height="64" width="64" /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height="64" width="64"/></p>
+			<h2>Make a mod!</h2>
+			<p>We aim to make it as easy as possible for you to make mods. Documentation on how to make mods can be found <a href="https://github.com/KordonBleu/jumpsuit/blob/master/doc/modding.md">here</a>.</p>
 		</div>
 
 		<div id="settings-box" class="hidden">

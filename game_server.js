@@ -223,7 +223,8 @@ wss.on("connection", function(ws) {
 				onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
 				break;
 			case MESSAGE.CHAT.value:
-				player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), MESSAGE.CHAT.deserialize(message)), player);
+				let chatMsg = MESSAGE.CHAT.deserialize(message);
+				if (chatMsg !== "" && chatMsg.length <= 150) player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), chatMsg), player);
 				break;
 			case MESSAGE.AIM_ANGLE.value:
 				player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);

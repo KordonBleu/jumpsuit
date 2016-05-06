@@ -275,6 +275,8 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 	shots.forEach(function(shot, si) {
 		shot.box.center.x += Math.sin(shot.box.angle) * 18;
 		shot.box.center.y += -Math.cos(shot.box.angle) * 18;
+		shot.box.center.x = (universe.width + shot.box.center.x) % universe.width;
+		shot.box.center.y = (universe.height + shot.box.center.y) % universe.height;
 		if (--shot.lifeTime <= 0) {
 			entitiesDelta.removedShots.push(shot);
 			shots.splice(si, 1);

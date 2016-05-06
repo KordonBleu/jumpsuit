@@ -54,6 +54,10 @@ The first parameter of every function defined by `on_message.js` is the player f
 
 You can implement the following functions and constructors:
 
-* onActionOne(player, angle)
-* onActionTwo(player, angle)
 * onControls(player, controlsObj)
+
+
+## Requests
+
+This API is yet quite new, lacks features, etc. If you think it could be improved, you are welcome to open an [https://github.com/KordonBleu/jumpsuit/issues](issue) or a [https://github.com/KordonBleu/jumpsuit/pulls](pull request).
+Feedback from modders is appreciated.
