@@ -208,11 +208,19 @@ Player.prototype.draw = function(showName) {
 
 	context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
-	var mouthRes = resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : this.walkFrame === "_jump" ? "surprise" : "happy")];
-	context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
-
 	var helmetRes = resources["astronaut_helmet"];
-	context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
+	if (this.walkFrame === "_duck") {
+		let mouthRes = resources[this.appearance + "_mouth_surprise"];
+		context.rotate(res.mouthAngle);
+		context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
+		context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
+		context.rotate(-res.mouthAngle);
+	} else {
+		let mouthRes = resources[this.appearance + "_mouth_" + (this.hurt ? "unhappy" : this.walkFrame === "_jump" ? "surprise" : "happy")];
+		context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
+		context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
+	}
+
 
 	context.resetTransform();
 }
@@ -278,39 +286,42 @@ resPaths.forEach(function(path) {//init resources
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
 	window.removeEventListener("resize", resizeHandler);
-	//TODO: handle :o facial expression in jump and crouch
-	setMouth(resources["alienBeige_jump"], resources["alienBeige_mouth_surprise"], 22.05, 26.45);
-	setMouth(resources["alienBeige_stand"], resources["alienBeige_mouth_happy"], 22.05, 26.5);
-	setMouth(resources["alienBeige_walk1"], resources["alienBeige_mouth_happy"], 25.8, 28.8);
-	setMouth(resources["alienBeige_walk2"], resources["alienBeige_mouth_happy"], 25.8, 28.8);
 
-	setMouth(resources["alienBlue_jump"], resources["alienBlue_mouth_surprise"], 27.75, 35.7);
-	setMouth(resources["alienBlue_stand"], resources["alienBlue_mouth_happy"], 27.75, 35.7);
-	setMouth(resources["alienBlue_walk1"], resources["alienBlue_mouth_happy"], 27.75, 37.55);
-	setMouth(resources["alienBlue_walk2"], resources["alienBlue_mouth_happy"], 27.75, 37.05);
 
-	setMouth(resources["alienGreen_jump"], resources["alienGreen_mouth_surprise"], 23.8, 36.1);
-	setMouth(resources["alienGreen_stand"], resources["alienGreen_mouth_happy"], 23.8, 36.1);
-	setMouth(resources["alienGreen_walk1"], resources["alienGreen_mouth_happy"], 25.556, 36.1);
-	setMouth(resources["alienGreen_walk2"], resources["alienGreen_mouth_happy"], 27.656, 36.1);
+	setMouth(resources["alienBeige_duck"], 24.443, 24.781, 15);
+	setMouth(resources["alienBeige_jump"], 22.05, 26.45);
+	setMouth(resources["alienBeige_stand"], 22.05, 26.5);
+	setMouth(resources["alienBeige_walk1"], 25.8, 28.8);
+	setMouth(resources["alienBeige_walk2"], 25.8, 28.8);
 
-	setMouth(resources["alienPink_jump"], resources["alienPink_mouth_surprise"], 30.2, 28.55);
-	setMouth(resources["alienPink_stand"], resources["alienPink_mouth_happy"], 30.2, 28.4);
-	setMouth(resources["alienPink_walk1"], resources["alienPink_mouth_happy"], 31.456, 30.25);
-	setMouth(resources["alienPink_walk2"], resources["alienPink_mouth_happy"], 33.206, 30.25);
+	setMouth(resources["alienBlue_duck"], 26.577, 38.755, 15);
+	setMouth(resources["alienBlue_jump"], 27.75, 35.7);
+	setMouth(resources["alienBlue_stand"], 27.75, 35.7);
+	setMouth(resources["alienBlue_walk1"], 27.75, 37.55);
+	setMouth(resources["alienBlue_walk2"], 27.75, 37.05);
 
-	setMouth(resources["alienYellow_jump"], resources["alienYellow_mouth_surprise"], 21.8, 40.65);
-	setMouth(resources["alienYellow_stand"], resources["alienYellow_mouth_happy"], 21.8, 40.65);
-	setMouth(resources["alienYellow_walk1"], resources["alienYellow_mouth_happy"], 25.056, 40);
-	setMouth(resources["alienYellow_walk2"], resources["alienYellow_mouth_happy"], 26.806, 40);
+	setMouth(resources["alienGreen_duck"], 25.443, 35.761, 15);
+	setMouth(resources["alienGreen_jump"], 23.8, 36.1);
+	setMouth(resources["alienGreen_stand"], 23.8, 36.1);
+	setMouth(resources["alienGreen_walk1"], 25.556, 36.1);
+	setMouth(resources["alienGreen_walk2"], 27.656, 36.1);
+
+	setMouth(resources["alienPink_duck"], 32.05, 31, 14);
+	setMouth(resources["alienPink_jump"], 30.2, 28.55);
+	setMouth(resources["alienPink_stand"], 30.2, 28.4);
+	setMouth(resources["alienPink_walk1"], 31.456, 30.25);
+	setMouth(resources["alienPink_walk2"], 33.206, 30.25);
+
+	setMouth(resources["alienYellow_duck"], 24.446, 37.35, 9.5);
+	setMouth(resources["alienYellow_jump"], 21.8, 40.65);
+	setMouth(resources["alienYellow_stand"], 21.8, 40.65);
+	setMouth(resources["alienYellow_walk1"], 25.056, 40);
+	setMouth(resources["alienYellow_walk2"], 26.806, 40);
 });
-function setMouth(body, mouth, mouthPosX, mouthPosY) {
-	var deltaX = -body.width/2 + (mouthPosX + mouth.width/2),//mouthPosX + mouth.width/2 - body.width/2,
-		deltaY = -body.height/2 + (mouthPosY + mouth.height/2);//mouthPosY + mouth.height/2 - body.height/2;
-	body.mouthAngle = Math.atan2(deltaY, deltaX) + Math.PI/2;// - Math.PI/2 - Math.PI/4;
-	body.mouthDistance = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+function setMouth(body, mouthPosX, mouthPosY, mouthAngle) {
 	body.mouthPosX = mouthPosX;
 	body.mouthPosY = mouthPosY;
+	if (mouthAngle !== undefined) body.mouthAngle = mouthAngle * Math.PI/180;//deg to rad
 }
 
 var canSpawnMeteor = true;
