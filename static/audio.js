@@ -13,53 +13,31 @@ musicGain.connect(audioContext.destination);
 function SoundModel(url, callback) {
 	var request = new XMLHttpRequest(),
 		that = this;
-	request.open("GET", url, true);
 	request.responseType = "arraybuffer";
+	request.open("GET", url, true);
 	request.onload = function() {
-		audioContext.decodeAudioData(request.response).then(function(buffer) {
-				that.buffer = buffer;
+		return audioContext.decodeAudioData(request.response).then(function(buffer) {
+			that.buffer = buffer;
 
-				if(typeof callback === "function") callback.bind(that)();
-			}).catch(function(err) {
-				that.elem = new Audio(url);// https://bugs.chromium.org/p/chromium/issues/detail?id=482934
-				//that.elem.play();
-				//TODO: load with audio element
-				console.log("bim bam", err);
-
-				if (typeof callback === "function") callback.call(that);
-			});
-	};
+			if(typeof callback === "function") callback.call(that);
+		}).catch(function(err) {
+			// use ogg in case the browser doesn't support opus
+			// https://bugs.chromium.org/p/chromium/issues/detail?id=482934
+			var indexOpus = url.lastIndexOf(".opus");
+			if (indexOpus !== -1) {//prevent recursivity
+				SoundModel.call(that, url.slice(0, indexOpus) + ".ogg", callback);
+			}
+		});
+	}.bind(this);
 	request.send();
 }
-SoundModel.prototype.makeSound = function(nextNode, loop) {//fails silenciously if this.buffer isn't loaded (yet)
-	if (this.buffer !== undefined) {
-		var sound = audioContext.createBufferSource();
-		sound.buffer = this.buffer;
+SoundModel.prototype.makeSound = function(nextNode, loop) {
+	var sound = audioContext.createBufferSource();
+	sound.buffer = this.buffer;
 
-		if(typeof loop === "number") {
-			sound.loopStart = loop;
-			sound.loop = true;
-		}
-	} else {
-		//this.elem.play();
-		var sound = audioContext.createMediaElementSource(this.elem.cloneNode());
-		sound.start = function(time) {
-			this.mediaElement.currentTime = time;
-			this.mediaElement.play();
-		}
-		sound.stop = function() {
-			this.mediaElement.pause();
-		}
-		console.log(sound);
-
-		if (typeof loop === "number") {
-			sound.mediaElement.dataset.loop = loop;
-			console.log(parseFloat(sound.mediaElement.dataset.loop, 10));
-			sound.mediaElement.addEventListener("ended", function() {
-				this.currentTime = parseFloat(this.dataset.loop, 10);
-				this.play();
-			});
-		}
+	if(typeof loop === "number") {
+		sound.loopStart = loop;
+		sound.loop = true;
 	}
 
 	sound.connect(nextNode);

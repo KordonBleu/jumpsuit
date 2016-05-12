@@ -56,6 +56,7 @@ const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.m
 /* Buttons */
 function addToggleListener(button, element) {
 	button.addEventListener("click", function() {
+		console.log("bam", element);
 		element.classList.toggle("hidden");
 		document.getElementById("shade-box").classList.toggle("hidden");
 	});

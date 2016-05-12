@@ -42,10 +42,20 @@ var context = canvas.getContext("2d"),
 			Array.prototype.forEach.call(document.querySelectorAll("#gui-points th"), function(element){
 				element.style.display = "none";
 			});
+			window.addEventListener("keydown", handleInput);
+			window.addEventListener("keyup", handleInput);
+			window.addEventListener("touchstart", handleInputMobile);
+			window.addEventListener("touchmove", handleInputMobile);
+			window.addEventListener("touchend", handleInputMobile);
 			loop();
 		},
 		stop: function() {
 			game.started = false;
+			window.removeEventListener("keydown", handleInput);
+			window.removeEventListener("keyup", handleInput);
+			window.removeEventListener("touchstart", handleInputMobile);
+			window.removeEventListener("touchmove", handleInputMobile);
+			window.removeEventListener("touchend", handleInputMobile);
 			menuBox.classList.remove("hidden");
 			players.forEach(function(player) {
 				if (player.jetpack) player.jetpackSound.stop();
@@ -201,10 +211,11 @@ Player.prototype.draw = function(showName) {
 		context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 	}
 
-	var qwf = (this.looksLeft ? -this.aimAngle : this.aimAngle);//wat
-	context.rotate(qwf);
+	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
+		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
+	context.rotate(weaponRotFact);
 	context.drawImage(resources[this.weaponry.carrying], 0, 0, resources[this.weaponry.carrying].width*0.93, resources[this.weaponry.carrying].height*0.93);
-	context.rotate(-qwf);
+	context.rotate(-weaponRotFact);
 
 	context.drawImage(res, centerX, centerY, wdt, hgt);//body
 

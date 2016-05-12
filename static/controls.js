@@ -63,6 +63,7 @@ function handleInputMobile(e) {
 	};
 
 	Array.prototype.forEach.call(e.changedTouches, function(touch) {
+		console.log(e);
 		var s = e.type !== "touchstart" && e.type === "touchend";
 		if (players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
@@ -90,7 +91,9 @@ function handleInput(e) {
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
-		} else if (triggered === "chat" && s === 1) chatInput.focus();
+		} else if (triggered === "chat" && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
+			chatInput.focus();//the "chat" control (most likelly "t")
+		}, 0);//from being written in the chat
 	}
 }
 handleInput.keyMap = defaultKeymap;
@@ -155,8 +158,6 @@ handleInput.loadKeySettings = function() {
 	else handleInput.keyMap = defaultKeymap;
 	handleInput.initKeymap(settings.keymap !== "");
 };
-window.addEventListener("keydown", handleInput);
-window.addEventListener("keyup", handleInput);
 
 /* Drag & Mouse */
 function dragStart(e) {
@@ -285,7 +286,3 @@ document.addEventListener("wheel", function(e) {
 });
 
 if (!isMobile) handleInput.loadKeySettings();
-
-window.addEventListener("touchstart", handleInputMobile);
-window.addEventListener("touchmove", handleInputMobile);
-window.addEventListener("touchend", handleInputMobile);
