@@ -55,7 +55,7 @@ module.exports = function(engine) {
 			}
 			if (player.needsUpdate || player.needsUpdate === undefined) {
 				player.needsUpdate = false;
-				setTimeout(updPlayer.bind(this), 40);
+				setTimeout(updPlayer.bind(this), 50);
 			}
 		}, this);
 		this.processTime = Date.now() - oldDate;
@@ -93,20 +93,23 @@ module.exports = function(engine) {
 		if (enemyAmount > 255) enemyAmount = 255;//by the protocol
 		//the ID of the planets and the enemies is stored on a single byte
 		//however, the planet ID value 255 (aka a wrapped -1) is reserved to be used when the player is not attached to a planet (player.attachedPlanet = -1)
-
+		function distanceBetween(box1, box2) {
+			var var1 = box2.center.x - box1.center.x, var2 = box2.center.y - box1.center.y;
+			return Math.sqrt(var1 * var1 + var2 * var2);
+		}
 		for (let i = 0; i !== planetAmount; ++i) {
 			let newPlanet = new engine.Planet(Math.random()*this.universe.width, Math.random()*this.universe.height, 100 + Math.random()*300);
 			if (this.planets.every(function(planet) {
-				return !this.universe.collide(planet.box, newPlanet.box);
+				return !this.universe.collide(planet.atmosBox, newPlanet.atmosBox);
 			}.bind(this))) this.planets.push(newPlanet);
 			else --i;//failed to add it, do it again so we have the correct amount
 		}
 		for (let i = 0; i !== enemyAmount; ++i) {
 			let newEnemy = new engine.Enemy(Math.random()*this.universe.width, Math.random()*this.universe.height);
 			if (this.planets.every(function(planet) {
-				return !this.universe.collide(planet.box, newEnemy.box);
+				return distanceBetween(planet.box, newEnemy.box) > planet.box.radius + 420;
 			}.bind(this)) && this.enemies.every(function(enemy) {
-				return !this.universe.collide(enemy.box, newEnemy.box);
+				return distanceBetween(enemy.box, newEnemy.box) > 370;
 			}.bind(this))) this.enemies.push(newEnemy);
 			else --i;//failed to add it, do it again so we have the correct amount
 		}

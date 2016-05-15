@@ -68,7 +68,6 @@ var context = canvas.getContext("2d"),
 		},
 		started: false,
 		fps: 0,
-		weaponOffset: {lmg: 60, smg: 54, knife: 54, shotgun: 50},
 		mousePos: {x: 0, y: 0, angle: 0}
 	};
 
@@ -161,13 +160,14 @@ Shot.prototype.draw = function(dead) {
 	windowBox.drawRotatedImage(resources[resourceKey],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) * Math.PI * 0.12 : 0));
+		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) / 100 * Math.PI * 4 - Math.PI / 2 : 0));
 	this.lifeTime--;
 }
 Player.prototype.draw = function(showName) {
 	var res = resources[this.appearance + this.walkFrame],
 		playerX = windowBox.wrapX(this.box.center.x),
 		playerY = windowBox.wrapY(this.box.center.y);
+
 
 	//name
 	if (showName) {
@@ -214,9 +214,9 @@ Player.prototype.draw = function(showName) {
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
 		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
 	context.rotate(weaponRotFact);
-	context.drawImage(resources[this.weaponry.carrying], 0, 0, resources[this.weaponry.carrying].width*0.93, resources[this.weaponry.carrying].height*0.93);
+	context.drawImage(resources[this.weaponry.armed], weaponList[this.weaponry.armed].offsetX, weaponList[this.weaponry.armed].offsetY, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
 	context.rotate(-weaponRotFact);
-
+	
 	context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
 	var helmetRes = resources["astronaut_helmet"];
@@ -297,7 +297,7 @@ resPaths.forEach(function(path) {//init resources
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
 	window.removeEventListener("resize", resizeHandler);
-
+	handleHistoryState();
 
 	setMouth(resources["alienBeige_duck"], 24.443, 24.781, 15);
 	setMouth(resources["alienBeige_jump"], 22.05, 26.45);
@@ -422,14 +422,10 @@ function loop() {
 
 	//muzzle flash
 	notMuzzleFlashedShots.forEach(function(shot) {
+		if (shot.type === shot.shotEnum["laser"] || shot.type === shot.shotEnum["knife"]) return;
 		var x = windowBox.wrapX(shot.box.center.x),
 			y = windowBox.wrapY(shot.box.center.y);
-
-		context.fillStyle = "#ffffff";
-		context.beginPath();
-		context.arc(x, y, 30*windowBox.zoomFactor, 0, 2 * Math.PI, false);
-		context.closePath();
-		context.fill();
+		windowBox.drawRotatedImage(resources["muzzle"], x, y, shot.box.angle - Math.PI / 2);
 	});
 	notMuzzleFlashedShots.length = 0;
 

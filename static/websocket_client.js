@@ -133,8 +133,6 @@ Connection.prototype.messageHandler = function(message) {
 					player.looksLeft = looksLeft;
 					player.lastSound = 0;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
-					player.weaponry.armed = armedWeapon;
-					player.weaponry.armed = carriedWeapon;
 					players.push(player);
 				}
 			);
@@ -217,21 +215,9 @@ Connection.prototype.messageHandler = function(message) {
 							players[id].jetpackSound.stop();
 						}
 					}
-
-					var _offset = {x: 0, y: 0, angle: 0, aimAngle: 0};
-					if (players[id].boxInformations[0] === undefined) players[id].boxInformations[0] = new Rectangle(new Point(x, y), 0, 0, angle);
-					if (Math.abs(x - players[id].box.center.x) >= universe.width - 400) _offset.x = (x < players[id].box.center.x) ? 0 : universe.width;
-					if (Math.abs(y - players[id].box.center.y) >= universe.height - 400) _offset.y = (y < players[id].box.center.y) ? 0 : universe.height;
-					if (Math.abs(angle - players[id].box.angle) >= 5) _offset.angle = (angle < players[id].box.angle ? -2*Math.PI : 2*Math.PI);
-					if (Math.abs(aimAngle - players[id].aimAngle) >= 5) _offset.aimAngle = (angle < players[id].aimAngle ? -2*Math.PI : 2*Math.PI);
-
-					players[id].boxInformations[0].center.x = players[id].box.center.x + _offset.x;
-					players[id].boxInformations[0].center.y = players[id].box.center.y + _offset.y;
-					players[id].boxInformations[0].angle = players[id].box.angle + _offset.angle;
-					players[id].boxInformations[1] = new Rectangle(new Point(x, y), 0, 0, angle);
-					players[id].aimAngleInformations[0] = players[id].aimAngle + _offset.aimAngle;
-					players[id].aimAngleInformations[1] = aimAngle;
-
+					if ("timestamp" in players[id].predictionTarget) players[id].lastPrediction = players[id].predictionTarget.timestamp;
+					players[id].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle)};
+					players[id].aimAngle = aimAngle;
 					players[id].looksLeft = looksLeft;
 					if ((players[id].walkFrame === "_walk1" && walkFrame === "walk2") || (players[id].walkFrame === "_walk2" && walkFrame === "walk1")) {
 						let type = planets[players[id].attachedPlanet].type,
@@ -249,9 +235,6 @@ Connection.prototype.messageHandler = function(message) {
 					players[id].jetpack = jetpack;
 
 					players[id].attachedPlanet = attachedPlanet;
-					if (attachedPlanet === 255) players[id].predictionState = 0;
-					else players[id].predictionState = Math.min(1, players[id].predictionState + 0.34);
-
 					players[id].weaponry.armed = armedWeapon;
 					players[id].weaponry.carrying = carriedWeapon;
 				}
@@ -323,15 +306,16 @@ function connectByHash() {
 	}
 }
 
-window.addEventListener("popstate", function(e) {
+function handleHistoryState() {
 	//modifies default history entries due hash changes
 	if (location.hash !== "") history.replaceState(HISTORY_GAME, "", "/" + location.hash);
 	else history.replaceState(HISTORY_MENU, "", "/");
-
+	console.log(history.state);
 	if (history.state === HISTORY_MENU) {
 		//if navigated to / stop the game + display menu
 		if (currentConnection !== undefined) currentConnection.close();
 		game.stop();
 	} else if (history.state === HISTORY_GAME) connectByHash();
-});
-history.replaceState(HISTORY_MENU, "", "/");
+}
+window.addEventListener("popstate", handleHistoryState);
+

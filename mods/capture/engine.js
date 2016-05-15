@@ -20,7 +20,7 @@ var resPaths = [
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
-	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg"
+	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg", "muzzle.svg"
 	],
 	resources = {};
 
@@ -36,13 +36,19 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
+const weaponList = {
+	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 90, muzzleY: 6, shotType: 1}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
+	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 70, muzzleY: -3, shotType: 1},
+	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 105, muzzleY: -4, shotType: 3},
+	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2}
+};
 
 function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 	this._walkCounter = 0;
 	this.name = name;
 	this.box = new Rectangle(new Point(0, 0), 0, 0);
-	this.boxInformations = [];
-	this.aimAngleInformations = [];
+	this.predictionTarget = {};
+	this.lastPrediction = 0;
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0, changeWeapon: 0, shoot: 0};
 	this.velocity = new Vector(0, 0);
 	this._appearance = appearance;
@@ -83,10 +89,9 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.health = health || 8;
 	this.fuel = fuel || 400;
 	this.attachedPlanet = attachedPlanet || -1;
-	this.predictionState = 0;
 	this.lastlyAimedAt = Date.now();
 	this.pid = 0;
-	this.weaponry = {armed: armedWeapon || "shotgun", carrying: carriedWeapon || "knife"};
+	this.weaponry = {armed: armedWeapon || "smg", carrying: carriedWeapon || "knife", cycle: 0};
 	this.aimAngle = aimAngle || 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
@@ -148,38 +153,50 @@ function Shot(x, y, angle, origin, type) {
 	this.type = type || 0;
 }
 Shot.prototype.shotEnum = {laser: 0, bullet: 1, knife: 2, ball: 3}; //a knife is no shot but can be handled the same way
+Shot.prototype.speed = [30, 25, 13, 22];
 
 function doPrediction(universe, players, enemies, shots) {
 	doPrediction.newTimestamp = Date.now();
 	doPrediction.oldTimestamp = doPrediction.oldTimestamp || Date.now();
+	
+	function lerp(x, y, t) {
+		//lerp = linear interpolation
+		return x + t * (y - x);
+	}
 
 	var fps = 1000 / (doPrediction.newTimestamp - doPrediction.oldTimestamp);
 	game.fps = fps;
 	players.forEach(function(player) {
-		if (player.boxInformations.length === 2){
-			var intensity = Math.max(1, 40 * fps / 1000);
-			player.box.angle += (player.boxInformations[1].angle - player.boxInformations[0].angle) / intensity;
+		if ("timestamp" in player.predictionTarget && player.lastPrediction !== 0) {
+			var now = Date.now(), serverTicks = 50,
+				smoothingTime = (now - player.predictionTarget.timestamp) / serverTicks;
+			player.box.angle = lerp(
+				player.box.angle,
+				player.predictionTarget.box.angle,
+				smoothingTime
+			);
+			player.box.center.x = lerp(
+				player.box.center.x,
+				player.predictionTarget.box.center.x,
+				smoothingTime
+			);
+			player.box.center.y = lerp(
+				player.box.center.y,
+				player.predictionTarget.box.center.y,
+				smoothingTime
+			);
+				
+//			player.box.center.x += ((now - player.predictionTarget.timestamp) / 40) * (player.predictionTarget.box.center.x - player.box.center.x);
+//			player.box.center.y += ((now - player.predictionTarget.timestamp) / 40) * (player.predictionTarget.box.center.y - player.box.center.y);
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
-
-			player.aimAngle += (player.aimAngleInformations[1] - player.aimAngleInformations[0]) / intensity;
 			player.aimAngle = (2 * Math.PI + player.aimAngle) % (2 * Math.PI);
-
-			if (player.attachedPlanet !== 255 && player.predictionState === 1) {
-				//"angular" prediction when moving around on planets
-				player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
-				player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
-			} else {
-				//linear prediction
-				player.box.center.x += (player.boxInformations[1].center.x - player.boxInformations[0].center.x) / intensity;
-				player.box.center.y += (player.boxInformations[1].center.y - player.boxInformations[0].center.y) / intensity;
-			}
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
 			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 		}
 	});
 	shots.forEach(function(shot){
-		shot.box.center.x += 18 * Math.sin(shot.box.angle) * (fps / 60);
-		shot.box.center.y += 18 * -Math.cos(shot.box.angle) * (fps / 60);
+		shot.box.center.x += shot.speed[shot.type] * Math.sin(shot.box.angle) * (fps / 60);
+		shot.box.center.y += shot.speed[shot.type] * -Math.cos(shot.box.angle) * (fps / 60);
 	});
 	doPrediction.oldTimestamp = doPrediction.newTimestamp;
 }
@@ -213,7 +230,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			}
 
 			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
-			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2)
+			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.velocity.x = 0;
 			player.velocity.y = 0;
 			player.fuel = 400;
@@ -261,17 +278,21 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			var a = player.weaponry.armed, b = player.weaponry.carrying;
 			player.weaponry.armed = b;
 			player.weaponry.carrying = a;
-		}
-		if (player.controls["shoot"] === 1) {
-			let shotType = 1;
-			if (player.weaponry.armed === "knife") shotType = 2;
-			if (player.weaponry.armed === "shotgun") shotType = 3;
+		}		
+		if (player.controls["shoot"] !== 0) {
+			if (player.controls["shoot"] === 2 && weaponList[player.weaponry.armed].cycle > 0) player.weaponry.cycle = ++player.weaponry.cycle % weaponList[player.weaponry.armed].cycle;
+			else player.weaponry.cycle = player.controls["shoot"] - 1;
 
-			for (var i = -2; i <= 2; i++) {
-				if (shotType !== 3 && i !== 0) continue;
-				let newShot = new Shot(player.box.center.x + 80*Math.sin(player.aimAngle), player.box.center.y - 80*Math.cos(player.aimAngle), player.aimAngle + i*0.05, player.pid, shotType);
-				shots.push(newShot);
-				entitiesDelta.addedShots.push(newShot);
+			if (player.weaponry.cycle === 0) {
+				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1;	
+				for (var i = -2; i <= 2; i++) {
+					if (shotType !== 3 && i !== 0) continue;
+					let shotX = player.box.center.x + weaponList[player.weaponry.armed].muzzleX * Math.sin(player.aimAngle) + weaponList[player.weaponry.armed].muzzleY * shift * Math.sin(player.aimAngle - Math.PI / 2),
+						shotY = player.box.center.y - weaponList[player.weaponry.armed].muzzleX * Math.cos(player.aimAngle) - weaponList[player.weaponry.armed].muzzleY * shift * Math.cos(player.aimAngle - Math.PI / 2);
+					let newShot = new Shot(shotX, shotY, player.aimAngle + i*0.05, player.pid, shotType);
+					shots.push(newShot);
+					entitiesDelta.addedShots.push(newShot);
+				}
 			}
 		}
 		var needsPressState = {"changeWeapon": null, "shoot": null}; //it needs to be an Object to use the operater `in`
@@ -279,8 +300,9 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 		player.setWalkFrame();
 	});
 	shots.forEach(function(shot, si) {
-		shot.box.center.x += Math.sin(shot.box.angle) * 18;
-		shot.box.center.y += -Math.cos(shot.box.angle) * 18;
+		let velocity = shot.speed[shot.type]; 
+		shot.box.center.x += Math.sin(shot.box.angle) * velocity;
+		shot.box.center.y += -Math.cos(shot.box.angle) * velocity;
 		shot.box.center.x = (universe.width + shot.box.center.x) % universe.width;
 		shot.box.center.y = (universe.height + shot.box.center.y) % universe.height;
 		if (--shot.lifeTime <= 0) {
