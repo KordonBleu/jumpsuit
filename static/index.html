@@ -78,7 +78,7 @@
 		</div>
 		<div id="shade-box" class="hidden"></div>
 		<div id="info-box" class="hidden">
-			<h2>Informations</h2><button id="close-info-box"><i class="fa fa-times"></i>Close</button>
+			<h2>Informations</h2><button id="close-info-box" class="close-parent"><i class="fa fa-times"></i>Close</button>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>And the credits go to...</p>
 				<ul>
@@ -102,7 +102,7 @@
 		</div>
 
 		<div id="settings-box" class="hidden">
-			<h2>Settings</h2><button id="close-settings-box"><i class="fa fa-times"></i>Close</button>
+			<h2>Settings</h2><button id="close-settings-box" class="close-parent"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<div class="splitContainer">
 					<h3>Score</h3>
@@ -122,6 +122,31 @@
 					<button id="key-reset">Reset keymap to default</button>
 				</div>
 			</div>
+		</div>
+		<div id="blocked-port-box" class="hidden">
+			<h2>The port is blocked</h2>
+			<p>This port is blocked. Please ask your network administrator to open the port <span id="port-number"></span>.</p>
+			<p>If you are at home, your network administrator is your ISP.<br/>
+			If you are at work or at school, contact the IT departement. (Ooh, I bet you aren't the employee of the month :P)</p>
+
+			<p>You should also try another server, chances are, you will find one which is not blocked</p>
+
+			<button class="close-parent">Let's try another server</button>
+		</div>
+		<div id="device-not-supported" class="hidden">
+			<h2>Your browser is unsupported</h2>
+			<p>We only support Chrome and Firefox on desktop for now.<br/>
+			Please come back using one of these (on old computers, Firefox is generally faster).</p>
+
+			<button "close-parent">I want to see how broken it is anyways!</button>
+		</div>
+		<div id="device-untested" class="hidden">
+			<h2>The game is likely not to work properly on this device</h2>
+			<p>We plan to support this platform, however it not our highest priority. Thus, the game might not work properly.</p>
+			<p>At the moment, we are primarily focusing on Chrome and Firefox on desktop.<br/>
+			Please come back using one of these (on old computers, Firefox is generally faster).</p>
+
+			<button class="close-parent">Okay</button>
 		</div>
 		<script src="/ipaddr.min.js"></script>
 		<script src="/audio.js"></script>

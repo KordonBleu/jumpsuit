@@ -214,9 +214,12 @@ Player.prototype.draw = function(showName) {
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
 		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
 	context.rotate(weaponRotFact);
-	context.drawImage(resources[this.weaponry.armed], weaponList[this.weaponry.armed].offsetX, weaponList[this.weaponry.armed].offsetY, resources[this.weaponry.armed].width, resources[this.weaponry.armed].height);
+	context.drawImage(resources[this.weaponry.armed],
+		weaponList[this.weaponry.armed].offsetX*windowBox.zoomFactor,
+		weaponList[this.weaponry.armed].offsetY*windowBox.zoomFactor,
+		resources[this.weaponry.armed].width*windowBox.zoomFactor, resources[this.weaponry.armed].height*windowBox.zoomFactor);
 	context.rotate(-weaponRotFact);
-	
+
 	context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
 	var helmetRes = resources["astronaut_helmet"];

@@ -13,13 +13,15 @@ html, body {
 	height: 100%;
 	overflow: hidden;
 	font-family: "Open Sans", Tahoma, sans-serif;
+	-webkit-transform: translate3d(0, 0, 0);/*GPU boost*/
+}
+html, body, button, label, #player-list, #lobby-table thead, #key-settings {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
 	user-select: none;
-	-webkit-transform: translate3d(0, 0, 0);/*GPU boost*/
 }
-#menu-box, #settings-box, #info-box {
+#menu-box, #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	overflow-y: auto;
 	-webkit-user-select: text;
 	-moz-user-select: text;
@@ -34,6 +36,9 @@ html, body {
 }
 html {
 	background-image: url("/assets/images/background.png");
+}
+#port-number {
+	font-weight: bold;
 }
 #canvas.boosted {
 	transform: scale3d(2, 2, 1);
@@ -50,23 +55,10 @@ html {
 	border-radius: 3px;
 	border: 2px solid #fff;
 }
-#minimap-overlay{
-	display: none;
-	position: fixed;
-	top: 54px;
-	right: 10px;
-	width: 150px;
-	height: 150px;
-	background: rgba(66, 66, 66, 0.5);
-	color: #fff;
-	font-size: 130px;
-	text-align: center;
-}
-#minimap-overlay i { position: relative; top: -13px;}
 #gui-bad-connection.hidden, #player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden {
 	display: none;
 }
-i {
+.fa {
 	margin-right: 2px;
 }
 a {
@@ -74,15 +66,12 @@ a {
 	text-decoration: none;
 	font-weight: bold;
 }
-a:active {
-	color: #AD3726;
-}
 a.gh-image {
 	color: black;
 	background: url("/assets/images/github.svg") top left no-repeat;
-	padding-left: 38px;
+	padding-left: 2.3em;
 	line-height: 2;
-	height: 38px;
+	height: 2.3em;
 	display: inline-block;
 }
 button {
@@ -100,10 +89,6 @@ button {
 	border: 2px solid #AD3726;
 	text-align: center;
 	transition: background .2s, color .2s;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
 }
 button:disabled {
 	background: #555;
@@ -214,12 +199,6 @@ input[type=checkbox]:checked::after {
 	transform: scale(1);
 	opacity: 1;
 }
-label {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-}
 /*
 === NOT IN USE ===
 label.checkbox-label[data-beta]::after {
@@ -311,10 +290,6 @@ label.range-label {
 	background: rgba(0, 0, 0, 0.3);	
 }
 #player-list {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
 	cursor: inherit;
 	font-size: 0.9em;
 	background: rgba(235, 237, 244, 0.2);
@@ -362,7 +337,7 @@ label.range-label {
 #shade-box.hidden {
 	display: none;
 }
-#settings-box, #info-box {
+#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	padding: 14px;
 	transition: transform .3s, opacity .3s;
 	transform: scale(1) translate(-50%, -50%);
@@ -374,13 +349,11 @@ label.range-label {
 	background: #ebedf4;
 	color: #333;
 	box-shadow: 0 0 13px 0 black;
-	min-width: 600px;
-	min-height: 400px;
-	width: calc(100% - 300px);
-	height: calc(100% - 190px);
-	max-width: 900px;
+	/*We need a media query for huge monitors */
+	width: 70vw;
+	max-height: 90vh;
 }
-#settings-box.hidden, #info-box.hidden {
+#settings-box.hidden, #info-box.hidden, #blocked-port-box.hidden, #device-not-supported.hidden, #device-untested.hidden {
 	display: block;
 	transform: scale(0) translate(-50%, -50%);
 	opacity: 0;
@@ -439,10 +412,6 @@ label.range-label {
 #lobby-table thead {
 	color: #ebedf4;
 	background-color: #AD3726;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
 }
 #lobby-table thead tr th {
 	padding: 1em;
@@ -536,10 +505,6 @@ label.range-label {
 	border-collapse: collapse;
 	cursor: pointer;
 	margin: 4px 8px;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
 }
 #key-settings #key-action {
 	width: 140px;
@@ -584,10 +549,6 @@ label.range-label {
 	font-size: 0.875em;
 	width: 300px;
 	height: calc(100vh - 4vh - 270px); /*div ends 15px above controls*/
-	-webkit-user-select: initial;
-	-moz-user-select: initial;
-	-ms-user-select: initial;
-	user-select: initial;
 }
 #gui-chat p {
 	margin: 2px 0;
@@ -723,4 +684,3 @@ label.range-label {
 	font-weight: bold;
 	color: #4dbb63;
 }
-

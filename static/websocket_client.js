@@ -37,7 +37,11 @@ masterSocket.addEventListener("message", function(message) {
 
 function Connection(url, lobbyId) {// a connection to a game server
 	this.lastControls = {};
-	this.socket = new WebSocket(url);
+	try {
+		this.socket = new WebSocket(url);
+	} catch (err) {
+		showBlockedPortDialog(url.match(/:(\d+)/)[1]);
+	}
 	this.socket.binaryType = "arraybuffer";
 
 	this.socket.addEventListener("open", function() {

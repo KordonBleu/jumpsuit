@@ -51,22 +51,45 @@ var chatElement = document.getElementById("gui-chat"),
 
 
 const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
-		|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
+	|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
+
+if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
+	document.getElementById("device-not-supported").classList.remove("hidden");
+	document.getElementById("shade-box").classList.remove("hidden");
+} else if (isMobile) {//Chrome or Firefox mobile
+	document.getElementById("device-untested").classList.remove("hidden");
+	document.getElementById("shade-box").classList.remove("hidden");
+}
 
 /* Buttons */
-function addToggleListener(button, element) {
+function addShowBoxListener(button, dialogBox) {
 	button.addEventListener("click", function() {
-		console.log("bam", element);
-		element.classList.toggle("hidden");
-		document.getElementById("shade-box").classList.toggle("hidden");
+		dialogBox.classList.remove("hidden");
+		document.getElementById("shade-box").classList.remove("hidden");
 	});
 }
-addToggleListener(closeSettingsButton, settingsBox);
-addToggleListener(settingsButton, settingsBox);
-addToggleListener(menuBoxSettingsButton, settingsBox);
-addToggleListener(closeInfoButton, infoBox);
-addToggleListener(infoButton, infoBox);
-addToggleListener(menuBoxInfoButton, infoBox);
+//every HTML element with a "close-parent" class (generally a "Close" button) will, when clicked, close the dialog it is part of
+Array.prototype.forEach.call(document.getElementsByClassName("close-parent"), function(button) {
+	button.addEventListener("click", function(e) {
+		e.target.parentElement.classList.add("hidden");
+		document.getElementById("shade-box").classList.add("hidden");
+	})
+});
+addShowBoxListener(settingsButton, settingsBox);
+addShowBoxListener(menuBoxSettingsButton, settingsBox);
+addShowBoxListener(infoButton, infoBox);
+addShowBoxListener(menuBoxInfoButton, infoBox);
+document.getElementById("leave-button").addEventListener("click", function() {
+	currentConnection.close();
+	game.stop();
+});
+
+/* Port blocked dialog box */
+function showBlockedPortDialog(portNumber) {
+	document.getElementById("blocked-port-box").classList.remove("hidden");
+	document.getElementById("shade-box").classList.remove("hidden");
+	document.getElementById("port-number").textContent = portNumber;
+}
 
 /* Graphic settings */
 /*document.getElementById("option-fullscreen").addEventListener("change", function() {
@@ -186,11 +209,6 @@ nameElement.addEventListener("blur", function(e) {
 	currentConnection.setName();
 });
 
-/* Buttons */
-document.getElementById("leave-button").addEventListener("click", function() {
-	currentConnection.close();
-	game.stop();
-});
 function isDocumentInFullScreenMode() {
 	// Note that the browser fullscreen (triggered by short keys) might
 	// be considered different from content fullscreen when expecting a boolean
@@ -372,7 +390,7 @@ emptyLobbyInput.addEventListener("change", applyEmptinessCheck);
 var message = {
 	previousTimeoutId: -1,
 	showMessage: function(title, desc) {
-		if (!title && !desc) return;		
+		if (!title && !desc) return;
 		if (message.previousTimeoutId !== -1) clearTimeout(message.previousTimeoutId);
 		messageBox.setAttribute("data-title", title);
 		messageBox.setAttribute("data-desc", desc);
