@@ -167,16 +167,12 @@ wss.on("connection", function(ws) {
 				//TODO: connect client to newly created lobby
 				break;
 			case MESSAGE.SET_NAME.value:
-				let name = MESSAGE.SET_NAME.deserialize(message);
+				let playerName = MESSAGE.SET_NAME.deserialize(message);
 				if (player.lobby !== undefined) {
-					if (player.lobby.players.some(function(_player) {
-						return _player.name === name;
-					})) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NAME_TAKEN));
-					else {
-						player.name = name;
-						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), name));
-					}
-				} else player.name = name;
+					player.homographId = player.lobby.getNextHomographId(playerName);
+					player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), playerName, player.homographId));
+				}
+				player.name = playerName;
 				break;
 			case MESSAGE.CONNECT.value:
 				let lobbyId = MESSAGE.CONNECT.deserialize(message);
@@ -204,17 +200,14 @@ wss.on("connection", function(ws) {
 						}
 					}
 
-					let homographId = 0;
-					lobby.players.forEach(function(_player) {
-						if (_player.name === player.name) ++homographId;
-					});
+					player.homographId = lobby.getNextHomographId(player.name);
 					lobby.players.push(player);
 					player.lastRefresh = Date.now();
 					player.lobby = lobby;
 					player.pid = lobby.players.findIndex(function(element) { return element === player; });
 					lobby.assignPlayerTeam(player);
 
-					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, homographId, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
+					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
 					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
 				}

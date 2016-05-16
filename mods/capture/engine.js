@@ -116,6 +116,9 @@ Player.prototype.setBoxSize = function() {
 	this.box.width = resources[this.appearance + this.walkFrame].width
 	this.box.height = resources[this.appearance + this.walkFrame].height;
 };
+Player.prototype.getFinalName = function() {
+	return this.name + (typeof this.homographId === "number" && this.homographId !== 0 ? " (" + this.homographId + ")" : "");
+}
 
 function Planet(x, y, radius, type) {
 	this.box = new Circle(new Point(x, y), radius);
@@ -158,7 +161,7 @@ Shot.prototype.speed = [30, 25, 13, 22];
 function doPrediction(universe, players, enemies, shots) {
 	doPrediction.newTimestamp = Date.now();
 	doPrediction.oldTimestamp = doPrediction.oldTimestamp || Date.now();
-	
+
 	function lerp(x, y, t) {
 		//lerp = linear interpolation
 		return x + t * (y - x);
@@ -288,13 +291,13 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			var a = player.weaponry.armed, b = player.weaponry.carrying;
 			player.weaponry.armed = b;
 			player.weaponry.carrying = a;
-		}		
+		}
 		if (player.controls["shoot"] !== 0) {
 			if (player.controls["shoot"] === 2 && weaponList[player.weaponry.armed].cycle > 0) player.weaponry.cycle = ++player.weaponry.cycle % weaponList[player.weaponry.armed].cycle;
 			else player.weaponry.cycle = player.controls["shoot"] - 1;
 
 			if (player.weaponry.cycle === 0) {
-				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1;	
+				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1;
 				for (var i = -2; i <= 2; i++) {
 					if (shotType !== 3 && i !== 0) continue;
 					let shotX = player.box.center.x + weaponList[player.weaponry.armed].muzzleX * Math.sin(player.aimAngle) + weaponList[player.weaponry.armed].muzzleY * shift * Math.sin(player.aimAngle - Math.PI / 2),
@@ -310,7 +313,7 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 		player.setWalkFrame();
 	});
 	shots.forEach(function(shot, si) {
-		let velocity = shot.speed[shot.type]; 
+		let velocity = shot.speed[shot.type];
 		shot.box.center.x += Math.sin(shot.box.angle) * velocity;
 		shot.box.center.y += -Math.cos(shot.box.angle) * velocity;
 		shot.box.center.x = (universe.width + shot.box.center.x) % universe.width;

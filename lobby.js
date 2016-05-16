@@ -81,6 +81,13 @@ module.exports = function(engine) {
 		for (a in this.teamScores) if (a.indexOf("alien") !== -1) i[a] = this.teamScores[a];
 		return i;
 	};
+	Lobby.prototype.getNextHomographId = function(playerName) {
+		var homographId = 0;
+		this.players.forEach(function(player) {
+			if (player.name === playerName) ++homographId;
+		});
+		return homographId;
+	};
 	Lobby.prototype.resetWorld = function() {//generate world
 		this.planets.length = 0;
 		this.enemies.length = 0;

@@ -106,12 +106,12 @@ Owned By must be either:
 
 #### PLAYER
 ```
-      2B             2B               1B            1B       1B           1b         1b          3b        3b        4b             2b              2b             1B        0-255B
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+-------------+--------+
-| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | Walk Frame | Team | unused bits | Armed Weapon | Carried Weapon | name length | "name" |
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+-------------+--------+
+      2B             2B               1B            1B       1B           1b         1b          3b        3b        4b             2b              2b              1B            1B        0-255B
++--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+--------------+-------------+--------+
+| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | Walk Frame | Team | unused bits | Armed Weapon | Carried Weapon | homograph id | name length | "name" |
++--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+--------------+-------------+--------+
 ```
-
+The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
 If `attached planet`'s value is 255, the player is not attached to a planet.
 `Walk Frame` must be either:
  0. `duck`
@@ -255,11 +255,12 @@ The player must send this message before `CONNECT` or `CREATE_PRIVATE_LOBBY`.
 
 #### SET_NAME_BROADCAST (game server → client)
 ```
- 1B      1B           0B-?B
-+---+-----------+---------------+
-| 4 | player id | "player name" |
-+---+-----------+---------------+
+ 1B      1B            1B            0B-?B
++---+-----------+--------------+---------------+
+| 4 | player id | homograph id | "player name" |
++---+-----------+--------------+---------------+
 ```
+The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
 
 
 #### CREATE_PRIVATE_LOBBY (client → game server)
@@ -301,13 +302,11 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### CONNECT_ACCEPTED (game server → client)
 ```
- 1B      4B          1B           1B             2B                2B              3b           1b          1b           1b          1b           1b            ?B
-+---+----------+-----------+--------------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
-| 8 | lobby id | player id | homograph id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
-+---+----------+-----------+--------------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
+ 1B      4B          1B           2B                2B              3b           1b          1b           1b          1b           1b            ?B
++---+----------+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
+| 8 | lobby id | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
++---+----------+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
 ```
-
-The homograph id is used to distinguish players with the same name. It is unique for every player with the same name.
 
 
 #### LOBBY_STATE (game server → client)

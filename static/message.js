@@ -48,6 +48,8 @@ function decodeLobbyNumber(lobbyCode) {
 	return lobbyNb;
 }
 
+/* Note: TypedArrays are faster than Dataviews. Therefore, when possible, they should be used.
+   But beware of endianness! */
 const MESSAGE = {
 	REGISTER_SERVER: {
 		value: 0,
@@ -200,20 +202,23 @@ const MESSAGE = {
 	},
 	SET_NAME_BROADCAST: {
 		value: 4,
-		serialize: function(id, name) {
+		serialize: function(id, name, homographId) {
 			var bufName = stringToBuffer(name),
-				view = new Uint8Array(bufName.byteLength + 2);
+				view = new Uint8Array(bufName.byteLength + 3);
 
 			view[0] = this.value;
 			view[1] = id;
-			view.set(new Uint8Array(bufName), 2);
+			view[2] = homographId;
+			view.set(new Uint8Array(bufName), 3);
 
 			return view.buffer;
 		},
 		deserialize: function(buffer) {
+			var arr = new Uint8Array(buffer);
 			return {
-				id: new Uint8Array(buffer)[1],
-				name: bufferToString(buffer.slice(2))
+				id: arr[1],
+				name: bufferToString(buffer.slice(3)),
+				homographId: arr[2]
 			};
 		}
 	},
@@ -266,43 +271,41 @@ const MESSAGE = {
 			alienPink: 2,
 			alienYellow: 1
 		},
-		serialize: function(lobbyId, playerId, homographId, univWidth, univHeight, planets, enemies, shots, players, teams) {
+		serialize: function(lobbyId, playerId, univWidth, univHeight, planets, enemies, shots, players, teams) {
 			var entityBuf = MESSAGE.ADD_ENTITY.serialize(planets, enemies, shots, players),
-				buffer = new ArrayBuffer(11 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
+				buffer = new ArrayBuffer(10 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
 				view = new DataView(buffer),
 				enabledTeams = 0;
 			view.setUint8(0, this.value);
 			view.setUint32(1, lobbyId);
 
 			view.setUint8(5, playerId);
-			view.setUint8(6, homographId);
 
-			view.setUint16(7, univWidth);
-			view.setUint16(9, univHeight);
+			view.setUint16(6, univWidth);
+			view.setUint16(8, univHeight);
 
 			teams.forEach(function(team) {
 				enabledTeams |= this.TEAM_MASK[team];
 			}, this);
-			view.setInt8(11, enabledTeams);
+			view.setInt8(10, enabledTeams);
 
-			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 12);
+			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 11);
 
 			return buffer;
 		},
 		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
 			var view = new DataView(buffer),
-				enabledTeamsByte = view.getUint8(11),
+				enabledTeamsByte = view.getUint8(10),
 				enabledTeams = [];
 			for (let team in this.TEAM_MASK) {
 				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
 			}
-			MESSAGE.ADD_ENTITY.deserialize(buffer.slice(11), planetsCbk, enemiesCbk, shotsCbk, playersCbk)//lil' hack: 11 because the packet id is removed
+			MESSAGE.ADD_ENTITY.deserialize(buffer.slice(10), planetsCbk, enemiesCbk, shotsCbk, playersCbk)//lil' hack: 11 because the packet id is removed
 			return {
 				lobbyId: view.getUint32(1),
 				playerId: view.getUint8(5),
-				homographId: view.getUint8(6),
-				univWidth: view.getUint16(7),
-				univHeight: view.getUint16(9),
+				univWidth: view.getUint16(6),
+				univHeight: view.getUint16(8),
 				enabledTeams: enabledTeams
 			};
 		}
@@ -385,7 +388,7 @@ const MESSAGE = {
 					totalNameSize += playerNameBufs[i].byteLength;
 				});
 			}
-			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*6 : 0) + (players !== undefined ? players.length*9 + totalNameSize : 0)),
+			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*6 : 0) + (players !== undefined ? players.length*10 + totalNameSize : 0)),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
@@ -444,9 +447,10 @@ const MESSAGE = {
 					weaponByte <<= 2;
 					weaponByte += this.WEAPON[player.weaponry.carrying];
 					view.setUint8(7 + offset, weaponByte);
-					view.setUint8(8 + offset, playerNameBufs[i].byteLength);
-					new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 9 + offset);
-					offset += 9 + playerNameBufs[i].byteLength;
+					view.setUint8(8 + offset, player.homographId);
+					view.setUint8(9 + offset, playerNameBufs[i].byteLength);
+					new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 10 + offset);
+					offset += 10 + playerNameBufs[i].byteLength;
 				}, this);
 			}
 
@@ -476,32 +480,33 @@ const MESSAGE = {
 			lim = 6*view.getUint8(i) + ++i;
 			for (; i !== lim; i += 6) {
 				shotsCbk(
-					view.getUint16(i),
-					view.getUint16(i + 2),
-					bradToRad(view.getUint8(i + 4), 1),
-					view.getUint8(i + 5)
+					view.getUint16(i),//x
+					view.getUint16(i + 2),//y
+					bradToRad(view.getUint8(i + 4), 1),//angle
+					view.getUint8(i + 5)//type
 				);
 
 			}
 
 			while (i !== buffer.byteLength) {
-				var nameLgt = view.getUint8(i + 8),
+				var nameLgt = view.getUint8(i + 9),
 					enumByte = view.getUint8(i + 6),
 					weaponByte = view.getUint8(i + 7);
 				playersCbk(
-					view.getUint16(i),
-					view.getUint16(i + 2),
-					view.getUint8(i + 4),
-					radToBrad(view.getUint8(i + 5), 1),
-					enumByte & this.MASK.LOOKS_LEFT ? true : false,
-					enumByte & this.MASK.JETPACK ? true : false,
-					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 29 >>> 29],
-					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//we operate on 32 bits
-					bufferToString(buffer.slice(i + 9, i + 9 + nameLgt)),
-					Object.keys(this.WEAPON)[weaponByte << 30 >> 30],
-					Object.keys(this.WEAPON)[weaponByte << 28 >> 30]
+					view.getUint16(i),//x
+					view.getUint16(i + 2),//y
+					view.getUint8(i + 4),//attached planet
+					radToBrad(view.getUint8(i + 5), 1),//angle
+					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
+					enumByte & this.MASK.JETPACK ? true : false,//jetpack
+					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 29 >>> 29],//appearance
+					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walk frame
+					bufferToString(buffer.slice(i + 10, i + 10 + nameLgt)),//name
+					view.getUint8(i + 8),//homographId
+					Object.keys(this.WEAPON)[weaponByte << 30 >> 30],//armedWeapon
+					Object.keys(this.WEAPON)[weaponByte << 28 >> 30]//carriedWeapon
 				);
-				i += nameLgt + 9;
+				i += nameLgt + 10;
 			}
 		}
 	},
@@ -752,10 +757,17 @@ const MESSAGE = {
 			return MESSAGE.SET_NAME.deserialize(buffer);
 		}
 	},
-	CHAT_BROADCAST: {//CHAT_BROADCAST and SET_NAME_BROADCAST are coincidentally serialized the same way
+	CHAT_BROADCAST: {
 		value: 16,
 		serialize: function(id, message) {
-			return MESSAGE.SET_NAME_BROADCAST.serialize.call(this, id, message);
+			var bufMessage = stringToBuffer(message),
+				view = new Uint8Array(bufMessage.byteLength + 2);
+
+			view[0] = this.value;
+			view[1] = id;
+			view.set(new Uint8Array(bufMessage), 2);
+
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			return {

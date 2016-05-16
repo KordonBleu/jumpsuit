@@ -286,9 +286,9 @@ function printPlayerList(filter) {
 	else playerListElement.dataset.desc = "press tab to complete a player's name";
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	players.forEach(function(player, index) {
-		if (filter !== "" && player.name.indexOf(filter) === -1) return;
+		if (filter !== "" && player.getFinalName().indexOf(filter) === -1) return;
 		var li = document.createElement("li");
-		li.textContent = player.name;
+		li.textContent = player.getFinalName();
 		li.style.color = Planet.prototype.teamColors[player.appearance];
 		if (index === ownIdx) li.style.fontWeight = "bold";
 		playerListElement.appendChild(li);

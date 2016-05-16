@@ -80,7 +80,7 @@ Connection.prototype.setName = function() {
 };
 Connection.prototype.sendChat = function(content) {
 	this.sendMessage(MESSAGE.CHAT, content);
-	printChatMessage(players[ownIdx].name, players[ownIdx].appearance, content);
+	printChatMessage(players[ownIdx].getFinalName(), players[ownIdx].appearance, content);
 };
 Connection.prototype.refreshControls = function(controls) {
 	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
@@ -132,9 +132,10 @@ Connection.prototype.messageHandler = function(message) {
 				function(x, y, angle) {//add shots
 					shots.push(new Shot(x, y, angle));
 				},
-				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, armedWeapon, carriedWeapon) {//add players
+				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					player.looksLeft = looksLeft;
+					player.homographId = homographId;
 					player.lastSound = 0;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
 					players.push(player);
@@ -163,12 +164,14 @@ Connection.prototype.messageHandler = function(message) {
 					shots.push(shot);
 					notMuzzleFlashedShots.push(shot);
 				},
-				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, armedWeapon, carriedWeapon) {//add players
-					printChatMessage(undefined, undefined, name + " joined the game");
-					players.push(new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon));
-					players[players.length - 1].box.center.x = x;
-					players[players.length - 1].box.center.y = y;
-					players[players.length - 1].looksLeft = looksLeft;
+				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
+					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
+					newPlayer.box.center.x = x;
+					newPlayer.box.center.y = y;
+					newPlayer.looksLeft = looksLeft;
+					newPlayer.homographId = homographId;
+					printChatMessage(undefined, undefined, newPlayer.getFinalName() + " joined the game");
+					players.push(newPlayer);
 				}
 			);
 			break;
@@ -182,7 +185,7 @@ Connection.prototype.messageHandler = function(message) {
 					shots.splice(id, 1);
 				},
 				function(id) {//remove players
-					printChatMessage(undefined, undefined, players[id].name + " has left the game");
+					printChatMessage(undefined, undefined, players[id].getFinalName() + " has left the game");
 					players.splice(id, 1);
 					if (id < ownIdx) --ownIdx;
 				}
@@ -260,12 +263,14 @@ Connection.prototype.messageHandler = function(message) {
 			break;
 		case MESSAGE.CHAT_BROADCAST.value:
 			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
-			printChatMessage(players[val.id].name, players[val.id].appearance, val.message);
+			printChatMessage(players[val.id].getFinalName(), players[val.id].appearance, val.message);
 			break;
 		case MESSAGE.SET_NAME_BROADCAST.value:
 			var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);
-			printChatMessage(undefined, undefined, "\"" + players[val.id].name + "\" is now known as \"" + val.name + "\"");
+			let oldName = players[val.id].getFinalName();
 			players[val.id].name = val.name;
+			players[val.id].homographId = val.homographId;
+			printChatMessage(undefined, undefined, "\"" + oldName + "\" is now known as \"" + players[val.id].getFinalName() + "\"");
 			printPlayerList();
 			break;
 		case MESSAGE.SCORES.value:
