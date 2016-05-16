@@ -170,24 +170,34 @@ function doPrediction(universe, players, enemies, shots) {
 		if ("timestamp" in player.predictionTarget && player.lastPrediction !== 0) {
 			var now = Date.now(), serverTicks = 50,
 				smoothingTime = (now - player.predictionTarget.timestamp) / serverTicks;
+			
+			var angleOffset = (Math.abs(player.predictionTarget.box.angle - player.box.angle) >= Math.PI ? (player.predictionTarget.box.angle > player.box.angle ? -2*Math.PI : 2*Math.PI) : 0),
+				xOffset = (Math.abs(player.predictionTarget.box.center.x - player.box.center.x) >= universe.width*0.5 ? (player.predictionTarget.box.center.x > player.box.center.x ? -universe.width : universe.width) : 0),
+				yOffset = (Math.abs(player.predictionTarget.box.center.y - player.box.center.y) >= universe.height*0.5 ? (player.predictionTarget.box.center.y > player.box.center.y ? -universe.height : universe.height) : 0),
+				aimAngleOffset = (Math.abs(player.predictionTarget.aimAngle - player.aimAngle) >= Math.PI ? (player.predictionTarget.aimAngle > player.aimAngle ? -2+Math.PI : 2+Math.PI) : 0);
+
+ 
 			player.box.angle = lerp(
 				player.box.angle,
-				player.predictionTarget.box.angle,
+				player.predictionTarget.box.angle + angleOffset,
 				smoothingTime
 			);
 			player.box.center.x = lerp(
 				player.box.center.x,
-				player.predictionTarget.box.center.x,
+				player.predictionTarget.box.center.x + xOffset,
 				smoothingTime
 			);
 			player.box.center.y = lerp(
 				player.box.center.y,
-				player.predictionTarget.box.center.y,
+				player.predictionTarget.box.center.y + yOffset,
 				smoothingTime
 			);
-				
-//			player.box.center.x += ((now - player.predictionTarget.timestamp) / 40) * (player.predictionTarget.box.center.x - player.box.center.x);
-//			player.box.center.y += ((now - player.predictionTarget.timestamp) / 40) * (player.predictionTarget.box.center.y - player.box.center.y);
+			player.aimAngle = lerp(
+				player.aimAngle,
+				player.predictionTarget.aimAngle,
+				smoothingTime
+			);
+							
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
 			player.aimAngle = (2 * Math.PI + player.aimAngle) % (2 * Math.PI);
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;

@@ -219,9 +219,10 @@ Connection.prototype.messageHandler = function(message) {
 							players[id].jetpackSound.stop();
 						}
 					}
+					
 					if ("timestamp" in players[id].predictionTarget) players[id].lastPrediction = players[id].predictionTarget.timestamp;
-					players[id].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle)};
-					players[id].aimAngle = aimAngle;
+					players[id].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle), aimAngle: aimAngle};
+
 					players[id].looksLeft = looksLeft;
 					if ((players[id].walkFrame === "_walk1" && walkFrame === "walk2") || (players[id].walkFrame === "_walk2" && walkFrame === "walk1")) {
 						let type = planets[players[id].attachedPlanet].type,
