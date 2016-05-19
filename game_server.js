@@ -7,6 +7,8 @@ var fs = require("fs"),
 	interactive = require("./interactive.js"),
 	MESSAGE = require("./static/message.js"),
 	logger = require("./logger.js"),
+	ipaddr = require("ipaddr.js"),
+	ips = require("./ips.js"),
 
 	configSkeleton = {
 		dev: false,
@@ -154,74 +156,85 @@ wss.on("connection", function(ws) {
 	}
 	var player = new engine.Player();
 	player.ws = ws;
+	player.ip = ipaddr.parse(ws._socket.remoteAddress);
 
 	ws.on("message", function(message, flags) {
+		if (ips.banned(player.ip)) return;
+
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
-		let state = new Uint8Array(message, 0, 1)[0];
-		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
-		logger(logger.DEV, (MESSAGE.toString(state)).italic);
-		switch (state) {
-			case MESSAGE.CREATE_PRIVATE_LOBBY.value:
-				var data = MESSAGE.CREATE_PRIVATE_LOBBY.deserialize(message);
-				if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.playerAmount, config.dev ? 0 : 30));
-				//TODO: connect client to newly created lobby
-				break;
-			case MESSAGE.SET_NAME.value:
-				let playerName = MESSAGE.SET_NAME.deserialize(message);
-				if (player.lobby !== undefined) {
-					player.homographId = player.lobby.getNextHomographId(playerName);
-					player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), playerName, player.homographId));
-				}
-				player.name = playerName;
-				break;
-			case MESSAGE.CONNECT.value:
-				let lobbyId = MESSAGE.CONNECT.deserialize(message);
 
-				if (player.name === undefined) break;
-				else {
-					let lobby;
-					if (lobbyId !== undefined) {//joining a private lobby
-						lobby = lobbies.getByUid(lobbyId);
-
-						if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
-						else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
-						break;
-					} else {//public lobby
-						if (!lobbies.some(function(_lobby, i) {//if no not-full lobby
-							if (_lobby.players.length < _lobby.maxPlayers) {
-								lobby = _lobby;
-								lobbyId = i;
-								return true;
-							} else return false;
-						})) {//create new lobby
-							lobby = new Lobby(8, config.dev ? 0 : 30);
-							lobbies.push(lobby);
-							lobbyId = lobbies.length - 1;
-						}
+		try {
+			let state = new Uint8Array(message, 0, 1)[0];
+			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
+			switch (state) {//shouldn't this be broken into small functions?
+				case MESSAGE.CREATE_PRIVATE_LOBBY.value:
+					var data = MESSAGE.CREATE_PRIVATE_LOBBY.deserialize(message);
+					if (data.playerAmount >= 1 && data.playerAmount <= 16 && data.name.length <= 32) lobbies.push(new Lobby(data.playerAmount, config.dev ? 0 : 30));
+					//TODO: connect client to newly created lobby
+					break;
+				case MESSAGE.SET_NAME.value:
+					let playerName = MESSAGE.SET_NAME.deserialize(message);
+					if (player.lobby !== undefined) {
+						player.homographId = player.lobby.getNextHomographId(playerName);
+						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), playerName, player.homographId));
 					}
+					player.name = playerName;
+					break;
+				case MESSAGE.CONNECT.value:
+					let lobbyId = MESSAGE.CONNECT.deserialize(message);
 
-					player.homographId = lobby.getNextHomographId(player.name);
-					lobby.players.push(player);
-					player.lastRefresh = Date.now();
-					player.lobby = lobby;
-					player.pid = lobby.players.findIndex(function(element) { return element === player; });
-					lobby.assignPlayerTeam(player);
+					if (player.name === undefined) break;
+					else {
+						let lobby;
+						if (lobbyId !== undefined) {//joining a private lobby
+							lobby = lobbies.getByUid(lobbyId);
 
-					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
-					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
-					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
-				}
-				break;
-			case MESSAGE.PLAYER_CONTROLS.value:
-				onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
-				break;
-			case MESSAGE.CHAT.value:
-				let chatMsg = MESSAGE.CHAT.deserialize(message);
-				if (chatMsg !== "" && chatMsg.length <= 150) player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), chatMsg), player);
-				break;
-			case MESSAGE.AIM_ANGLE.value:
-				player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);
-				break
+							if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
+							else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
+							break;
+						} else {//public lobby
+							if (!lobbies.some(function(_lobby, i) {//if no not-full lobby
+								if (_lobby.players.length < _lobby.maxPlayers) {
+									lobby = _lobby;
+									lobbyId = i;
+									return true;
+								} else return false;
+							})) {//create new lobby
+								lobby = new Lobby(8, config.dev ? 0 : 30);
+								lobbies.push(lobby);
+								lobbyId = lobbies.length - 1;
+							}
+						}
+
+						player.homographId = lobby.getNextHomographId(player.name);
+						lobby.players.push(player);
+						player.lastRefresh = Date.now();
+						player.lobby = lobby;
+						player.pid = lobby.players.findIndex(function(element) { return element === player; });
+						lobby.assignPlayerTeam(player);
+
+						player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
+						lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
+						player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
+					}
+					break;
+				case MESSAGE.PLAYER_CONTROLS.value:
+					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
+					break;
+				case MESSAGE.CHAT.value:
+					let chatMsg = MESSAGE.CHAT.deserialize(message);
+					if (chatMsg !== "" && chatMsg.length <= 150) player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), chatMsg), player);
+					break;
+				case MESSAGE.AIM_ANGLE.value:
+					player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);
+					break
+				default:
+					ips.ban(player.ip);
+					return;//prevent logging
+			}
+			logger(logger.DEV, MESSAGE.toString(state));
+		} catch (err) {
+			ips.ban(player.ip);
 		}
 	});
 	ws.on("pong", function() {

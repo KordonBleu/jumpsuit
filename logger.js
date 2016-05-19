@@ -14,7 +14,7 @@ module.exports = function(type, content) {
 	if (type === 0 && process.env.NODE_ENV !== "development") return;
 
 	let timestamp = ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey;
-	console.log(timestamp + enumToString(type) + " " + (content || ""));
+	console.log(timestamp + enumToString(type) + " " + (content.replace(/[\x00-\x1F\x7F-\x9F]/g, "?") || ""));//sanitize string for console output
 };
 module.exports.DEV = 0;
 module.exports.INFO = 1;

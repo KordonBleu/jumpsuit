@@ -8,6 +8,7 @@ var fs = require("fs"),
 	MESSAGE = require("./static/message.js"),
 	logger = require("./logger.js"),
 	ipaddr = require("ipaddr.js"),
+	ips = require("./ips"),
 
 	configSkeleton = {
 		dev: false,
@@ -127,18 +128,24 @@ var gameServerSocket = new WebSocketServer({server: server, path: "/game_servers
 	wsOptions = { binary: true, mask: false };
 
 gameServerSocket.on("connection", function(ws) {
-	var gameServer;
+	var gameServer = new GameServer(undefined, undefined, undefined, undefined, ipaddr.parse(ws._socket.remoteAddress));
+
 	ws.on("message", function(message, flags) {
+		if (ips.banned(gameServer.ip)) return;
+
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
-		let state = new Uint8Array(message, 0, 1)[0];
 
-		if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
-		logger(logger.DEV, (MESSAGE.toString(state)).italic);
+		try {
+			let state = new Uint8Array(message, 0, 1)[0];
 
-		switch (state) {
-			case MESSAGE.REGISTER_SERVER.value:
+			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
+
+			if (state === MESSAGE.REGISTER_SERVER.value) {
 				let data = MESSAGE.REGISTER_SERVER.deserialize(message);
-				gameServer = new GameServer(data.serverName, data.modName, data.secure, data.serverPort, ipaddr.parse(ws._socket.remoteAddress));
+				gameServer.name = data.serverName;
+				gameServer.mod = data.modName;
+				gameServer.secure = data.secure;
+				gameServer.port = data.serverPort;
 				gameServer.pingIntervalId = setInterval(function() {
 					try {
 						ws.ping();
@@ -155,7 +162,13 @@ gameServerSocket.on("connection", function(ws) {
 						});
 					} catch (err) {/* Do nothing */}
 				});
-				break;
+			} else {
+				ips.ban(gameServer.ip);
+				return;//prevent logging
+			}
+		logger(logger.DEV, (MESSAGE.toString(state)).italic);
+		} catch (err) {
+			ips.ban(gameServer.ip);
 		}
 	});
 
