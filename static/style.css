@@ -5,7 +5,7 @@
 	font-family: "Open Sans";
 	font-style: normal;
 	font-weight: 400;
-	src: local("Open Sans"), url("/assets/fonts/open_sans_400.woff2") format("woff2"), url("/assets/fonts/open_sans_400.woff") format("woff");
+	src: local("Open Sans"), url("https://jumpsuit.space/assets/fonts/open_sans_400.woff2") format("woff2"), url("https://jumpsuit.space/assets/fonts/open_sans_400.woff") format("woff");
 }
 html, body {
 	font-size: 16px;
@@ -35,7 +35,7 @@ html, body, button, label, #player-list, #lobby-table thead, #key-settings {
 	pointer-events: auto;
 }
 html {
-	background-image: url("/assets/images/background.png");
+	background-image: url("https://jumpsuit.space/assets/images/background.png");
 }
 #port-number {
 	font-weight: bold;
@@ -68,7 +68,7 @@ a {
 }
 a.gh-image {
 	color: black;
-	background: url("/assets/images/github.svg") top left no-repeat;
+	background: url("https://jumpsuit.space/assets/images/github.svg") top left no-repeat;
 	padding-left: 2.3em;
 	line-height: 2;
 	height: 2.3em;
@@ -613,9 +613,9 @@ label.range-label {
 	width: 1.625em;
 	height: 1.41em;
 }
-#gui-health div.heartFilled { background-image: url("/assets/images/heartFilled.svg"); }
-#gui-health div.heartHalfFilled { background-image: url("/assets/images/heartHalfFilled.svg"); }
-#gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
+#gui-health div.heartFilled { background-image: url("https://jumpsuit.space/assets/images/heartFilled.svg"); }
+#gui-health div.heartHalfFilled { background-image: url("https://jumpsuit.space/assets/images/heartHalfFilled.svg"); }
+#gui-health div.heartNotFilled { background-image: url("https://jumpsuit.space/assets/images/heartNotFilled.svg"); }
 
 #gui-bad-connection {
 	font-size: 2.75em;

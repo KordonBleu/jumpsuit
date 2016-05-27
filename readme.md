@@ -61,7 +61,7 @@ In this file you can set the following parameters:
 
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
-dev | Disable the countdown before joining a lobby and enable debug messages. You'll have to restart the server if you create a new file | false | boolean
+dev | Enable debug messages | false | boolean
 interactive | Make it possible to enter JavaScript commands while the server runs | false | boolean
 master | The master server your server registers to. If your host your own master server it should look like "ws://localhost:8080" | "ws://jumpsuit.space" | string
 mod | Choose the server's gamemode | "capture" | string
@@ -82,9 +82,16 @@ In this file you can set the following parameters:
 
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
-dev | Enable debug messages and the automatic reload of modified files (under `static/`) | false | boolean
+dev | Enable debug messages. Enable automatic reload of modified files (if you add a new file, you'll have to restart the server). Get resources from local files instead of jumpsuit.space<sup>[1](#http2)</sup> | true | boolean
 interactive | Make it possible to enter JavaScript commands while the server runs | false | boolean
 ipv4_provider | The URL of a web service which should return an IPv4 as plain text. You can also set your IP directly | "https://icanhazip.com/" | string
 ipv6_provider | The URL of a web service which should return an IPv6 as plain text. You can also set your IP directly | "https://ipv6.icanhazip.com/" | string
 monitor | Displays a neat view of the connected game servers in real-time | false| boolean
 port | Set the game server's port | 80 | integer
+
+
+## Footnotes
+
+<a name="http2">1</a>: Since a lot of tiny assets must be served, (which is inefficent with HTTP/1.0 and HTTP/1.1), on [jumpsuit.space](http://jumpsuit.space/), http2 is used.
+However, browsers do not accept HTTP/2 without SSL. We cannot make [jumpsuit.space](http://jumpsuit.space/) SSL-only, because it brings more latency (which is not okay for game websockets) and because that would mean third-party developpers wanting to register a game server on the master server at [jumpsuit.space](http://jumpsuit.space/) would have to get a SSL certificate. So; everything but game server sockets and the index.html is encrypted, and thus, we cannot use protocol relative URLs to access ressources.
+The problem is that a developper on localhost would get assets and scripts from jumpsuit.space. To prevent this, the dev option rewrites files to replace URLs pointing to jumpsuit.space with protocol relative URLs.

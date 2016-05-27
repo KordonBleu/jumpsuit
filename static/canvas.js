@@ -283,7 +283,7 @@ resPaths.forEach(function(path) {//init resources
 		img.addEventListener("error", function(e) {
 			reject(e);
 		})
-		img.src = "/assets/images/" + path;
+		img.src = "https://jumpsuit.space/assets/images/" + path;
 	});
 	promise.then(function() {
 		++drawBar.progress;

@@ -2,7 +2,7 @@
 
 var ownIdx = null,
 	enabledTeams = [],
-	masterSocket = new WebSocket((location.protocol === "http:" ? "ws://" : "wss://") + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
+	masterSocket = new WebSocket("wss://" + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
 	serverList,
 	currentConnection;
 

@@ -11,7 +11,7 @@ var fs = require("fs"),
 	ips = require("./ips"),
 
 	configSkeleton = {
-		dev: false,
+		dev: true,
 		interactive: false,
 		ipv4_provider: "https://icanhazip.com/",
 		ipv6_provider: "https://ipv6.icanhazip.com/",
@@ -62,24 +62,36 @@ if(config.monitor) monitor.setMonitorMode();*/
 
 if (config.interactive) interactive.open();
 
-var files = {
-	"/engine.js": fs.readFileSync("./mods/capture/engine.js"),//the default engine is not under `./static` because it is part of a mod
-	"/ipaddr.min.js": fs.readFileSync("./node_modules/ipaddr.js/ipaddr.min.js"),
-	"/vinage.js": fs.readFileSync("./node_modules/vinage/vinage.js")
-};
-files["/engine.js"].mtime = fs.statSync("./mods/capture/engine.js").mtime;
-files["/ipaddr.min.js"].mtime = fs.statSync("./node_modules/ipaddr.js/ipaddr.min.js").mtime;
-files["/vinage.js"].mtime = fs.statSync("./node_modules/vinage/vinage.js").mtime;
+var files = {};
+function loadFile(name, path) {
+	var mimeList = {html: "text/html", css: "text/css", svg: "image/svg+xml", png: "image/png", js: "application/javascript", ogg: "audio/ogg", opus: "audio/ogg"},
+		extension = path.slice(path.lastIndexOf(".") - path.length + 1);
+	files[name] = {
+		content: fs.readFileSync(path),
+		mtime: fs.statSync(path).mtime,
+		path: path,
+		mime: extension in mimeList ? mimeList[extension] : "application/octet-stream"
+	}
+	if (config.dev) {
+		if (extension === "html" || extension === "css" || extension === "js") {
+			files[name].content = files[name].content.toString("utf8").replace(/https:\/\/jumpsuit\.space/g, "");
+		}
+		if (name === "/websocket_client.js") {
+			files[name].content = files[name].content.replace(/"wss:\/\/"/g, "(location.protocol === \"http:\" ? \"ws://\" : \"wss://\")");
+		}
+	}
+}
+loadFile("/engine.js", "./mods/capture/engine.js");
+loadFile("/ipaddr.min.js", "./node_modules/ipaddr.js/ipaddr.min.js");
+loadFile("/vinage.js", "./node_modules/vinage/vinage.js");
+
 files.construct = function(path, oName) {
 	fs.readdirSync(path).forEach(function(pPath) {
 		var cPath = path + "/" + pPath,
 			stat = fs.statSync(cPath);
 		if(stat.isDirectory()) {//WE NEED TO GO DEEPER
 			files.construct(cPath, oName + pPath + "/");
-		} else {
-			files[oName + pPath] = fs.readFileSync(cPath);
-			files[oName + pPath].mtime = stat.mtime;
-		}
+		} else loadFile(oName + pPath, cPath);
 	});
 };
 files.construct("./static", "/");//load everything under `./static` in RAM for fast access
@@ -96,24 +108,21 @@ var server = http.createServer(function (req, res) {
 		res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
 		if (config.dev) {
 			try {
-				var path = "./static" + req.url,
-					mtime = fs.statSync(path).mtime;
-				if (mtime.getTime() !== files[req.url].mtime.getTime()) {
-					files[req.url] = fs.readFileSync(path);
+				if (fs.statSync(files[req.url].path).mtime.getTime() !== files[req.url].mtime.getTime()) {
+					files[req.url] = fs.readFileSync(files[req.url].path);
 					files[req.url].mtime = mtime;
 				}
-			} catch(e) {/*Do nothing*/}
+			} catch(err) {
+				console.log(err);
+			}
 		}
 		if (req.headers["if-modified-since"] !== undefined && new Date(req.headers["if-modified-since"]).toUTCString() === files[req.url].mtime.toUTCString()) {
 			res.writeHead(304);
 			res.end();
 		} else {
-			let mimeList = {html: "text/html", css: "text/css", svg: "image/svg+xml", png: "image/png", js: "application/javascript", ogg: "audio/ogg", opus: "audio/ogg"},
-				extension = req.url.slice(req.url.lastIndexOf(".") - req.url.length + 1),
-				mime = extension in mimeList ? mimeList[extension] : "application/octet-stream";
 
-			res.writeHead(200, {"Content-Type": mime, "Last-Modified": files[req.url].mtime.toUTCString()});
-			res.end(files[req.url]);
+			res.writeHead(200, {"Content-Type": files[req.url].mime, "Last-Modified": files[req.url].mtime.toUTCString()});
+			res.end(files[req.url].content);
 		}
 	} else {
 		res.writeHead(404);
