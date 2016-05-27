@@ -598,8 +598,8 @@ const MESSAGE = {
 			shotgun: 2,
 			knife: 3
 		},
-		serialize: function(yourHealth, yourFuel, planets, enemies, shots, players) {
-			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + shots.length*4 + players.length*9),
+		serialize: function(yourHealth, yourFuel, planets, enemies, players) {
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.length*9),
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
@@ -614,12 +614,6 @@ const MESSAGE = {
 
 			enemies.forEach(function(enemy) {
 				view.setUint8(offset++, radToBrad(enemy.box.angle, 1));
-			});
-
-			shots.forEach(function(shot, i) {
-				view.setUint16(offset, shot.box.center.x);
-				view.setUint16(2 + offset, shot.box.center.y);
-				offset += 4;
 			});
 
 			players.forEach(function(player, i) {
@@ -641,7 +635,7 @@ const MESSAGE = {
 
 			return buffer;
 		},
-		deserialize: function(buffer, planetAmount, enemyAmount, shotAmount, playerAmount, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+		deserialize: function(buffer, planetAmount, enemyAmount, playerAmount, planetsCbk, enemiesCbk, playersCbk) {
 			var view = new DataView(buffer);
 
 			var i = 4;
@@ -655,14 +649,6 @@ const MESSAGE = {
 			var limit = i + enemyAmount;
 			for (let id = 0; i !== limit; ++i, ++id) {
 				enemiesCbk(id, bradToRad(view.getUint8(i), 1));//angle
-			}
-
-			limit += shotAmount*4;
-			for (let id = 0; i !== limit; i += 4, ++id) {
-				shotsCbk(id,
-					view.getUint16(i),//x
-					view.getUint16(i + 2)//y
-				);
 			}
 
 			limit += playerAmount*9;

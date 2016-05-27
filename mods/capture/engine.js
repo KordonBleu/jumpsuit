@@ -48,7 +48,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.name = name;
 	this.box = new Rectangle(new Point(0, 0), 0, 0);
 	this.predictionTarget = {};
-	this.lastPrediction = 0;
+	this.predictionBase = {};
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0, changeWeapon: 0, shoot: 0};
 	this.velocity = new Vector(0, 0);
 	this._appearance = appearance;
@@ -166,38 +166,43 @@ function doPrediction(universe, players, enemies, shots) {
 		//lerp = linear interpolation
 		return x + t * (y - x);
 	}
+	function wrapOffset(x, y, size) {
+		if (Math.abs((x - size/2) - (y - size/2)) >= size*0.6) return (x > y ? -size : size);
+		return 0;
+	}
 
 	var fps = 1000 / (doPrediction.newTimestamp - doPrediction.oldTimestamp);
 	game.fps = fps;
 	players.forEach(function(player) {
-		if ("timestamp" in player.predictionTarget && player.lastPrediction !== 0) {
+		if ("timestamp" in player.predictionTarget) {
 			var now = Date.now(), serverTicks = 50,
 				smoothingTime = (now - player.predictionTarget.timestamp) / serverTicks;
 			
-			var angleOffset = (Math.abs(player.predictionTarget.box.angle - player.box.angle) >= Math.PI ? (player.predictionTarget.box.angle > player.box.angle ? -2*Math.PI : 2*Math.PI) : 0),
-				xOffset = (Math.abs(player.predictionTarget.box.center.x - player.box.center.x) >= universe.width*0.5 ? (player.predictionTarget.box.center.x > player.box.center.x ? -universe.width : universe.width) : 0),
-				yOffset = (Math.abs(player.predictionTarget.box.center.y - player.box.center.y) >= universe.height*0.5 ? (player.predictionTarget.box.center.y > player.box.center.y ? -universe.height : universe.height) : 0),
-				aimAngleOffset = (Math.abs(player.predictionTarget.aimAngle - player.aimAngle) >= Math.PI ? (player.predictionTarget.aimAngle > player.aimAngle ? -2+Math.PI : 2+Math.PI) : 0);
+			var angleOffset = wrapOffset(player.predictionTarget.box.angle, player.predictionBase.box.angle, 2*Math.PI),
+				xOffset = wrapOffset(player.predictionTarget.box.center.x, player.predictionBase.box.center.x, universe.width),
+				yOffset = wrapOffset(player.predictionTarget.box.center.y, player.predictionBase.box.center.y, universe.height),
+				aimAngleOffset = wrapOffset(player.predictionTarget.aimAngle, player.predictionBase.aimAngle, 2*Math.PI);
 
- 
+			if (angleOffset !== 0) console.log(angleOffset, player.predictionBase.box.angle, player.predictionTarget.box.angle, player.predictionTarget.box.angle + angleOffset);
+
 			player.box.angle = lerp(
-				player.box.angle,
+				player.predictionBase.box.angle,
 				player.predictionTarget.box.angle + angleOffset,
 				smoothingTime
 			);
 			player.box.center.x = lerp(
-				player.box.center.x,
+				player.predictionBase.box.center.x,
 				player.predictionTarget.box.center.x + xOffset,
 				smoothingTime
 			);
 			player.box.center.y = lerp(
-				player.box.center.y,
+				player.predictionBase.box.center.y,
 				player.predictionTarget.box.center.y + yOffset,
 				smoothingTime
 			);
 			player.aimAngle = lerp(
-				player.aimAngle,
-				player.predictionTarget.aimAngle,
+				player.predictionBase.aimAngle,
+				player.predictionTarget.aimAngle + aimAngleOffset,
 				smoothingTime
 			);
 							
@@ -208,8 +213,8 @@ function doPrediction(universe, players, enemies, shots) {
 		}
 	});
 	shots.forEach(function(shot){
-		shot.box.center.x += shot.speed[shot.type] * Math.sin(shot.box.angle) * (fps / 60);
-		shot.box.center.y += shot.speed[shot.type] * -Math.cos(shot.box.angle) * (fps / 60);
+		shot.box.center.x += shot.speed[shot.type] * Math.sin(shot.box.angle) * (60 / fps);
+		shot.box.center.y += shot.speed[shot.type] * -Math.cos(shot.box.angle) * (60 / fps);
 	});
 	doPrediction.oldTimestamp = doPrediction.newTimestamp;
 }

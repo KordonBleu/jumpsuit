@@ -192,7 +192,7 @@ Connection.prototype.messageHandler = function(message) {
 			);
 			break;
 		case MESSAGE.GAME_STATE.value:
-			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, shots.length, players.length,
+			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, players.length,
 				function(id, ownedBy, progress) {
 					planets[id].progress.team = ownedBy;
 					planets[id].progress.value = progress;
@@ -200,10 +200,6 @@ Connection.prototype.messageHandler = function(message) {
 				},
 				function(id, angle) {
 					enemies[id].box.angle = angle;
-				},
-				function(id, x, y) {
-					shots[id].box.center.x = x;
-					shots[id].box.center.y = y;
 				},
 				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
 					if (id === ownIdx) {
@@ -222,10 +218,11 @@ Connection.prototype.messageHandler = function(message) {
 							players[id].jetpackSound.stop();
 						}
 					}
-					
-					if ("timestamp" in players[id].predictionTarget) players[id].lastPrediction = players[id].predictionTarget.timestamp;
-					players[id].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle), aimAngle: aimAngle};
+					var param1 = Date.now(), param2 = players[id];
 
+					if ("timestamp" in players[id].predictionTarget) param1 = param2.predictionTarget.timestamp;
+					players[id].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle), aimAngle: aimAngle};
+					players[id].predictionBase = {timestamp: param1, box: new Rectangle(new Point(param2.box.center.x, param2.box.center.y), 0, 0, param2.box.angle), aimAngle: param2.aimAngle};
 					players[id].looksLeft = looksLeft;
 					if ((players[id].walkFrame === "_walk1" && walkFrame === "walk2") || (players[id].walkFrame === "_walk2" && walkFrame === "walk1")) {
 						let type = planets[players[id].attachedPlanet].type,

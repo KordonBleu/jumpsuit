@@ -22,7 +22,15 @@ module.exports = function(engine) {
 			if (player !== exclude) player.send(message);
 		});
 	};
-	Lobby.prototype.update = function() {
+	Lobby.prototype.init = function() {
+		this.param1 = setInterval(this.updateGame.bind(this), 16);
+		this.param2 = setInterval(this.updateLobby.bind(this), 1000);
+	};
+	Lobby.prototype.close = function() {
+		clearInterval(this.param1);
+		clearInterval(this.param2);
+	}
+	Lobby.prototype.updateGame = function() {
 		var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
 			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
 
@@ -50,7 +58,7 @@ module.exports = function(engine) {
 
 		this.players.forEach(function(player) {
 			function updPlayer() {
-				player.send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.shots, this.players));
+				player.send(MESSAGE.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.players));
 				player.needsUpdate = true;
 			}
 			if (player.needsUpdate || player.needsUpdate === undefined) {
@@ -59,6 +67,13 @@ module.exports = function(engine) {
 			}
 		}, this);
 		this.processTime = Date.now() - oldDate;
+	};
+	Lobby.prototype.updateLobby = function() {
+		
+		this.planets.forEach((function(planet) {
+			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
+		}).bind(this));
+		this.broadcast(MESSAGE.SCORES.serialize(this.teamScores));		
 	};
 	Lobby.prototype.pingPlayers = function() {
 		this.players.forEach(function(player) {
@@ -104,14 +119,16 @@ module.exports = function(engine) {
 			var var1 = box2.center.x - box1.center.x, var2 = box2.center.y - box1.center.y;
 			return Math.sqrt(var1 * var1 + var2 * var2);
 		}
-		for (let i = 0; i !== planetAmount; ++i) {
+		var maxIterations = planetAmount * 4;
+		for (let i = 0, iterations = 0; i !== planetAmount, iterations !== maxIterations; ++i, ++iterations) {
 			let newPlanet = new engine.Planet(Math.random()*this.universe.width, Math.random()*this.universe.height, 100 + Math.random()*300);
-			if (this.planets.every(function(planet) {
-				return !this.universe.collide(planet.atmosBox, newPlanet.atmosBox);
-			}.bind(this))) this.planets.push(newPlanet);
+			if (this.planets.every(function(planet) { return !this.universe.collide(planet.atmosBox, newPlanet.atmosBox); }.bind(this)) &&
+				newPlanet.box.center.x - newPlanet.box.radius > 50 && newPlanet.box.center.x + newPlanet.box.radius < this.universe.width - 50 &&
+				newPlanet.box.center.y - newPlanet.box.radius > 50 && newPlanet.box.center.y + newPlanet.box.radius < this.universe.height - 50) this.planets.push(newPlanet);
 			else --i;//failed to add it, do it again so we have the correct amount
 		}
-		for (let i = 0; i !== enemyAmount; ++i) {
+		maxIterations = enemyAmount * 4;
+		for (let i = 0, iterations = 0; i !== enemyAmount, iterations !== maxIterations; ++i, ++iterations) {
 			let newEnemy = new engine.Enemy(Math.random()*this.universe.width, Math.random()*this.universe.height);
 			if (this.planets.every(function(planet) {
 				return distanceBetween(planet.box, newEnemy.box) > planet.box.radius + 420;

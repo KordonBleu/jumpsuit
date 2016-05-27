@@ -109,34 +109,6 @@ lobbies.getByUid = function(uid) {
 	if(!isNaN(index) && isFinite(index) && index % 1 === 0 && index >= 0 && this[index] !== undefined) return this[index];
 };
 
-setInterval(function() {
-	lobbies.forEach(function(lobby) {
-		lobby.update();
-	});
-}, 16);
-
-setInterval(function() {
-	lobbies.forEach(function(lobby) {
-		/*if (lobby.players.length !== 0 && !config.dev) lobby.stateTimer -= 1;
-
-		if (lobby.stateTimer <= 0) {
-			lobby.stateTimer = 10;
-		}*/
-
-
-		lobby.planets.forEach(function(planet) {
-			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
-		}, lobby);
-		lobby.broadcast(MESSAGE.SCORES.serialize(lobby.teamScores));
-	});
-}, 1000)
-
-setInterval(function() {
-	lobbies.forEach(function(lobby) {
-		lobby.pingPlayers();
-	});
-}, 500);
-
 wss.on("connection", function(ws) {
 	function cleanup() {
 		lobbies.forEach(function(lobby, lobbyI) {
@@ -145,7 +117,10 @@ wss.on("connection", function(ws) {
 					logger(logger.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
 					players.splice(i, 1);
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]));
-					if (players.length === 0) lobbies.splice(lobbyI, 1);
+					if (players.length === 0) { 
+						lobbies[lobbyI].close();
+						lobbies.splice(lobbyI, 1);						
+					}
 					for (let i = lobbyI; i !== lobbies.length; ++i) {
 						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
 					}
@@ -201,8 +176,8 @@ wss.on("connection", function(ws) {
 								} else return false;
 							})) {//create new lobby
 								lobby = new Lobby(8, config.dev ? 0 : 30);
-								lobbies.push(lobby);
-								lobbyId = lobbies.length - 1;
+								lobby.init();
+								lobbyId = lobbies.push(lobby) - 1;
 							}
 						}
 
