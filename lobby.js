@@ -32,7 +32,7 @@ module.exports = function(engine) {
 	}
 	Lobby.prototype.updateGame = function() {
 		var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
-			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, false, this.teamScores);
+			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores);
 
 		//if a shot is added and removed at the same moment, don't send it to clients
 		entitiesDelta.addedShots.forEach(function(shot, iAdd) {
@@ -43,7 +43,7 @@ module.exports = function(engine) {
 			}
 		});
 		if (entitiesDelta.addedShots.length != 0) this.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], entitiesDelta.addedShots, []));
-		if (entitiesDelta.removedShots.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], entitiesDelta.removedShots, []));
+		//if (entitiesDelta.removedShots.length != 0) this.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], entitiesDelta.removedShots, []));
 
 		this.players.forEach(function(player, i) {
 			function truncTo(number, decimalNbr) {

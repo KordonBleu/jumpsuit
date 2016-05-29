@@ -20,7 +20,7 @@ var resPaths = [
 	"enemyBlue1.svg", "enemyBlue2.svg", "enemyBlue3.svg", "enemyBlue4.svg", "enemyBlue5.svg",
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
-	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg", "muzzle.svg"
+	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg", "muzzle.svg", "muzzle2.svg"
 	],
 	resources = {};
 
@@ -36,9 +36,9 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-const weaponList = {
-	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 90, muzzleY: 6, shotType: 1}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
-	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 70, muzzleY: -3, shotType: 1},
+var weaponList = {
+	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
+	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1},
 	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 105, muzzleY: -4, shotType: 3},
 	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2}
 };
@@ -91,7 +91,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
 	this.pid = 0;
-	this.weaponry = {armed: armedWeapon || "smg", carrying: carriedWeapon || "knife", cycle: 0};
+	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0};
 	this.aimAngle = aimAngle || 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
@@ -167,6 +167,7 @@ function doPrediction(universe, players, enemies, shots) {
 		return x + t * (y - x);
 	}
 	function wrapOffset(x, y, size) {
+		//shortcut
 		if (Math.abs((x - size/2) - (y - size/2)) >= size*0.6) return (x > y ? -size : size);
 		return 0;
 	}
@@ -182,8 +183,6 @@ function doPrediction(universe, players, enemies, shots) {
 				xOffset = wrapOffset(player.predictionTarget.box.center.x, player.predictionBase.box.center.x, universe.width),
 				yOffset = wrapOffset(player.predictionTarget.box.center.y, player.predictionBase.box.center.y, universe.height),
 				aimAngleOffset = wrapOffset(player.predictionTarget.aimAngle, player.predictionBase.aimAngle, 2*Math.PI);
-
-			if (angleOffset !== 0) console.log(angleOffset, player.predictionBase.box.angle, player.predictionTarget.box.angle, player.predictionTarget.box.angle + angleOffset);
 
 			player.box.angle = lerp(
 				player.predictionBase.box.angle,
@@ -220,7 +219,8 @@ function doPrediction(universe, players, enemies, shots) {
 }
 doPrediction.oldTimestamp = 0;
 doPrediction.newTimestamp = 0;
-function doPhysics(universe, players, planets, enemies, shots, isClient, teamScores) {
+
+function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 	var playersOnPlanets = new Array(planets.length),
 		entitiesDelta = {
 			addedShots: [],
@@ -369,14 +369,13 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 			if (++enemy.fireRate >= 20) {
 				playerToHit.lastlyAimedAt = Date.now();
 				enemy.fireRate = 0;
-				let newShot = new Shot(enemy.box.center.x, enemy.box.center.y, enemy.box.angle - Math.PI)
+				let newShot = new Shot(enemy.box.center.x, enemy.box.center.y, enemy.box.angle - Math.PI, -1, 0);
 				shots.push(newShot);
 				entitiesDelta.addedShots.push(newShot);
 			}
 		}
 	});
 
-	if (isClient) return entitiesDelta;
 	for (var i = 0; i < playersOnPlanets.length; i++){
 		if (typeof playersOnPlanets[i] === "undefined") continue;
 		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
@@ -401,6 +400,15 @@ function doPhysics(universe, players, planets, enemies, shots, isClient, teamSco
 	}
 
 	return entitiesDelta;
+}
+
+function doPhysicsClient(universe, planets, shots, players) {
+	shots.forEach(function(shot, si) {
+		if (--shot.lifeTime === 0 ||
+			players.some(function(player) { if (player.pid !== shot.origin && universe.collide(shot.box, player.box)) return true;  }) ||
+			planets.some(function(planet) { if (universe.collide(shot.box, planet.box)) return true; })) shots.splice(si, 1);
+		//delete shot, if lifetime equals 0 OR collision with a player that hasn't shot the shot OR collision with a planet
+	});
 }
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {

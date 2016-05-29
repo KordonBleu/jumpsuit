@@ -525,24 +525,11 @@ label.range-label {
 #key-settings tr.selected td {
 	padding: 2px 2px;
 }
-#gui-ping {
-	position: fixed;
-	top: 8px;
-	right: 30px;
-	left: calc(100% - 158px);
-	color: #eee;
-}
-#gui-ping::before {
-	line-height: 100%;
-	height: 22.5px;
-	content: "Latency: ";
-	width: 80px;
-	display: inline-block;
-}
 #gui-chat-first {
 	height: 1px;
 }
 #gui-chat {
+	overflow: hidden;
 	position: fixed;
 	top: 95px;
 	left: 18px;

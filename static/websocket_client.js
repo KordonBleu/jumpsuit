@@ -158,11 +158,11 @@ Connection.prototype.messageHandler = function(message) {
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
 				function(x, y, radius, type) {},//add planets
 				function(x, y, appearance) {},//add enemies
-				function(x, y, angle, type) {//add shots
+				function(x, y, angle, origin, type) {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
-					var shot = new Shot(x, y, angle, undefined, type);
+					var shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					notMuzzleFlashedShots.push(shot);
+					if (origin in players) players[origin].muzzleFlash = type === shot.shotEnum.bullet;
 				},
 				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
 					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
@@ -236,6 +236,7 @@ Connection.prototype.messageHandler = function(message) {
 						players[id].lastSound = (players[id].lastSound + 1) % 5;
 					}
 					players[id].walkFrame = "_" + walkFrame;
+					players[id].setBoxSize();
 					players[id].hurt = hurt;
 					players[id].jetpack = jetpack;
 

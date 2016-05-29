@@ -91,39 +91,8 @@ function showBlockedPortDialog(portNumber) {
 	document.getElementById("port-number").textContent = portNumber;
 }
 
-/* Graphic settings */
-/*document.getElementById("option-fullscreen").addEventListener("change", function() {
-	if (!this.checked){
-		if (document.exitFullscreen) {
-			document.exitFullscreen();
-		} else if(document.mozCancelFullScreen) {
-			document.mozCancelFullScreen();
-		} else if(document.webkitExitFullscreen) {
-			document.webkitExitFullscreen();
-		}
-	} else {
-		if (document.documentElement.requestFullscreen) {
-			document.documentElement.requestFullscreen();
-		} else if (document.documentElement.mozRequestFullScreen) {
-			document.documentElement.mozRequestFullScreen();
-		} else if (document.documentElement.webkitRequestFullscreen) {
-			document.documentElement.webkitRequestFullscreen();
-		}
-	}
-});
-document.getElementById("option-moblur").addEventListener("change", function(){
-	graphicFilters.motionBlur.enabled = this.checked;
-	if (this.checked) canvas.classList.add("motionBlur");
-	else canvas.classList.remove("motionBlur");
-});
-document.getElementById("option-performance").addEventListener("change", function(){
-	if (this.checked) canvas.classList.add("boosted");
-	else canvas.classList.remove("boosted");
-	resizeCanvas();
-});
 
 /* Audio settings */
-
 musicVolumeElement.value = settings.volMusic;
 effectsVolumeElement.value = settings.volEffects;
 musicGain.gain.value = settings.volMusic / 100;
@@ -266,6 +235,9 @@ function printChatMessage(name, appearance, content) {
 	element.appendChild(textElement);
 	chatElement.appendChild(element);
 	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
+	updateChatOffset();
+}
+function updateChatOffset(){
 	var messageHeight = 0;
 	Array.prototype.forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
 		messageHeight += element.clientHeight + 2;

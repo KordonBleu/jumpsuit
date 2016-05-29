@@ -388,7 +388,7 @@ const MESSAGE = {
 					totalNameSize += playerNameBufs[i].byteLength;
 				});
 			}
-			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*6 : 0) + (players !== undefined ? players.length*10 + totalNameSize : 0)),
+			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.length*10 + totalNameSize : 0)),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
@@ -424,8 +424,9 @@ const MESSAGE = {
 					view.setUint16(offset, shot.box.center.x);
 					view.setUint16(2 + offset, shot.box.center.y);
 					view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
-					view.setUint8(5 + offset, shot.type);
-					offset += 6;
+					view.setUint8(5 + offset, shot.origin);
+					view.setUint8(6 + offset, shot.type);
+					offset += 7;
 				});
 			} else {
 				view.setUint8(offset++, 0);
@@ -477,13 +478,14 @@ const MESSAGE = {
 				);
 			}
 
-			lim = 6*view.getUint8(i) + ++i;
-			for (; i !== lim; i += 6) {
+			lim = 7*view.getUint8(i) + ++i;
+			for (; i !== lim; i += 7) {
 				shotsCbk(
 					view.getUint16(i),//x
 					view.getUint16(i + 2),//y
 					bradToRad(view.getUint8(i + 4), 1),//angle
-					view.getUint8(i + 5)//type
+					view.getUint8(i + 5),//origin
+					view.getUint8(i + 6)//type
 				);
 
 			}

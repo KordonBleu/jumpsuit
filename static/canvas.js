@@ -11,7 +11,6 @@ var context = canvas.getContext("2d"),
 	planets = [],
 	enemies = [],
 	shots = [],
-	notMuzzleFlashedShots = [],
 	deadShots = [],
 	particles = [],
 	universe = new Rectangle(new Point(0, 0), null, null),//these parameters will be
@@ -160,8 +159,7 @@ Shot.prototype.draw = function(dead) {
 	windowBox.drawRotatedImage(resources[resourceKey],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
-		this.box.angle + (resourceKey === "knife" ? (100-this.lifeTime) / 100 * Math.PI * 4 - Math.PI / 2 : 0));
-	this.lifeTime--;
+		this.box.angle + (resourceKey === "knife" ? (100 - this.lifeTime) * Math.PI * 0.04 - Math.PI / 2 : 0));
 }
 Player.prototype.draw = function(showName) {
 	var res = resources[this.appearance + this.walkFrame],
@@ -214,13 +212,22 @@ Player.prototype.draw = function(showName) {
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
 		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
 	context.rotate(weaponRotFact);
+	if (this.muzzleFlash === true){
+		var	muzzleX = weaponList[this.weaponry.armed].muzzleX*windowBox.zoomFactor + resources["muzzle"].width*0.5*windowBox.zoomFactor,
+			muzzleY = weaponList[this.weaponry.armed].muzzleY*windowBox.zoomFactor - resources["muzzle"].height*0.25*windowBox.zoomFactor;
+		context.drawImage(resources[(Math.random() > 0.5 ? "muzzle" : "muzzle2")],
+			muzzleX, muzzleY + weaponList[this.weaponry.armed].offsetY*windowBox.zoomFactor,
+			resources["muzzle"].width * windowBox.zoomFactor,
+			resources["muzzle"].height * windowBox.zoomFactor);//muzzle flash
+		this.muzzleFlash = false;
+	}
 	context.drawImage(resources[this.weaponry.armed],
 		weaponList[this.weaponry.armed].offsetX*windowBox.zoomFactor,
 		weaponList[this.weaponry.armed].offsetY*windowBox.zoomFactor,
 		resources[this.weaponry.armed].width*windowBox.zoomFactor, resources[this.weaponry.armed].height*windowBox.zoomFactor);
-	context.rotate(-weaponRotFact);
+		context.rotate(-weaponRotFact);
 
-	context.drawImage(res, centerX, centerY, wdt, hgt);//body
+		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
 	var helmetRes = resources["astronaut_helmet"];
 	if (this.walkFrame === "_duck") {
@@ -244,6 +251,8 @@ function resizeCanvas() {
 	canvas.height = window.innerHeight;
 	windowBox.width = canvas.clientWidth / windowBox.zoomFactor;
 	windowBox.height = canvas.clientHeight / windowBox.zoomFactor;
+
+	updateChatOffset();
 };
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
@@ -357,6 +366,7 @@ var meteorSpawning = setInterval(function() {
 }, 800);
 function loop() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
+	doPhysicsClient(universe, planets, shots, players);
 
 	//layer 0: meteors
 	context.globalAlpha = 0.2;
@@ -423,14 +433,9 @@ function loop() {
 		if(player.panner !== undefined && player.jetpack) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 	});
 
-	//muzzle flash
-	notMuzzleFlashedShots.forEach(function(shot) {
-		if (shot.type === shot.shotEnum["laser"] || shot.type === shot.shotEnum["knife"]) return;
-		var x = windowBox.wrapX(shot.box.center.x),
-			y = windowBox.wrapY(shot.box.center.y);
-		windowBox.drawRotatedImage(resources["muzzle"], x, y, shot.box.angle - Math.PI / 2);
-	});
-	notMuzzleFlashedShots.length = 0;
+
+
+
 
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
@@ -464,7 +469,6 @@ function loop() {
 		minimapContext.fill();
 	});
 
-	chatElement.style.clip = "rect(0px," + chatElement.clientWidth + "px," + chatElement.clientHeight + "px,0px)";
 	game.animationFrameId = window.requestAnimationFrame(loop);
 }
 
