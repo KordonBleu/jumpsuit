@@ -180,12 +180,22 @@ wss.on("connection", function(ws) {
 								lobbyId = lobbies.push(lobby) - 1;
 							}
 						}
-
+					
+						var pid = 0, i, taken; //PIDs can be independent of the id in the lobby's player array
+						for (i = 0; i !== lobby.maxPlayers; i++) {
+							taken = false;
+							lobby.players.forEach(function(p) { if (p.pid === i) taken = true; });
+							if (!taken) {
+								pid = i;
+								break;
+							}
+						}
 						player.homographId = lobby.getNextHomographId(player.name);
 						lobby.players.push(player);
 						player.lastRefresh = Date.now();
 						player.lobby = lobby;
-						player.pid = lobby.players.findIndex(function(element) { return element === player; });
+					
+						player.pid = pid;
 						lobby.assignPlayerTeam(player);
 
 						player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));

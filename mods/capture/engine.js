@@ -36,7 +36,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		});
 }
 
-var weaponList = {
+const weaponList = {
 	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
 	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1},
 	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 105, muzzleY: -4, shotType: 3},

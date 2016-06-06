@@ -280,7 +280,7 @@ const MESSAGE = {
 			view.setUint32(1, lobbyId);
 
 			view.setUint8(5, playerId);
-
+			
 			view.setUint16(6, univWidth);
 			view.setUint16(8, univHeight);
 
@@ -388,7 +388,7 @@ const MESSAGE = {
 					totalNameSize += playerNameBufs[i].byteLength;
 				});
 			}
-			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.length*10 + totalNameSize : 0)),
+			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.length*11 + totalNameSize : 0)),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
@@ -434,24 +434,25 @@ const MESSAGE = {
 
 			if (players !== undefined) {
 				players.forEach(function(player, i) {
-					view.setUint16(offset, player.box.center.x);
-					view.setUint16(2 + offset, player.box.center.y);
-					view.setUint8(4 + offset, player.attachedPlanet);
-					view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
+					view.setUint8(offset, player.pid); 
+					view.setUint16(1 + offset, player.box.center.x);
+					view.setUint16(3 + offset, player.box.center.y);
+					view.setUint8(5 + offset, player.attachedPlanet);
+					view.setUint8(6 + offset, radToBrad(player.box.angle, 1));
 					var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)];
 					enumByte <<= 3;
 					enumByte += this.PLAYER_APPEARANCE[player.appearance];
 					if (player.jetpack) enumByte |= this.MASK.JETPACK;
 					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-					view.setUint8(6 + offset, enumByte);
+					view.setUint8(7 + offset, enumByte);
 					var weaponByte = this.WEAPON[player.weaponry.armed];
 					weaponByte <<= 2;
 					weaponByte += this.WEAPON[player.weaponry.carrying];
-					view.setUint8(7 + offset, weaponByte);
-					view.setUint8(8 + offset, player.homographId);
-					view.setUint8(9 + offset, playerNameBufs[i].byteLength);
-					new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 10 + offset);
-					offset += 10 + playerNameBufs[i].byteLength;
+					view.setUint8(8 + offset, weaponByte);
+					view.setUint8(9 + offset, player.homographId);
+					view.setUint8(10 + offset, playerNameBufs[i].byteLength);
+					new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 11 + offset);
+					offset += 11 + playerNameBufs[i].byteLength;
 				}, this);
 			}
 
@@ -491,24 +492,25 @@ const MESSAGE = {
 			}
 
 			while (i !== buffer.byteLength) {
-				var nameLgt = view.getUint8(i + 9),
-					enumByte = view.getUint8(i + 6),
-					weaponByte = view.getUint8(i + 7);
+				var nameLgt = view.getUint8(i + 10),
+					enumByte = view.getUint8(i + 7),
+					weaponByte = view.getUint8(i + 8);
 				playersCbk(
-					view.getUint16(i),//x
-					view.getUint16(i + 2),//y
-					view.getUint8(i + 4),//attached planet
-					radToBrad(view.getUint8(i + 5), 1),//angle
+					view.getUint8(i),//pid
+					view.getUint16(i + 1),//x
+					view.getUint16(i + 3),//y
+					view.getUint8(i + 5),//attached planet
+					radToBrad(view.getUint8(i + 6), 1),//angle
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 29 >>> 29],//appearance
 					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walk frame
 					bufferToString(buffer.slice(i + 10, i + 10 + nameLgt)),//name
-					view.getUint8(i + 8),//homographId
+					view.getUint8(i + 9),//homographId
 					Object.keys(this.WEAPON)[weaponByte << 30 >> 30],//armedWeapon
 					Object.keys(this.WEAPON)[weaponByte << 28 >> 30]//carriedWeapon
 				);
-				i += nameLgt + 10;
+				i += nameLgt + 11;
 			}
 		}
 	},

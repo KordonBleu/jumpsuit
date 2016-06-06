@@ -132,10 +132,11 @@ Connection.prototype.messageHandler = function(message) {
 				function(x, y, angle) {//add shots
 					shots.push(new Shot(x, y, angle));
 				},
-				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
+				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
 					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					player.looksLeft = looksLeft;
 					player.homographId = homographId;
+					player.pid = pid;
 					player.lastSound = 0;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
 					players.push(player);
@@ -162,10 +163,12 @@ Connection.prototype.messageHandler = function(message) {
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					var shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					if (origin in players) players[origin].muzzleFlash = type === shot.shotEnum.bullet;
+					var param1 = players.find(function(element) { return element.pid === origin; });
+					if (param1) param1.muzzleFlash = type === shot.shotEnum.bullet;
 				},
-				function(x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
+				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
 					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
+					newPlayer.pid = pid;
 					newPlayer.box.center.x = x;
 					newPlayer.box.center.y = y;
 					newPlayer.looksLeft = looksLeft;
