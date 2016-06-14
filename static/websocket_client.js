@@ -2,7 +2,7 @@
 
 var ownIdx = null,
 	enabledTeams = [],
-	masterSocket = new WebSocket("wss://" + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
+	masterSocket = new WebSocket("ws://" + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
 	serverList,
 	currentConnection;
 
@@ -18,7 +18,6 @@ masterSocket.addEventListener("message", function(message) {
 				serverList = MESSAGE.ADD_SERVERS.deserialize(message.data);
 				serverList.forEach(addServerRow);
 				applyLobbySearch();//in case the page was refreshed and the
-				applyEmptinessCheck();//inputs left in a modified state
 			} else {
 				console.log(MESSAGE.ADD_SERVERS.deserialize(message.data), serverList);
 				let newServers = MESSAGE.ADD_SERVERS.deserialize(message.data);

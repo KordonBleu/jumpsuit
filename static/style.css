@@ -114,7 +114,6 @@ input[type=range] {
 	background: transparent;
 	height: 20px;
 	margin-bottom: 15px;
-	display: block;
 }
 input[type=range]::-ms-track {
 	width: 100%;
@@ -177,7 +176,7 @@ input[type=checkbox]::before {
 	border: 2px solid #AD3726;
 	background: #fff;
 	position: relative;
-	top: -3px;
+	top: -1px;
 	left: -3px;		
 	cursor: pointer;
 }
@@ -192,7 +191,7 @@ input[type=checkbox]::after {
 	background: #AD3726;
 	border-radius: 50%;
 	position: relative;
-	top: -17px;
+	top: -15px;
 	left: 1px;
 }
 input[type=checkbox]:checked::after {
@@ -216,7 +215,7 @@ label.checkbox-label {
 	margin: 8px 2px;
 	cursor: pointer;
 }
-label.range-label {
+label {
 	min-width: 150px;
 	margin: 0 8px 8px 0;
 	display: inline-block;
@@ -257,7 +256,6 @@ label.range-label {
 	transition: opacity .15s;
 }
 #name {
-	display: block;
 	margin: 0;
 	padding: 4px;
 	outline: none;
@@ -349,29 +347,46 @@ label.range-label {
 	background: #ebedf4;
 	color: #333;
 	box-shadow: 0 0 13px 0 black;
-	/*We need a media query for huge monitors */
-	width: 70vw;
+	width: 80vw;
+	max-width: 1000px;
+	min-width: 810px;
 	max-height: 90vh;
 }
 #settings-box.hidden, #info-box.hidden, #blocked-port-box.hidden, #device-not-supported.hidden, #device-untested.hidden {
-	display: block;
 	transform: scale(0) translate(-50%, -50%);
 	opacity: 0;
+}
+#settings-box {
+	display: flex;
+	justify-content: flex-start;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+#settings-box div:nth-of-type(1) {
+	flex-grow: 1;
+	max-width: 280px;
+}
+#settings-box div:nth-of-type(2) {
+	flex-grow: 3;
+	flex-basis: 0;
+	min-width: 500px;
+}
+#settings-box label {
+	min-width: 120px;
+	margin: 0 8px 8px 0;
+	display: inline-block;
 }
 #settings-box > h2, #info-box > h2 {
 	display: block;
 	text-align: center;
 	margin-bottom: 0.5rem;
 	margin-top: 0;
+	width: 100%;
 }
 #settings-box > button, #info-box > button {
 	position: absolute;
 	top: 0.5%;
 	right: 0.5%;
-}
-#settings-box h3, #info-box h3 {
-	float: left;
-	width: 100%;
 }
 #menu-box {
 	transition: transform .3s, opacity .3s;
@@ -381,28 +396,26 @@ label.range-label {
 	position: fixed;
 	top: 0;
 	left: 0;
-	bottom: 0;
-	right: 0;
 	background: #ebedf4;
 	color: #333;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	width: 100vw;
+	height: 100vh;
 }
 #menu-box.hidden {
 	transform: scale(0);
 	opacity: 0;
 	display: block;
 }
-.splitContainer {
-	float: left;
-	max-width: calc(100% - 330px);
-	min-width: 260px;
-	padding: 0 8px;	
-	box-sizing: border-box;
+#menu-box:first-child {
+	flex-grow: 1;
+	order: 1;
 }
 #lobby-table {
+	width: 100%;
 	font-size: 1.25em;
-	max-width: calc(100% - 190px);
-	width: calc(80% - 10px);
-	min-width: calc(100% - 290px);
 	border-collapse: collapse;
 	table-layout: fixed;
 	display: inline-table;
@@ -421,7 +434,7 @@ label.range-label {
 	text-transform: uppercase;
 }
 #lobby-table th:last-child {
-	width: 150px;
+	width: 7em;
 }
 #lobby-table th img {
 	width: 1em;
@@ -441,8 +454,11 @@ label.range-label {
 	text-align: center;
 	word-wrap: break-word;
 }
+#lobby-list tr td u {
+	color: #AD3726;
+}
 
-#lobby-list button {
+/* #lobby-list button {
 	text-transform: none;
 }
 #lobby-list input {
@@ -457,15 +473,22 @@ label.range-label {
 	padding-left: 3px;
 	width: 3.5ex;
 	font-weight: 600;
-}
+} */
 #sidebar {
-	display: inline-block;
-	min-width: 180px;
-	width: 20%;
-	max-width: 280px;
-	margin: 0 auto;
+	flex-grow: 0;
+	order: 2;
+	min-width: 261px;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	justify-content: space-around;
 }
-#search-filter h1{
+#search-filter {
+	display: block;
+	flex-grow: 1;
+}
+#search-filter h1 {
 	margin: 12.5px 0;
 	text-align: center;
 }
@@ -476,35 +499,19 @@ label.range-label {
 	margin: 0.5em 0px;
 }
 #search-input {
-	margin-top: 12px;
 	padding: 2px;
-	width: calc(100% - 8px);
+	box-sizing: border-box;
 	font-size: 1.25em;
-}
-
-#team-list {
-	list-style-type: none;
-	font-size: 1.125em;
-	padding: 0;
-	width: 565px;
-	margin: 0 auto;
-}
-#team-list li {
-	display: inline-block;
-	margin: 10px;
-	width: 88px;
-	text-align: center;
-}
-#team-list li img {
-	width: 88px;
-	height: 88px;
+	width: 250px;
 }
 #key-settings {
+	box-sizing: border-box;
 	width: 100%;
 	text-align: left;
 	border-collapse: collapse;
 	cursor: pointer;
-	margin: 4px 8px;
+	border: 0.5em solid rgba(0, 0, 0, 0);
+	margin-top: 0.75em;
 }
 #key-settings #key-action {
 	width: 140px;

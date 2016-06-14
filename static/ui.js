@@ -343,21 +343,23 @@ lobbyTableHeaderRowElement.addEventListener("click", function(e) {
 function applyLobbySearch() {
 	serverList.forEach(function(lobby, index) {
 		//lobbyListElement.children are reversed compared to serverList
-		var currentElem = lobbyListElement.children[serverList.length - index - 1];
-		if (new RegExp(searchInput.value, "gi").test(lobby.name)) currentElem.classList.remove("search-hidden");
-		else currentElem.classList.add("search-hidden");
-	});
-}
-function applyEmptinessCheck() {
-	serverList.forEach(function(lobby, index) {
-		//lobbyListElement.children are reversed compared to serverList
-		var currentElem = lobbyListElement.children[serverList.length - index -1];
-		if (emptyLobbyInput.checked && lobby.players === 0) currentElem.classList.add("empty-lobby-hidden");
-		else currentElem.classList.remove("empty-lobby-hidden");
+		var currentElem = lobbyListElement.children[serverList.length - index - 1],
+			newValue = currentElem.firstChild.textContent;
+		
+		if (searchInput.value === "") currentElem.classList.remove("search-hidden");
+		else {
+			var regx = new RegExp(searchInput.value, "gi"), match, offset = 0;
+			while ((match = regx.exec(lobby.name)) !== null) {
+				newValue = newValue.substr(0, match.index + offset) + "<u>" + newValue.substr(match.index + offset, match[0].length) + "</u>" + newValue.substr(offset + match.index + match[0].length);
+				offset += 7; //<u>...</u> inserted so the string length and match indexes change 
+			}
+			if (offset === 0) currentElem.classList.add("search-hidden");
+			else currentElem.classList.remove("search-hidden");
+		}
+		currentElem.firstChild.innerHTML = newValue; //always set the innerHTML in order to clear highlights or re-highlight
 	});
 }
 searchInput.addEventListener("input", applyLobbySearch);
-emptyLobbyInput.addEventListener("change", applyEmptinessCheck);
 
 var message = {
 	previousTimeoutId: -1,

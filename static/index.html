@@ -48,33 +48,29 @@
 			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button>
 			<button id="settings-button"><i class="fa fa-wrench"></i>Settings</button>
 		</div>
-		<div id="gui-message" class="hidden" data-title="" data-reward=""></div>
+		<div id="gui-message" class="hidden"></div>
 		<div id="menu-box" class="hidden">
-			<table id="lobby-table">
-				<thead>
-					<tr><th>Server name <img src="/assets/images/sort_arrow_double.svg" alt="sort icon"/></th><th>Mod name <img src="/assets/images/sort_arrow_double.svg" alt="sort icon"/></th><th></th></tr>
-				</thead>
-				<tbody id="lobby-list">
-				</tbody>
-			</table><!--inline-block hack
-			--><div id="sidebar">
-				<div class="flex-container">
-					<button id="menu-box-info-button"><i class="fa fa-info-circle"></i>Infos</button>
-					<button id="menu-box-settings-button"><i class="fa fa-wrench"></i>Settings</button>
-				</div>
+			<div>
+				<table id="lobby-table">
+					<thead>
+						<tr>
+							<th>Server name <img src="/assets/images/sort_arrow_double.svg" alt="sort icon"/></th>
+							<th>Mod name <img src="/assets/images/sort_arrow_double.svg" alt="sort icon"/></th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody id="lobby-list">
+					</tbody>
+				</table>
+			</div>
+			<div id="sidebar">
+				<button id="menu-box-info-button"><i class="fa fa-info-circle"></i>Info</button>
+				<button id="menu-box-settings-button"><i class="fa fa-wrench"></i>Settings</button>
 				<div id="search-filter">
 					<h1><i class="fa fa-search"></i></h1>
 					<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp"/></label>
-					<label><input id="empty-lobby" type="checkbox"/>Hide empty lobbies</label>
 				</div>
 			</div>
-			<ul id="team-list" class="hidden">
-				<li><img src="/assets/images/alienBlue_badge.svg"/><span id="teamBlue">-</span></li>
-				<li><img src="/assets/images/alienBeige_badge.svg"/><span id="teamBeige">-</span></li>
-				<li><img src="/assets/images/alienGreen_badge.svg"/><span id="teamGreen">-</span></li>
-				<li><img src="/assets/images/alienPink_badge.svg"/><span id="teamPink">-</span></li>
-				<li><img src="/assets/images/alienYellow_badge.svg"/><span id="teamYellow">-</span></li>
-			</ul>
 		</div>
 		<div id="shade-box" class="hidden"></div>
 		<div id="info-box" class="hidden">
@@ -104,23 +100,20 @@
 		<div id="settings-box" class="hidden">
 			<h2>Settings</h2><button id="close-settings-box" class="close-parent"><i class="fa fa-times"></i>Close</button>
 			<div>
-				<div class="splitContainer">
-					<h3>Score</h3>
-					<p id="score">0 Points</p>
-					<h3>Player</h3>
-					<input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
-					<h3>Volume</h3>
-					<label class="range-label">Background Music</label><input type="range" value="50" id="music-volume"/><br/>
-					<label class="range-label">Sound Effects</label><input type="range" value="50" id="effects-volume"/>
-				</div>
-				<div class="splitContainer">
-					<h3>Key map</h3>
-					Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
-					Also you can't assign Mouse keys to the key settings!<br/><br/><!--TODO: tell this to the user only when trying to assign mouse key-->
-					You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
-					<table id="key-settings"></table>
-					<button id="key-reset">Reset keymap to default</button>
-				</div>
+				<h3>Player</h3>
+				<p id="score">0 Points</p>
+				<label>Name</label><input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
+				<h3>Volume</h3>
+				<label>Background Music</label><input type="range" value="50" id="music-volume"/><br/>
+				<label>Sound Effects</label><input type="range" value="50" id="effects-volume"/>
+			</div>
+			<div>
+				<h3>Key map</h3>
+				Note that all F-Keys (F1 to F12) won't do their default job once they are listed here.<br/>
+				Also you can't assign Mouse keys to the key settings!<br/><br/><!--TODO: tell this to the user only when trying to assign mouse key-->
+				You can customize the key settings by clicking on an action and pressing your desired key while it is marked green.<br/>
+				<table id="key-settings"></table>
+				<button id="key-reset">Reset keymap to default</button>
 			</div>
 		</div>
 		<div id="blocked-port-box" class="hidden">
@@ -129,7 +122,7 @@
 			<p>If you are at home, your network administrator is your ISP.<br/>
 			If you are at work or at school, contact the IT departement. (Ooh, I bet you aren't the employee of the month :P)</p>
 
-			<p>You should also try another server, chances are, you will find one which is not blocked</p>
+			<p>You should also try another server, chances are you will find one which is not blocked</p>
 
 			<button class="close-parent">Let's try another server</button>
 		</div>

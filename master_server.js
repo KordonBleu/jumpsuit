@@ -101,17 +101,14 @@ var server = http.createServer(function (req, res) {
 		res.writeHead(301, {"Location": "/"});
 		res.end();
 		return;
-	} //beautifying URL, shows foo.bar when requested foo.bar/index.html (why would someone request foo.bar/index.html though?)
+	} //beautifying URL, shows foo.bar when requested foo.bar/index.html (why would someone request foo.bar/index.html though?) It tends to happen... just in case, you know?
 
 	if (req.url === "/") req.url = "/index.html";
 	if (files[req.url] !== undefined) {
 		res.setHeader("Cache-Control", "public, no-cache, must-revalidate, proxy-revalidate");
 		if (config.dev) {
 			try {
-				if (fs.statSync(files[req.url].path).mtime.getTime() !== files[req.url].mtime.getTime()) {
-					files[req.url] = fs.readFileSync(files[req.url].path);
-					files[req.url].mtime = mtime;
-				}
+				if (fs.statSync(files[req.url].path).mtime.getTime() !== files[req.url].mtime.getTime()) loadFile(req.url, files[req.url].path);
 			} catch(err) {
 				console.log(err);
 			}
@@ -120,7 +117,6 @@ var server = http.createServer(function (req, res) {
 			res.writeHead(304);
 			res.end();
 		} else {
-
 			res.writeHead(200, {"Content-Type": files[req.url].mime, "Last-Modified": files[req.url].mtime.toUTCString()});
 			res.end(files[req.url].content);
 		}
@@ -183,7 +179,7 @@ gameServerSocket.on("connection", function(ws) {
 
 	ws.on("close", function() {
 		gameServers.forEach(function(gS, i) {
-			if (gameServer = gS) {
+			if (gameServer === gS) {
 				clearInterval(gameServer.pingIntervalId);
 				gameServers.splice(i, 1);
 				logger(logger.INFO, "Unregistered \"" + gS.mod + "\" server \"" + gS.name + "\" @ " + gS.ip + ":" + gS.port);
@@ -198,12 +194,12 @@ gameServerSocket.on("connection", function(ws) {
 });
 
 clientsSocket.on("connection", function(ws) {
-	ws.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
+	ws.ipAddr = ipaddr.parse(ws.upgradeReq.headers["x-forwarded-for"] || ws._socket.remoteAddress);
 	if (ws.ipAddr.kind() === "ipv4") ws.ipAddr = ws.ipAddr.toIPv4MappedAddress();
 
 	try {
 		MESSAGE.ADD_SERVERS.serialize(gameServers, ws.ipAddr).then(function(buf) {
 			ws.send(buf, wsOptions);
 		});
-	} catch (err) {/* Do nothing */}
+	} catch (err) {/* Do nothing */ console.log(err); }
 });

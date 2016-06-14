@@ -28,21 +28,52 @@
 	}
 	#minimap-canvas {
 		top: 6px;
-		width: 125px;
-		height: 125px;
+		transform-origin: top right;
+		transform: scale(0.75);
 	}
 	#gui-chat {
 		left: 12px;
 		font-size: 0.75em;
-		top: 70px;
+		top: 107px;
 		width: 250px;
 		height: calc(100vh - 4vh - 205px);
 	}
 	#gui-options {
-		width: 100px;
-		top: 10px;
-		right: 142px;
-	}	
+		top: 64px;
+		left: 6px;
+		right: initial;
+		/* right attribute needs to be reset, otherwise div would be stretched all over the screen, eventhough this isn't
+		visible to the viewer, it prevents from shooting in case the mouse cursor is over the div's area */
+	}
+	#settings-button, #info-button {
+		display: none;
+	}
+	#menu-box {
+		flex-direction: column;
+		flex-wrap: wrap;
+	}
+	#sidebar {
+		order: -1;
+		min-width: initial;
+		justify-content: space-between;
+		align-items: center;
+	}
+	#search-filter > h1, #search-filter > label  {
+		float: left;
+		margin: 0.5rem 4px;
+		height: 2rem;
+		line-height: 2rem;
+	}
+	#settings-box {
+		flex-direction: column;
+		flex-wrap: nowrap;
+	}
+	#settings-box div:nth-of-type(1) {
+		max-width: initial;
+	}
+	#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
+		min-width: initial;
+	}
 }
 @media all and (max-width: 640px) {
 	body {
@@ -55,8 +86,12 @@
 	#gui-points {
 		font-size: 1.25em;
 	}
+	#gui-chat {
+		top: 95px;
+		height: calc(100vh - 4vh - 193px);
+	}
 	#gui-points th {
-		width: 66px;
+		width: 40px;
 	}
 	#controls li img {
 		width: 50px;
@@ -66,13 +101,10 @@
 		width: calc(100vw - 270px);
 	}
 	#minimap-canvas {
-		width: 90px;
-		height: 90px;
+		transform: scale(0.6);
 	}
 	#gui-options {
-		width: 80px;
-		top: 4px;
-		right: 110px;
+		top: 60px;
 	}
 }
 
