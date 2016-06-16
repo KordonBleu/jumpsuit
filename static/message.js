@@ -505,7 +505,7 @@ const MESSAGE = {
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 29 >>> 29],//appearance
 					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walk frame
-					bufferToString(buffer.slice(i + 10, i + 10 + nameLgt)),//name
+					bufferToString(buffer.slice(i + 11, i + 11 + nameLgt)),//name
 					view.getUint8(i + 9),//homographId
 					Object.keys(this.WEAPON)[weaponByte << 30 >> 30],//armedWeapon
 					Object.keys(this.WEAPON)[weaponByte << 28 >> 30]//carriedWeapon

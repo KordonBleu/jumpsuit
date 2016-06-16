@@ -13,7 +13,7 @@ html, body {
 	height: 100%;
 	overflow: hidden;
 	font-family: "Open Sans", Tahoma, sans-serif;
-	-webkit-transform: translate3d(0, 0, 0);/*GPU boost*/
+	-webkit-transform: translate3d(0, 0, 0);
 }
 html, body, button, label, #player-list, #lobby-table thead, #key-settings {
 	-webkit-user-select: none;
@@ -39,14 +39,6 @@ html {
 }
 #port-number {
 	font-weight: bold;
-}
-#canvas.boosted {
-	transform: scale3d(2, 2, 1);
-	transform-origin: 0 0;
-}
-#canvas.motionBlur {
-	filter: url("#MotionBlur");
-	-webkit-filter: url("#MotionBlur");
 }
 #minimap-canvas {
 	position: fixed;
@@ -338,7 +330,7 @@ label {
 #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	padding: 14px;
 	transition: transform .3s, opacity .3s;
-	transform: scale(1) translate(-50%, -50%);
+	transform: scale(1) translate(-50%, -50%); 
 	transform-origin: 0 0;
 	opacity: 1;
 	position: fixed;
@@ -625,7 +617,7 @@ label {
 	position: fixed;
 	top: 4px;
 	left: 50%;
-	transform: translate(-50%, 0);
+	transform: translate3d(-50%, 0, 0);
 	color: #eee;
 	font-size: 1.75em;
 	background: rgba(0, 0, 0, 0.7);

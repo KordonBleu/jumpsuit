@@ -343,10 +343,10 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### GAME_STATE (game server → client)
 ```
-  1B       1B           2B           ?*3B           ?*1B          ?*4B           ?*9B
-+----+-------------+-----------+===============+=============+=============+===============+
-| 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_SHOT | LESSER_PLAYER |
-+----+-------------+-----------+===============+=============+=============+===============+
+  1B       1B           2B           ?*3B           ?*1B            ?*9B
++----+-------------+-----------+===============+=============+===============+
+| 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_PLAYER |
++----+-------------+-----------+===============+=============+===============+
 ```
 
 

@@ -149,6 +149,7 @@ wss.on("connection", function(ws) {
 					break;
 				case MESSAGE.SET_NAME.value:
 					let playerName = MESSAGE.SET_NAME.deserialize(message);
+					if (playerName === player.name) return;	
 					if (player.lobby !== undefined) {
 						player.homographId = player.lobby.getNextHomographId(playerName);
 						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), playerName, player.homographId));
@@ -197,7 +198,8 @@ wss.on("connection", function(ws) {
 					
 						player.pid = pid;
 						lobby.assignPlayerTeam(player);
-
+						
+						
 						player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
 						lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
 						player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
@@ -219,7 +221,9 @@ wss.on("connection", function(ws) {
 			}
 			logger(logger.DEV, MESSAGE.toString(state));
 		} catch (err) {
+			console.log(err);
 			ips.ban(player.ip);
+			
 		}
 	});
 	ws.on("pong", function() {

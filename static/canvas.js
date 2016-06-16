@@ -20,7 +20,8 @@ var context = canvas.getContext("2d"),
 		drag: new Vector(0, 0),
 		dragSmoothed: new Vector(0,0),
 		connectionProblems: false,
-		animationFrameId: null,		
+		animationFrameId: null,
+		loadingAnimationFrameId: null,		
 		start: function() {
 			game.started = true;
 			chatElement.classList.remove("hidden");
@@ -264,7 +265,7 @@ function drawBar() {
 	context.fillRect(0, 0, ((drawBar.progress) / resPaths.length) * canvas.width, 15);
 }
 drawBar.progress = 0;
-function resizeHandler() {
+function loaderLoop() {
 	context.textBaseline = "top";
 	context.textAlign = "center";
 
@@ -277,9 +278,9 @@ function resizeHandler() {
 	context.font = "28px Open Sans";
 	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
 	drawBar();
+	game.loaderAnimationFrameId = window.requestAnimationFrame(loaderLoop);
 }
-resizeHandler();
-window.addEventListener("resize", resizeHandler);
+
 
 var imgPromises = [];
 resPaths.forEach(function(path) {//init resources
@@ -296,7 +297,6 @@ resPaths.forEach(function(path) {//init resources
 	});
 	promise.then(function() {
 		++drawBar.progress;
-		drawBar();
 	})
 	.catch(function(err) {
 		alert("Something went wrong. Try reloading this page.\n" +
@@ -308,7 +308,7 @@ resPaths.forEach(function(path) {//init resources
 });
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	game.stop();
-	window.removeEventListener("resize", resizeHandler);
+	window.cancelAnimationFrame(game.loaderAnimationFrameId);
 	handleHistoryState();
 
 	setMouth(resources["alienBeige_duck"], 24.443, 24.781, 15);

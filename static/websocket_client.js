@@ -267,7 +267,7 @@ Connection.prototype.messageHandler = function(message) {
 			break;
 		case MESSAGE.SET_NAME_BROADCAST.value:
 			var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);
-			let oldName = players[val.id].getFinalName();
+			var oldName = players[val.id].getFinalName();
 			players[val.id].name = val.name;
 			players[val.id].homographId = val.homographId;
 			printChatMessage(undefined, undefined, "\"" + oldName + "\" is now known as \"" + players[val.id].getFinalName() + "\"");
