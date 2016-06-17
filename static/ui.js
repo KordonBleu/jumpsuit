@@ -32,6 +32,8 @@ var chatElement = document.getElementById("gui-chat"),
 	effectsVolumeElement = document.getElementById("effects-volume"),
 	keySettingsElement = document.getElementById("key-settings"),
 	keyResetElement = document.getElementById("key-reset"),
+	primaryWeaponElement = document.getElementById("primary-weapon"),
+	secondaryWeaponElement = document.getElementById("secondary-weapon"),
 	/* inside info-box */
 	closeInfoButton = document.getElementById("close-info-box"),
 	/* in-game buttons */
@@ -69,9 +71,9 @@ function addShowBoxListener(button, dialogBox) {
 	});
 }
 //every HTML element with a "close-parent" class (generally a "Close" button) will, when clicked, close the dialog it is part of
-Array.prototype.forEach.call(document.getElementsByClassName("close-parent"), function(button) {
+[].forEach.call(document.getElementsByClassName("close-parent"), function(button) {
 	button.addEventListener("click", function(e) {
-		e.target.parentElement.classList.add("hidden");
+		this.parentElement.classList.add("hidden");
 		document.getElementById("shade-box").classList.add("hidden");
 	})
 });
@@ -178,12 +180,23 @@ nameElement.addEventListener("blur", function(e) {
 	currentConnection.setName();
 });
 
-function isDocumentInFullScreenMode() {
-	// Note that the browser fullscreen (triggered by short keys) might
-	// be considered different from content fullscreen when expecting a boolean
-	return ((document.fullscreenElement && document.fullscreenElement !== null) ||// alternative standard methods
-		document.mozFullScreen || document.webkitIsFullScreen);// current working methods
-}
+/* Weaponry */
+var weaponryCycle = ["lmg", "smg", "knife", "shotgun"];
+[].forEach.call(document.querySelectorAll(".weapon-select"), function(element){
+	element.addEventListener("click", function() {
+		var imgElement = this.childNodes[0], textElement = this.childNodes[1],
+			currentIndex = weaponryCycle.findIndex(function(x) { return x === imgElement.dataset.currentWeapon; }), offset,
+			names = {lmg: "Borpov", smg: "Pezcak", knife: "throwable Knife", shotgun: "Azard"}, nextIndex;
+
+		for (offset = 1; offset !== weaponryCycle.length; offset++) {
+			var nextIndex = (currentIndex + offset) % weaponryCycle.length, x = weaponryCycle[nextIndex];
+			if (primaryWeaponElement.childNodes[0].dataset.currentWeapon !== x && secondaryWeaponElement.childNodes[0].dataset.currentWeapon !== x) break;
+		}
+		imgElement.src = "/assets/images/" + weaponryCycle[nextIndex] + ".svg";
+		imgElement.dataset.currentWeapon = weaponryCycle[nextIndex];
+		textElement.textContent = names[weaponryCycle[nextIndex]];
+	});
+});
 
 /* Chat */
 chatInput.addEventListener("keydown", function(e) {
@@ -372,6 +385,17 @@ var message = {
 		message.previousTimeoutId = setTimeout(function() { messageBox.classList.add("hidden"); message.previousTimeoutId = -1; }, 4000);
 	}
 }
+
+/* Position fix: settings-box and info-box become blurry due decimal number in CSS's transform */
+window.addEventListener("resize", resizeHandler);
+function resizeHandler() {
+	[].forEach.call(document.querySelectorAll("#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested"), function(element) {
+		element.style["margin-top"] = Math.round(element.clientHeight * -0.5) + "px";
+		element.style["margin-left"] = Math.round(element.clientWidth * -0.5) + "px";
+	}); 
+}
+resizeHandler();
+
 window.onbeforeunload = function() {
 	//default values don't need to be saved
 	if (settings.name !== "Unnamed Player") localStorage.setItem("settings.name", settings.name);

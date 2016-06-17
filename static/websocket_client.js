@@ -36,21 +36,26 @@ masterSocket.addEventListener("message", function(message) {
 
 function Connection(url, lobbyId) {// a connection to a game server
 	this.lastControls = {};
+	this.lastMessage = 0;
 	try {
 		this.socket = new WebSocket(url);
 	} catch (err) {
 		showBlockedPortDialog(url.match(/:(\d+)/)[1]);
 	}
 	this.socket.binaryType = "arraybuffer";
-
 	this.socket.addEventListener("open", function() {
 		this.setName.call(this);
 		this.sendMessage.call(this, MESSAGE.CONNECT, lobbyId);
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
-	this.socket.addEventListener("message", this.messageHandler);
+	this.socket.addEventListener("message", this.messageHandler.bind(this));
 	//this should return a Promise, dontcha think?
 
+	this.latencyHandler = setInterval((function() {
+		var param1 = document.getElementById("gui-bad-connection");
+		if (Date.now() - this.lastMessage > 500) param1.classList.remove("hidden");
+		else param1.classList.add("hidden");
+	}).bind(this), 100);
 }
 Connection.prototype.alive = function() { return this.socket.readyState === 1; };
 Connection.prototype.sendMessage = function(messageType) {
@@ -67,6 +72,7 @@ Connection.prototype.createLobby = function(name, playerAmount) {
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
 };
 Connection.prototype.close = function() {
+	clearInterval(this.latencyHandler);
 	this.socket.close();
 	this.socket.removeEventListener("error", this.errorHandler);
 	this.socket.removeEventListener("message", this.messageHandler);
@@ -102,6 +108,8 @@ Connection.prototype.errorHandler = function() {
 	this.close();
 };
 Connection.prototype.messageHandler = function(message) {
+	this.lastMessage = Date.now();
+	console.log(this);
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
 		case MESSAGE.ERROR.value:
 			var errDesc;
@@ -147,7 +155,7 @@ Connection.prototype.messageHandler = function(message) {
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
 
-			var hashSocket = this.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
+			var hashSocket = this.socket.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
 				if (p1) return "s";
 				else if (p2) return "";
 			});
@@ -328,4 +336,6 @@ function handleHistoryState() {
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
 window.addEventListener("popstate", handleHistoryState);
+
+
 

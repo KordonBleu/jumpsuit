@@ -15,7 +15,7 @@ html, body {
 	font-family: "Open Sans", Tahoma, sans-serif;
 	-webkit-transform: translate3d(0, 0, 0);
 }
-html, body, button, label, #player-list, #lobby-table thead, #key-settings {
+html, body, button, label, #player-list, #lobby-table thead, #key-settings, .weapon-select {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
@@ -98,6 +98,10 @@ button:disabled:hover {
 .flex-container {
 	display: flex;
 	justify-content: space-around;
+}
+input[type=text] {
+	outline: none;
+	border: 1px solid #888;
 }
 input[type=range] {
 	-webkit-appearance: none;
@@ -330,8 +334,8 @@ label {
 #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	padding: 14px;
 	transition: transform .3s, opacity .3s;
-	transform: scale(1) translate(-50%, -50%); 
-	transform-origin: 0 0;
+	transform: scale(1);
+	transform-origin: 50% 50%;
 	opacity: 1;
 	position: fixed;
 	top: 50%;
@@ -345,7 +349,7 @@ label {
 	max-height: 90vh;
 }
 #settings-box.hidden, #info-box.hidden, #blocked-port-box.hidden, #device-not-supported.hidden, #device-untested.hidden {
-	transform: scale(0) translate(-50%, -50%);
+	transform: scale(0);
 	opacity: 0;
 }
 #settings-box {
@@ -354,11 +358,11 @@ label {
 	flex-direction: row;
 	flex-wrap: wrap;
 }
-#settings-box div:nth-of-type(1) {
+#settings-box > div:nth-of-type(1) {
 	flex-grow: 1;
 	max-width: 280px;
 }
-#settings-box div:nth-of-type(2) {
+#settings-box > div:nth-of-type(2) {
 	flex-grow: 3;
 	flex-basis: 0;
 	min-width: 500px;
@@ -367,6 +371,36 @@ label {
 	min-width: 120px;
 	margin: 0 8px 8px 0;
 	display: inline-block;
+}
+#settings-box .weaponry-container {
+	display: flex;
+	justify-content: space-around; 
+	flex-wrap: wrap;
+}
+#settings-box .weapon-select {
+	position: relative;
+	border-radius: 5px;
+	padding: 5px;
+	display: inline-block;
+	flex-shrink: 1;
+	width: 15em;
+	margin: 2px;	
+}
+#settings-box .weapon-select:active, #settings-box .weapon-select:hover {
+	background: rgba(0, 0, 0, 0.25);
+}
+#settings-box .weapon-select span {
+	display: block;
+	font-weight: 600;
+	width: 100%;
+	text-align: center;
+}
+#settings-box .weapon-select img {
+	max-height: 3.125em;
+	width: 100%;
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%);
 }
 #settings-box > h2, #info-box > h2 {
 	display: block;
@@ -380,6 +414,7 @@ label {
 	top: 0.5%;
 	right: 0.5%;
 }
+
 #menu-box {
 	transition: transform .3s, opacity .3s;
 	transform: scale(1);
@@ -509,7 +544,8 @@ label {
 	width: 140px;
 }
 #key-settings tr {
-	transition: background .2s, color .2s, border-color .2s;
+	transition: background .2s, color .2s;
+	outline: 2px dashed rgba(0, 0, 0, 0);
 }
 #key-settings td {
 	padding: 3px;
@@ -519,10 +555,7 @@ label {
 	color: #ddd;
 }
 #key-settings tr.selected {
-	border: 2px dashed #AD3726;
-}
-#key-settings tr.selected td {
-	padding: 2px 2px;
+	outline-color: #AD3726;
 }
 #gui-chat-first {
 	height: 1px;
@@ -606,12 +639,23 @@ label {
 #gui-bad-connection {
 	font-size: 2.75em;
 	position: fixed;
-	top: 50%;
+	top: 20%;
 	left: 50%;
-	width: 500px;
-	margin-top: -180px;
-	margin-left: -250px;
+	max-width: 70vw;
+	transform: translate(-50%, -50%);
 	color: #eee;
+}
+#gui-bad-connection i {
+	color: #bc4937;
+	vertical-align: middle;
+}
+#gui-bad-connection:after {
+	position: absolute;
+	top: 100%;
+	display: block;
+	font-size: 1.2rem;
+	text-align: center;
+	content: "The server hasn't send a package for 500ms, your connection is probably interrupted or dead."
 }
 #gui-points {
 	position: fixed;

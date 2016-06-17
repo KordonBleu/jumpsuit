@@ -435,11 +435,8 @@ function loop() {
 
 
 
-
-
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
-
 	Array.prototype.forEach.call(document.querySelectorAll("#controls img"), function (element) {
 		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
 	});
