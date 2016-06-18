@@ -133,13 +133,13 @@ var gameServerSocket = new WebSocketServer({server: server, path: "/game_servers
 	wsOptions = { binary: true, mask: false };
 
 gameServerSocket.on("connection", function(ws) {
-	var gameServer = new GameServer(undefined, undefined, undefined, undefined, ipaddr.parse(ws._socket.remoteAddress));
+	var gameServer = new GameServer(undefined, undefined, undefined, undefined, ipaddr.parse(ws._socket.remoteAddress)),
+		lastPing = 0;
 
 	ws.on("message", function(message, flags) {
 		if (ips.banned(gameServer.ip)) return;
 
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
-
 		try {
 			let state = new Uint8Array(message, 0, 1)[0];
 
@@ -154,12 +154,13 @@ gameServerSocket.on("connection", function(ws) {
 				gameServer.pingIntervalId = setInterval(function() {
 					try {
 						ws.ping();
+						lastPing = Date.now();
 					} catch (err) {/* Do nothing */}
-
-				}, 20000);
+				}, 5000);
 				gameServers.push(gameServer);
 
 				logger(logger.INFO, "Registered \"" + gameServer.mod + "\" server \"" + gameServer.name + "\" @ " + gameServer.ip + ":" + gameServer.port);
+				ws.send(MESSAGE.SERVER_REGISTERED.serialize());
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
 						MESSAGE.ADD_SERVERS.serialize([gameServer], client.ipAddr).then(function(buf) {
@@ -171,12 +172,14 @@ gameServerSocket.on("connection", function(ws) {
 				ips.ban(gameServer.ip);
 				return;//prevent logging
 			}
-		logger(logger.DEV, (MESSAGE.toString(state)).italic);
+			logger(logger.DEV, (MESSAGE.toString(state)).italic);
 		} catch (err) {
 			ips.ban(gameServer.ip);
 		}
 	});
-
+	ws.on("pong", function() {
+		gameServer.latency = Date.now() - lastPing;	
+	});
 	ws.on("close", function() {
 		gameServers.forEach(function(gS, i) {
 			if (gameServer === gS) {
@@ -203,3 +206,4 @@ clientsSocket.on("connection", function(ws) {
 		});
 	} catch (err) {/* Do nothing */ console.log(err); }
 });
+

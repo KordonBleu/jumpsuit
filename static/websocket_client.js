@@ -55,6 +55,11 @@ function Connection(url, lobbyId) {// a connection to a game server
 		var param1 = document.getElementById("gui-bad-connection");
 		if (Date.now() - this.lastMessage > 500) param1.classList.remove("hidden");
 		else param1.classList.add("hidden");
+
+		if (Date.now() - this.lastMessage > 7000) {
+			currentConnection.close();
+			game.stop();
+		} 
 	}).bind(this), 100);
 }
 Connection.prototype.alive = function() { return this.socket.readyState === 1; };
@@ -109,7 +114,6 @@ Connection.prototype.errorHandler = function() {
 };
 Connection.prototype.messageHandler = function(message) {
 	this.lastMessage = Date.now();
-	console.log(this);
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
 		case MESSAGE.ERROR.value:
 			var errDesc;
@@ -328,7 +332,6 @@ function handleHistoryState() {
 	//modifies default history entries due hash changes
 	if (location.hash !== "") history.replaceState(HISTORY_GAME, "", "/" + location.hash);
 	else history.replaceState(HISTORY_MENU, "", "/");
-	console.log(history.state);
 	if (history.state === HISTORY_MENU) {
 		//if navigated to / stop the game + display menu
 		if (currentConnection !== undefined) currentConnection.close();

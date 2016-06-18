@@ -83,10 +83,31 @@ var server = http.createServer(),//create an independent server so it is easy to
 	wss = new WebSocket.Server({server: server});//change port while running
 server.listen(config.port);
 
-var masterWs = new WebSocket(config.master + "/game_servers");
-masterWs.on("open", function() {
-	masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
-});
+function connectToMaster(){
+	logger(logger.REGISTER, "Attempting to connect to master server");
+	let masterWs = new WebSocket(config.master + "/game_servers"), param1 = false;
+	masterWs.on("open", function() {
+		masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
+	});
+	masterWs.on("ping", function() {
+		masterWs.pong();
+	});
+	masterWs.on("message", function(message) {
+		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
+		
+		if (new Uint8Array(message, 0, 1)[0] === MESSAGE.SERVER_REGISTERED.value) logger(logger.S_REGISTER, "Successfully registered at " + config.master.bold);
+
+	});
+	masterWs.on("close", function() {
+		logger(logger.ERROR, "Connection to master server lost! Trying to reconnect in 5s");
+		setTimeout(connectToMaster, 5000);
+	});
+	masterWs.on("error", function() {
+		logger(logger.ERROR, "Attempt failed, master server is not reachable! Trying to reconnect in 5s");
+		setTimeout(connectToMaster, 5000);
+	});
+}
+connectToMaster(); 
 
 engine.Player.prototype.send = function(data) {
 	try {

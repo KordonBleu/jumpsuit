@@ -788,6 +788,17 @@ const MESSAGE = {
 
 			return val;
 		}
+	},
+	SERVER_REGISTERED: {
+		value: 18,
+		serialize: function() {
+			var view = new Uint8Array(1);
+			view[0] = this.value
+			return view.buffer;
+		},
+		deserialize: function() {
+			//nothing
+		}
 	}
 };
 Object.defineProperty(MESSAGE, "toString", {
