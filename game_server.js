@@ -85,7 +85,7 @@ server.listen(config.port);
 
 function connectToMaster(){
 	logger(logger.REGISTER, "Attempting to connect to master server");
-	let masterWs = new WebSocket(config.master + "/game_servers"), param1 = false;
+	let masterWs = new WebSocket(config.master + "/game_servers"), nextAttemptID;
 	masterWs.on("open", function() {
 		masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
 	});
@@ -100,11 +100,13 @@ function connectToMaster(){
 	});
 	masterWs.on("close", function() {
 		logger(logger.ERROR, "Connection to master server lost! Trying to reconnect in 5s");
-		setTimeout(connectToMaster, 5000);
+		if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
+		nextAttemptID = setTimeout(connectToMaster, 5000);
 	});
 	masterWs.on("error", function() {
 		logger(logger.ERROR, "Attempt failed, master server is not reachable! Trying to reconnect in 5s");
-		setTimeout(connectToMaster, 5000);
+		if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
+		nextAttemptID = setTimeout(connectToMaster, 5000);
 	});
 }
 connectToMaster(); 

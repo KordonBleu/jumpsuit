@@ -2,7 +2,7 @@
 
 var ownIdx = null,
 	enabledTeams = [],
-	masterSocket = new WebSocket("ws://" + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
+	masterSocket = new WebSocket("wss://" + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
 	serverList,
 	currentConnection;
 
@@ -36,7 +36,7 @@ masterSocket.addEventListener("message", function(message) {
 
 function Connection(url, lobbyId) {// a connection to a game server
 	this.lastControls = {};
-	this.lastMessage = 0;
+	this.lastMessage;
 	try {
 		this.socket = new WebSocket(url);
 	} catch (err) {
@@ -56,7 +56,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 		if (Date.now() - this.lastMessage > 500) param1.classList.remove("hidden");
 		else param1.classList.add("hidden");
 
-		if (Date.now() - this.lastMessage > 7000) {
+		if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
 			currentConnection.close();
 			game.stop();
 		} 

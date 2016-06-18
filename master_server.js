@@ -16,7 +16,7 @@ var fs = require("fs"),
 		ipv4_provider: "https://icanhazip.com/",
 		ipv6_provider: "https://ipv6.icanhazip.com/",
 		monitor: false,
-		port: 80,
+		port: 80
 	};
 
 function GameServer(name, mod, secure, port, ip) {
