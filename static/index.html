@@ -101,16 +101,18 @@
 			<h2>Settings</h2><button id="close-settings-box" class="close-parent"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<h3>Player</h3>
-				<p id="score">0 Points</p>
 				<label>Name</label><input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
+				<h3>Weaponry</h3>
+				<div class="weaponry-container">
+					<div class="weapon-select" id="primary-weapon"><img src="/assets/images/shotgun.svg" data-current-weapon="lmg" /><span></span></div>
+					<div class="weapon-select" id="secondary-weapon"><img src="/assets/images/knife.svg" data-current-weapon="knife" /><span></span></div>
+				</div>
 				<h3>Volume</h3>
 				<label>Background Music</label><input type="range" value="50" id="music-volume"/><br/>
 				<label>Sound Effects</label><input type="range" value="50" id="effects-volume"/>
-				<h3>Weaponry</h3>
-				<div class="weaponry-container">
-					<div class="weapon-select" id="primary-weapon"><img src="/assets/images/shotgun.svg" data-current-weapon="lmg" /><span>LMG</span></div>
-					<div class="weapon-select" id="secondary-weapon"><img src="/assets/images/knife.svg" data-current-weapon="knife" /><span>Knife</span></div>
-				</div>
+				<h3>Graphics</h3>
+				<label><input type="checkbox" id="particle-option"> Draw particles</label>
+				<label><input type="checkbox" id="meteor-option"> Draw meteors</label>
 			</div>
 			<div>
 				<h3>Key map</h3>

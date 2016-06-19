@@ -190,7 +190,7 @@ Player.prototype.draw = function(showName) {
 
 	if (this.jetpack) {
 		let shift = this.looksLeft === true ? -windowBox.zoomFactor : windowBox.zoomFactor;
-		if (Math.random() < 0.6) {//TODO: this should be dependent on speed, which can be calculated with predictBox
+		if (particlesElement.checked && Date.now() % 2 === 0) {
 			particles.push(new Particle(18,
 				this.box.center.x - shift*14*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
 				this.box.center.y + shift*14*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle - Math.PI / 11),
@@ -213,7 +213,7 @@ Player.prototype.draw = function(showName) {
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
 		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
 	context.rotate(weaponRotFact);
-	if (this.muzzleFlash === true){
+	if (particlesElement.checked && this.muzzleFlash === true){
 		var	muzzleX = weaponList[this.weaponry.armed].muzzleX*windowBox.zoomFactor + resources["muzzle"].width*0.5*windowBox.zoomFactor,
 			muzzleY = weaponList[this.weaponry.armed].muzzleY*windowBox.zoomFactor - resources["muzzle"].height*0.25*windowBox.zoomFactor;
 		context.drawImage(resources[(Math.random() > 0.5 ? "muzzle" : "muzzle2")],
@@ -307,6 +307,7 @@ resPaths.forEach(function(path) {//init resources
 	imgPromises.push(promise);
 });
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
+	resizeHandler();
 	game.stop();
 	window.cancelAnimationFrame(game.loaderAnimationFrameId);
 	handleHistoryState();
@@ -369,14 +370,16 @@ function loop() {
 	doPhysicsClient(universe, planets, shots, players);
 
 	//layer 0: meteors
-	context.globalAlpha = 0.2;
-	meteors.forEach(function(m, i) {
-		canSpawnMeteor = true;
-		m.x += m.speed;
-		m.rotAng += m.rotSpeed;
-		if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
-		else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
-	});
+	if (meteorsElement.checked) {
+		context.globalAlpha = 0.2;
+		meteors.forEach(function(m, i) {
+			canSpawnMeteor = true;
+			m.x += m.speed;
+			m.rotAng += m.rotSpeed;
+			if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
+			else windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, resources[m.res].width / windowBox.zoomFactor, resources[m.res].height / windowBox.zoomFactor);
+		});
+	}
 	context.globalAlpha = 1;
 
 
@@ -415,13 +418,15 @@ function loop() {
 	});
 
 	//particles
-	particles.forEach(function(particle, index, array) {
-		if (particle.update()) array.splice(index, 1);
-		else windowBox.drawRotatedImage(resources["jetpackParticle"],
-			windowBox.wrapX(particle.box.center.x),
-			windowBox.wrapY(particle.box.center.y),
-			particle.box.angle, particle.size, particle.size);
-	});
+	if (particlesElement.checked) {
+		particles.forEach(function(particle, index, array) {
+			if (particle.update()) array.splice(index, 1);
+			else windowBox.drawRotatedImage(resources["jetpackParticle"],
+				windowBox.wrapX(particle.box.center.x),
+				windowBox.wrapY(particle.box.center.y),
+				particle.box.angle, particle.size, particle.size);
+		});
+	}
 
 	//players
 	context.fillStyle = "#eee";

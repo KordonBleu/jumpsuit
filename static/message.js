@@ -768,24 +768,27 @@ const MESSAGE = {
 	},
 	SCORES: {
 		value: 17,
+		PLAYER_APPEARANCE: {
+			alienBlue: 0,
+			alienBeige: 1,
+			alienGreen: 2,
+			alienPink: 3,
+			alienYellow: 4
+		},
 		serialize: function(scoresObj) {
-			var teams = Object.keys(scoresObj).sort(),
-				buffer = new ArrayBuffer(1 + teams.length*4),
+			var teams = Object.keys(scoresObj),
+				buffer = new ArrayBuffer(1 + teams.length*5),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
-			teams.forEach(function(team, i) {
-				view.setInt32(1 + i*4, scoresObj[team]);
-			});
-
+			teams.forEach((function(team, i) {
+				view.setUint8(1 + i*5, this.PLAYER_APPEARANCE[team]);
+				view.setInt32(2 + i*5, scoresObj[team]);
+			}).bind(this));
 			return buffer;
 		},
-		deserialize: function(buffer, definedTeams) {
-			var view = new DataView(buffer, 1),
-				val = {};
-			definedTeams.sort().forEach(function(team, i) {
-				val[team] = view.getInt32(i*4);
-			});
-
+		deserialize: function(buffer) {
+			var view = new DataView(buffer, 1), val = {};
+			for (var i = 0; i !== view.byteLength; i+=5) val[Object.keys(this.PLAYER_APPEARANCE)[view.getUint8(i)]] = view.getInt32(i+1);
 			return val;
 		}
 	},

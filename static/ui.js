@@ -34,6 +34,8 @@ var chatElement = document.getElementById("gui-chat"),
 	keyResetElement = document.getElementById("key-reset"),
 	primaryWeaponElement = document.getElementById("primary-weapon"),
 	secondaryWeaponElement = document.getElementById("secondary-weapon"),
+	particlesElement = document.getElementById("particle-option"),
+	meteorsElement = document.getElementById("meteor-option"),
 	/* inside info-box */
 	closeInfoButton = document.getElementById("close-info-box"),
 	/* in-game buttons */
@@ -110,7 +112,6 @@ effectsVolumeElement.addEventListener("input", function(ev) {
 /* Key settings */
 var changingKeys = false,
 	selectedRow = -1;
-
 keySettingsElement.addEventListener("click", function(e) {
 	function reselect(obj){
 		document.removeEventListener("keydown", wrap);
@@ -161,7 +162,6 @@ keySettingsElement.addEventListener("click", function(e) {
 		document.addEventListener("keydown", wrap);
 	}
 });
-
 keyResetElement.addEventListener("click", function() {
 	handleInput.keyMap = defaultKeymap;
 	handleInput.initKeymap(false);
@@ -181,22 +181,29 @@ nameElement.addEventListener("blur", function(e) {
 });
 
 /* Weaponry */
-var weaponryCycle = ["lmg", "smg", "knife", "shotgun"];
+var weaponryCycle = ["lmg", "smg", "knife", "shotgun"], weaponNames = {lmg: "Borpov", smg: "Pezcak", knife: "throwable Knife", shotgun: "Azard"};
+function setGun(element, type) {
+	if (type === null) return;
+	element.dataset.currentWeapon = type;
+	element.childNodes[0].src = "/assets/images/" + type + ".svg";
+	element.childNodes[1].textContent = weaponNames[type];	
+}
 [].forEach.call(document.querySelectorAll(".weapon-select"), function(element){
 	element.addEventListener("click", function() {
-		var imgElement = this.childNodes[0], textElement = this.childNodes[1],
-			currentIndex = weaponryCycle.findIndex(function(x) { return x === imgElement.dataset.currentWeapon; }), offset,
-			names = {lmg: "Borpov", smg: "Pezcak", knife: "throwable Knife", shotgun: "Azard"}, nextIndex;
-
+		var currentIndex = weaponryCycle.findIndex(function(x) { return x === element.dataset.currentWeapon; }), offset, nextIndex;
 		for (offset = 1; offset !== weaponryCycle.length; offset++) {
 			var nextIndex = (currentIndex + offset) % weaponryCycle.length, x = weaponryCycle[nextIndex];
-			if (primaryWeaponElement.childNodes[0].dataset.currentWeapon !== x && secondaryWeaponElement.childNodes[0].dataset.currentWeapon !== x) break;
+			if (primaryWeaponElement.dataset.currentWeapon !== x && secondaryWeaponElement.dataset.currentWeapon !== x) break;
 		}
-		imgElement.src = "/assets/images/" + weaponryCycle[nextIndex] + ".svg";
-		imgElement.dataset.currentWeapon = weaponryCycle[nextIndex];
-		textElement.textContent = names[weaponryCycle[nextIndex]];
+		setGun(this, weaponryCycle[nextIndex]);
 	});
 });
+setGun(primaryWeaponElement, localStorage.getItem("settings.weaponry.primary"));
+setGun(secondaryWeaponElement, localStorage.getItem("settings.weaponry.secondary"));
+
+/* Graphics */
+meteorsElement.checked = localStorage.getItem("settings.graphics.meteors") === "true";
+particlesElement.checked = localStorage.getItem("settings.graphics.particles") === "true";
 
 /* Chat */
 chatInput.addEventListener("keydown", function(e) {
@@ -394,7 +401,7 @@ function resizeHandler() {
 		element.style["margin-left"] = Math.round(element.clientWidth * -0.5) + "px";
 	}); 
 }
-resizeHandler();
+
 
 window.onbeforeunload = function() {
 	//default values don't need to be saved
@@ -402,5 +409,9 @@ window.onbeforeunload = function() {
 	if (settings.keymap !== "") localStorage.setItem("settings.keymap", settings.keymap);
 	localStorage.setItem("settings.volume.music", musicVolumeElement.value);
 	localStorage.setItem("settings.volume.effects", effectsVolumeElement.value);
+	localStorage.setItem("settings.weaponry.primary", primaryWeaponElement.dataset.currentWeapon);
+	localStorage.setItem("settings.weaponry.secondary", secondaryWeaponElement.dataset.currentWeapon);
+	localStorage.setItem("settings.graphics.meteors", meteorsElement.checked);
+	localStorage.setItem("settings.graphics.particles", particlesElement.checked);
 };
 

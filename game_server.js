@@ -88,20 +88,18 @@ function connectToMaster(){
 	let masterWs = new WebSocket(config.master + "/game_servers"), nextAttemptID;
 	masterWs.on("open", function() {
 		masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
+		masterWs.on("close", function() {
+			logger(logger.ERROR, "Connection to master server lost! Trying to reconnect in 5s");
+			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
+			nextAttemptID = setTimeout(connectToMaster, 5000);
+		});
 	});
 	masterWs.on("ping", function() {
 		masterWs.pong();
 	});
 	masterWs.on("message", function(message) {
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
-		
 		if (new Uint8Array(message, 0, 1)[0] === MESSAGE.SERVER_REGISTERED.value) logger(logger.S_REGISTER, "Successfully registered at " + config.master.bold);
-
-	});
-	masterWs.on("close", function() {
-		logger(logger.ERROR, "Connection to master server lost! Trying to reconnect in 5s");
-		if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
-		nextAttemptID = setTimeout(connectToMaster, 5000);
 	});
 	masterWs.on("error", function() {
 		logger(logger.ERROR, "Attempt failed, master server is not reachable! Trying to reconnect in 5s");
@@ -220,9 +218,8 @@ wss.on("connection", function(ws) {
 						player.lobby = lobby;
 					
 						player.pid = pid;
-						lobby.assignPlayerTeam(player);
-						
-						
+						lobby.assignPlayerTeam(player);					
+					
 						player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
 						lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
 						player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
@@ -245,8 +242,7 @@ wss.on("connection", function(ws) {
 			logger(logger.DEV, MESSAGE.toString(state));
 		} catch (err) {
 			console.log(err);
-			ips.ban(player.ip);
-			
+			ips.ban(player.ip);			
 		}
 	});
 	ws.on("pong", function() {
