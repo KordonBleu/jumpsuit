@@ -222,17 +222,8 @@ const MESSAGE = {
 			};
 		}
 	},
-	CREATE_PRIVATE_LOBBY: {
-		value: 5,
-		serialize: function(playerAmount) {
-			return new Uint8Array([this.value, playerAmount]).buffer;
-		},
-		deserialize: function(buffer) {
-			return new Uint8Array(buffer)[1];
-		}
-	},
 	CONNECT: {
-		value: 6,
+		value: 5,
 		serialize: function(lobbyId) {
 			if (lobbyId !== undefined) {
 				let buffer = new ArrayBuffer(5),
@@ -252,7 +243,7 @@ const MESSAGE = {
 		}
 	},
 	ERROR: {
-		value: 7,
+		value: 6,
 		NO_LOBBY: 0,
 		NO_SLOT: 1,
 		serialize: function(errorCode) {
@@ -263,7 +254,7 @@ const MESSAGE = {
 		}
 	},
 	CONNECT_ACCEPTED: {
-		value: 8,
+		value: 7,
 		TEAM_MASK: {
 			alienBeige: 16,
 			alienBlue: 8,
@@ -280,7 +271,7 @@ const MESSAGE = {
 			view.setUint32(1, lobbyId);
 
 			view.setUint8(5, playerId);
-			
+
 			view.setUint16(6, univWidth);
 			view.setUint16(8, univHeight);
 
@@ -311,7 +302,7 @@ const MESSAGE = {
 		}
 	},
 	LOBBY_STATE: {
-		value: 9,
+		value: 8,
 		serialize: function(state, timer) {
 			var view = new Uint8ClampedArray(timer === undefined ? 2 : 3);
 			view[0] = MESSAGE.LOBBY_STATE.value;
@@ -331,7 +322,7 @@ const MESSAGE = {
 		}
 	},
 	ADD_ENTITY: {
-		value: 10,
+		value: 9,
 		ENEMY_APPEARANCE: {
 			enemyBlack1: 0,
 			enemyBlack2: 1,
@@ -515,7 +506,7 @@ const MESSAGE = {
 		}
 	},
 	REMOVE_ENTITY: {
-		value: 11,
+		value: 10,
 		serialize: function(planetIds, enemyIds, shotIds, playerIds) {
 			var view = new Uint8Array(4 + planetIds.length + enemyIds.length + shotIds.length + playerIds.length);
 
@@ -575,7 +566,7 @@ const MESSAGE = {
 		}
 	},
 	GAME_STATE: {
-		value: 12,
+		value: 11,
 		OWNED_BY: {
 			neutral: 0,
 			alienBlue: 1,
@@ -681,7 +672,7 @@ const MESSAGE = {
 		}
 	},
 	PLAYER_CONTROLS: {
-		value: 13,
+		value: 12,
 		MASK: {
 			JUMP: 1,
 			RUN: 2,
@@ -726,7 +717,7 @@ const MESSAGE = {
 		}
 	},
 	AIM_ANGLE: {
-		value: 14,
+		value: 13,
 		serialize: function(angle) {
 			var view = new Uint8Array(2);
 			view[0] = this.value;
@@ -739,7 +730,7 @@ const MESSAGE = {
 		}
 	},
 	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
-		value: 15,
+		value: 14,
 		serialize: function(message) {
 			return MESSAGE.SET_NAME.serialize.call(this, message);
 		},
@@ -748,7 +739,7 @@ const MESSAGE = {
 		}
 	},
 	CHAT_BROADCAST: {
-		value: 16,
+		value: 15,
 		serialize: function(id, message) {
 			var bufMessage = stringToBuffer(message),
 				view = new Uint8Array(bufMessage.byteLength + 2);
@@ -767,7 +758,7 @@ const MESSAGE = {
 		}
 	},
 	SCORES: {
-		value: 17,
+		value: 16,
 		PLAYER_APPEARANCE: {
 			alienBlue: 0,
 			alienBeige: 1,
@@ -793,7 +784,7 @@ const MESSAGE = {
 		}
 	},
 	SERVER_REGISTERED: {
-		value: 18,
+		value: 17,
 		serialize: function() {
 			var view = new Uint8Array(1);
 			view[0] = this.value

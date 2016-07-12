@@ -30,29 +30,32 @@ module.exports = function(config, lobbies) {
 		printProperty("Development Mode", (config.dev) ? "Enabled" : "Disabled");
 		printProperty("Interactive Mode", (config.interactive) ? "Enabled" : "Disabled");
 
-		console.log(); //newline
-		var headerSizes = [35, 10, 15],
-			headerNames = ["lobby name", "players", "process time"],
-			header = "";
-		headerSizes.forEach(function(hSize, i) {
-			header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
-		});
-		console.log(header);
+		if (lobbies !== undefined) {
+			console.log(); //newline
+			var headerSizes = [35, 10, 15],
+				headerNames = ["lobby name", "players", "process time"],
+				header = "";
+			headerSizes.forEach(function(hSize, i) {
+				header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
+			});
+			console.log(header);
 
-		var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height and width
-		lobbies.some(function(lobby, index, array) {
-			if (lobbyAmount >= 8) {
-				console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
-				return true; //"some" function can be quitted with return, but it needs to return something so just return; wouldn't work
-			}
-			var info = lobby.name + genSpaces(headerSizes[0] - lobby.name.length),
-				amount = lobby.players.length.toString(),
-				processTime = lobby.processTime.toString();
-			info += "   " + amount + genSpaces(headerSizes[1] - amount.length);
-			info += "   " + processTime;
-			console.log(info);
-			lobbyAmount++;
-		});
+			var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height and width
+			lobbies.some(function(lobby, index, array) {
+				if (lobbyAmount >= 8) {
+					console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
+					return true; //"some" function can be quitted with return, but it needs to return something so just return; wouldn't work
+				}
+				var indexAsString = index.toString(),
+					info = indexAsString + genSpaces(headerSizes[0] - indexAsString.length),
+					amount = lobby.players.length.toString(),
+					processTime = lobby.processTime.toString();
+				info += "   " + amount + genSpaces(headerSizes[1] - amount.length);
+				info += "   " + processTime;
+				console.log(info);
+				lobbyAmount++;
+			});
+		}
 	}
 
 	function cleanup() {

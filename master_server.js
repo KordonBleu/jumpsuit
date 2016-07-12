@@ -57,8 +57,8 @@ var config = require("./config.js")(process.argv[2] || "./master_config.json", c
 	ipPicker = require("./ip_picker.js")(config);
 
 
-/*var monitor = require("./monitor.js")(config);
-if(config.monitor) monitor.setMonitorMode();*/
+var monitor = require("./monitor.js")(config);
+if(config.monitor) monitor.setMonitorMode();
 
 if (config.interactive) interactive.open();
 

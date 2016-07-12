@@ -14,7 +14,7 @@ Possible values for a field are noted:
  * with lowercase words for variables (ex: `player name`)
  * with lowercase words between double quotes for strings variables (`"player name"`)
  * with lowercase words starting with a uppercase character for enumerations (ex: `Error Type`)
- * with uppercase snake case for packets and subpayloads (ex: `CREATE_PRIVATE_LOBBY`)
+ * with uppercase snake case for packets and subpayloads (ex: `LOBBY_STATE`)
 Values dubbed `unused bits` are not used, but are present to complete a byte.
 
 Values are enclosed in boxes.
@@ -201,7 +201,7 @@ The first byte of every packet determines its type. A payload may be placed afte
 +------+-----------
 ```
 
-There are 19 packet types.
+There are 17 packet types.
 
 
 
@@ -250,7 +250,7 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 +---+---------------+
 ```
 
-The player must send this message before `CONNECT` or `CREATE_PRIVATE_LOBBY`.
+The player must send this message before `CONNECT`.
 
 
 #### SET_NAME_BROADCAST (game server → client)
@@ -263,34 +263,23 @@ The player must send this message before `CONNECT` or `CREATE_PRIVATE_LOBBY`.
 The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
 
 
-#### CREATE_PRIVATE_LOBBY (client → game server)
-```
- 1B              1B
-+---+---------------------------+
-| 5 | maximum amount of players |
-+---+---------------------------+
-```
-
-The game server will respond with CONNECT_ACCEPTED.
-
-
 #### CONNECT (client → game server)
 ```
  1B      4B
 +---+~~~~~~~~~~+
-| 6 | lobby id |
+| 5 | lobby id |
 +---+~~~~~~~~~~+
 ```
 
 The game server will respond with CONNECT_ACCEPTED.
-The `lobby id` must be set only if the player wishes to connect to a specific lobby (this is the only way to access private lobbies). In this case the server might respond with an ERROR rather than with CONNECT_ACCEPTED.
+The `lobby id` must be set only if the player wishes to connect to a specific lobby (which happens when connecting via a URL). In this case the server might respond with an ERROR rather than with CONNECT_ACCEPTED.
 
 
 #### ERROR (game server → client)
 ```
  1B       1B
 +---+------------+
-| 7 | Error Type |
+| 6 | Error Type |
 +---+------------+
 ```
 
@@ -304,7 +293,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
  1B      4B          1B           2B                2B              3b           1b          1b           1b          1b           1b            ?B
 +---+----------+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
-| 8 | lobby id | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
+| 7 | lobby id | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
 +---+----------+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
 ```
 
@@ -313,7 +302,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
  1B       1B         1B
 +---+-------------+~~~~~~~+
-| 9 | Lobby State | timer |
+| 8 | Lobby State | timer |
 +---+-------------+~~~~~~~+
 ```
 
@@ -327,7 +316,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B       1B           ?*6B         1B        ?*5B         1B       ?*6B     ?B
 +----+---------------+========+--------------+=======+-------------+======+========+
-| 10 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
+| 9 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
 +----+---------------+========+--------------+=======+-------------+======+========+
 ```
 
@@ -336,7 +325,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B        1B           ?*1B           1B          ?*1B         1B         ?*1B       ?*1B
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
-| 11 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
+| 10 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
 +----+---------------+===========+--------------+==========+-------------+=========+===========+
 ```
 
@@ -345,7 +334,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B       1B           2B           ?*3B           ?*1B            ?*9B
 +----+-------------+-----------+===============+=============+===============+
-| 12 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_PLAYER |
+| 11 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_PLAYER |
 +----+-------------+-----------+===============+=============+===============+
 ```
 
@@ -354,7 +343,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B    1b    1b      1b       1b         1b           1b            1b          1b
 +----+------+-----+--------+---------+-----------+------------+---------------+-------+
-| 13 | jump | run | crouch | jetpack | move left | move right | change weapon | shoot |
+| 12 | jump | run | crouch | jetpack | move left | move right | change weapon | shoot |
 +----+------+-----+--------+---------+-----------+------------+---------------+-------+
 ```
 
@@ -363,7 +352,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B    1B
 +----+-------+
-| 14 | angle |
+| 13 | angle |
 +----+-------+
 ```
 
@@ -372,7 +361,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B      1B
 +----+-----------+
-| 15 | "message" |
+| 14 | "message" |
 +----+-----------+
 ```
 
@@ -381,7 +370,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B      1B          ?B
 +----+-----------+-----------+
-| 16 | player id | "message" |
+| 15 | player id | "message" |
 +----+-----------+-----------+
 ```
 
@@ -389,7 +378,7 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
   1B       4B
 +----+============+
-| 17 | team score |
+| 16 | team score |
 +----+============+
 ```
 

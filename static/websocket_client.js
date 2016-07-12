@@ -59,13 +59,13 @@ function Connection(url, lobbyId) {// a connection to a game server
 		if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
 			currentConnection.close();
 			game.stop();
-		} 
+		}
 	}).bind(this), 100);
 }
 Connection.prototype.alive = function() { return this.socket.readyState === 1; };
-Connection.prototype.sendMessage = function(messageType) {
+Connection.prototype.sendMessage = function(messageType, ...args) {
 	try {
-		this.socket.send(messageType.serialize.apply(messageType, [].slice.call(arguments, 1)));
+		this.socket.send(messageType.serialize.apply(messageType, args));
 	} catch(err) {
 		console.log(err);
 		//TODO: display "connection lost" and get back to the main menu
@@ -304,24 +304,23 @@ Connection.prototype.messageHandler = function(message) {
 function connectByHash() {
 	if (location.hash === "") return;
 	try {
-		var a = location.hash.substr(1).split("&"), b, url, protocol = "ws://", ws, lobbyId;
-		for (b in a) {
-			if (a[b].indexOf("srv=") === 0) url = a[b].substr(4);
-			else if (a[b].indexOf("lobby=") === 0) lobbyId = a[b].substr(6);
-		}
-		if (url.indexOf("s") === 0) {
-			protocol = "wss://";
-			url = url.substr(1);
-		}
-		ws = protocol + url + "/";
+		let [, ip, lobbyId] = location.hash.match(/^#srv=(s?[\d\.:a-f]*)&lobby=([ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-\._~!$&'()\*\+,;=:@]+)/),
+			protocol;
+		if (ip.startsWith("s")) {
+			protocol = "ws://"
+			ip = ip.slice(1);
+		} else protocol = "wss://";
+
+		let url = protocol + ip;
+
 		if (currentConnection !== undefined) {
-			if (currentConnection.socket.url !== ws) {
+			if (currentConnection.socket.url !== url) {
 				currentConnection.close();
-				currentConnection = new Connection(ws, lobbyId);
+				currentConnection = new Connection(url, lobbyId);
 			} else if (!currentConnection.alive()) {
-				currentConnection = new Connection(ws, lobbyId);
+				currentConnection = new Connection(url, lobbyId);
 			}
-		} else currentConnection = new Connection(ws, lobbyId);
+		} else currentConnection = new Connection(url, lobbyId);
 	} catch (ex) {
 		if (currentConnection !== undefined) currentConnection.close();
 		console.log(ex, ex.stack);

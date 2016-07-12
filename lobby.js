@@ -68,11 +68,11 @@ module.exports = function(engine) {
 		}, this);
 		this.processTime = Date.now() - oldDate;
 	};
-	Lobby.prototype.updateLobby = function() {		
+	Lobby.prototype.updateLobby = function() {
 		this.planets.forEach((function(planet) {
 			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
 		}).bind(this));
-		this.broadcast(MESSAGE.SCORES.serialize(this.teamScores));		
+		this.broadcast(MESSAGE.SCORES.serialize(this.teamScores));
 	};
 	Lobby.prototype.pingPlayers = function() {
 		this.players.forEach(function(player) {
