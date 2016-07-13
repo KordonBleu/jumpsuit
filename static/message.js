@@ -185,61 +185,82 @@ const MESSAGE = {
 			return serverIds;
 		}
 	},
-	SET_NAME: {
+	SET_PREFERENCES: {
 		value: 3,
-		serialize: function(name) {
-			var bufName = stringToBuffer(name),
-				view = new Uint8Array(bufName.length + 1);
-
+		WEAPON: {
+			lmg: 0,
+			smg: 1,
+			shotgun: 2,
+			knife: 3
+		},
+		serialize: function(settings) {
+			let nameBuffer = stringToBuffer(settings.name),
+				buffer = new Uint8Array(3 + nameBuffer.byteLength);
 			view[0] = this.value;
-			view.set(bufName, 1);
-
+			view[1] = this.WEAPON[settings.primary];
+			view[2] =  this.WEAPON[settings.secondary];
+			view.set(new Uint8Array(nameBuffer), 3);
 			return view.buffer;
 		},
 		deserialize: function(buffer) {
-			return buffer.byteLength === 1 ? "" : bufferToString(buffer.slice(1));//prevent crash when buffer empty
+			var view = new Uint8Array(buffer);
+			return {
+				primary: view[1],
+				secondary: view[2],
+				name: bufferToString(buffer.slice(3))
+			}
 		}
 	},
 	SET_NAME_BROADCAST: {
 		value: 4,
 		serialize: function(id, name, homographId) {
-			var bufName = stringToBuffer(name),
-				view = new Uint8Array(bufName.byteLength + 3);
-
+			var nameBuffer = stringToBuffer(name),
+				view = new Uint8Array(3 + nameBuffer.byteLength);
+			
 			view[0] = this.value;
 			view[1] = id;
 			view[2] = homographId;
-			view.set(new Uint8Array(bufName), 3);
+			view.set(new Uint8Array(nameBuffer), 3);
 
 			return view.buffer;
 		},
 		deserialize: function(buffer) {
-			var arr = new Uint8Array(buffer);
+			var view = new Uint8Array(buffer);
 			return {
-				id: arr[1],
+				id: view[1],
 				name: bufferToString(buffer.slice(3)),
-				homographId: arr[2]
+				homographId: view[2]
 			};
 		}
 	},
 	CONNECT: {
 		value: 5,
-		serialize: function(lobbyId) {
-			if (lobbyId !== undefined) {
-				let buffer = new ArrayBuffer(5),
-					view = new DataView(buffer);
-				view.setUint8(0, this.value);
-				view.setUint32(1, lobbyId);
-
-				return buffer;
-			} else {
-				return new Uint8Array([this.value]).buffer;
-			}
+		WEAPON: {
+			lmg: 0,
+			smg: 1,
+			shotgun: 2,
+			knife: 3
+		},
+		serialize: function(lobbyId, settings) {
+			let nameBuffer = stringToBuffer(settings.name),
+				buffer = new Uint8Array(8 + nameBuffer.byteLength),
+				view = new DataView(buffer.buffer);
+			view.setUint8(0, this.value);
+			view.setUint8(1, lobbyId !== undefined);
+			view.setUint32(2, lobbyId || 0);
+			view.setUint8(6, this.WEAPON[settings.primary]);
+			view.setUint8(7, this.WEAPON[settings.secondary]);
+			buffer.set(new Uint8Array(nameBuffer), 8);
+			return buffer.buffer;
 		},
 		deserialize: function(buffer) {
-			if (buffer.byteLength === 2) {
-				return new DataView(buffer).getUint32(1);
-			}
+			var view = new DataView(buffer);	
+			return {
+				lobbyId: (view.getUint8(1) === 1 ? view.getUint32(2) : undefined),
+				primary: Object.keys(this.WEAPON)[view.getUint8(6)],
+				secondary: Object.keys(this.WEAPON)[view.getUint8(7)],
+				name: bufferToString(buffer.slice(8))
+			}		
 		}
 	},
 	ERROR: {
@@ -269,9 +290,7 @@ const MESSAGE = {
 				enabledTeams = 0;
 			view.setUint8(0, this.value);
 			view.setUint32(1, lobbyId);
-
-			view.setUint8(5, playerId);
-
+			view.setUint8(5, playerId);			
 			view.setUint16(6, univWidth);
 			view.setUint16(8, univHeight);
 
@@ -281,7 +300,6 @@ const MESSAGE = {
 			view.setInt8(10, enabledTeams);
 
 			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 11);
-
 			return buffer;
 		},
 		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
@@ -594,7 +612,7 @@ const MESSAGE = {
 			knife: 3
 		},
 		serialize: function(yourHealth, yourFuel, planets, enemies, players) {
-			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.length*9),
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.actualLength*10),
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
@@ -611,21 +629,22 @@ const MESSAGE = {
 				view.setUint8(offset++, radToBrad(enemy.box.angle, 1));
 			});
 
-			players.forEach(function(player, i) {
-				view.setUint16(offset, player.box.center.x);
-				view.setUint16(2 + offset, player.box.center.y);
-				view.setUint8(4 + offset, player.attachedPlanet);
-				view.setUint8(5 + offset, radToBrad(player.box.angle, 1));
-				view.setUint8(6 + offset, radToBrad(player.aimAngle, 1));
+			players.forEach(function(player) {
+				view.setUint8(offset, player.pid);
+				view.setUint16(1 + offset, player.box.center.x);
+				view.setUint16(3 + offset, player.box.center.y);
+				view.setUint8(5 + offset, player.attachedPlanet);
+				view.setUint8(6 + offset, radToBrad(player.box.angle, 1));
+				view.setUint8(7 + offset, radToBrad(player.aimAngle, 1));
 				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)] << 2;//doesn't work directly on buffer for efficiency
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				if (player.hurt) enumByte |= this.MASK.HURT;
-				view.setUint8(7 + offset, enumByte);
+				view.setUint8(8 + offset, enumByte);
 				var weaponByte = this.WEAPON[player.weaponry.armed] << 2;
 				weaponByte += this.WEAPON[player.weaponry.carrying];
-				view.setUint8(8 + offset, weaponByte);
-				offset += 9;
+				view.setUint8(9 + offset, weaponByte);
+				offset += 10;
 			}, this);
 
 			return buffer;
@@ -646,22 +665,22 @@ const MESSAGE = {
 				enemiesCbk(id, bradToRad(view.getUint8(i), 1));//angle
 			}
 
-			limit += playerAmount*9;
-			for (let id = 0; i !== limit; i += 9, ++id) {
-				let enumByte = view.getUint8(7 + i),
-					weaponByte = view.getUint8(8 + i);
-				playersCbk(id,
-					view.getUint16(i),//x
-					view.getUint16(2 + i),//y
-					view.getUint8(4 + i),//attachedPlanet
-					bradToRad(view.getUint8(5 + i), 1),//angle
+			limit += playerAmount*10;
+			for (; i !== limit; i += 10) {
+				let enumByte = view.getUint8(8 + i),
+					weaponByte = view.getUint8(9 + i);
+				playersCbk(view.getUint8(i), //pid
+					view.getUint16(1 + i),//x
+					view.getUint16(3 + i),//y
+					view.getUint8(5 + i),//attachedPlanet
+					bradToRad(view.getUint8(6 + i), 1),//angle
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					enumByte & this.MASK.HURT ? true : false,//hurt
 					Object.keys(this.WALK_FRAME)[enumByte << 27 >>> 29],//walkFrame
 					Object.keys(this.WEAPON)[weaponByte >>> 2],//armed weapon
 					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30],//carrying weapon
-					bradToRad(view.getUint8(6 + i), 1)
+					bradToRad(view.getUint8(7 + i), 1)
 				);
 			}
 
@@ -732,10 +751,14 @@ const MESSAGE = {
 	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
 		value: 14,
 		serialize: function(message) {
-			return MESSAGE.SET_NAME.serialize.call(this, message);
+			let nameBuffer = stringToBuffer(message),
+				view = new Uint8Array(1 + nameBuffer.byteLength);
+			view[0] = this.value;
+			view.set(new Uint8Array(nameBuffer), 1);
+			return view.buffer;
 		},
 		deserialize: function(buffer) {
-			return MESSAGE.SET_NAME.deserialize(buffer);
+			return bufferToString(buffer.slice(1));
 		}
 	},
 	CHAT_BROADCAST: {

@@ -39,7 +39,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 const weaponList = {
 	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
 	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1},
-	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 105, muzzleY: -4, shotType: 3},
+	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 84, muzzleY: 2, shotType: 3},
 	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2}
 };
 
@@ -73,7 +73,6 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 			}
 		}
 	});
-
 	this.jetpack = jetpack || false;
 	if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		this._lastHurt = 0;
@@ -90,11 +89,10 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.fuel = fuel || 400;
 	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
-	this.pid = 0;
-	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0};
+	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0, recoil: 0};
 	this.aimAngle = aimAngle || 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
-			this.panner = makePanner(0, 0);//note: won't be used if this is not another player
+		this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}
 }
 Player.prototype.setWalkFrame = function() {
@@ -303,7 +301,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 
 			if (player.weaponry.cycle === 0) {
 				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1;
-				for (var i = -2; i <= 2; i++) {
+				for (var i = -1; i <= 1; i++) {
 					if (shotType !== 3 && i !== 0) continue;
 					let shotX = player.box.center.x + weaponList[player.weaponry.armed].muzzleX * Math.sin(player.aimAngle) + weaponList[player.weaponry.armed].muzzleY * shift * Math.sin(player.aimAngle - Math.PI / 2),
 						shotY = player.box.center.y - weaponList[player.weaponry.armed].muzzleX * Math.cos(player.aimAngle) - weaponList[player.weaponry.armed].muzzleY * shift * Math.cos(player.aimAngle - Math.PI / 2);
@@ -327,6 +325,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			entitiesDelta.removedShots.push(shot);
 			shots.splice(si, 1);
 		} else if (!players.some(function(player) {
+			if (player.constructor !== Player) return;
 			if (player.pid !== shot.origin && universe.collide(shot.box, player.box)) {
 				player.health -= (player.health === 0) ? 0 : 1;
 				if (player.health <= 0) {

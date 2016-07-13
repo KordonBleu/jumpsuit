@@ -20,6 +20,19 @@ var fs = require("fs"),
 		secure: false,
 		server_name: "JumpSuit server"
 	};
+Array.prototype.actualLength = 0;
+Array.prototype.append = function(item) {
+	this.actualLength++;
+	for (var i = 0; i !== this.length; i++) {
+		if (this[i] === null || this[i] === undefined) {
+			this[i] = item;
+			return i;
+		}
+	}
+	return this.push(item) - 1;
+};
+
+
 
 function changeCbk(newConfig, previousConfig) {
 	if (newConfig.port !== previousConfig.port) {
@@ -118,31 +131,21 @@ engine.Player.prototype.send = function(data) {
 	} catch (err) { /* Maybe log this error somewhere? */ }
 };
 
-lobbies.getUid = function(index) {
-	var uid = index.toString(16);
-	while(uid.length !== 6) {
-		uid = "0" + uid;
-	}
-	return uid;
-};
-lobbies.getByUid = function(uid) {
-	var index = parseInt(uid, 16);
-	if(!isNaN(index) && isFinite(index) && index % 1 === 0 && index >= 0 && this[index] !== undefined) return this[index];
-};
-
 wss.on("connection", function(ws) {
 	function cleanup() {
-		lobbies.forEach(function(lobby, lobbyI) {
-			lobby.players.some(function(player, i, players) {
+		lobbies.forEach(function(lobby, li) {
+			lobby.players.some(function(player, pi) {
 				if (player.ws === ws) {
 					logger(logger.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
-					players.splice(i, 1);
-					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [i]));
-					if (players.length === 0) {
-						lobbies[lobbyI].close();
-						lobbies.splice(lobbyI, 1);
+					delete lobby.players[pi];
+					lobby.players.actualLength--;
+					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [pi]));
+					if (lobby.players.length === 0) { 
+						lobbies[li].close();
+						delete lobbies[li];
+						lobbies.actualLength--;						
 					}
-					for (let i = lobbyI; i !== lobbies.length; ++i) {
+					for (let i = li; i !== lobbies.length; ++i) {
 						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
 					}
 					return true;
@@ -163,7 +166,7 @@ wss.on("connection", function(ws) {
 			let state = new Uint8Array(message, 0, 1)[0];
 			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
-				case MESSAGE.SET_NAME.value:
+				case MESSAGE.SET_PREFERENCES.value:
 					let playerName = MESSAGE.SET_NAME.deserialize(message);
 					if (playerName === player.name) return;
 					if (player.lobby !== undefined) {
@@ -173,52 +176,47 @@ wss.on("connection", function(ws) {
 					player.name = playerName;
 					break;
 				case MESSAGE.CONNECT.value:
-					let lobbyId = MESSAGE.CONNECT.deserialize(message);
+					let val = MESSAGE.CONNECT.deserialize(message);
+					var lobby;
 
-					if (player.name === undefined) break;
-					else {
-						let lobby;
-						if (lobbyId !== undefined) {//entering by clicking the play button
-							lobby = lobbies.getByUid(lobbyId);
-
-							if (lobby === undefined) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
-							else if (lobby.players.length === lobby.maxPlayers) player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
+					if (val.lobbyId !== undefined) {
+						lobby = lobbies[val.lobbyId];
+						if (lobby === undefined) {
+							player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
 							break;
-						} else {//entering by using a URL
-							if (!lobbies.some(function(_lobby, i) {//if no not-full lobby
-								if (_lobby.players.length < _lobby.maxPlayers) {
-									lobby = _lobby;
-									lobbyId = i;
-									return true;
-								} else return false;
-							})) {//create new lobby
-								lobby = new Lobby(8, config.dev ? 0 : 30);
-								lobby.init();
-								lobbyId = lobbies.push(lobby) - 1;
-							}
+						} else if (lobby.players.length === lobby.maxPlayers) {
+							player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
+							break;
 						}
-
-						var pid = 0, i, taken; //PIDs can be independent of the id in the lobby's player array
-						for (i = 0; i !== lobby.maxPlayers; i++) {
-							taken = false;
-							lobby.players.forEach(function(p) { if (p.pid === i) taken = true; });
-							if (!taken) {
-								pid = i;
-								break;
-							}
+					} else {//public lobby
+						if (!lobbies.some(function(l, i) {//if no not-full lobby
+							if (l.players.actualLength < l.maxPlayers) {
+								val.lobbyId = i;
+								lobby = lobbies[i];
+								return true;
+							} else return false;
+						})) {//create new lobby
+							lobby = new Lobby(8, config.dev ? 0 : 30);
+							lobby.init();
+							val.lobbyId = lobbies.append(lobby);
 						}
-						player.homographId = lobby.getNextHomographId(player.name);
-						lobby.players.push(player);
-						player.lastRefresh = Date.now();
-						player.lobby = lobby;
-
-						player.pid = pid;
-						lobby.assignPlayerTeam(player);
-
-						player.send(MESSAGE.CONNECT_ACCEPTED.serialize(lobbyId, lobby.players.length - 1, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
-						lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
-						player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
 					}
+
+					player.pid = lobby.players.append(player);
+
+					player.name = val.name;
+					player.weaponry.armed = val.primary;
+					player.weaponry.carrying = val.secondary;
+					player.homographId = lobby.getNextHomographId(player.name);
+					player.lastRefresh = Date.now();
+					player.lobbyId = val.lobbyId;
+
+					lobby.assignPlayerTeam(player);	
+				
+					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
+					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
+					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
+					
 					break;
 				case MESSAGE.PLAYER_CONTROLS.value:
 					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));

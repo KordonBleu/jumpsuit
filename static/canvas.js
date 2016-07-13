@@ -209,21 +209,24 @@ Player.prototype.draw = function(showName) {
 		context.drawImage(jetpackFireRes, -(jetpackFireRes.width/2)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 		context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 	}
-
+	
+	
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
 		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
+	this.weaponry.recoil = this.weaponry.recoil < 0.05 ? 0 : this.weaponry.recoil * 0.7;
 	context.rotate(weaponRotFact);
-	if (particlesElement.checked && this.muzzleFlash === true){
+	if (particlesElement.checked && this.weaponry.muzzleFlash === true){
 		var	muzzleX = weaponList[this.weaponry.armed].muzzleX*windowBox.zoomFactor + resources["muzzle"].width*0.5*windowBox.zoomFactor,
 			muzzleY = weaponList[this.weaponry.armed].muzzleY*windowBox.zoomFactor - resources["muzzle"].height*0.25*windowBox.zoomFactor;
 		context.drawImage(resources[(Math.random() > 0.5 ? "muzzle" : "muzzle2")],
 			muzzleX, muzzleY + weaponList[this.weaponry.armed].offsetY*windowBox.zoomFactor,
 			resources["muzzle"].width * windowBox.zoomFactor,
 			resources["muzzle"].height * windowBox.zoomFactor);//muzzle flash
-		this.muzzleFlash = false;
+		this.weaponry.muzzleFlash = false;
+		this.weaponry.recoil = (this.weaponry.armed === "shotgun") ? 27 : 10;
 	}
 	context.drawImage(resources[this.weaponry.armed],
-		weaponList[this.weaponry.armed].offsetX*windowBox.zoomFactor,
+		(weaponList[this.weaponry.armed].offsetX - this.weaponry.recoil)*windowBox.zoomFactor,
 		weaponList[this.weaponry.armed].offsetY*windowBox.zoomFactor,
 		resources[this.weaponry.armed].width*windowBox.zoomFactor, resources[this.weaponry.armed].height*windowBox.zoomFactor);
 		context.rotate(-weaponRotFact);
@@ -242,8 +245,6 @@ Player.prototype.draw = function(showName) {
 		context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
 		context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
 	}
-
-
 	context.resetTransform();
 }
 
@@ -381,7 +382,8 @@ function loop() {
 		});
 	}
 	context.globalAlpha = 1;
-
+	//console.log(ownIdx, players);
+	
 
 	//layer 1: the game
 	doPrediction(universe, players, enemies, shots);
@@ -434,8 +436,7 @@ function loop() {
 	context.textAlign = "center";
 	players.forEach(function (player, i) {
 		if (universe.collide(windowBox, player.box)) player.draw(i !== ownIdx);
-
-		if(player.panner !== undefined && player.jetpack) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
+		if (player.panner !== undefined && player.jetpack) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 	});
 
 

@@ -98,7 +98,7 @@ module.exports = function(engine) {
 	Lobby.prototype.getNextHomographId = function(playerName) {
 		var homographId = 0;
 		this.players.forEach(function(player) {
-			if (player.name === playerName) ++homographId;
+			if (player.name === playerName && player.homographId === homographId) ++homographId;
 		});
 		return homographId;
 	};

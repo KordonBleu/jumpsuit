@@ -44,8 +44,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 	}
 	this.socket.binaryType = "arraybuffer";
 	this.socket.addEventListener("open", function() {
-		this.setName.call(this);
-		this.sendMessage.call(this, MESSAGE.CONNECT, lobbyId);
+		this.sendMessage.call(this, MESSAGE.CONNECT, lobbyId, settings);
 	}.bind(this));
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler.bind(this));
@@ -85,8 +84,8 @@ Connection.prototype.close = function() {
 //	history.pushState(HISTORY_MENU, "", "/");
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 };
-Connection.prototype.setName = function() {
-	this.sendMessage(MESSAGE.SET_NAME, settings.name);
+Connection.prototype.setPreferences = function() {
+	this.sendMessage(MESSAGE.SET_PREFERENCES, settings);
 };
 Connection.prototype.sendChat = function(content) {
 	this.sendMessage(MESSAGE.CHAT, content);
@@ -125,7 +124,7 @@ Connection.prototype.messageHandler = function(message) {
 					errDesc = "There's no slot left in the lobby";
 					break;
 			}
-
+			location.hash = "";
 			alert("Error:\n" + errDesc);
 			break;
 		case MESSAGE.CONNECT_ACCEPTED.value:
@@ -150,7 +149,7 @@ Connection.prototype.messageHandler = function(message) {
 					player.pid = pid;
 					player.lastSound = 0;
 					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
-					players.push(player);
+					players[pid] = player;
 				}
 			);
 			ownIdx = val.playerId;
@@ -174,8 +173,8 @@ Connection.prototype.messageHandler = function(message) {
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					var shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					var param1 = players.find(function(element) { return element.pid === origin; });
-					if (param1) param1.muzzleFlash = type === shot.shotEnum.bullet;
+					var param1 = players.find(function(element) { return element !== null && element.pid === origin; });
+					if (param1) param1.weaponry.muzzleFlash = type === shot.shotEnum.bullet || type === shot.shotEnum.ball;
 				},
 				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
 					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
@@ -185,7 +184,7 @@ Connection.prototype.messageHandler = function(message) {
 					newPlayer.looksLeft = looksLeft;
 					newPlayer.homographId = homographId;
 					printChatMessage(undefined, undefined, newPlayer.getFinalName() + " joined the game");
-					players.push(newPlayer);
+					players[pid] = newPlayer;
 				}
 			);
 			break;
@@ -200,8 +199,7 @@ Connection.prototype.messageHandler = function(message) {
 				},
 				function(id) {//remove players
 					printChatMessage(undefined, undefined, players[id].getFinalName() + " has left the game");
-					players.splice(id, 1);
-					if (id < ownIdx) --ownIdx;
+					delete players[id];
 				}
 			);
 			break;
@@ -215,48 +213,48 @@ Connection.prototype.messageHandler = function(message) {
 				function(id, angle) {
 					enemies[id].box.angle = angle;
 				},
-				function(id, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
-					if (id === ownIdx) {
-						if (!players[id].jetpack && jetpack) {
-							players[id].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
-							players[id].jetpackSound.start(0);
-						} else if (players[id].jetpack && !jetpack && players[ownIdx].jetpackSound !== undefined) {
-							players[id].jetpackSound.stop();
+				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
+					if (pid === ownIdx) {
+						if (!players[pid].jetpack && jetpack) {
+							players[pid].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
+							players[pid].jetpackSound.start(0);
+						} else if (players[pid].jetpack && !jetpack && players[ownIdx].jetpackSound !== undefined) {
+							players[pid].jetpackSound.stop();
 						}
 					} else {
-						if(!players[id].jetpack && jetpack) {
-							setPanner(players[id].panner, players[id].box.center.x - players[ownIdx].box.center.x, players[id].box.center.y - players[ownIdx].box.center.y);
-							players[id].jetpackSound = jetpackModel.makeSound(players[id].panner, 1);
-							players[id].jetpackSound.start(0);
-						} else if(players[id].jetpack && !jetpack && players[id].jetpackSound !== undefined) {
-							players[id].jetpackSound.stop();
+						if (!players[pid].jetpack && jetpack) {
+							setPanner(players[pid].panner, players[pid].box.center.x - players[ownIdx].box.center.x, players[pid].box.center.y - players[ownIdx].box.center.y);
+							players[pid].jetpackSound = jetpackModel.makeSound(players[pid].panner, 1);
+							players[pid].jetpackSound.start(0);
+						} else if(players[pid].jetpack && !jetpack && players[pid].jetpackSound !== undefined) {
+							players[pid].jetpackSound.stop();
 						}
 					}
-					var param1 = Date.now(), param2 = players[id];
+					var param1 = Date.now(), param2 = players[pid];
 
-					if ("timestamp" in players[id].predictionTarget) param1 = param2.predictionTarget.timestamp;
-					players[id].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle), aimAngle: aimAngle};
-					players[id].predictionBase = {timestamp: param1, box: new Rectangle(new Point(param2.box.center.x, param2.box.center.y), 0, 0, param2.box.angle), aimAngle: param2.aimAngle};
-					players[id].looksLeft = looksLeft;
-					if ((players[id].walkFrame === "_walk1" && walkFrame === "walk2") || (players[id].walkFrame === "_walk2" && walkFrame === "walk1")) {
-						let type = planets[players[id].attachedPlanet].type,
-							stepSound = stepModels[type][players[id].lastSound].makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y));
+					if ("timestamp" in players[pid].predictionTarget) param1 = param2.predictionTarget.timestamp;
+					players[pid].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle), aimAngle: aimAngle};
+					players[pid].predictionBase = {timestamp: param1, box: new Rectangle(new Point(param2.box.center.x, param2.box.center.y), 0, 0, param2.box.angle), aimAngle: param2.aimAngle};
+					players[pid].looksLeft = looksLeft;
+					if ((players[pid].walkFrame === "_walk1" && walkFrame === "walk2") || (players[pid].walkFrame === "_walk2" && walkFrame === "walk1")) {
+						let type = planets[players[pid].attachedPlanet].type,
+							stepSound = stepModels[type][players[pid].lastSound].makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y));
 						if (stepSound.buffer !== undefined) {
 							stepSound.playbackRate.value = Math.random() + 0.5;//pitch is modified from 50% to 150%
 						} else {//hack for Chrome (doesn't sound as good)
 							stepSound.mediaElement.playbackRate = Math.random() + 0.5;
 						}
 						stepSound.start(0);
-						players[id].lastSound = (players[id].lastSound + 1) % 5;
+						players[pid].lastSound = (players[pid].lastSound + 1) % 5;
 					}
-					players[id].walkFrame = "_" + walkFrame;
-					players[id].setBoxSize();
-					players[id].hurt = hurt;
-					players[id].jetpack = jetpack;
+					players[pid].walkFrame = "_" + walkFrame;
+					players[pid].setBoxSize();
+					players[pid].hurt = hurt;
+					players[pid].jetpack = jetpack;
 
-					players[id].attachedPlanet = attachedPlanet;
-					players[id].weaponry.armed = armedWeapon;
-					players[id].weaponry.carrying = carriedWeapon;
+					players[pid].attachedPlanet = attachedPlanet;
+					players[pid].weaponry.armed = armedWeapon;
+					players[pid].weaponry.carrying = carriedWeapon;
 				}
 			);
 
@@ -338,6 +336,4 @@ function handleHistoryState() {
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
 window.addEventListener("popstate", handleHistoryState);
-
-
 

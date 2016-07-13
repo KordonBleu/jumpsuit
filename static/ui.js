@@ -50,7 +50,9 @@ var chatElement = document.getElementById("gui-chat"),
 		name: localStorage.getItem("settings.name") || "Unnamed Player",
 		keymap: localStorage.getItem("settings.keymap") || "",
 		volMusic: localStorage.getItem("settings.volume.music") || 50,
-		volEffects: localStorage.getItem("settings.volume.effects") || 50
+		volEffects: localStorage.getItem("settings.volume.effects") || 50,
+		primary: localStorage.getItem("settings.weaponry.primary") || "lmg",
+		secondary: localStorage.getItem("settings.weaponry.secondary") || "knife"
 	};
 
 
@@ -129,7 +131,7 @@ keySettingsElement.addEventListener("click", function(e) {
 	}
 	function handleChangeKey(e) {
 		if (selectedRow === -1) return;
-		var keyName = e.key || convertToKey(e.keyCode),
+		var keyName = e.code,
 			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent,
 			alreadyTaken = false;
 
@@ -170,7 +172,7 @@ keyResetElement.addEventListener("click", function() {
 /* Name */
 nameElement.value = settings.name;
 nameElement.addEventListener("keydown", function(e) {
-	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
+	if (e.key === "Enter") {
 		e.target.blur();//this triggers the "blur" event!
 	}
 });
@@ -183,7 +185,6 @@ nameElement.addEventListener("blur", function(e) {
 /* Weaponry */
 var weaponryCycle = ["lmg", "smg", "knife", "shotgun"], weaponNames = {lmg: "Borpov", smg: "Pezcak", knife: "throwable Knife", shotgun: "Azard"};
 function setGun(element, type) {
-	if (type === null) return;
 	element.dataset.currentWeapon = type;
 	element.childNodes[0].src = "/assets/images/" + type + ".svg";
 	element.childNodes[1].textContent = weaponNames[type];	
@@ -198,8 +199,8 @@ function setGun(element, type) {
 		setGun(this, weaponryCycle[nextIndex]);
 	});
 });
-setGun(primaryWeaponElement, localStorage.getItem("settings.weaponry.primary"));
-setGun(secondaryWeaponElement, localStorage.getItem("settings.weaponry.secondary"));
+setGun(primaryWeaponElement, settings.primary);
+setGun(secondaryWeaponElement, settings.secondary);
 
 /* Graphics */
 meteorsElement.checked = localStorage.getItem("settings.graphics.meteors") === "true";
@@ -207,12 +208,12 @@ particlesElement.checked = localStorage.getItem("settings.graphics.particles") =
 
 /* Chat */
 chatInput.addEventListener("keydown", function(e) {
-	if (e.key === "Enter" || convertToKey(e.keyCode) === "Enter") {
+	if (e.key === "Enter") {
 		if (!currentConnection.alive()) return;
 		currentConnection.sendChat(this.value);
 		this.value = "";
 		this.blur();
-	} else if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") {
+	} else if (e.key === "Tab") {
 		e.preventDefault();
 		if (!this.playerSelection) {
 			this.playerSelection = true;

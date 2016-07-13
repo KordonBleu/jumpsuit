@@ -1,6 +1,6 @@
 "use strict";
 
-const defaultKeymap = {Shift: "run", " ": "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", a: "moveLeft", w: "jetpack", d: "moveRight", s: "crouch", t: "chat", "1": "changeWeapon", "2": "changeWeapon"};
+const defaultKeymap = {ShiftLeft: "run", Space: "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", KeyA: "moveLeft", KeyW: "jetpack", KeyD: "moveRight", KeyS: "crouch", KeyT: "chat", Digit1: "changeWeapon", Digit2: "changeWeapon"};
 function sameObjects(a, b) {
 	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
 		return false;
@@ -14,30 +14,6 @@ function sameObjects(a, b) {
 String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
-};
-function convertToKey(keyCode) {//polyfill for Chrome
-	if (keyCode > 47 && keyCode < 58) return keyCode - 48;//numbers
-	else if (keyCode > 95 && keyCode < 106) return "Numpad" + (keyCode - 96);//numpad
-	else if (keyCode > 64 && keyCode < 91) return convertToKey.keyMapChar.charAt(keyCode - 65);//characters
-	else if (keyCode > 111 && keyCode < 124) return "F" + (keyCode - 111);//F-keys
-	else return convertToKey.keyMapMisc[keyCode];//misc
-}
-convertToKey.keyMapChar = "abcdefghijklmnopqrstuvwxyz";
-convertToKey.keyMapMisc = {//there are more but those are the most common
-	8: "Backspace",
-	9: "Tab",
-	13: "Enter",
-	16: "Shift",
-	17: "Control",
-	18: "Alt",
-	19: "Pause",
-	20: "CapsLock",
-	27: "Escape",
-	32: " ",
-	37: "ArrowLeft",
-	38: "ArrowUp",
-	39: "ArrowRight",
-	40: "ArrowDown"
 };
 function objsInvisible(elArr) {
 	return elArr.every(function(element) {
@@ -80,13 +56,12 @@ function handleInputMobile(e) {
 
 /* Keyboard */
 function handleInput(e) {
-	if (e.key === "Tab" || convertToKey(e.keyCode) === "Tab") e.preventDefault();
+	if (e.code === "Tab") e.preventDefault();
 
 	var s = (e.type === "keydown") * 1,
 		chatInUse = chatInput === document.activeElement;
-
 	if (!chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
-		var triggered = handleInput.keyMap[e.key || convertToKey(e.keyCode)];
+		var triggered = handleInput.keyMap[e.code];
 		if (players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
 			players[ownIdx].controls[triggered] = s;
@@ -144,7 +119,7 @@ handleInput.initKeymap = function(fromReversed) {
 		for (var i = 0; i != 2; i++){
 			keyEl = document.createElement("td");
 			if (typeof slice[i] === "undefined" || slice[i] === "") keyEl.textContent = " - ";
-			else keyEl.textContent = slice[i].toString().replace(" ", "Space").ucFirst(); //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
+			else keyEl.textContent = slice[i]; //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
 			rowEl.appendChild(keyEl);
 		}
 		keySettingsElement.appendChild(rowEl);

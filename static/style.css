@@ -323,6 +323,7 @@ label {
 	cursor: default;
 	flex-grow: 0;
 	overflow: hidden;
+	padding: 0 4px;
 }
 #shade-box {
 	position: fixed;
@@ -578,6 +579,7 @@ label {
 	margin: 2px 0;
 	display: block;
 	color: #eee;
+	word-wrap: break-word;
 }
 #gui-chat p.server{	color: #fff37f; }
 #gui-chat p b.alienBeige{ color: #e5d9be; }
