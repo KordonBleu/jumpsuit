@@ -37,10 +37,10 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 }
 
 const weaponList = {
-	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
-	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1},
-	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 84, muzzleY: 2, shotType: 3},
-	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2}
+	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1, spray: 0.025}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
+	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1, spray: 0.04},
+	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 84, muzzleY: 2, shotType: 3, spray: 0.08},
+	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2, spray: 0.005}
 };
 
 function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
@@ -86,7 +86,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 		});
 	} else this.hurt = false;
 	this.health = health || 8;
-	this.fuel = fuel || 400;
+	this.fuel = fuel || 300;
 	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
 	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0, recoil: 0};
@@ -230,7 +230,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === "undefined") playersOnPlanets[player.attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;
 			player.jetpack = false;
-			var stepSize = Math.PI * 0.007 * (150 / planets[player.attachedPlanet].box.radius);
+			var stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius);
 			if (player.controls["moveLeft"] > 0) {
 				stepSize = stepSize * player.controls["moveLeft"];
 				player.box.angle -= (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
@@ -275,15 +275,15 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			if (player.controls["jetpack"] > 0 && player.fuel > 0 && player.controls["crouch"] < 1){
 				player.fuel -= player.controls["jetpack"];
 				player.jetpack = (player.controls["jetpack"] > 0);
-				player.velocity.x += (Math.sin(player.box.angle) / 10) * player.controls["jetpack"];
-				player.velocity.y += (-Math.cos(player.box.angle) / 10) * player.controls["jetpack"];
+				player.velocity.x += (Math.sin(player.box.angle) / 6) * player.controls["jetpack"];
+				player.velocity.y += (-Math.cos(player.box.angle) / 6) * player.controls["jetpack"];
 			} else if (player.controls["crouch"] > 0){
 				player.velocity.x = player.velocity.x * 0.987;
 				player.velocity.y = player.velocity.y * 0.987;
 			}
 			var runMultiplicator = player.controls["run"] ? 1.7 : 1;
-			if (player.controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 140) * player.controls["moveLeft"] * runMultiplicator;
-			if (player.controls["moveRight"] > 0) player.box.angle += (Math.PI / 140) * player.controls["moveRight"] * runMultiplicator;
+			if (player.controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 60) * player.controls["moveLeft"] * runMultiplicator;
+			if (player.controls["moveRight"] > 0) player.box.angle += (Math.PI / 60) * player.controls["moveRight"] * runMultiplicator;
 
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
@@ -300,12 +300,13 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			else player.weaponry.cycle = player.controls["shoot"] - 1;
 
 			if (player.weaponry.cycle === 0) {
-				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1;
+				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1,
+					inaccuracy = (2*Math.random()-1)*weaponList[player.weaponry.armed].spray;
 				for (var i = -1; i <= 1; i++) {
 					if (shotType !== 3 && i !== 0) continue;
 					let shotX = player.box.center.x + weaponList[player.weaponry.armed].muzzleX * Math.sin(player.aimAngle) + weaponList[player.weaponry.armed].muzzleY * shift * Math.sin(player.aimAngle - Math.PI / 2),
 						shotY = player.box.center.y - weaponList[player.weaponry.armed].muzzleX * Math.cos(player.aimAngle) - weaponList[player.weaponry.armed].muzzleY * shift * Math.cos(player.aimAngle - Math.PI / 2);
-					let newShot = new Shot(shotX, shotY, player.aimAngle + i*0.05, player.pid, shotType);
+					let newShot = new Shot(shotX, shotY, player.aimAngle + i*0.12 + inaccuracy, player.pid, shotType);
 					shots.push(newShot);
 					entitiesDelta.addedShots.push(newShot);
 				}
@@ -337,7 +338,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 					if (suitablePlanets.length === 0) player.attachedPlanet = Math.floor(Math.random() * planets.length);
 					else player.attachedPlanet = suitablePlanets[Math.floor(Math.random() * suitablePlanets.length)];
 					player.health = 8;
-					player.fuel = 400;
+					player.fuel = 300;
 					teamScores[player.appearance] -= 5;
 				}
 				player.hurt = true;
