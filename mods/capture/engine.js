@@ -21,8 +21,7 @@ var resPaths = [
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
 	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg", "muzzle.svg", "muzzle2.svg"
-	],
-	resources = {};
+	];
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	var vinage = require("vinage"),
@@ -30,10 +29,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		Rectangle = vinage.Rectangle,
 		Circle = vinage.Circle,
 		Vector = vinage.Vector,
-		sizeOf = require("image-size");
-		resPaths.forEach(function(path) {
-			resources[path.slice(0, path.lastIndexOf("."))] = sizeOf("./static/assets/images/" + path);
-		});
+		resources = require("../../static/resource_loader.js");
 }
 
 const weaponList = {
@@ -176,7 +172,7 @@ function doPrediction(universe, players, enemies, shots) {
 		if ("timestamp" in player.predictionTarget) {
 			var now = Date.now(), serverTicks = 50,
 				smoothingTime = (now - player.predictionTarget.timestamp) / serverTicks;
-			
+
 			var angleOffset = wrapOffset(player.predictionTarget.box.angle, player.predictionBase.box.angle, 2*Math.PI),
 				xOffset = wrapOffset(player.predictionTarget.box.center.x, player.predictionBase.box.center.x, universe.width),
 				yOffset = wrapOffset(player.predictionTarget.box.center.y, player.predictionBase.box.center.y, universe.height),

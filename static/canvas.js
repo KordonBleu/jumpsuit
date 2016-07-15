@@ -209,8 +209,8 @@ Player.prototype.draw = function(showName) {
 		context.drawImage(jetpackFireRes, -(jetpackFireRes.width/2)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 		context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 	}
-	
-	
+
+
 	var weaponAngle = (!showName ? game.mousePos.angle : this.aimAngle),
 		weaponRotFact = this.looksLeft === true ? -(weaponAngle - this.box.angle + Math.PI/2) : (weaponAngle - this.box.angle + 3*Math.PI/2);
 	this.weaponry.recoil = this.weaponry.recoil < 0.05 ? 0 : this.weaponry.recoil * 0.7;
@@ -283,30 +283,6 @@ function loaderLoop() {
 }
 
 
-var imgPromises = [];
-resPaths.forEach(function(path) {//init resources
-	var promise = new Promise(function(resolve, reject) {
-		var img = new Image();
-		img.addEventListener("load", function(e) {
-			resources[path.substring(0, path.lastIndexOf("."))] = e.target;
-			resolve();
-		});
-		img.addEventListener("error", function(e) {
-			reject(e);
-		})
-		img.src = "https://jumpsuit.space/assets/images/" + path;
-	});
-	promise.then(function() {
-		++drawBar.progress;
-	})
-	.catch(function(err) {
-		alert("Something went wrong. Try reloading this page.\n" +
-			"If it still doesn't work, please open an issue on GitHub with a copy of the text in this message.\n" +
-			"Error type: " + err.type + "\n" +
-			"Failed to load " + err.target.src);
-	});
-	imgPromises.push(promise);
-});
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	resizeHandler();
 	game.stop();
@@ -383,7 +359,7 @@ function loop() {
 	}
 	context.globalAlpha = 1;
 	//console.log(ownIdx, players);
-	
+
 
 	//layer 1: the game
 	doPrediction(universe, players, enemies, shots);

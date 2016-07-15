@@ -309,7 +309,7 @@ function connectByHash() {
 			ip = ip.slice(1);
 		} else protocol = "wss://";
 
-		let url = protocol + ip;
+		let url = protocol + ip + "/";
 
 		if (currentConnection !== undefined) {
 			if (currentConnection.socket.url !== url) {
