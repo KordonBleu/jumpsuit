@@ -143,7 +143,7 @@ wss.on("connection", function(ws) {
 					if (lobby.players.length === 0) { 
 						lobbies[li].close();
 						delete lobbies[li];
-						lobbies.actualLength--;						
+						lobbies.actualLength--;
 					}
 					for (let i = li; i !== lobbies.length; ++i) {
 						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
@@ -196,14 +196,12 @@ wss.on("connection", function(ws) {
 								return true;
 							} else return false;
 						})) {//create new lobby
-							lobby = new Lobby(8, config.dev ? 0 : 30);
+							lobby = new Lobby(2);
 							lobby.init();
 							val.lobbyId = lobbies.append(lobby);
 						}
 					}
-
 					player.pid = lobby.players.append(player);
-
 					player.name = val.name;
 					player.weaponry.armed = val.primary;
 					player.weaponry.carrying = val.secondary;
@@ -211,19 +209,20 @@ wss.on("connection", function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					lobby.assignPlayerTeam(player);	
-				
-					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
-					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
-					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
-					
+					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
+					if (Object.keys(lobby.lobbyStates)[lobby.lobbyState] === "PLAYING") {
+						lobby.assignPlayerTeam(player);
+						player.send(MESSAGE.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
+					} else player.send(MESSAGE.ADD_ENTITY.serialize([], [], [], lobby.players));
+					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
+					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.lobbyState, lobby.enabledTeams));
 					break;
 				case MESSAGE.PLAYER_CONTROLS.value:
 					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
 					break;
 				case MESSAGE.CHAT.value:
 					let chatMsg = MESSAGE.CHAT.deserialize(message);
-					if (chatMsg !== "" && chatMsg.length <= 150) player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), chatMsg), player);
+					if (chatMsg !== "" && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.pid, chatMsg), player);
 					break;
 				case MESSAGE.AIM_ANGLE.value:
 					player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);

@@ -91,6 +91,7 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.lastlyAimedAt = Date.now();
 	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0, recoil: 0};
 	this.aimAngle = aimAngle || 0;
+	this.lastSound = 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {
 		this.panner = makePanner(0, 0);//note: won't be used if this is not another player
 	}

@@ -52,7 +52,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 
 	this.latencyHandler = setInterval((function() {
 		var param1 = document.getElementById("gui-bad-connection");
-		if (Date.now() - this.lastMessage > 500) param1.classList.remove("hidden");
+		if (Date.now() - this.lastMessage > 2000) param1.classList.remove("hidden");
 		else param1.classList.add("hidden");
 
 		if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
@@ -128,47 +128,29 @@ Connection.prototype.messageHandler = function(message) {
 			alert("Error:\n" + errDesc);
 			break;
 		case MESSAGE.CONNECT_ACCEPTED.value:
+			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
 			planets.length = 0;
 			enemies.length = 0;
 			shots.length = 0;
 			players.length = 0;
-			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data,
+
+			ownIdx = val.playerId;
+			universe.width = val.univWidth;
+			universe.height = val.univHeight;
+			var hashSocket = this.socket.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
+				if (p1) return "s";
+				else if (p2) return "";
+			});
+			location.hash = "#srv=" + hashSocket.substr(0, hashSocket.length - 1) + "&lobby=" + encodeLobbyNumber(val.lobbyId);
+			break;
+		case MESSAGE.ADD_ENTITY.value:
+			MESSAGE.ADD_ENTITY.deserialize(message.data,
 				function(x, y, radius, type) {//add planets
 					planets.push(new Planet(x, y, radius, type));
 				},
 				function(x, y, appearance) {//add enemies
 					enemies.push(new Enemy(x, y, appearance));
 				},
-				function(x, y, angle) {//add shots
-					shots.push(new Shot(x, y, angle));
-				},
-				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
-					var player = new Player(name, appearance, "_" + walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
-					player.looksLeft = looksLeft;
-					player.homographId = homographId;
-					player.pid = pid;
-					player.lastSound = 0;
-					player.box = new Rectangle(new Point(x, y), resources[appearance + "_" + walkFrame].width, resources[appearance + "_" + walkFrame].height, angle);
-					players[pid] = player;
-				}
-			);
-			ownIdx = val.playerId;
-			enabledTeams = val.enabledTeams;
-
-			universe.width = val.univWidth;
-			universe.height = val.univHeight;
-
-			var hashSocket = this.socket.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
-				if (p1) return "s";
-				else if (p2) return "";
-			});
-			location.hash = "#srv=" + hashSocket.substr(0, hashSocket.length - 1) + "&lobby=" + encodeLobbyNumber(val.lobbyId);
-			if (!game.started) game.start();
-			break;
-		case MESSAGE.ADD_ENTITY.value:
-			MESSAGE.ADD_ENTITY.deserialize(message.data,
-				function(x, y, radius, type) {},//add planets
-				function(x, y, appearance) {},//add enemies
 				function(x, y, angle, origin, type) {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					var shot = new Shot(x, y, angle, origin, type);
@@ -177,6 +159,7 @@ Connection.prototype.messageHandler = function(message) {
 					if (param1) param1.weaponry.muzzleFlash = type === shot.shotEnum.bullet || type === shot.shotEnum.ball;
 				},
 				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
+					console.log(pid);
 					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					newPlayer.pid = pid;
 					newPlayer.box.center.x = x;
@@ -248,7 +231,6 @@ Connection.prototype.messageHandler = function(message) {
 						players[pid].lastSound = (players[pid].lastSound + 1) % 5;
 					}
 					players[pid].walkFrame = "_" + walkFrame;
-					players[pid].setBoxSize();
 					players[pid].hurt = hurt;
 					players[pid].jetpack = jetpack;
 
@@ -285,7 +267,6 @@ Connection.prototype.messageHandler = function(message) {
 			break;
 		case MESSAGE.SCORES.value:
 			var val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
-
 			for (var team in val) {
 				var element = document.getElementById("gui-points-" + team);
 				if (element !== null) {
@@ -293,7 +274,18 @@ Connection.prototype.messageHandler = function(message) {
 					element.style.display = "inline-block";
 				}
 			}
-			//TODO: when game ends, display scores
+			break;
+		case MESSAGE.LOBBY_STATE.value:
+			var val = MESSAGE.LOBBY_STATE.deserialize(message.data);
+			if (val.enabledTeams !== undefined) enabledTeams = val.enabledTeams;
+			console.log(val);
+			if (val.state === "PLAYING" && !game.started) game.start();
+			else if (val.state === "DISPLAYING_SCORES") {
+				if (game.started) game.stop();
+				planets.length = 0;
+				enemies.length = 0;
+				shots.length = 0;
+			}
 			break;
 	}
 };
@@ -309,7 +301,7 @@ function connectByHash() {
 			ip = ip.slice(1);
 		} else protocol = "wss://";
 
-		let url = protocol + ip;
+		let url = protocol + ip + "/";
 
 		if (currentConnection !== undefined) {
 			if (currentConnection.socket.url !== url) {

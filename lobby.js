@@ -4,31 +4,33 @@ module.exports = function(engine) {
 	var vinage = require("vinage"),
 		MESSAGE = require("./static/message.js");
 
-	function Lobby(maxPlayers, stateTimer) {
+	function Lobby(maxPlayers) {
 		this.players = [];
 		this.maxPlayers = maxPlayers;
 		this.planets = [];
 		this.enemies = [];
 		this.shots = [];
 		this.processTime = 2;
-		this.stateTimer = stateTimer;
-
+		this.stateTimer = 0;
+		this.lobbyState = 0;
 		let univSize = 10000;//(1 << 16) - 1 is the max size allowed by the protocol
 		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize/2);
 		this.resetWorld();
 	}
+	Lobby.prototype.lobbyStates = {NOT_ENOUGH_PLAYER: 0, TRANSMITTING_DATA: 1, PLAYING: 2, DISPLAYING_SCORES: 3};
+	Lobby.prototype.stateTimes = [-1, -1, 750, 100];
 	Lobby.prototype.broadcast = function(message, exclude) {
 		this.players.forEach(function(player) {
 			if (player !== exclude) player.send(message);
 		});
 	};
 	Lobby.prototype.init = function() {
-		this.param1 = setInterval(this.updateGame.bind(this), 16);
-		this.param2 = setInterval(this.updateLobby.bind(this), 1000);
+		this.lobbyCycleId = setInterval(this.updateLobby.bind(this), 100);
 	};
 	Lobby.prototype.close = function() {
-		clearInterval(this.param1);
-		clearInterval(this.param2);
+		clearInterval(this.lobbyCycleId);
+		clearInterval(this.gameCycleId);
+		clearInterval(this.scoreCycleId);
 	}
 	Lobby.prototype.updateGame = function() {
 		var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
@@ -69,6 +71,41 @@ module.exports = function(engine) {
 		this.processTime = Date.now() - oldDate;
 	};
 	Lobby.prototype.updateLobby = function() {
+		if (this.lobbyState === this.lobbyStates["NOT_ENOUGH_PLAYERS"]) {
+			if (this.players.actualLength >= this.maxPlayers * 0.5) {
+				this.stateTimer = 0;
+				this.lobbyState++;
+				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
+			}
+		} else if (this.lobbyState === this.lobbyStates["TRANSMITTING_DATA"]) {
+			this.resetWorld();
+			this.players.forEach((function(player) {
+				this.assignPlayerTeam(player);
+			}).bind(this));
+			this.broadcast(MESSAGE.ADD_ENTITY.serialize(this.planets, this.enemies, [], this.players));
+			this.stateTimer = 0;
+			this.lobbyState++;
+
+			this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState, this.enabledTeams));
+		} else {
+			this.stateTimer++;
+			if (this.stateTimer >= this.stateTimes[this.lobbyState]) {
+				this.stateTimer = 0;
+				this.lobbyState = ++this.lobbyState % Object.keys(this.lobbyStates).length;
+				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));	
+			}
+			if (this.lobbyState === this.lobbyStates["PLAYING"]) {
+				if (this.stateTimer === 1) {
+					this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
+					this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
+				}
+			} else {
+				clearInterval(this.gameCycleId);
+				clearInterval(this.scoreCycleId);
+			}
+		}
+	};
+	Lobby.prototype.updateScores = function() {
 		this.planets.forEach((function(planet) {
 			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
 		}).bind(this));
@@ -147,7 +184,7 @@ module.exports = function(engine) {
 			this.teamScores[_teams[teamIndex]] = 0;
 			_teams.splice(teamIndex, 1);
 		}
-
+		this.enabledTeams = Object.keys(this.teamScores);
 		this.players.forEach(function(player) {//TODO: This. Better.
 			var ws = player.ws;
 			player = new engine.Player(player.name);//resetPlayers for team-reassignment
@@ -162,6 +199,7 @@ module.exports = function(engine) {
 		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 		player.box.angle = Math.random() * Math.PI;
 		player.attachedPlanet = -1;
+		console.log(player.appearance);
 	};
 	Lobby.prototype.sendEntityDelta = function(delta, excludedPlayer) {
 		if (delta !== undefined) {

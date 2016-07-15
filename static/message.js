@@ -195,7 +195,7 @@ const MESSAGE = {
 		},
 		serialize: function(settings) {
 			let nameBuffer = stringToBuffer(settings.name),
-				buffer = new Uint8Array(3 + nameBuffer.byteLength);
+				view = new Uint8Array(3 + nameBuffer.byteLength);
 			view[0] = this.value;
 			view[1] = this.WEAPON[settings.primary];
 			view[2] =  this.WEAPON[settings.secondary];
@@ -276,16 +276,8 @@ const MESSAGE = {
 	},
 	CONNECT_ACCEPTED: {
 		value: 7,
-		TEAM_MASK: {
-			alienBeige: 16,
-			alienBlue: 8,
-			alienGreen: 4,
-			alienPink: 2,
-			alienYellow: 1
-		},
-		serialize: function(lobbyId, playerId, univWidth, univHeight, planets, enemies, shots, players, teams) {
-			var entityBuf = MESSAGE.ADD_ENTITY.serialize(planets, enemies, shots, players),
-				buffer = new ArrayBuffer(10 + entityBuf.byteLength),//11 + entityBuf.byteLength - 1 because the packet id is removed
+		serialize: function(lobbyId, playerId, univWidth, univHeight) {
+			var buffer = new ArrayBuffer(11),
 				view = new DataView(buffer),
 				enabledTeams = 0;
 			view.setUint8(0, this.value);
@@ -293,52 +285,60 @@ const MESSAGE = {
 			view.setUint8(5, playerId);			
 			view.setUint16(6, univWidth);
 			view.setUint16(8, univHeight);
-
-			teams.forEach(function(team) {
-				enabledTeams |= this.TEAM_MASK[team];
-			}, this);
-			view.setInt8(10, enabledTeams);
-
-			new Uint8Array(buffer).set(new Uint8Array(entityBuf.slice(1)), 11);
+	
 			return buffer;
 		},
-		deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
-			var view = new DataView(buffer),
-				enabledTeamsByte = view.getUint8(10),
-				enabledTeams = [];
-			for (let team in this.TEAM_MASK) {
-				if (enabledTeamsByte & this.TEAM_MASK[team]) enabledTeams.push(team);
-			}
-			MESSAGE.ADD_ENTITY.deserialize(buffer.slice(10), planetsCbk, enemiesCbk, shotsCbk, playersCbk)//lil' hack: 11 because the packet id is removed
+		deserialize: function(buffer) {
+			var view = new DataView(buffer);
 			return {
 				lobbyId: view.getUint32(1),
 				playerId: view.getUint8(5),
 				univWidth: view.getUint16(6),
 				univHeight: view.getUint16(8),
-				enabledTeams: enabledTeams
 			};
 		}
 	},
 	LOBBY_STATE: {
 		value: 8,
-		serialize: function(state, timer) {
-			var view = new Uint8ClampedArray(timer === undefined ? 2 : 3);
-			view[0] = MESSAGE.LOBBY_STATE.value;
+		LOBBY_STATES: {
+			NOT_ENOUGH_PLAYERS: 0,
+			TRANSMITTING_DATA: 1,
+			PLAYING: 2,
+			DISPLAYING_SCORES: 3
+		},
+		TEAM_MASK: {
+			alienBeige: 16,
+			alienBlue: 8,
+			alienGreen: 4,
+			alienPink: 2,
+			alienYellow: 1
+		},
+		serialize: function(state, teams) {
+			var view = new Uint8Array(3),
+				enabledTeams = 0;
+			view[0] =  this.value;
 			view[1] = state;
-			if (timer !== undefined) view[2] = timer;
-
+			if (teams !== undefined) {
+				teams.forEach(function(team) {
+					enabledTeams |= this.TEAM_MASK[team];
+				}, this);
+				view[2] = enabledTeams;
+			}
 			return view.buffer;
 		},
 		deserialize: function(buffer) {
 			var view = new Uint8Array(buffer),
-				val = {
-					state: view[1],
-				};
-			if (buffer.length === 3) val.timer = view[2];
+				enabledTeams = [];
+			for (var team in this.TEAM_MASK) {
+				if (view[2] & this.TEAM_MASK[team]) enabledTeams.push(team);
+			}
 
-			return val;
+			return {
+				state: Object.keys(this.LOBBY_STATES)[view[1]],
+				enabledTeams: enabledTeams
+			};
 		}
-	},
+	},	
 	ADD_ENTITY: {
 		value: 9,
 		ENEMY_APPEARANCE: {
@@ -651,7 +651,6 @@ const MESSAGE = {
 		},
 		deserialize: function(buffer, planetAmount, enemyAmount, playerAmount, planetsCbk, enemiesCbk, playersCbk) {
 			var view = new DataView(buffer);
-
 			var i = 4;
 			for (let id = 0; i !== 4 + planetAmount*2; i += 2, ++id) {
 				planetsCbk(id,
@@ -810,12 +809,10 @@ const MESSAGE = {
 		value: 17,
 		serialize: function() {
 			var view = new Uint8Array(1);
-			view[0] = this.value
+			view[0] = this.value;
 			return view.buffer;
-		},
-		deserialize: function() {
-			//nothing
 		}
+		//no deserialize needed
 	}
 };
 Object.defineProperty(MESSAGE, "toString", {
