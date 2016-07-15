@@ -36,8 +36,8 @@ module.exports.ban = function(ip) {
 		attackAmount: 1,
 		banned: true
 	};
-	metadataObj.banId = setTimeout(unBan.bind(metadataObj), 500),
-	metadataObj.distrustId = setTimeout(unDistrust.bind(ip), 1000)
+	metadataObj.banId = setTimeout(unBan.bind(metadataObj), 500);
+	metadataObj.distrustId = setTimeout(unDistrust.bind(ip), 1000);
 
 	attackers.set(ip, metadataObj);
 };

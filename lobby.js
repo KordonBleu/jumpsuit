@@ -29,7 +29,7 @@ module.exports = function(engine) {
 	Lobby.prototype.close = function() {
 		clearInterval(this.param1);
 		clearInterval(this.param2);
-	}
+	};
 	Lobby.prototype.updateGame = function() {
 		var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
 			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores);
@@ -71,7 +71,7 @@ module.exports = function(engine) {
 	Lobby.prototype.updateLobby = function() {
 		this.planets.forEach((function(planet) {
 			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
-		}).bind(this));
+		}), this);
 		this.broadcast(MESSAGE.SCORES.serialize(this.teamScores));
 	};
 	Lobby.prototype.pingPlayers = function() {
@@ -174,7 +174,7 @@ module.exports = function(engine) {
 					excludedPlayer);
 			}
 		}
-	}
+	};
 
 	return Lobby;
 };

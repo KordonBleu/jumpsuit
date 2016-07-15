@@ -147,7 +147,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 			// get svg as a svg element from xhr
 			let xhr = new XMLHttpRequest();
 			xhr.responseType = "document";
-			xhr.open('GET', svgUrl, true);
+			xhr.open("GET", svgUrl, true);
 
 			let modifiedSvgList = [],
 				promiseList = [];
@@ -158,7 +158,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 
 				modifiedSvgList.forEach(function(svgElem) {
 					promiseList.push(new Promise(function(resolve, reject) {
-						let blob = new Blob([svgElem.outerHTML], {type: 'image/svg+xml;charset=utf-8'}); // convert DOMString to Blob
+						let blob = new Blob([svgElem.outerHTML], {type: "image/svg+xml;charset=utf-8"}); // convert DOMString to Blob
 
 						let img = new Image();
 						img.addEventListener("load", function(ev) {
@@ -197,7 +197,9 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 
 
 	var imgPromises = [],
-		resources = {};
+		resources = {},
+		loadProgress = 0;
+
 	resPaths.forEach(function(path) {//init resources
 		var promise = new Promise(function(resolve, reject) {
 			var img = new Image();
@@ -207,11 +209,11 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 			});
 			img.addEventListener("error", function(e) {
 				reject(e);
-			})
+			});
 			img.src = "https://jumpsuit.space/assets/images/" + path;
 		});
 		promise.then(function() {
-			++drawBar.progress;
+			++loadProgress;
 		})
 		.catch(function(err) {
 			alert("Something went wrong. Try reloading this page.\n" +

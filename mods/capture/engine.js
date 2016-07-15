@@ -21,7 +21,7 @@ var resPaths = [
 	"enemyGreen1.svg", "enemyGreen2.svg", "enemyGreen3.svg", "enemyGreen4.svg", "enemyGreen5.svg",
 	"enemyRed1.svg", "enemyRed2.svg", "enemyRed3.svg", "enemyRed4.svg", "enemyRed5.svg",
 	"rifleShot.svg", "lmg.svg", "smg.svg", "shotgun.svg", "knife.svg", "shotgunBall.svg", "muzzle.svg", "muzzle2.svg"
-	];
+];
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	var vinage = require("vinage"),
@@ -107,12 +107,12 @@ Player.prototype.setWalkFrame = function() {
 };
 Player.prototype.setBoxSize = function() {
 //	console.log(this.appearance, this.walkFrame);
-	this.box.width = resources[this.appearance + this.walkFrame].width
+	this.box.width = resources[this.appearance + this.walkFrame].width;
 	this.box.height = resources[this.appearance + this.walkFrame].height;
 };
 Player.prototype.getFinalName = function() {
 	return this.name + (typeof this.homographId === "number" && this.homographId !== 0 ? " (" + this.homographId + ")" : "");
-}
+};
 
 function Planet(x, y, radius, type) {
 	this.box = new Circle(new Point(x, y), radius);
@@ -198,7 +198,7 @@ function doPrediction(universe, players, enemies, shots) {
 				player.predictionTarget.aimAngle + aimAngleOffset,
 				smoothingTime
 			);
-							
+
 			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
 			player.aimAngle = (2 * Math.PI + player.aimAngle) % (2 * Math.PI);
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;

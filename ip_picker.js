@@ -8,7 +8,7 @@ module.exports = function(config) {
 		externalIp,
 		localIp,
 		localNetmask,
-		ifaces = require('os').networkInterfaces(),
+		ifaces = require("os").networkInterfaces(),
 		internal;
 
 	for (let iname in ifaces) {
@@ -31,7 +31,7 @@ module.exports = function(config) {
 	//even though IPv6 netmasks don't exist, see https://github.com/whitequark/ipaddr.js/pull/41#issuecomment-210771828
 	//also the code is ported from here, stripped of the error-checking because data gotten from Node.js can be assumed safe, right?
 	//and because it makes it possible to calculate the cidr of a mapped IPv4 address. In the mapped address ::ffff:stuff:stuff:stuff the preceding zeroes could be considered an error. It's a hack
-	var zerotable = {}//number of zeroes in IPv6 part (16 bits long)
+	var zerotable = {};//number of zeroes in IPv6 part (16 bits long)
 	for (let i = 0; i !== 17; ++i) {
 		zerotable[(0xffff >> i) << i] = i;
 	}
@@ -42,7 +42,7 @@ module.exports = function(config) {
 			zeros = zerotable[part];
 		cidr += zeros;
 		if (zeros !== 16) {
-			break
+			break;
 		}
 	}
 
@@ -124,4 +124,4 @@ module.exports = function(config) {
 			(serverOnLocalhost && clientOnNetwork)) return Promise.resolve(localIp);
 		else return getExternalIp();
 	};
-}
+};

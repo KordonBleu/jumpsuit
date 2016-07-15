@@ -36,7 +36,7 @@ function handleInputMobile(e) {
 		var yTransform = -Math.max(0, Math.min(50, Math.floor(element.dataset.touchstart - element.dataset.touchmove)));
 		element.style.transform = "translateY(" + yTransform + "px)";
 		return yTransform;
-	};
+	}
 
 	Array.prototype.forEach.call(e.changedTouches, function(touch) {
 		console.log(e);
@@ -101,7 +101,7 @@ handleInput.initKeymap = function(fromReversed) {
 		keySettingsElement.removeChild(keySettingsElement.firstChild);
 	}
 	var tableTitles = ["Actions", "Primary Keys", "Alternate Keys"], firstRow = document.createElement("tr");
-	for (var i = 0; i < tableTitles; i++){
+	for (let i = 0; i < tableTitles; i++){
 		var tableHead = document.createElement("th");
 		tableHead.textContent = tableTitles[i];
 		firstRow.appendChild(tableHead);
@@ -116,7 +116,7 @@ handleInput.initKeymap = function(fromReversed) {
 		rowEl.appendChild(actionEl);
 
 		var slice = handleInput.reverseKeyMap[action];
-		for (var i = 0; i != 2; i++){
+		for (let i = 0; i != 2; i++) {
 			keyEl = document.createElement("td");
 			if (typeof slice[i] === "undefined" || slice[i] === "") keyEl.textContent = " - ";
 			else keyEl.textContent = slice[i]; //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
@@ -209,7 +209,7 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) {
 	});
 	window.addEventListener("gamepaddisconnected", function(e) {
 		message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
-		usingGamepad = -1
+		usingGamepad = -1;
 	});
 } else {
 	setInterval(function() {

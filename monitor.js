@@ -84,5 +84,5 @@ module.exports = function(config, lobbies) {
 		getTraffic: function() {
 			return traffic;
 		}
-	}
-}
+	};
+};

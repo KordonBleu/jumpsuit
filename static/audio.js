@@ -43,7 +43,7 @@ SoundModel.prototype.makeSound = function(nextNode, loop) {
 	sound.connect(nextNode);
 
 	return sound;
-}
+};
 
 function makePanner(deltaPosX, deltaPosY) {
 	var panner = audioContext.createPanner();

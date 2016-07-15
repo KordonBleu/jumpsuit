@@ -140,10 +140,10 @@ wss.on("connection", function(ws) {
 					delete lobby.players[pi];
 					lobby.players.actualLength--;
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [pi]));
-					if (lobby.players.length === 0) { 
+					if (lobby.players.length === 0) {
 						lobbies[li].close();
 						delete lobbies[li];
-						lobbies.actualLength--;						
+						lobbies.actualLength--;
 					}
 					for (let i = li; i !== lobbies.length; ++i) {
 						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
@@ -166,7 +166,7 @@ wss.on("connection", function(ws) {
 			let state = new Uint8Array(message, 0, 1)[0];
 			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
-				case MESSAGE.SET_PREFERENCES.value:
+				case MESSAGE.SET_PREFERENCES.value: {
 					let playerName = MESSAGE.SET_NAME.deserialize(message);
 					if (playerName === player.name) return;
 					if (player.lobby !== undefined) {
@@ -175,7 +175,8 @@ wss.on("connection", function(ws) {
 					}
 					player.name = playerName;
 					break;
-				case MESSAGE.CONNECT.value:
+				}
+				case MESSAGE.CONNECT.value: {
 					let val = MESSAGE.CONNECT.deserialize(message);
 					var lobby;
 
@@ -211,23 +212,25 @@ wss.on("connection", function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					lobby.assignPlayerTeam(player);	
-				
+					lobby.assignPlayerTeam(player);
+
 					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players, Object.keys(lobby.teamScores)));
-					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player)
+					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
 					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.state));
-					
+
 					break;
+				}
 				case MESSAGE.PLAYER_CONTROLS.value:
 					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
 					break;
-				case MESSAGE.CHAT.value:
+				case MESSAGE.CHAT.value: {
 					let chatMsg = MESSAGE.CHAT.deserialize(message);
 					if (chatMsg !== "" && chatMsg.length <= 150) player.lobby.broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.lobby.getPlayerId(player), chatMsg), player);
 					break;
+				}
 				case MESSAGE.AIM_ANGLE.value:
 					player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);
-					break
+					break;
 				default:
 					ips.ban(player.ip);
 					return;//prevent logging

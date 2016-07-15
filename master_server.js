@@ -32,7 +32,7 @@ GameServer.prototype.getUrl = function() {
 };
 GameServer.prototype.effectiveIp = function(clientIp) {
 	return ipPicker(this.ip, clientIp);
-}
+};
 
 var gameServers = [];
 
@@ -71,7 +71,7 @@ function loadFile(name, path) {
 		mtime: fs.statSync(path).mtime,
 		path: path,
 		mime: extension in mimeList ? mimeList[extension] : "application/octet-stream"
-	}
+	};
 	if (config.dev) {
 		if (extension === "html" || extension === "css" || extension === "js") {
 			files[name].content = files[name].content.toString("utf8").replace(/https:\/\/jumpsuit\.space/g, "");

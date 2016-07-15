@@ -1,7 +1,7 @@
-var WebSocket = require('ws');
-var ws = new WebSocket('ws://localhost:7483/');
+var WebSocket = require("ws");
+var ws = new WebSocket("ws://localhost:7483/");
 
-ws.on('open', function open() {
+ws.on("open", function open() {
 	setInterval(function() {
 		var array = new Uint8Array(1 + Math.round(Math.random()*99));
 

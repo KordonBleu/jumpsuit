@@ -91,7 +91,7 @@ windowBox.strokeAtmos = function(cx, cy, r, sw) {
 	context.lineWidth = sw*this.zoomFactor;
 	context.stroke();
 	context.closePath();
-}
+};
 windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY, mirrorX, mirrorY) {
 	sizeX *= this.zoomFactor;
 	sizeY *= this.zoomFactor;
@@ -103,7 +103,7 @@ windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY, mirrorX,
 		hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 	context.resetTransform();
-}
+};
 Planet.prototype.draw = function() {
 	var cx = windowBox.wrapX(this.box.center.x),
 		cy = windowBox.wrapY(this.box.center.y);
@@ -124,7 +124,7 @@ Planet.prototype.draw = function() {
 	context.strokeStyle = "rgba(0, 0, 0, 0.2)";
 	context.stroke();
 	context.closePath();
-}
+};
 Planet.prototype.drawAtmos = function() {
 	context.fillStyle = this.progress.color;
 	context.strokeStyle = context.fillStyle;
@@ -133,13 +133,13 @@ Planet.prototype.drawAtmos = function() {
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
 		this.box.radius*1.75, 2);
-}
+};
 Enemy.prototype.draw = function() {
 	windowBox.drawRotatedImage(resources[this.appearance],
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
 		this.box.angle);
-}
+};
 Enemy.prototype.drawAtmos = function() {
 	context.fillStyle = "#aaa";
 	context.strokeStyle = context.fillStyle;
@@ -148,7 +148,7 @@ Enemy.prototype.drawAtmos = function() {
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
 		350, 4);
-}
+};
 Shot.prototype.draw = function(dead) {
 	var resourceKey;
 	if (this.type === this.shotEnum.bullet && !dead) resourceKey = "rifleShot";
@@ -161,7 +161,7 @@ Shot.prototype.draw = function(dead) {
 		windowBox.wrapX(this.box.center.x),
 		windowBox.wrapY(this.box.center.y),
 		this.box.angle + (resourceKey === "knife" ? (100 - this.lifeTime) * Math.PI * 0.04 - Math.PI / 2 : 0));
-}
+};
 Player.prototype.draw = function(showName) {
 	var res = resources[this.appearance + this.walkFrame],
 		playerX = windowBox.wrapX(this.box.center.x),
@@ -246,7 +246,7 @@ Player.prototype.draw = function(showName) {
 		context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
 	}
 	context.resetTransform();
-}
+};
 
 function resizeCanvas() {
 	canvas.width = window.innerWidth;
@@ -255,7 +255,7 @@ function resizeCanvas() {
 	windowBox.height = canvas.clientHeight / windowBox.zoomFactor;
 
 	updateChatOffset();
-};
+}
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
@@ -263,9 +263,8 @@ window.addEventListener("resize", resizeCanvas);
 /* Load image assets */
 function drawBar() {
 	context.fillStyle = "#007d6c";
-	context.fillRect(0, 0, ((drawBar.progress) / resPaths.length) * canvas.width, 15);
+	context.fillRect(0, 0, ((loadProgress) / Object.keys(resList).length) * canvas.width, 15);
 }
-drawBar.progress = 0;
 function loaderLoop() {
 	context.textBaseline = "top";
 	context.textAlign = "center";
@@ -281,7 +280,7 @@ function loaderLoop() {
 	drawBar();
 	game.loaderAnimationFrameId = window.requestAnimationFrame(loaderLoop);
 }
-
+loaderLoop();
 
 var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	resizeHandler();
@@ -458,12 +457,12 @@ function Particle(size, startX, startY, velocityX, velocityY, lifetime) {
 	this.lifetime = 0;
 	this.rotSpeed = Math.random() * Math.PI * 0.04;
 	this.velocity = {x: velocityX || (Math.random() * 2 - 1) * 2 * Math.sin(this.box.angle), y: velocityY || (Math.random() * 2 - 1) * 2 * Math.cos(this.box.angle)};
-	this.update = function() {
-		this.lifetime++;
-		this.box.center.x += this.velocity.x;
-		this.box.center.y += this.velocity.y;
-		this.box.angle += this.rotSpeed;
-		this.size *= 0.95;
-		return this.lifetime >= this.maxLifetime;
-	}
 }
+Particle.prototype.update = function() {
+	this.lifetime++;
+	this.box.center.x += this.velocity.x;
+	this.box.center.y += this.velocity.y;
+	this.box.angle += this.rotSpeed;
+	this.size *= 0.95;
+	return this.lifetime >= this.maxLifetime;
+};
