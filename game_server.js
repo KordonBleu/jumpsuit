@@ -140,7 +140,7 @@ wss.on("connection", function(ws) {
 					delete lobby.players[pi];
 					lobby.players.actualLength--;
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [pi]));
-					if (lobby.players.length === 0) { 
+					if (lobby.players.length === 0) {
 						lobbies[li].close();
 						delete lobbies[li];
 						lobbies.actualLength--;
@@ -166,7 +166,7 @@ wss.on("connection", function(ws) {
 			let state = new Uint8Array(message, 0, 1)[0];
 			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
-				case MESSAGE.SET_PREFERENCES.value:
+				case MESSAGE.SET_PREFERENCES.value: {
 					let playerName = MESSAGE.SET_NAME.deserialize(message);
 					if (playerName === player.name) return;
 					if (player.lobby !== undefined) {
@@ -175,7 +175,8 @@ wss.on("connection", function(ws) {
 					}
 					player.name = playerName;
 					break;
-				case MESSAGE.CONNECT.value:
+				}
+				case MESSAGE.CONNECT.value: {
 					let val = MESSAGE.CONNECT.deserialize(message);
 					var lobby;
 
@@ -216,17 +217,20 @@ wss.on("connection", function(ws) {
 					} else player.send(MESSAGE.ADD_ENTITY.serialize([], [], [], lobby.players));
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
 					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.lobbyState, lobby.enabledTeams));
+
 					break;
+				}
 				case MESSAGE.PLAYER_CONTROLS.value:
 					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
 					break;
-				case MESSAGE.CHAT.value:
+				case MESSAGE.CHAT.value: {
 					let chatMsg = MESSAGE.CHAT.deserialize(message);
 					if (chatMsg !== "" && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.pid, chatMsg), player);
 					break;
+				}
 				case MESSAGE.AIM_ANGLE.value:
 					player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);
-					break
+					break;
 				default:
 					ips.ban(player.ip);
 					return;//prevent logging

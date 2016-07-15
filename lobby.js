@@ -18,7 +18,7 @@ module.exports = function(engine) {
 		this.resetWorld();
 	}
 	Lobby.prototype.lobbyStates = {NOT_ENOUGH_PLAYER: 0, TRANSMITTING_DATA: 1, PLAYING: 2, DISPLAYING_SCORES: 3};
-	Lobby.prototype.stateTimes = [-1, -1, 750, 100];
+	Lobby.prototype.stateTimes = [-1, -1, 1200, 50];
 	Lobby.prototype.broadcast = function(message, exclude) {
 		this.players.forEach(function(player) {
 			if (player !== exclude) player.send(message);
@@ -31,7 +31,8 @@ module.exports = function(engine) {
 		clearInterval(this.lobbyCycleId);
 		clearInterval(this.gameCycleId);
 		clearInterval(this.scoreCycleId);
-	}
+	};
+
 	Lobby.prototype.updateGame = function() {
 		var oldDate = Date.now(), playerData = new Array(this.maxPlayers),
 			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores);
@@ -71,10 +72,10 @@ module.exports = function(engine) {
 		this.processTime = Date.now() - oldDate;
 	};
 	Lobby.prototype.updateLobby = function() {
-		if (this.lobbyState === this.lobbyStates["NOT_ENOUGH_PLAYERS"]) {
+		if (this.lobbyState === this.lobbyStates["NOT_ENOUGH_PLAYER"]) {
 			if (this.players.actualLength >= this.maxPlayers * 0.5) {
 				this.stateTimer = 0;
-				this.lobbyState++;
+				this.lobbyState = 1;
 				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
 			}
 		} else if (this.lobbyState === this.lobbyStates["TRANSMITTING_DATA"]) {
@@ -84,14 +85,15 @@ module.exports = function(engine) {
 			}).bind(this));
 			this.broadcast(MESSAGE.ADD_ENTITY.serialize(this.planets, this.enemies, [], this.players));
 			this.stateTimer = 0;
-			this.lobbyState++;
+			this.lobbyState = 2;
 
 			this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState, this.enabledTeams));
 		} else {
 			this.stateTimer++;
 			if (this.stateTimer >= this.stateTimes[this.lobbyState]) {
 				this.stateTimer = 0;
-				this.lobbyState = ++this.lobbyState % Object.keys(this.lobbyStates).length;
+				this.lobbyState = (this.lobbyState + 1) % this.stateTimes.length;
+				console.log(this.lobbyState);
 				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));	
 			}
 			if (this.lobbyState === this.lobbyStates["PLAYING"]) {
@@ -108,7 +110,7 @@ module.exports = function(engine) {
 	Lobby.prototype.updateScores = function() {
 		this.planets.forEach((function(planet) {
 			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
-		}).bind(this));
+		}), this);
 		this.broadcast(MESSAGE.SCORES.serialize(this.teamScores));
 	};
 	Lobby.prototype.pingPlayers = function() {
@@ -212,7 +214,7 @@ module.exports = function(engine) {
 					excludedPlayer);
 			}
 		}
-	}
+	};
 
 	return Lobby;
 };

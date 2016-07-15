@@ -19,7 +19,7 @@ module.exports = function(path, skeleton, changeCbk) {
 				if(skeleton[key] === undefined) throw new Error("Invalid property " + key + " in " + path);
 			}
 
-			if (config.dev) process.env.NODE_ENV = "development";//this is the kind of thing which would usually be set in 
+			if (config.dev) process.env.NODE_ENV = "development";//this is the kind of thing which would usually be set in
 			else process.env.NODE_ENV = "production";//`changeCbk` but it is critical to set it first so that `logger` works properly
 
 			logger(logger.INFO, "Succesfully loaded" + (previousConfig === undefined ? "" : " modified") + " config file.");
@@ -63,4 +63,4 @@ module.exports = function(path, skeleton, changeCbk) {
 	});
 
 	return config;
-}
+};

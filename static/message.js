@@ -9,18 +9,18 @@ function stringToBuffer(string) {
 		let buf = new Buffer(string, "utf8");
 		return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 	} else {
-		var encoder = new TextEncoder("utf8");
+		let encoder = new TextEncoder("utf8");
 		return encoder.encode(string);
 	}
 }
 function bufferToString(arrayBuffer) {
 	if (isNode) {
-		var StringDecoder = require("string_decoder").StringDecoder,
+		let StringDecoder = require("string_decoder").StringDecoder,
 			decoder = new StringDecoder("utf8"),
 			tmpBuf = new Buffer(arrayBuffer);
 		return decoder.write(tmpBuf);
 	} else {
-		var decoder = new TextDecoder("utf8");
+		let decoder = new TextDecoder("utf8");
 		return decoder.decode(arrayBuffer);
 	}
 }
@@ -114,7 +114,7 @@ const MESSAGE = {
 				var currentPromise = serverList[i].effectiveIp(clientIp);
 				currentPromise.then(function(ip) {
 					view.set(ip.toByteArray(), offseti);
-				})
+				});
 				promises.push(currentPromise);
 
 				offset += 16;
@@ -208,7 +208,7 @@ const MESSAGE = {
 				primary: view[1],
 				secondary: view[2],
 				name: bufferToString(buffer.slice(3))
-			}
+			};
 		}
 	},
 	SET_NAME_BROADCAST: {
@@ -216,7 +216,7 @@ const MESSAGE = {
 		serialize: function(id, name, homographId) {
 			var nameBuffer = stringToBuffer(name),
 				view = new Uint8Array(3 + nameBuffer.byteLength);
-			
+
 			view[0] = this.value;
 			view[1] = id;
 			view[2] = homographId;
@@ -254,13 +254,13 @@ const MESSAGE = {
 			return buffer.buffer;
 		},
 		deserialize: function(buffer) {
-			var view = new DataView(buffer);	
+			var view = new DataView(buffer);
 			return {
 				lobbyId: (view.getUint8(1) === 1 ? view.getUint32(2) : undefined),
 				primary: Object.keys(this.WEAPON)[view.getUint8(6)],
 				secondary: Object.keys(this.WEAPON)[view.getUint8(7)],
 				name: bufferToString(buffer.slice(8))
-			}		
+			};
 		}
 	},
 	ERROR: {
@@ -443,7 +443,7 @@ const MESSAGE = {
 
 			if (players !== undefined) {
 				players.forEach(function(player, i) {
-					view.setUint8(offset, player.pid); 
+					view.setUint8(offset, player.pid);
 					view.setUint16(1 + offset, player.box.center.x);
 					view.setUint16(3 + offset, player.box.center.y);
 					view.setUint8(5 + offset, player.attachedPlanet);

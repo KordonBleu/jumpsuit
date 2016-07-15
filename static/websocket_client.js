@@ -70,7 +70,7 @@ Connection.prototype.sendMessage = function(messageType, ...args) {
 		//TODO: display "connection lost" and get back to the main menu
 		//or is that redudant with the event listener on "error"?
 	}
-}
+};
 Connection.prototype.createLobby = function(name, playerAmount) {
 	if (!currentConnection.alive()) return;
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
@@ -127,6 +127,7 @@ Connection.prototype.messageHandler = function(message) {
 			location.hash = "";
 			alert("Error:\n" + errDesc);
 			break;
+
 		case MESSAGE.CONNECT_ACCEPTED.value:
 			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
 			planets.length = 0;
@@ -137,12 +138,14 @@ Connection.prototype.messageHandler = function(message) {
 			ownIdx = val.playerId;
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
-			var hashSocket = this.socket.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2){
+
+			var hashSocket = this.socket.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2) {
 				if (p1) return "s";
 				else if (p2) return "";
 			});
 			location.hash = "#srv=" + hashSocket.substr(0, hashSocket.length - 1) + "&lobby=" + encodeLobbyNumber(val.lobbyId);
 			break;
+		
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
 				function(x, y, radius, type) {//add planets
@@ -186,7 +189,7 @@ Connection.prototype.messageHandler = function(message) {
 				}
 			);
 			break;
-		case MESSAGE.GAME_STATE.value:
+		case MESSAGE.GAME_STATE.value: 
 			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, players.length,
 				function(id, ownedBy, progress) {
 					planets[id].progress.team = ownedBy;
@@ -253,13 +256,14 @@ Connection.prototype.messageHandler = function(message) {
 			if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
 
 			break;
+		
 		case MESSAGE.CHAT_BROADCAST.value:
 			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
 			printChatMessage(players[val.id].getFinalName(), players[val.id].appearance, val.message);
 			break;
 		case MESSAGE.SET_NAME_BROADCAST.value:
-			var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data);
-			var oldName = players[val.id].getFinalName();
+			var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data),
+				oldName = players[val.id].getFinalName();
 			players[val.id].name = val.name;
 			players[val.id].homographId = val.homographId;
 			printChatMessage(undefined, undefined, "\"" + oldName + "\" is now known as \"" + players[val.id].getFinalName() + "\"");
@@ -286,7 +290,7 @@ Connection.prototype.messageHandler = function(message) {
 				enemies.length = 0;
 				shots.length = 0;
 			}
-			break;
+			break;		
 	}
 };
 
@@ -297,7 +301,7 @@ function connectByHash() {
 		let [, ip, lobbyId] = location.hash.match(/^#srv=(s?[\d\.:a-f]*)&lobby=([ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-\._~!$&'()\*\+,;=:@]+)/),
 			protocol;
 		if (ip.startsWith("s")) {
-			protocol = "ws://"
+			protocol = "ws://";
 			ip = ip.slice(1);
 		} else protocol = "wss://";
 

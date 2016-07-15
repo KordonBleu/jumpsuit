@@ -79,7 +79,7 @@ function addShowBoxListener(button, dialogBox) {
 	button.addEventListener("click", function(e) {
 		this.parentElement.classList.add("hidden");
 		document.getElementById("shade-box").classList.add("hidden");
-	})
+	});
 });
 addShowBoxListener(settingsButton, settingsBox);
 addShowBoxListener(menuBoxSettingsButton, settingsBox);
@@ -187,13 +187,14 @@ var weaponryCycle = ["lmg", "smg", "knife", "shotgun"], weaponNames = {lmg: "Bor
 function setGun(element, type) {
 	element.dataset.currentWeapon = type;
 	element.childNodes[0].src = "/assets/images/" + type + ".svg";
-	element.childNodes[1].textContent = weaponNames[type];	
+	element.childNodes[1].textContent = weaponNames[type];
 }
 [].forEach.call(document.querySelectorAll(".weapon-select"), function(element){
 	element.addEventListener("click", function() {
-		var currentIndex = weaponryCycle.findIndex(function(x) { return x === element.dataset.currentWeapon; }), offset, nextIndex;
-		for (offset = 1; offset !== weaponryCycle.length; offset++) {
-			var nextIndex = (currentIndex + offset) % weaponryCycle.length, x = weaponryCycle[nextIndex];
+		var currentIndex = weaponryCycle.findIndex(function(x) { return x === element.dataset.currentWeapon; }),
+			nextIndex;
+		for (let offset = 1; offset !== weaponryCycle.length; offset++) {
+			nextIndex = (currentIndex + offset) % weaponryCycle.length, x = weaponryCycle[nextIndex];
 			if (primaryWeaponElement.dataset.currentWeapon !== x && secondaryWeaponElement.dataset.currentWeapon !== x) break;
 		}
 		setGun(this, weaponryCycle[nextIndex]);
@@ -372,7 +373,7 @@ function applyLobbySearch() {
 			var regx = new RegExp(searchInput.value, "gi"), match, offset = 0;
 			while ((match = regx.exec(lobby.name)) !== null) {
 				newValue = newValue.substr(0, match.index + offset) + "<u>" + newValue.substr(match.index + offset, match[0].length) + "</u>" + newValue.substr(offset + match.index + match[0].length);
-				offset += 7; //<u>...</u> inserted so the string length and match indexes change 
+				offset += 7; //<u>...</u> inserted so the string length and match indexes change
 			}
 			if (offset === 0) currentElem.classList.add("search-hidden");
 			else currentElem.classList.remove("search-hidden");
@@ -392,7 +393,7 @@ var message = {
 		messageBox.classList.remove("hidden");
 		message.previousTimeoutId = setTimeout(function() { messageBox.classList.add("hidden"); message.previousTimeoutId = -1; }, 4000);
 	}
-}
+};
 
 /* Position fix: settings-box and info-box become blurry due decimal number in CSS's transform */
 window.addEventListener("resize", resizeHandler);
@@ -400,7 +401,7 @@ function resizeHandler() {
 	[].forEach.call(document.querySelectorAll("#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested"), function(element) {
 		element.style["margin-top"] = Math.round(element.clientHeight * -0.5) + "px";
 		element.style["margin-left"] = Math.round(element.clientWidth * -0.5) + "px";
-	}); 
+	});
 }
 
 
