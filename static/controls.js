@@ -38,8 +38,7 @@ function handleInputMobile(e) {
 		return yTransform;
 	}
 
-	Array.prototype.forEach.call(e.changedTouches, function(touch) {
-		console.log(e);
+	for (touch of e.changedTouches) {
 		var s = e.type !== "touchstart" && e.type === "touchend";
 		if (players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
@@ -50,7 +49,7 @@ function handleInputMobile(e) {
 			if (e.type !== "touchmove") players[ownIdx].controls[touch.target.id] = s * 1;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		}
-	});
+	}
 }
 
 
@@ -200,40 +199,50 @@ setInterval(function() {
 
 
 /* Gamepads */
-var usingGamepad = -1;
-if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) {
+if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // other browsers
 	//no timed query
-	window.addEventListener("gamepadconnected", function(e) {
-		usingGamepad = e.gamepad.index;
-		message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
+	let intervalId,
+		controllingGamepad = null;
+	window.addEventListener("gamepadconnected", e => {
+		if (controllingGamepad !== null) {
+			message.showMessage("Gamepad connected", "Gamepad #" + e.gamepad.index + " has been ignored because there is already a gamepad connected");
+		} else {
+			controllingGamepad = e.gamepad.index;
+			message.showMessage("Gamepad connected", "Gamepad #" + e.gamepad.index + " is set as controlling device");
+			intervalId = setInterval(updateControlsViaGamepad, 50, e.gamepad.index);
+		}
 	});
-	window.addEventListener("gamepaddisconnected", function(e) {
-		message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
-		usingGamepad = -1;
+	window.addEventListener("gamepaddisconnected", e => {
+		message.showMessage("Gamepad disconnected", "Gamepad #" + e.gamepad.index + " was disconnected");
+		if (controllingGamepad === e.gamepad.index) {
+			clearInterval(intervalId);
+			controllingGamepad = null;
+		}
 	});
 } else {
-	setInterval(function() {
-		var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
-		if (typeof gamepads[usingGamepad] === "undefined") {
-			if (usingGamepad !== -1) message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
+	let usingGamepad = -1,
+		intervalId;
+	setInterval(function() { // chrome
+		var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+		if (typeof gamepads[usingGamepad] === "undefined" && usingGamepad !== -1) {
+			message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
 			usingGamepad = -1;
+			clearInterval(intervalId);
 		}
-		if (usingGamepad == -1) {
-			for (var i = 0; i < gamepads.length; i++) {
-				var gp = gamepads[i];
-				if (gp) {
-					usingGamepad = gp.index;
-					message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
-				}
-			}
+		if (usingGamepad === -1) {
+			gamepads.forEach((gp, i) => {
+				usingGamepad = gp.index;
+				message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
+				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);
+			});
 		}
 	}, 500);
 }
-setInterval(function() {
+function updateControlsViaGamepad(usingGamepad) {
 	if (usingGamepad === -1) return;
-	var gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads : []);
+	var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 	var g = gamepads[usingGamepad];
-	if (typeof(g) !== "undefined" && players.length !== 0 && ownIdx in players){
+	if (typeof(g) !== "undefined" && players.length !== 0 && ownIdx in players) {
 		players[ownIdx].controls["jump"] = g.buttons[0].value;
 		players[ownIdx].controls["run"] = g.buttons[1].value;
 		players[ownIdx].controls["crouch"] = g.buttons[4].value;
@@ -248,7 +257,7 @@ setInterval(function() {
 		else game.drag.y = 0;
 		currentConnection.refreshControls(players[ownIdx].controls);
 	}
-}, 50);
+}
 
 /* Zoom */
 document.addEventListener("wheel", function(e) {

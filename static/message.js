@@ -94,11 +94,12 @@ const MESSAGE = {
 			var partialServerBufs = [],
 				partialServerBufsLength = 0;
 
-			serverList.forEach(function(server) {
+			console.log(serverList);
+			for (let server of serverList) {
 				var partialServerBuf = MESSAGE.REGISTER_SERVER.serialize(server.secure, server.port, server.name, server.mod).slice(1);
 				partialServerBufs.push(partialServerBuf);
 				partialServerBufsLength += partialServerBuf.byteLength;
-			});
+			}
 
 			var buffer = new ArrayBuffer(1 + serverList.length*16 + partialServerBufsLength),
 				view = new Uint8Array(buffer),
@@ -107,7 +108,7 @@ const MESSAGE = {
 
 			view[0] = this.value;
 
-			partialServerBufs.forEach(function(partialServerBuf, i) {
+			partialServerBufs.forEach((partialServerBuf, i) => {
 				var offseti = offset;//a copy of offset local to this scope
 				//because by the moment the promise will be resolved, `offset` will be modified
 
@@ -123,7 +124,7 @@ const MESSAGE = {
 
 			});
 
-			return new Promise(function(resolve, reject) {
+			return new Promise((resolve, reject) => {
 				Promise.all(promises).then(function() {
 					resolve(buffer);
 				}).catch(function() {
@@ -168,7 +169,7 @@ const MESSAGE = {
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
-			serverIds.forEach(function(id, i) {
+			serverIds.forEach((id, i) => {
 				view.setUint16(1 + i*2, id);
 			});
 
@@ -319,7 +320,7 @@ const MESSAGE = {
 			view[0] =  this.value;
 			view[1] = state;
 			if (teams !== undefined) {
-				teams.forEach(function(team) {
+				teams.forEach(team => {
 					enabledTeams |= this.TEAM_MASK[team];
 				}, this);
 				view[2] = enabledTeams;
@@ -392,7 +393,7 @@ const MESSAGE = {
 			var totalNameSize = 0,
 				playerNameBufs = [];
 			if (players !== undefined) {
-				players.forEach(function(player, i) {
+				players.forEach((player, i) => {
 					playerNameBufs.push(stringToBuffer(player.name));
 					totalNameSize += playerNameBufs[i].byteLength;
 				});
@@ -404,32 +405,32 @@ const MESSAGE = {
 			var offset = 2;
 			if (planets !== undefined) {
 				view.setUint8(1, planets.length);
-				planets.forEach(function(planet) {
+				for (let planet of planets) {
 					view.setUint16(offset, planet.box.center.x);
 					view.setUint16(2 + offset, planet.box.center.y);
 					view.setUint16(4 + offset, planet.box.radius);
 					view.setUint8(6 + offset, planet.type);
 					offset += 7;
-				});
+				}
 			} else {
 				view.setUint8(1, 0);
 			}
 
 			if (enemies !== undefined) {
 				view.setUint8(offset++, enemies.length);
-				enemies.forEach(function(enemy) {
+				for (let enemy of enemies) {
 					view.setUint16(offset, enemy.box.center.x);
 					view.setUint16(2 + offset, enemy.box.center.y);
 					view.setUint8(4 + offset, this.ENEMY_APPEARANCE[enemy.appearance]);
 					offset += 5;
-				}, this);
+				}
 			} else {
 				view.setUint8(offset++, 0);
 			}
 
 			if (shots !== undefined) {
 				view.setUint8(offset++, shots.length);
-				shots.forEach(function(shot, i) {
+				shots.forEach((shot, i) => {
 					view.setUint16(offset, shot.box.center.x);
 					view.setUint16(2 + offset, shot.box.center.y);
 					view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
@@ -532,7 +533,7 @@ const MESSAGE = {
 
 			if (planetIds !== undefined) {
 				view[1] = planetIds.length;
-				planetIds.forEach(function(id, i) {
+				planetIds.forEach((id, i) => {
 					view[2 + i] = id;
 				});
 			} else {
@@ -542,7 +543,7 @@ const MESSAGE = {
 			var offset = 2 + planetIds.length;
 			if (enemyIds !== undefined) {
 				view[offset++] = enemyIds.length;
-				enemyIds.forEach(function(id, i) {
+				enemyIds.forEach((id, i) => {
 					view[offset + i] = id;
 				});
 			} else {
@@ -552,14 +553,14 @@ const MESSAGE = {
 			offset += enemyIds.length;
 			if (shotIds !== undefined) {
 				view[offset++] = shotIds.length;
-				shotIds.forEach(function(id, i) {
+				shotIds.forEach((id, i) => {
 					view[offset + i] = id;
 				});
 			} else {
 				view[offset++] = 0;
 			}
 
-			playerIds.forEach(function(id, i) {
+			playerIds.forEach((id, i) => {
 				view[offset + i] = id;
 			});
 
@@ -620,16 +621,16 @@ const MESSAGE = {
 			view.setUint16(2, yourFuel);
 
 			var offset = 4;
-			planets.forEach(function(planet) {
+			for (let planet of planets) {
 				view.setUint8(offset++, this.OWNED_BY[planet.progress.team]);
 				view.setUint8(offset++, planet.progress.value);
-			}, this);
+			}
 
-			enemies.forEach(function(enemy) {
+			for (let enemy of enemies) {
 				view.setUint8(offset++, radToBrad(enemy.box.angle, 1));
-			});
+			}
 
-			players.forEach(function(player) {
+			for (let player of players) {
 				view.setUint8(offset, player.pid);
 				view.setUint16(1 + offset, player.box.center.x);
 				view.setUint16(3 + offset, player.box.center.y);
@@ -645,7 +646,7 @@ const MESSAGE = {
 				weaponByte += this.WEAPON[player.weaponry.carrying];
 				view.setUint8(9 + offset, weaponByte);
 				offset += 10;
-			}, this);
+			}
 
 			return buffer;
 		},
@@ -793,10 +794,10 @@ const MESSAGE = {
 				buffer = new ArrayBuffer(1 + teams.length*5),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
-			teams.forEach((function(team, i) {
+			teams.forEach((team, i) => {
 				view.setUint8(1 + i*5, this.PLAYER_APPEARANCE[team]);
 				view.setInt32(2 + i*5, scoresObj[team]);
-			}).bind(this));
+			});
 			return buffer;
 		},
 		deserialize: function(buffer) {
@@ -816,7 +817,7 @@ const MESSAGE = {
 	}
 };
 Object.defineProperty(MESSAGE, "toString", {
-	value: function(val) {
+	value: (val) => {
 		var res = Object.keys(this);
 		return res !== undefined && res[val] !== undefined ? res[val] : "UNKNOWN";
 	},

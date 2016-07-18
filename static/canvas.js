@@ -39,9 +39,9 @@ var context = canvas.getContext("2d"),
 			minimapCanvas.width = unitSize*universe.width;
 			minimapCanvas.height = unitSize*universe.height;
 			menuBox.classList.add("hidden");
-			Array.prototype.forEach.call(document.querySelectorAll("#gui-points th"), function(element){
+			for (let element of document.querySelectorAll("#gui-points th")) {
 				element.style.display = "none";
-			});
+			}
 			window.addEventListener("keydown", handleInput);
 			window.addEventListener("keyup", handleInput);
 			window.addEventListener("touchstart", handleInputMobile);
@@ -418,9 +418,9 @@ function loop() {
 
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
-	Array.prototype.forEach.call(document.querySelectorAll("#controls img"), function (element) {
+	for (let element of document.querySelectorAll("#controls img")) {
 		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
-	});
+	}
 
 	//minimap	
 	minimapContext.fillStyle = "rgba(0, 0, 0, 0.7)";

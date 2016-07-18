@@ -10,7 +10,7 @@ const HISTORY_MENU = 0;
 const HISTORY_GAME = 1;
 
 masterSocket.binaryType = "arraybuffer";
-masterSocket.addEventListener("message", function(message) {
+masterSocket.addEventListener("message", message => {
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
 		case MESSAGE.ADD_SERVERS.value:
 			console.log("Got some new servers to add ! :D");
@@ -27,9 +27,9 @@ masterSocket.addEventListener("message", function(message) {
 			break;
 		case MESSAGE.REMOVE_SERVERS.value:
 			console.log("I hafta remove servers :c");
-			MESSAGE.REMOVE_SERVERS.deserialize(message.data).forEach(function(id) {
+			for (let id of MESSAGE.REMOVE_SERVERS.deserialize(message.data)) {
 				removeServer(id);
-			});
+			}
 			break;
 	}
 });
@@ -43,14 +43,14 @@ function Connection(url, lobbyId) {// a connection to a game server
 		showBlockedPortDialog(url.match(/:(\d+)/)[1]);
 	}
 	this.socket.binaryType = "arraybuffer";
-	this.socket.addEventListener("open", function() {
+	this.socket.addEventListener("open", () => {
 		this.sendMessage.call(this, MESSAGE.CONNECT, lobbyId, settings);
-	}.bind(this));
+	});
 	this.socket.addEventListener("error", this.errorHandler);
 	this.socket.addEventListener("message", this.messageHandler.bind(this));
 	//this should return a Promise, dontcha think?
 
-	this.latencyHandler = setInterval((function() {
+	this.latencyHandler = setInterval(() => {
 		var param1 = document.getElementById("gui-bad-connection");
 		if (Date.now() - this.lastMessage > 2000) param1.classList.remove("hidden");
 		else param1.classList.add("hidden");
@@ -59,7 +59,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 			currentConnection.close();
 			game.stop();
 		}
-	}).bind(this), 100);
+	}, 100);
 }
 Connection.prototype.alive = function() { return this.socket.readyState === 1; };
 Connection.prototype.sendMessage = function(messageType, ...args) {
@@ -139,29 +139,27 @@ Connection.prototype.messageHandler = function(message) {
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
 
-			var hashSocket = this.socket.url.replace(/wss\:\/\/|ws\:\/\//, function(match, p1, p2) {
-				if (p1) return "s";
-				else if (p2) return "";
-			});
-			location.hash = "#srv=" + hashSocket.substr(0, hashSocket.length - 1) + "&lobby=" + encodeLobbyNumber(val.lobbyId);
+			var hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, "$1$2");
+
+			location.hash = "#srv=" + hashSocket + "&lobby=" + encodeLobbyNumber(val.lobbyId);
 			break;
-		
+
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
-				function(x, y, radius, type) {//add planets
+				(x, y, radius, type) => {//add planets
 					planets.push(new Planet(x, y, radius, type));
 				},
-				function(x, y, appearance) {//add enemies
+				(x, y, appearance) => {//add enemies
 					enemies.push(new Enemy(x, y, appearance));
 				},
-				function(x, y, angle, origin, type) {//add shots
+				(x, y, angle, origin, type) => {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					var shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					var param1 = players.find(function(element) { return element !== null && element.pid === origin; });
+					var param1 = players.find(element => { return element !== null && element.pid === origin; });
 					if (param1) param1.weaponry.muzzleFlash = type === shot.shotEnum.bullet || type === shot.shotEnum.ball;
 				},
-				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) {//add players
+				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {//add players
 					console.log(pid);
 					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					newPlayer.pid = pid;
@@ -176,14 +174,14 @@ Connection.prototype.messageHandler = function(message) {
 			break;
 		case MESSAGE.REMOVE_ENTITY.value:
 			MESSAGE.REMOVE_ENTITY.deserialize(message.data,
-				function(id) {},//remove planets
-				function(id) {},//remove enemies
-				function(id) {//remove shots
+				id => {},//remove planets
+				id => {},//remove enemies
+				id => {//remove shots
 					deadShots.push(shots[id]);
 					deadShots[deadShots.length - 1].lifeTime = 0;
 					shots.splice(id, 1);
 				},
-				function(id) {//remove players
+				id => {//remove players
 					printChatMessage(undefined, undefined, players[id].getFinalName() + " has left the game");
 					delete players[id];
 				}
@@ -191,15 +189,15 @@ Connection.prototype.messageHandler = function(message) {
 			break;
 		case MESSAGE.GAME_STATE.value: 
 			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, players.length,
-				function(id, ownedBy, progress) {
+				(id, ownedBy, progress) => {
 					planets[id].progress.team = ownedBy;
 					planets[id].progress.value = progress;
 					planets[id].updateColor();
 				},
-				function(id, angle) {
+				(id, angle) => {
 					enemies[id].box.angle = angle;
 				},
-				function(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
+				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
 					if (pid === ownIdx) {
 						if (!players[pid].jetpack && jetpack) {
 							players[pid].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);
@@ -246,7 +244,7 @@ Connection.prototype.messageHandler = function(message) {
 			players[ownIdx].health = val.yourHealth;
 			players[ownIdx].fuel = val.yourFuel;
 
-			[].forEach.call(document.querySelectorAll("#gui-health div"), function(element, index) {
+			Array.prototype.forEach.call(document.querySelectorAll("#gui-health div"), (element, index) => {
 				var state = "heartFilled";
 				if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
 				else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";
@@ -256,7 +254,7 @@ Connection.prototype.messageHandler = function(message) {
 			if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
 
 			break;
-		
+
 		case MESSAGE.CHAT_BROADCAST.value:
 			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
 			printChatMessage(players[val.id].getFinalName(), players[val.id].appearance, val.message);
@@ -290,7 +288,7 @@ Connection.prototype.messageHandler = function(message) {
 				enemies.length = 0;
 				shots.length = 0;
 			}
-			break;		
+			break;
 	}
 };
 

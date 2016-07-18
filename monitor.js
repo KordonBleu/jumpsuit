@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function(config, lobbies) {
+module.exports = (config, lobbies) => {
 	var monitorTimerID,
 		traffic = {
 			previous: {in: 0, out: 0, http: 0},
@@ -35,16 +35,16 @@ module.exports = function(config, lobbies) {
 			var headerSizes = [35, 10, 15],
 				headerNames = ["lobby name", "players", "process time"],
 				header = "";
-			headerSizes.forEach(function(hSize, i) {
+			headerSizes.forEach((hSize, i) => {
 				header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
 			});
 			console.log(header);
 
 			var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height and width
-			lobbies.some(function(lobby, index, array) {
+			lobbies.some((lobby, index, array) => {
 				if (lobbyAmount >= 8) {
 					console.log("... ("  + (array.length - maxLobbies) + " lobbies not listed)");
-					return true; //"some" function can be quitted with return, but it needs to return something so just return; wouldn't work
+					return true; //"some" function can be exited with return, but it needs to return something so just return; wouldn't work
 				}
 				var indexAsString = index.toString(),
 					info = indexAsString + genSpaces(headerSizes[0] - indexAsString.length),
@@ -81,7 +81,7 @@ module.exports = function(config, lobbies) {
 	return {
 		setMonitorMode,
 		unsetMonitorMode,
-		getTraffic: function() {
+		getTraffic: () => {
 			return traffic;
 		}
 	};

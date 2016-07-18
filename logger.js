@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function(type, content) {
+module.exports = (type, content) => {
 	function enumToString(e) {
 		switch (e) {
 			case 0: return "[DEV]".cyan.bold;

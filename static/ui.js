@@ -75,12 +75,12 @@ function addShowBoxListener(button, dialogBox) {
 	});
 }
 //every HTML element with a "close-parent" class (generally a "Close" button) will, when clicked, close the dialog it is part of
-[].forEach.call(document.getElementsByClassName("close-parent"), function(button) {
+for (let button of document.getElementsByClassName("close-parent")) {
 	button.addEventListener("click", function(e) {
 		this.parentElement.classList.add("hidden");
 		document.getElementById("shade-box").classList.add("hidden");
 	});
-});
+}
 addShowBoxListener(settingsButton, settingsBox);
 addShowBoxListener(menuBoxSettingsButton, settingsBox);
 addShowBoxListener(infoButton, infoBox);
@@ -117,7 +117,7 @@ var changingKeys = false,
 keySettingsElement.addEventListener("click", function(e) {
 	function reselect(obj){
 		document.removeEventListener("keydown", wrap);
-		Array.prototype.forEach.call(keySettingsElement.childNodes, function (row){ row.classList.remove("selected"); });
+		for (let row of keySettingsElement.childNodes) row.classList.remove("selected");
 		if (typeof obj !== "undefined") {
 			obj.classList.add("selected");
 			var nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
@@ -189,17 +189,18 @@ function setGun(element, type) {
 	element.childNodes[0].src = "/assets/images/" + type + ".svg";
 	element.childNodes[1].textContent = weaponNames[type];
 }
-[].forEach.call(document.querySelectorAll(".weapon-select"), function(element){
+for (let element of document.querySelectorAll(".weapon-select")) {
 	element.addEventListener("click", function() {
 		var currentIndex = weaponryCycle.findIndex(function(x) { return x === element.dataset.currentWeapon; }),
 			nextIndex;
 		for (let offset = 1; offset !== weaponryCycle.length; offset++) {
-			nextIndex = (currentIndex + offset) % weaponryCycle.length, x = weaponryCycle[nextIndex];
+			nextIndex = (currentIndex + offset) % weaponryCycle.length;
+			let x = weaponryCycle[nextIndex];
 			if (primaryWeaponElement.dataset.currentWeapon !== x && secondaryWeaponElement.dataset.currentWeapon !== x) break;
 		}
 		setGun(this, weaponryCycle[nextIndex]);
 	});
-});
+}
 setGun(primaryWeaponElement, settings.primary);
 setGun(secondaryWeaponElement, settings.secondary);
 
@@ -261,9 +262,9 @@ function printChatMessage(name, appearance, content) {
 }
 function updateChatOffset(){
 	var messageHeight = 0;
-	Array.prototype.forEach.call(chatElement.querySelectorAll("p:not(#gui-chat-first)"), function(element){
+	for (let element of chatElement.querySelectorAll("p:not(#gui-chat-first)")) {
 		messageHeight += element.clientHeight + 2;
-	});
+	}
 	chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
 }
 
@@ -328,12 +329,12 @@ lobbyTableHeaderRowElement.addEventListener("click", function(e) {
 		switch (e.target.getAttribute("src")) {
 			case "/assets/images/sort_arrow_double.svg":
 				e.target.setAttribute("src", "/assets/images/sort_arrow_down.svg");
-				Array.prototype.forEach.call(lobbyTableHeaderRowElement.children, function(elem) {
+				for (let elem of lobbyTableHeaderRowElement.children) {
 					var arrowImg = elem.lastElementChild;
 					if (elem.lastElementChild !== null && e.target !== arrowImg) {
 						arrowImg.setAttribute("src", "/assets/images/sort_arrow_double.svg");
 					}
-				});
+				}
 
 				switch (e.target.previousSibling.data.trim()) {
 					case "Lobby name":
@@ -367,10 +368,12 @@ function applyLobbySearch() {
 		//lobbyListElement.children are reversed compared to serverList
 		var currentElem = lobbyListElement.children[serverList.length - index - 1],
 			newValue = currentElem.firstChild.textContent;
-		
+
 		if (searchInput.value === "") currentElem.classList.remove("search-hidden");
 		else {
-			var regx = new RegExp(searchInput.value, "gi"), match, offset = 0;
+			var regx = new RegExp(searchInput.value, "gi"),
+				match,
+				offset = 0;
 			while ((match = regx.exec(lobby.name)) !== null) {
 				newValue = newValue.substr(0, match.index + offset) + "<u>" + newValue.substr(match.index + offset, match[0].length) + "</u>" + newValue.substr(offset + match.index + match[0].length);
 				offset += 7; //<u>...</u> inserted so the string length and match indexes change
@@ -398,10 +401,10 @@ var message = {
 /* Position fix: settings-box and info-box become blurry due decimal number in CSS's transform */
 window.addEventListener("resize", resizeHandler);
 function resizeHandler() {
-	[].forEach.call(document.querySelectorAll("#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested"), function(element) {
+	for (let element of document.querySelectorAll("#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested")) {
 		element.style["margin-top"] = Math.round(element.clientHeight * -0.5) + "px";
 		element.style["margin-left"] = Math.round(element.clientWidth * -0.5) + "px";
-	});
+	}
 }
 
 
