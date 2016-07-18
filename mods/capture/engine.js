@@ -32,6 +32,10 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 		resources = require("../../static/resource_loader.js");
 }
 
+function mod(dividend, divisor) {
+	return (dividend + divisor*Math.ceil(Math.abs(dividend / divisor))) % divisor;
+}
+
 const weaponList = {
 	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1, spray: 0.025}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
 	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1, spray: 0.04},
@@ -239,7 +243,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 				player.looksLeft = false;
 			}
 			if (player.controls["moveLeft"] === 0 && player.controls["moveRight"] === 0) {
-				player.looksLeft = (player.aimAngle - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
+				player.looksLeft = mod(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 			}
 
 			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);

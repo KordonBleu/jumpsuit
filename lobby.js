@@ -93,7 +93,6 @@ module.exports = function(engine) {
 			if (this.stateTimer >= this.stateTimes[this.lobbyState]) {
 				this.stateTimer = 0;
 				this.lobbyState = (this.lobbyState + 1) % this.stateTimes.length;
-				console.log(this.lobbyState);
 				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));	
 			}
 			if (this.lobbyState === this.lobbyStates["PLAYING"]) {
@@ -200,8 +199,9 @@ module.exports = function(engine) {
 		this.teams[player.appearance].push(player.pid);
 		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 		player.box.angle = Math.random() * Math.PI;
-		player.attachedPlanet = -1;
-		console.log(player.appearance);
+		player.attachedPlanet = this.planets.findIndex(function(planet) {
+			return planet.progress.team === player.appearance && planet.progress.value > 80;
+		});
 	};
 	Lobby.prototype.sendEntityDelta = function(delta, excludedPlayer) {
 		if (delta !== undefined) {

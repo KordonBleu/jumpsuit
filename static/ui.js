@@ -172,14 +172,12 @@ keyResetElement.addEventListener("click", function() {
 /* Name */
 nameElement.value = settings.name;
 nameElement.addEventListener("keydown", function(e) {
-	if (e.key === "Enter") {
-		e.target.blur();//this triggers the "blur" event!
-	}
+	if (e.key === "Enter") e.target.blur();
 });
 nameElement.addEventListener("blur", function(e) {
 	localStorage.setItem("settings.name", e.target.value);
 	settings.name = e.target.value;
-	currentConnection.setName();
+	currentConnection.setPreferences();
 });
 
 /* Weaponry */
@@ -188,6 +186,7 @@ function setGun(element, type) {
 	element.dataset.currentWeapon = type;
 	element.childNodes[0].src = "/assets/images/" + type + ".svg";
 	element.childNodes[1].textContent = weaponNames[type];
+	if (typeof currentConnection !== "undefined") currentConnection.setPreferences();
 }
 for (let element of document.querySelectorAll(".weapon-select")) {
 	element.addEventListener("click", function() {

@@ -72,9 +72,7 @@ var context = canvas.getContext("2d"),
 	};
 
 
-function mod(dividend, divisor) {
-	return (dividend%divisor + divisor) % divisor;
-}
+
 windowBox.wrapX = function(entityX) {//get the position where the entity can be drawn on the screen
 	return (mod(entityX + universe.width/2 - this.center.x, universe.width) -universe.width/2 + canvas.width/2 - (this.width*this.zoomFactor - this.width)/2) * this.zoomFactor;
 };

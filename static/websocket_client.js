@@ -85,6 +85,7 @@ Connection.prototype.close = function() {
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 };
 Connection.prototype.setPreferences = function() {
+	if (!currentConnection.alive()) return;
 	this.sendMessage(MESSAGE.SET_PREFERENCES, settings);
 };
 Connection.prototype.sendChat = function(content) {
