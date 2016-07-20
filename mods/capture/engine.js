@@ -25,10 +25,6 @@ var resPaths = [
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	var vinage = require("vinage"),
-		Point = vinage.Point,
-		Rectangle = vinage.Rectangle,
-		Circle = vinage.Circle,
-		Vector = vinage.Vector,
 		resources = require("../../static/resource_loader.js");
 }
 
@@ -46,11 +42,11 @@ const weaponList = {
 function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 	this._walkCounter = 0;
 	this.name = name;
-	this.box = new Rectangle(new Point(0, 0), 0, 0);
+	this.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 	this.predictionTarget = {};
 	this.predictionBase = {};
 	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0, changeWeapon: 0, shoot: 0};
-	this.velocity = new Vector(0, 0);
+	this.velocity = new vinage.Vector(0, 0);
 	this._appearance = appearance;
 	this._walkFrame = "_stand";
 	Object.defineProperties(this, {
@@ -120,8 +116,8 @@ Player.prototype.getFinalName = function() {
 };
 
 function Planet(x, y, radius, type) {
-	this.box = new Circle(new Point(x, y), radius);
-	this.atmosBox = new Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
+	this.box = new vinage.Circle(new vinage.Point(x, y), radius);
+	this.atmosBox = new vinage.Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
 	this.progress = {team: "neutral", value: 0, color: "rgb(80,80,80)"};
 	this.type = type || Math.round(Math.random());
 }
@@ -142,14 +138,14 @@ Planet.prototype.updateColor = function() {
 
 function Enemy(x, y, appearance) {
 	this.appearance = appearance || "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
-	this.box = new Rectangle(new Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
-	this.aggroBox = new Circle(new Point(x, y), 350);
+	this.box = new vinage.Rectangle(new vinage.Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
+	this.aggroBox = new vinage.Circle(new vinage.Point(x, y), 350);
 	this.fireRate = 0;
 }
 Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
 
 function Shot(x, y, angle, origin, type) {
-	this.box = new Rectangle(new Point(x, y), resources["laserBeam"].width, resources["laserBeam"].height, angle);
+	this.box = new vinage.Rectangle(new vinage.Point(x, y), resources["laserBeam"].width, resources["laserBeam"].height, angle);
 	this.lifeTime = 100;
 	this.origin = origin;
 	this.type = type || 0;

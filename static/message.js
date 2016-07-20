@@ -283,10 +283,10 @@ const MESSAGE = {
 				enabledTeams = 0;
 			view.setUint8(0, this.value);
 			view.setUint32(1, lobbyId);
-			view.setUint8(5, playerId);			
+			view.setUint8(5, playerId);
 			view.setUint16(6, univWidth);
 			view.setUint16(8, univHeight);
-	
+
 			return buffer;
 		},
 		deserialize: function(buffer) {
@@ -817,7 +817,7 @@ const MESSAGE = {
 	}
 };
 Object.defineProperty(MESSAGE, "toString", {
-	value: (val) => {
+	value: function(val) {
 		var res = Object.keys(this);
 		return res !== undefined && res[val] !== undefined ? res[val] : "UNKNOWN";
 	},

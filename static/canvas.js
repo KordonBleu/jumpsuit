@@ -13,12 +13,12 @@ var context = canvas.getContext("2d"),
 	shots = [],
 	deadShots = [],
 	particles = [],
-	universe = new Rectangle(new Point(0, 0), null, null),//these parameters will be
-	windowBox = new Rectangle(new Point(null, null), canvas.clientWidth, canvas.clientHeight),//overwritten later
+	universe = new vinage.Rectangle(new vinage.Point(0, 0), null, null),//these parameters will be
+	windowBox = new vinage.Rectangle(new vinage.Point(null, null), canvas.clientWidth, canvas.clientHeight),//overwritten later
 	game = {
-		dragStart: new Vector(0, 0),
-		drag: new Vector(0, 0),
-		dragSmoothed: new Vector(0,0),
+		dragStart: new vinage.Vector(0, 0),
+		drag: new vinage.Vector(0, 0),
+		dragSmoothed: new vinage.Vector(0,0),
 		connectionProblems: false,
 		animationFrameId: null,
 		loadingAnimationFrameId: null,		
@@ -449,7 +449,7 @@ function loop() {
 }
 
 function Particle(size, startX, startY, velocityX, velocityY, lifetime) {
-	this.box = new Rectangle(new Point(startX, startY), 0, 0, Math.random() * 2 * Math.PI);
+	this.box = new vinage.Rectangle(new vinage.Point(startX, startY), 0, 0, Math.random() * 2 * Math.PI);
 	this.size = size;
 	this.maxLifetime = lifetime;
 	this.lifetime = 0;

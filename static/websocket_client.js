@@ -218,8 +218,8 @@ Connection.prototype.messageHandler = function(message) {
 					var param1 = Date.now(), param2 = players[pid];
 
 					if ("timestamp" in players[pid].predictionTarget) param1 = param2.predictionTarget.timestamp;
-					players[pid].predictionTarget = {timestamp: Date.now(), box: new Rectangle(new Point(x, y), 0, 0, angle), aimAngle: aimAngle};
-					players[pid].predictionBase = {timestamp: param1, box: new Rectangle(new Point(param2.box.center.x, param2.box.center.y), 0, 0, param2.box.angle), aimAngle: param2.aimAngle};
+					players[pid].predictionTarget = {timestamp: Date.now(), box: new vinage.Rectangle(new vinage.Point(x, y), 0, 0, angle), aimAngle: aimAngle};
+					players[pid].predictionBase = {timestamp: param1, box: new vinage.Rectangle(new vinage.Point(param2.box.center.x, param2.box.center.y), 0, 0, param2.box.angle), aimAngle: param2.aimAngle};
 					players[pid].looksLeft = looksLeft;
 					if ((players[pid].walkFrame === "_walk1" && walkFrame === "walk2") || (players[pid].walkFrame === "_walk2" && walkFrame === "walk1")) {
 						let type = planets[players[pid].attachedPlanet].type,
