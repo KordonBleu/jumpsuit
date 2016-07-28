@@ -1,12 +1,20 @@
 "use strict";
 
-function turnToBeige() {
+function turnToBeige(svgElem) {
+	//console.log("turning to beige");
+	return svgElem; // should return a clone
 }
-function turnToGreen() {
+function turnToGreen(svgElem) {
+	//console.log("turning to green");
+	return svgElem; // should return a clone
 }
-function turnToPink() {
+function turnToPink(svgElem) {
+	//console.log("turning to pink");
+	return svgElem; // should return a clone
 }
-function turnToYellow() {
+function turnToYellow(svgElem) {
+	//console.log("turning to yellow");
+	return svgElem; // should return a clone
 }
 
 const resList = {
@@ -126,101 +134,81 @@ const resList = {
 	"muzzle2": {}
 };
 
+function getFinalResNames(cbk) {
+	for (let resName in resList) {
+		let baseName = resName.replace(/\((.+)\)/, "$1"); // get rid of the parens
+
+		let variants = {};
+
+		for (let variant in resList[resName]) {
+			let variantName = resName.replace(/\((.+)\)/, variant); // get rid of the parens
+			variants[variantName] = resList[resName][variant];
+		}
+
+		cbk(baseName, variants);
+	}
+}
+
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	const sizeOf = require("image-size");
 	let resources = {};
 
-	for (let path in resList) {
-		let actualPath = path.replace(/\((.+)\)/, "$1");
-		resources[actualPath] = sizeOf("./static/assets/images/" + actualPath + ".svg"); // get rid of the parens
-		for (let variant in resList[path]) {
-			let actualPath = path.replace(/\((.+)\)/, variant);
-			resources[actualPath] = sizeOf("./static/assets/images/" + actualPath + ".svg"); // get rid of the parens
-		}
-	}
+	getFinalResNames((baseName, variants) => {
+		resources[baseName] = sizeOf("./static/assets/images/" + baseName + ".svg");
+
+		for (let variant in variants) resources[variant] = resources[baseName];
+	});
 
 	module.exports = resources;
 } else {
-	function exportSvg(svgUrl, ...cbkSvgMods) {
+	function exportSvg(svgName, variants) {
 
-		return new Promise(function(resolve, reject) {
+		return new Promise((resolve, reject) => {
 			// get svg as a svg element from xhr
 			let xhr = new XMLHttpRequest();
 			xhr.responseType = "document";
-			xhr.open("GET", svgUrl, true);
+			xhr.open("GET", "https://jumpsuit.space/assets/images/" + svgName + ".svg", true);
 
-			let modifiedSvgList = [],
-				promiseList = [];
-			xhr.addEventListener("load", function(ev) {
-				cbkSvgMods.forEach(function(cbk) { // modify svg element
-					modifiedSvgList = modifiedSvgList.concat(cbk(ev.target.response.documentElement));
-				});
-
-				modifiedSvgList.forEach(function(svgElem) {
-					promiseList.push(new Promise(function(resolve, reject) {
-						let blob = new Blob([svgElem.outerHTML], {type: "image/svg+xml;charset=utf-8"}); // convert DOMString to Blob
+			let promiseList = [];
+			xhr.addEventListener("load", ev => {
+				function svgToImg(name, svg) {
+					promiseList.push(new Promise((resolve, reject) => {
+						let blob = new Blob([svg.outerHTML], {type: "image/svg+xml;charset=utf-8"}); // convert DOMString to Blob
 
 						let img = new Image();
 						img.addEventListener("load", function(ev) {
+							resources[name] = ev.target;
 							resolve(ev.target);
-						});
-						img.addEventListener("error", function(err) {
+						}.bind(this));
+						img.addEventListener("error", err => {
 							reject(err);
 						});
 						img.src = URL.createObjectURL(blob); // use blob://whatever to create image
 					}));
-				});
+				}
+				//console.log(ev.target);
+				svgToImg(svgName, ev.target.response.documentElement);
+				for (let variant in variants) svgToImg(variant, variants[variant](ev.target.response.documentElement));
 
-				Promise.all(promiseList).then(function(imgList) {
-					resolve(imgList);
-				}).catch(function(err) {
+				Promise.all(promiseList).then(() => {
+					resolve();
+				}).catch(err => {
 					reject(err);
 				});
 			});
-			xhr.addEventListener("error", function(err) {
+			xhr.addEventListener("error", err => {
 				reject(err);
 			});
 
 			xhr.send();
-
-
 		});
 	}
-
-	exportSvg("https://jumpsuit.space/assets/images/alienBeige_badge.svg", function(svgElement) {
-		svgElement.firstChild.firstChild.setAttribute("fill", "blue");
-
-		return svgElement;
-	}).then(function(imgList) {
-		console.log(imgList);
-	});
 
 
 	var imgPromises = [],
 		resources = {},
-		loadProgress = 0;
-
-	resPaths.forEach(function(path) {//init resources
-		var promise = new Promise(function(resolve, reject) {
-			var img = new Image();
-			img.addEventListener("load", function(e) {
-				resources[path.substring(0, path.lastIndexOf("."))] = e.target;
-				resolve();
-			});
-			img.addEventListener("error", function(e) {
-				reject(e);
-			});
-			img.src = "https://jumpsuit.space/assets/images/" + path;
-		});
-		promise.then(function() {
-			++loadProgress;
-		})
-		.catch(function(err) {
-			alert("Something went wrong. Try reloading this page.\n" +
-				"If it still doesn't work, please open an issue on GitHub with a copy of the text in this message.\n" +
-				"Error type: " + err.type + "\n" +
-				"Failed to load " + err.target.src);
-		});
-		imgPromises.push(promise);
+		loadProgress;
+	getFinalResNames((baseName, variants) => {
+		imgPromises.push(exportSvg(baseName, variants));
 	});
 }
