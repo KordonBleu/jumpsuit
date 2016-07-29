@@ -30,7 +30,7 @@ The server requires Node.js 6.0.0 or above.
 
 ## Program architecture
 
-JumpSuit works in a decentralised way: anyone can create a game server. After registering (automatically) to the master server, your game server will be listed on [jumpsuit.space](http://jumpsuit.space/) for players, which will be able to play directly on it. For security reasons however, the assets and scripts **are serverd by the master server**.
+JumpSuit works in a decentralised way: anyone can create a game server. After registering (automatically) to the master server, your game server will be listed on [jumpsuit.space](http://jumpsuit.space/) for players, who will be able to play directly on it. For security reasons however, the assets and scripts **are served by the master server**.
 
 ## How to run
 If you want to create a public game server, here is what you need to do:

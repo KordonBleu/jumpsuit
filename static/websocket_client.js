@@ -19,7 +19,6 @@ masterSocket.addEventListener("message", message => {
 				serverList.forEach(addServerRow);
 				applyLobbySearch();//in case the page was refreshed and the
 			} else {
-				console.log(MESSAGE.ADD_SERVERS.deserialize(message.data), serverList);
 				let newServers = MESSAGE.ADD_SERVERS.deserialize(message.data);
 				serverList = serverList.concat(newServers);
 				newServers.forEach(addServerRow);

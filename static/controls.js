@@ -230,7 +230,7 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // ot
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
-			gamepads.forEach((gp, i) => {
+			Array.prototype.forEach.call(gamepads, (gp, i) => { // Chrome workaround
 				usingGamepad = gp.index;
 				message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);

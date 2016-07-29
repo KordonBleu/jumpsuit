@@ -1,20 +1,21 @@
 "use strict";
 
-function turnToBeige(svgElem) {
-	//console.log("turning to beige");
-	return svgElem; // should return a clone
+// the following functions assume the original image is beige
+function turnToBlue(svgElem) {
+	svgElem.innerHTML = svgElem.innerHTML.replace(/#e0d1af/g, "#8db5e7");
+	return svgElem;
 }
 function turnToGreen(svgElem) {
-	//console.log("turning to green");
-	return svgElem; // should return a clone
+	svgElem.innerHTML = svgElem.innerHTML.replace(/#e0d1af/g, "#6fc4a9");
+	return svgElem;
 }
 function turnToPink(svgElem) {
-	//console.log("turning to pink");
-	return svgElem; // should return a clone
+	svgElem.innerHTML = svgElem.innerHTML.replace(/#e0d1af/g, "#f19cb7");
+	return svgElem;
 }
 function turnToYellow(svgElem) {
-	//console.log("turning to yellow");
-	return svgElem; // should return a clone
+	svgElem.innerHTML = svgElem.innerHTML.replace(/#e0d1af/g, "#fc0");
+	return svgElem;
 }
 
 const resList = {
@@ -43,48 +44,46 @@ const resList = {
 	/*"goldCoin": {},
 	"silverCoin": {},
 	"bronzeCoin": {},*/
-
-	"alien(Blue)_duck": {
-		"Beige": turnToBeige,
-		"Green": turnToGreen,
-		"Pink": turnToPink,
-		"Yellow": turnToYellow,
-	},
 	//"alien(Blue)_hurt": {},
 
-	"alienBlue_jump": {},
-	"alienBlue_stand": {},
-	"alienBlue_walk1": {},
-	"alienBlue_walk2": {},
-
-	"alienBeige_jump": {},
-	"alienBeige_stand": {},
-	"alienBeige_walk1": {},
-	"alienBeige_walk2": {},
-
-	"alienGreen_jump": {},
-	"alienGreen_stand": {},
-	"alienGreen_walk1": {},
-	"alienGreen_walk2": {},
-
-	"alienPink_jump": {},
-	"alienPink_stand": {},
-	"alienPink_walk1": {},
-	"alienPink_walk2": {},
-
-	"alienYellow_jump": {},
-	"alienYellow_stand": {},
-	"alienYellow_walk1": {},
-	"alienYellow_walk2": {},
-
-
-	"alienBlue_mouth_happy": {},
-	"alienBlue_mouth_unhappy": {},
-	"alienBlue_mouth_surprise": {},
+	"alien(Beige)_duck": {
+		"Blue": turnToBlue,
+		"Green": turnToGreen,
+		"Pink": turnToPink,
+		"Yellow": turnToYellow
+	},
+	"alien(Beige)_jump": {
+		"Blue": turnToBlue,
+		"Green": turnToGreen,
+		"Pink": turnToPink,
+		"Yellow": turnToYellow
+	},
+	"alien(Beige)_stand": {
+		"Blue": turnToBlue,
+		"Green": turnToGreen,
+		"Pink": turnToPink,
+		"Yellow": turnToYellow
+	},
+	"alien(Beige)_walk1": {
+		"Blue": turnToBlue,
+		"Green": turnToGreen,
+		"Pink": turnToPink,
+		"Yellow": turnToYellow
+	},
+	"alien(Beige)_walk2": {
+		"Blue": turnToBlue,
+		"Green": turnToGreen,
+		"Pink": turnToPink,
+		"Yellow": turnToYellow
+	},
 
 	"alienBeige_mouth_happy": {},
 	"alienBeige_mouth_unhappy": {},
 	"alienBeige_mouth_surprise": {},
+
+	"alienBlue_mouth_happy": {},
+	"alienBlue_mouth_unhappy": {},
+	"alienBlue_mouth_surprise": {},
 
 	"alienGreen_mouth_happy": {},
 	"alienGreen_mouth_unhappy": {},
@@ -188,7 +187,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 				}
 				//console.log(ev.target);
 				svgToImg(svgName, ev.target.response.documentElement);
-				for (let variant in variants) svgToImg(variant, variants[variant](ev.target.response.documentElement));
+				for (let variant in variants) svgToImg(variant, variants[variant](ev.target.response.documentElement.cloneNode(true)));
 
 				Promise.all(promiseList).then(() => {
 					resolve();
