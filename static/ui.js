@@ -77,7 +77,7 @@ function addShowBoxListener(button, dialogBox) {
 //every HTML element with a "close-parent" class (generally a "Close" button) will, when clicked, close the dialog it is part of
 for (let button of document.getElementsByClassName("close-parent")) {
 	button.addEventListener("click", function(e) {
-		this.parentElement.classList.add("hidden");
+		e.target.parentElement.classList.add("hidden");
 		document.getElementById("shade-box").classList.add("hidden");
 	});
 }

@@ -1,9 +1,9 @@
 "use strict";
 
-var fs = require("fs"),
+require("colors");
+const fs = require("fs"),
 	http = require("http"),
 	WebSocketServer = require("ws").Server,
-	colors = require("colors"),
 	interactive = require("./interactive.js"),
 	MESSAGE = require("./static/message.js"),
 	logger = require("./logger.js"),
@@ -136,7 +136,7 @@ gameServerSocket.on("connection", function(ws) {
 	var gameServer = new GameServer(undefined, undefined, undefined, undefined, ipaddr.parse(ws._socket.remoteAddress)),
 		lastPing = 0;
 
-	ws.on("message", function(message, flags) {
+	ws.on("message", function(message) {
 		if (ips.banned(gameServer.ip)) return;
 
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer

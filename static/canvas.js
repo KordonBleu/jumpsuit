@@ -226,10 +226,11 @@ Player.prototype.draw = function(showName) {
 	context.drawImage(resources[this.weaponry.armed],
 		(weaponList[this.weaponry.armed].offsetX - this.weaponry.recoil)*windowBox.zoomFactor,
 		weaponList[this.weaponry.armed].offsetY*windowBox.zoomFactor,
-		resources[this.weaponry.armed].width*windowBox.zoomFactor, resources[this.weaponry.armed].height*windowBox.zoomFactor);
-		context.rotate(-weaponRotFact);
+		resources[this.weaponry.armed].width*windowBox.zoomFactor, resources[this.weaponry.armed].height*windowBox.zoomFactor
+	);
+	context.rotate(-weaponRotFact);
 
-		context.drawImage(res, centerX, centerY, wdt, hgt);//body
+	context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
 	var helmetRes = resources["astronaut_helmet"];
 	if (this.walkFrame === "_duck") {
@@ -368,7 +369,7 @@ function loop() {
 
 	//planet
 	var playerInAtmos = false;
-	planets.forEach(function (planet, pi) {
+	planets.forEach(function (planet) {
 		if (universe.collide(windowBox, planet.atmosBox)) planet.drawAtmos();
 		if (universe.collide(windowBox, planet.box)) planet.draw();
 
@@ -387,7 +388,7 @@ function loop() {
 	});
 
 	//enemies
-	enemies.forEach(function (enemy, ei) {
+	enemies.forEach(function (enemy) {
 		if (universe.collide(windowBox, enemy.aggroBox)) enemy.drawAtmos();
 		if (universe.collide(windowBox, enemy.box)) enemy.draw();
 	});

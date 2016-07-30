@@ -1,9 +1,8 @@
 "use strict";
 
-var fs = require("fs"),
-	http = require("http"),
+require("colors");
+const http = require("http"),
 	WebSocket = require("ws"),
-	colors = require("colors"),
 	interactive = require("./interactive.js"),
 	MESSAGE = require("./static/message.js"),
 	logger = require("./logger.js"),
@@ -54,9 +53,8 @@ function changeCbk(newConfig, previousConfig) {
 var config = require("./config.js")(process.argv[2] || "./game_config.json", configSkeleton, changeCbk);
 
 function plugModdedModule(moddedModule, defaultModule) {
-	let defaultEngine = require("./mods/" + configSkeleton.mod + "/engine.js");//default engine
-	for (let key in defaultEngine) {
-		if (engine[key] === undefined) engine[key] = defaultEngine[key];//use default functions and constructor when the mod doesn't implement them
+	for (let key in defaultModule) {
+		if (moddedModule[key] === undefined) moddedModule[key] = defaultModule[key];//use default functions and constructor when the mod doesn't implement them
 	}
 }
 var engine,
@@ -157,7 +155,7 @@ wss.on("connection", function(ws) {
 	player.ws = ws;
 	player.ip = ipaddr.parse(ws._socket.remoteAddress);
 
-	ws.on("message", function(message, flags) {
+	ws.on("message", function(message) {
 		if (ips.banned(player.ip)) return;
 
 		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer

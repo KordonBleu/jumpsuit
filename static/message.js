@@ -279,8 +279,7 @@ const MESSAGE = {
 		value: 7,
 		serialize: function(lobbyId, playerId, univWidth, univHeight) {
 			var buffer = new ArrayBuffer(11),
-				view = new DataView(buffer),
-				enabledTeams = 0;
+				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 			view.setUint32(1, lobbyId);
 			view.setUint8(5, playerId);
@@ -430,7 +429,7 @@ const MESSAGE = {
 
 			if (shots !== undefined) {
 				view.setUint8(offset++, shots.length);
-				shots.forEach((shot, i) => {
+				shots.forEach(shot => {
 					view.setUint16(offset, shot.box.center.x);
 					view.setUint16(2 + offset, shot.box.center.y);
 					view.setUint8(4 + offset, radToBrad(shot.box.angle, 1));
@@ -631,6 +630,7 @@ const MESSAGE = {
 			}
 
 			for (let player of players) {
+				if (player === undefined) continue;
 				view.setUint8(offset, player.pid);
 				view.setUint16(1 + offset, player.box.center.x);
 				view.setUint16(3 + offset, player.box.center.y);

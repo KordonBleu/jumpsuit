@@ -38,7 +38,7 @@ function handleInputMobile(e) {
 		return yTransform;
 	}
 
-	for (touch of e.changedTouches) {
+	for (let touch of e.changedTouches) {
 		var s = e.type !== "touchstart" && e.type === "touchend";
 		if (players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
@@ -183,11 +183,10 @@ canvas.addEventListener("touchend", dragEnd);
 document.getElementById("controls").addEventListener("dragstart", function(e) {
 	e.preventDefault();//prevent unhandled dragging
 });
-document.addEventListener("contextmenu", function(e) {
+//document.addEventListener("contextmenu", function(e) {
 	//e.preventDefault();//prevent right-click context menu
 	//unfortunately it also disables the context menu key
-});
-var mousePosX = 0, mousePosY = 0;
+//});
 document.addEventListener("mousemove", function(e) {
 	game.mousePos.x = e.clientX;
 	game.mousePos.y = e.clientY;
@@ -230,7 +229,7 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // ot
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
-			Array.prototype.forEach.call(gamepads, (gp, i) => { // Chrome workaround
+			Array.prototype.forEach.call(gamepads, gp => { // Chrome workaround
 				usingGamepad = gp.index;
 				message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);

@@ -26,7 +26,7 @@ function SoundModel(url, callback) {
 			var indexOpus = url.lastIndexOf(".opus");
 			if (indexOpus !== -1) {//prevent recursivity
 				SoundModel.call(that, url.slice(0, indexOpus) + ".ogg", callback);
-			}
+			} else console.log(err);
 		});
 	}.bind(this);
 	request.send();
@@ -65,11 +65,11 @@ function setPanner(panner, deltaPosX, deltaPosY) {
 
 
 var bgFilter = audioContext.createBiquadFilter();
-	bgFilter.type = "lowpass";
-	bgFilter.Q.value = 2;
-	bgFilter.frequency.value = 4000;
+bgFilter.type = "lowpass";
+bgFilter.Q.value = 2;
+bgFilter.frequency.value = 4000;
 
-	bgFilter.connect(musicGain);
+bgFilter.connect(musicGain);
 
 var laserModel = new SoundModel("/assets/audio/laser.opus"),
 	jetpackModel = new SoundModel("/assets/audio/jetpack.opus"),

@@ -1,11 +1,11 @@
 "use strict";
 
 module.exports = function(config) {
-	var ipaddr = require("ipaddr.js"),
+	const ipaddr = require("ipaddr.js"),
 		https = require("https"),
 		http = require("http"),
-		logger = require("./logger.js"),
-		externalIp,
+		logger = require("./logger.js");
+	let externalIp,
 		localIp,
 		localNetmask,
 		ifaces = require("os").networkInterfaces(),
@@ -31,12 +31,12 @@ module.exports = function(config) {
 	//even though IPv6 netmasks don't exist, see https://github.com/whitequark/ipaddr.js/pull/41#issuecomment-210771828
 	//also the code is ported from here, stripped of the error-checking because data gotten from Node.js can be assumed safe, right?
 	//and because it makes it possible to calculate the cidr of a mapped IPv4 address. In the mapped address ::ffff:stuff:stuff:stuff the preceding zeroes could be considered an error. It's a hack
-	var zerotable = {};//number of zeroes in IPv6 part (16 bits long)
+	let zerotable = {};//number of zeroes in IPv6 part (16 bits long)
 	for (let i = 0; i !== 17; ++i) {
 		zerotable[(0xffff >> i) << i] = i;
 	}
 
-	var cidr = 0;
+	let cidr = 0;
 	for (let i = 7; i !== 0; --i) {
 		let part = localNetmask.parts[i],
 			zeros = zerotable[part];
@@ -55,7 +55,6 @@ module.exports = function(config) {
 				logger(logger.ERROR, "Unknown error: " + err.message + ". Closing server.");
 				process.exit(1);
 			}
-			reject(err);
 		}
 
 		return new Promise(function(resolve, reject) {
@@ -100,8 +99,14 @@ module.exports = function(config) {
 								logger(logger.INFO, "IPv6 is: " + externalIp.toString());
 								resolve(externalIp);
 							});
-						}).on("error", errorHandler);
-					} else errorHandler(err);
+						}).on("error", err => {
+							errorHandler(err);
+							reject(err);
+						});
+					} else {
+						errorHandler(err);
+						reject(err);
+					}
 				});
 			}
 		});
@@ -111,12 +116,10 @@ module.exports = function(config) {
 
 
 	return function(serverIp, clientIp) {
-		var serverOnLocalhost = serverIp.range() === "loopback" || (serverIp.range() === "ipv4Mapped" && serverIp.toIPv4Address().range() === "loopback"),
+		let serverOnLocalhost = serverIp.range() === "loopback" || (serverIp.range() === "ipv4Mapped" && serverIp.toIPv4Address().range() === "loopback"),
 			serverOnNetwork = localIp.match(serverIp, cidr),
-			serverOnInternet = !serverOnLocalhost && !serverOnNetwork,
 			clientOnLocalhost = clientIp.range() === "loopback" || (clientIp.range() === "ipv4Mapped" && clientIp.toIPv4Address().range() === "loopback"),
-			clientOnNetwork = localIp.match(clientIp, cidr),
-			clientOnInternet = !clientOnLocalhost && !clientOnNetwork;
+			clientOnNetwork = localIp.match(clientIp, cidr);
 
 
 		if (serverOnLocalhost && clientOnLocalhost) return Promise.resolve(ipaddr.parse("::ffff:7f00:1"));

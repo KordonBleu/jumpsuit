@@ -1,6 +1,6 @@
 "use strict";
 
-var ownIdx = null,
+let ownIdx = null,
 	enabledTeams = [],
 	masterSocket = new WebSocket("wss://" + location.hostname + (location.port === "" ? "" : ":" + location.port) + "/clients"),
 	serverList,
@@ -50,7 +50,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 	//this should return a Promise, dontcha think?
 
 	this.latencyHandler = setInterval(() => {
-		var param1 = document.getElementById("gui-bad-connection");
+		let param1 = document.getElementById("gui-bad-connection");
 		if (Date.now() - this.lastMessage > 2000) param1.classList.remove("hidden");
 		else param1.classList.add("hidden");
 
@@ -92,8 +92,8 @@ Connection.prototype.sendChat = function(content) {
 	printChatMessage(players[ownIdx].getFinalName(), players[ownIdx].appearance, content);
 };
 Connection.prototype.refreshControls = function(controls) {
-	var accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
-	for (var c in players[ownIdx].controls) {
+	let accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
+	for (let c in players[ownIdx].controls) {
 		b++;
 		if (this.lastControls[c] === players[ownIdx].controls[c]) accordance++;
 		else this.lastControls[c] = players[ownIdx].controls[c];
@@ -114,8 +114,8 @@ Connection.prototype.errorHandler = function() {
 Connection.prototype.messageHandler = function(message) {
 	this.lastMessage = Date.now();
 	switch (new Uint8Array(message.data, 0, 1)[0]) {
-		case MESSAGE.ERROR.value:
-			var errDesc;
+		case MESSAGE.ERROR.value: {
+			let errDesc;
 			switch(MESSAGE.ERROR.deserialize(message.data)) {
 				case MESSAGE.ERROR.NO_LOBBY:
 					errDesc = "This lobby doesn't exist anymore";//TODO: show this message in a pop-up with "See the other servers button" to get back to the menu
@@ -127,9 +127,9 @@ Connection.prototype.messageHandler = function(message) {
 			location.hash = "";
 			alert("Error:\n" + errDesc);
 			break;
-
-		case MESSAGE.CONNECT_ACCEPTED.value:
-			var val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
+		}
+		case MESSAGE.CONNECT_ACCEPTED.value: {
+			let val = MESSAGE.CONNECT_ACCEPTED.deserialize(message.data);
 			planets.length = 0;
 			enemies.length = 0;
 			shots.length = 0;
@@ -139,11 +139,11 @@ Connection.prototype.messageHandler = function(message) {
 			universe.width = val.univWidth;
 			universe.height = val.univHeight;
 
-			var hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, "$1$2");
+			let hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, "$1$2");
 
 			location.hash = "#srv=" + hashSocket + "&lobby=" + encodeLobbyNumber(val.lobbyId);
 			break;
-
+		}
 		case MESSAGE.ADD_ENTITY.value:
 			MESSAGE.ADD_ENTITY.deserialize(message.data,
 				(x, y, radius, type) => {//add planets
@@ -154,14 +154,14 @@ Connection.prototype.messageHandler = function(message) {
 				},
 				(x, y, angle, origin, type) => {//add shots
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
-					var shot = new Shot(x, y, angle, origin, type);
+					let shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					var param1 = players.find(element => { return element !== null && element.pid === origin; });
+					let param1 = players.find(element => { return element !== null && element.pid === origin; });
 					if (param1) param1.weaponry.muzzleFlash = type === shot.shotEnum.bullet || type === shot.shotEnum.ball;
 				},
 				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {//add players
 					console.log(pid);
-					var newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
+					let newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					newPlayer.pid = pid;
 					newPlayer.box.center.x = x;
 					newPlayer.box.center.y = y;
@@ -187,8 +187,8 @@ Connection.prototype.messageHandler = function(message) {
 				}
 			);
 			break;
-		case MESSAGE.GAME_STATE.value: 
-			var val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, players.length,
+		case MESSAGE.GAME_STATE.value: {
+			let val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, players.length,
 				(id, ownedBy, progress) => {
 					planets[id].progress.team = ownedBy;
 					planets[id].progress.value = progress;
@@ -214,7 +214,7 @@ Connection.prototype.messageHandler = function(message) {
 							players[pid].jetpackSound.stop();
 						}
 					}
-					var param1 = Date.now(), param2 = players[pid];
+					let param1 = Date.now(), param2 = players[pid];
 
 					if ("timestamp" in players[pid].predictionTarget) param1 = param2.predictionTarget.timestamp;
 					players[pid].predictionTarget = {timestamp: Date.now(), box: new vinage.Rectangle(new vinage.Point(x, y), 0, 0, angle), aimAngle: aimAngle};
@@ -245,7 +245,7 @@ Connection.prototype.messageHandler = function(message) {
 			players[ownIdx].fuel = val.yourFuel;
 
 			Array.prototype.forEach.call(document.querySelectorAll("#gui-health div"), (element, index) => {
-				var state = "heartFilled";
+				let state = "heartFilled";
 				if (index * 2 + 2 <= players[ownIdx].health) state = "heartFilled";
 				else if (index * 2 + 1 === players[ownIdx].health) state = "heartHalfFilled";
 				else state = "heartNotFilled";
@@ -254,31 +254,34 @@ Connection.prototype.messageHandler = function(message) {
 			if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
 
 			break;
-
-		case MESSAGE.CHAT_BROADCAST.value:
-			var val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
+		}
+		case MESSAGE.CHAT_BROADCAST.value: {
+			let val = MESSAGE.CHAT_BROADCAST.deserialize(message.data);
 			printChatMessage(players[val.id].getFinalName(), players[val.id].appearance, val.message);
 			break;
-		case MESSAGE.SET_NAME_BROADCAST.value:
-			var val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data),
+		}
+		case MESSAGE.SET_NAME_BROADCAST.value: {
+			let val = MESSAGE.SET_NAME_BROADCAST.deserialize(message.data),
 				oldName = players[val.id].getFinalName();
 			players[val.id].name = val.name;
 			players[val.id].homographId = val.homographId;
 			printChatMessage(undefined, undefined, "\"" + oldName + "\" is now known as \"" + players[val.id].getFinalName() + "\"");
 			printPlayerList();
 			break;
-		case MESSAGE.SCORES.value:
-			var val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
-			for (var team in val) {
-				var element = document.getElementById("gui-points-" + team);
+		}
+		case MESSAGE.SCORES.value: {
+			let val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
+			for (let team in val) {
+				let element = document.getElementById("gui-points-" + team);
 				if (element !== null) {
 					element.textContent = val[team];
 					element.style.display = "inline-block";
 				}
 			}
 			break;
-		case MESSAGE.LOBBY_STATE.value:
-			var val = MESSAGE.LOBBY_STATE.deserialize(message.data);
+		}
+		case MESSAGE.LOBBY_STATE.value: {
+			let val = MESSAGE.LOBBY_STATE.deserialize(message.data);
 			if (val.enabledTeams !== undefined) enabledTeams = val.enabledTeams;
 			console.log(val);
 			if (val.state === "PLAYING" && !game.started) game.start();
@@ -289,6 +292,7 @@ Connection.prototype.messageHandler = function(message) {
 				shots.length = 0;
 			}
 			break;
+		}
 	}
 };
 

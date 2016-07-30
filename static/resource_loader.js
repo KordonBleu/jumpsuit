@@ -177,6 +177,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 						let img = new Image();
 						img.addEventListener("load", function(ev) {
 							resources[name] = ev.target;
+							loadProgress += 1;
 							resolve(ev.target);
 						}.bind(this));
 						img.addEventListener("error", err => {
@@ -185,7 +186,6 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 						img.src = URL.createObjectURL(blob); // use blob://whatever to create image
 					}));
 				}
-				//console.log(ev.target);
 				svgToImg(svgName, ev.target.response.documentElement);
 				for (let variant in variants) svgToImg(variant, variants[variant](ev.target.response.documentElement.cloneNode(true)));
 
