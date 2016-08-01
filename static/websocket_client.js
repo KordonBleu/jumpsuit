@@ -273,20 +273,25 @@ Connection.prototype.messageHandler = function(message) {
 			let val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
 			for (let team in val) {
 				let element = document.getElementById("gui-points-" + team);
-				if (element !== null) {
-					element.textContent = val[team];
-					element.style.display = "inline-block";
-				}
+				if (element !== null) element.textContent = val[team];
 			}
 			break;
 		}
 		case MESSAGE.LOBBY_STATE.value: {
 			let val = MESSAGE.LOBBY_STATE.deserialize(message.data);
-			if (val.enabledTeams !== undefined) enabledTeams = val.enabledTeams;
+			if (val.enabledTeams !== undefined) {
+				enabledTeams = val.enabledTeams
+				while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild);
+				for (let team of enabledTeams) {
+					let teamItem = document.createElement("div");
+					teamItem.id = "gui-points-" + team;
+					pointsElement.appendChild(teamItem);
+				}
+			}
 			console.log(val);
 			if (val.state === "PLAYING" && !game.started) game.start();
 			else if (val.state === "DISPLAYING_SCORES") {
-				if (game.started) game.stop();
+				while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 				planets.length = 0;
 				enemies.length = 0;
 				shots.length = 0;

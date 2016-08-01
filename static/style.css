@@ -7,6 +7,9 @@
 	font-weight: 400;
 	src: local("Open Sans"), url("https://jumpsuit.space/assets/fonts/open_sans_400.woff2") format("woff2"), url("https://jumpsuit.space/assets/fonts/open_sans_400.woff") format("woff");
 }
+html {
+	background-image: url("https://jumpsuit.space/assets/images/background.png");
+}
 html, body {
 	font-size: 16px;
 	margin: 0;
@@ -21,6 +24,9 @@ html, body, button, label, #player-list, #lobby-table thead, #key-settings, .wea
 	-ms-user-select: none;
 	user-select: none;
 }
+body.nogui *[id^=gui]{
+	display: none;
+}
 #menu-box, #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	overflow-y: auto;
 	-webkit-user-select: text;
@@ -28,19 +34,16 @@ html, body, button, label, #player-list, #lobby-table thead, #key-settings, .wea
 	-ms-user-select: text;
 	user-select: text;
 }
-#gui-fuel, #gui-health, #gui-chat, #gui-points, #controls {
+#gui-fuel, #gui-health, #gui-chat, #gui-points, #gui-controls {
 	pointer-events: none;
 }
-#controls li img {
+#gui-controls li img {
 	pointer-events: auto;
-}
-html {
-	background-image: url("https://jumpsuit.space/assets/images/background.png");
 }
 #port-number {
 	font-weight: bold;
 }
-#minimap-canvas {
+#gui-minimap-canvas {
 	position: fixed;
 	top: 52px;
 	right: 8px;
@@ -237,7 +240,7 @@ label {
 }
 
 /* On-screen controls */
-#controls {
+#gui-controls {
 	position: fixed;
 	bottom: 0;
 	padding: 0;
@@ -247,10 +250,10 @@ label {
 	justify-content: space-between;
 	align-items: flex-end;
 }
-#controls li {
+#gui-controls li {
 	list-style-type: none;
 }
-#controls li img {
+#gui-controls li img {
 	width: 80px;
 	height: 80px;
 	opacity: 0.3;
@@ -263,7 +266,7 @@ label {
 	width: 230px;
 }
 
-#chat-input-container {
+#gui-chat-input-container {
 	position: fixed;
 	bottom: 20px;
 	left: 50%;
@@ -271,7 +274,7 @@ label {
 	max-width: 1000px;
 	width: calc(100vw - 420px);
 }
-#chat-input {
+#gui-chat-input {
 	width: 100%;
 	box-sizing: border-box;
 	padding: 5px;
@@ -285,7 +288,7 @@ label {
 	border-top-left-radius: 4px;
 	border-top-right-radius: 4px;
 }
-#chat-input:focus {
+#gui-chat-input:focus {
 	background: rgba(0, 0, 0, 0.3);	
 }
 #player-list {
@@ -574,6 +577,7 @@ label {
 	font-size: 0.875em;
 	width: 300px;
 	height: calc(100vh - 4vh - 270px); /*div ends 15px above controls*/
+	text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
 }
 #gui-chat p {
 	margin: 2px 0;
@@ -668,14 +672,17 @@ label {
 	position: fixed;
 	top: 4px;
 	left: 50%;
-	transform: translate3d(-50%, 0, 0);
+	transform: translateX(-50%);
 	color: #eee;
 	font-size: 1.75em;
 	background: rgba(0, 0, 0, 0.7);
 	min-height: none;
 }
-#gui-points th {
-	width: 108px;
+#gui-points div {
+	display: inline-block;
+	width: 4em;
+	font-weight: bold;
+	padding: 0.1em 0;
 	text-align: center;
 }
 #gui-points-alienBeige { color: #e5d9be; }

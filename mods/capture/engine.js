@@ -12,7 +12,7 @@ function mod(dividend, divisor) {
 const weaponList = {
 	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1, spray: 0.025}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
 	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1, spray: 0.04},
-	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 84, muzzleY: 2, shotType: 3, spray: 0.08},
+	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 84, muzzleY: 2, shotType: 3, spray: 0.05},
 	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2, spray: 0.005}
 };
 
@@ -278,6 +278,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 					inaccuracy = (2*Math.random()-1)*weaponList[player.weaponry.armed].spray;
 				for (var i = -1; i <= 1; i++) {
 					if (shotType !== 3 && i !== 0) continue;
+					if (i !== 0) inaccuracy += (2 * Math.random() - 1) * weaponList[player.weaponry.armed].spray * 0.45;
 					let shotX = player.box.center.x + weaponList[player.weaponry.armed].muzzleX * Math.sin(player.aimAngle) + weaponList[player.weaponry.armed].muzzleY * shift * Math.sin(player.aimAngle - Math.PI / 2),
 						shotY = player.box.center.y - weaponList[player.weaponry.armed].muzzleX * Math.cos(player.aimAngle) - weaponList[player.weaponry.armed].muzzleY * shift * Math.cos(player.aimAngle - Math.PI / 2);
 					let newShot = new Shot(shotX, shotY, player.aimAngle + i*0.12 + inaccuracy, player.pid, shotType);

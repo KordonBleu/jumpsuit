@@ -170,7 +170,7 @@ module.exports = function(engine) {
 			if (this.planets.every(function(planet) {
 				return distanceBetween(planet.box, newEnemy.box) > planet.box.radius + 420;
 			}.bind(this)) && this.enemies.every(function(enemy) {
-				return distanceBetween(enemy.box, newEnemy.box) > 370;
+				return distanceBetween(enemy.box, newEnemy.box) > 700;
 			}.bind(this))) this.enemies.push(newEnemy);
 			else --i;//failed to add it, do it again so we have the correct amount
 		}

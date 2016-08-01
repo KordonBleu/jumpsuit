@@ -240,14 +240,16 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 ```
 
 
+
+
 ### Client ↔ Game server
 
-#### SET_NAME (client → game server)
+#### SET_PREFERENCES (client → game server)
 ```
- 1B       0B-?B
-+---+---------------+
-| 3 | "player name" |
-+---+---------------+
+ 1B         1B               1B               0B-?B
++---+----------------+------------------+---------------+
+| 3 | primary weapon | secondary weapon | "player name" |
++---+----------------+------------------+---------------+
 ```
 
 The player must send this message before `CONNECT`.
@@ -265,15 +267,14 @@ The `homograph id` is used to distinguish players with the same name. It is uniq
 
 #### CONNECT (client → game server)
 ```
- 1B      4B
-+---+~~~~~~~~~~+
-| 5 | lobby id |
-+---+~~~~~~~~~~+
+ 1B        1B            4B           1B                 1B              0B-?B
++---+---------------+----------+----------------+------------------+---------------+
+| 5 | lobbyDefined? | lobby id | primary weapon | secondary weapon | "player name" |
++---+---------------+----------+----------------+------------------+---------------+
 ```
 
 The game server will respond with CONNECT_ACCEPTED.
-The `lobby id` must be set only if the player wishes to connect to a specific lobby (which happens when connecting via a URL). In this case the server might respond with an ERROR rather than with CONNECT_ACCEPTED.
-
+The `lobby id` must be set only if the player wishes to connect to a specific lobby (which happens when connecting via a URL).
 
 #### ERROR (game server → client)
 ```
@@ -291,33 +292,41 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### CONNECT_ACCEPTED (game server → client)
 ```
- 1B      4B          1B           2B                2B              3b           1b          1b           1b          1b           1b            ?B
-+---+----------+-----------+----------------+-----------------+--------------------------+-----------+------------+-----------+-------------+------------+
-| 7 | lobby id | player id | universe width | universe height | unused bits | beige team | blue team | green team | pink team | yellow team | ADD_ENTITY |
-+---+----------+-----------+----------------+-----------------+-------------+------------+-----------+------------+-----------+-------------+------------+
+ 1B      4B          1B           2B                2B
++---+----------+-----------+----------------+-----------------+
+| 7 | lobby id | player id | universe width | universe height |
++---+----------+-----------+----------------+-----------------+
 ```
 
 
 #### LOBBY_STATE (game server → client)
 ```
- 1B       1B         1B
-+---+-------------+~~~~~~~+
-| 8 | Lobby State | timer |
-+---+-------------+~~~~~~~+
+ 1B       1B            3b                   5b
++---+-------------+-------------+------------------------+
+| 8 | lobby state | unused bits |      enabledTeams      |
++---+-------------+-------------+-  -  -  -  -  -  -  -  +
+                                | e.g.:  0 1 0 1 0       |
+                                |          ^   ^         |
+                                |          |   |         |
+                                |          |   alienPink |
+                                |          alienBlue     |
+                                +------------------------+
+
 ```
 
 `Lobby State` must be either:
- 0. warmup
- 1. game started
- 2. game over
+ 0. not enough players
+ 1. transmitting data (planets, enmies, players)
+ 2. playing
+ 3. displaying scores
 
 
 #### ADD_ENTITY (game server → client)
 ```
-  1B       1B           ?*6B         1B        ?*5B         1B       ?*6B     ?B
-+----+---------------+========+--------------+=======+-------------+======+========+
+  1B       1B          ?*6B         1B        ?*5B         1B       ?*6B     ?B
++---+---------------+========+--------------+=======+-------------+======+========+
 | 9 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
-+----+---------------+========+--------------+=======+-------------+======+========+
++---+---------------+========+--------------+=======+-------------+======+========+
 ```
 
 
@@ -376,11 +385,9 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### SCORES (game server → client)
 ```
-  1B       4B
-+----+============+
-| 16 | team score |
-+----+============+
+  1B      1B        4B
++----+======================+
+| 16 | team id | team score |
++----+======================+
 ```
 
-There are as many `team score`s as there are teams. Which teams are playing has already been sent with a CONNECT_ACCEPTED message.
-The order `team score`s can be mapped to teams is as follow (provided the teams are enabled): beige team, blue team, green team, pink team, yellow team.

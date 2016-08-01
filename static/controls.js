@@ -38,7 +38,7 @@ function handleInputMobile(e) {
 		return yTransform;
 	}
 
-	for (let touch of e.changedTouches) {
+	for (touch of e.changedTouches) {
 		var s = e.type !== "touchstart" && e.type === "touchend";
 		if (players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
@@ -63,6 +63,8 @@ function handleInput(e) {
 		var triggered = handleInput.keyMap[e.code];
 		if (players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
+			var controlElement = document.getElementById(triggered);
+			if (controlElement !== null) controlElement.style["opacity"] = s * 0.7 + 0.3;
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		} else if (triggered === "chat" && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
@@ -180,7 +182,7 @@ canvas.addEventListener("mouseup", function(e) {
 canvas.addEventListener("touchstart", dragStart);//TODO: action 1 on simple tap on mobile
 //canvas.addEventListener("touchmove", dragMove);
 canvas.addEventListener("touchend", dragEnd);
-document.getElementById("controls").addEventListener("dragstart", function(e) {
+document.getElementById("gui-controls").addEventListener("dragstart", function(e) {
 	e.preventDefault();//prevent unhandled dragging
 });
 //document.addEventListener("contextmenu", function(e) {
@@ -229,7 +231,7 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // ot
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
-			Array.prototype.forEach.call(gamepads, gp => { // Chrome workaround
+			Array.prototype.forEach.call(gamepads, (gp, i) => { // Chrome workaround
 				usingGamepad = gp.index;
 				message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);

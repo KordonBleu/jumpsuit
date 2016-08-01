@@ -57,6 +57,7 @@ var context = canvas.getContext("2d"),
 			window.removeEventListener("touchmove", handleInputMobile);
 			window.removeEventListener("touchend", handleInputMobile);
 			menuBox.classList.remove("hidden");
+			clearChat();
 			players.forEach(function(player) {
 				if (player.jetpack) player.jetpackSound.stop();
 			});
@@ -285,6 +286,7 @@ var allImagesLoaded = Promise.all(imgPromises).then(function() {
 	resizeHandler();
 	game.stop();
 	window.cancelAnimationFrame(game.loaderAnimationFrameId);
+	document.body.removeAttribute("class");
 	handleHistoryState();
 
 	setMouth(resources["alienBeige_duck"], 24.443, 24.781, 15);

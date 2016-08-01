@@ -10,10 +10,10 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
 		<link rel="icon" href="https://jumpsuit.space/assets/images/cordonbleu.png"/>
 	</head>
-	<body>
+	<body class="nogui">
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<canvas id="minimap-canvas" class="hidden"></canvas>
-		<ul id="controls">
+		<canvas id="gui-minimap-canvas" class="hidden"></canvas>
+		<ul id="gui-controls">
 			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
 				<img src="/assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
 				<img src="/assets/images/controls/crouch.svg" alt="crouch control" id="crouch"/></li>
@@ -30,19 +30,13 @@
 		</div>
 		<div id="gui-chat" class="hidden"><p id="gui-chat-first"></p></div>
 		<div id="gui-bad-connection" class="hidden"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</div>
-		<div id="chat-input-container" class="hidden">
+		<div id="gui-chat-input-container" class="hidden">
 			<ul id="player-list" class="hidden"></ul>
-			<input type="text" id="chat-input" maxlength="150"/>
+			<input type="text" id="gui-chat-input" maxlength="150"/>
 		</div>
-		<table id="gui-points" class="hidden">
-			<tr>
-				<th id="gui-points-alienBeige">60</th>
-				<th id="gui-points-alienBlue">15</th>
-				<th id="gui-points-alienGreen">73</th>
-				<th id="gui-points-alienPink">44</th>
-				<th id="gui-points-alienYellow">102</th>
-			</tr>
-		</table>
+		<div id="gui-points" class="hidden">
+			
+		</div>
 		<div id="gui-options" class="hidden">
 			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button>
 			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button>
@@ -145,7 +139,6 @@
 			<p>We plan to support this platform, however it not our highest priority. Thus, the game might not work properly.</p>
 			<p>At the moment, we are primarily focusing on Chrome and Firefox on desktop.<br/>
 			Please come back using one of these (on old computers, Firefox is generally faster).</p>
-
 			<button class="close-parent">Okay</button>
 		</div>
 		<script src="https://jumpsuit.space/ipaddr.min.js"></script>

@@ -19,14 +19,14 @@
 	#gui-health {
 		top: 14px;
 	}
-	#controls li img {
+	#gui-controls li img {
 		width: 65px;
 		height: 65px;
 	}
 	#chat-input-container {
 		width: calc(100vw - 340px);
 	}
-	#minimap-canvas {
+	#gui-minimap-canvas {
 		top: 6px;
 		transform-origin: top right;
 		transform: scale(0.75);
@@ -95,14 +95,14 @@
 	#gui-points th {
 		width: 40px;
 	}
-	#controls li img {
+	#gui-controls li img {
 		width: 50px;
 		height: 50px;
 	}
-	#chat-input-container {
+	#gui-chat-input-container {
 		width: calc(100vw - 270px);
 	}
-	#minimap-canvas {
+	#gui-minimap-canvas {
 		transform: scale(0.6);
 	}
 	#gui-options {

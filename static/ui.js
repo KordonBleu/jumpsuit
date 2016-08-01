@@ -2,8 +2,8 @@
 
 var chatElement = document.getElementById("gui-chat"),
 	chatFirstElement = document.getElementById("gui-chat-first"),
-	chatInputContainer = document.getElementById("chat-input-container"),
-	chatInput = document.getElementById("chat-input"),
+	chatInputContainer = document.getElementById("gui-chat-input-container"),
+	chatInput = document.getElementById("gui-chat-input"),
 	playerListElement = document.getElementById("player-list"),
 
 	healthElement = document.getElementById("gui-health"),
@@ -44,7 +44,7 @@ var chatElement = document.getElementById("gui-chat"),
 	infoButton = document.getElementById("info-button"),
 	/* canvases */
 	canvas = document.getElementById("canvas"),
-	minimapCanvas = document.getElementById("minimap-canvas"),
+	minimapCanvas = document.getElementById("gui-minimap-canvas"),
 
 	settings = {
 		name: localStorage.getItem("settings.name") || "Unnamed Player",
@@ -256,7 +256,6 @@ function printChatMessage(name, appearance, content) {
 	element.appendChild(nameElement);
 	element.appendChild(textElement);
 	chatElement.appendChild(element);
-	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
 	updateChatOffset();
 }
 function updateChatOffset(){
@@ -265,6 +264,9 @@ function updateChatOffset(){
 		messageHeight += element.clientHeight + 2;
 	}
 	chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + "px";
+}
+function clearChat() {
+	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
 }
 
 /* Player list */
