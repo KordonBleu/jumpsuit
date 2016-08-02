@@ -94,7 +94,6 @@ const MESSAGE = {
 			var partialServerBufs = [],
 				partialServerBufsLength = 0;
 
-			console.log(serverList);
 			for (let server of serverList) {
 				var partialServerBuf = MESSAGE.REGISTER_SERVER.serialize(server.secure, server.port, server.name, server.mod).slice(1);
 				partialServerBufs.push(partialServerBuf);
@@ -397,7 +396,7 @@ const MESSAGE = {
 					totalNameSize += playerNameBufs[i].byteLength;
 				});
 			}
-			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.length*11 + totalNameSize : 0)),
+			var buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*11 + totalNameSize : 0)),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
 
@@ -499,7 +498,6 @@ const MESSAGE = {
 				);
 
 			}
-
 			while (i !== buffer.byteLength) {
 				var nameLgt = view.getUint8(i + 10),
 					enumByte = view.getUint8(i + 7),
@@ -612,7 +610,7 @@ const MESSAGE = {
 			knife: 3
 		},
 		serialize: function(yourHealth, yourFuel, planets, enemies, players) {
-			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.actualLength*10),
+			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.actualLength()*10),
 				view = new DataView(buffer);
 
 			view.setUint8(0, this.value);
@@ -628,7 +626,7 @@ const MESSAGE = {
 			for (let enemy of enemies) {
 				view.setUint8(offset++, radToBrad(enemy.box.angle, 1));
 			}
-
+			
 			for (let player of players) {
 				if (player === undefined) continue;
 				view.setUint8(offset, player.pid);
@@ -650,7 +648,7 @@ const MESSAGE = {
 
 			return buffer;
 		},
-		deserialize: function(buffer, planetAmount, enemyAmount, playerAmount, planetsCbk, enemiesCbk, playersCbk) {
+		deserialize: function(buffer, planetAmount, enemyAmount, planetsCbk, enemiesCbk, playersCbk) {
 			var view = new DataView(buffer);
 			var i = 4;
 			for (let id = 0; i !== 4 + planetAmount*2; i += 2, ++id) {
@@ -665,8 +663,7 @@ const MESSAGE = {
 				enemiesCbk(id, bradToRad(view.getUint8(i), 1));//angle
 			}
 
-			limit += playerAmount*10;
-			for (; i !== limit; i += 10) {
+			for (; i !== view.byteLength; i += 10) {
 				let enumByte = view.getUint8(8 + i),
 					weaponByte = view.getUint8(9 + i);
 				playersCbk(view.getUint8(i), //pid

@@ -1,10 +1,6 @@
 @media all and (max-width: 900px) {
-	body {
-		font-size: 14px;
-	}
-	button {
-		min-width: 90px;
-		padding: 6px;
+	html {
+		font-size: 0.9em;
 	}
 	#gui-points {
 		font-size: 1.5em;
@@ -52,19 +48,16 @@
 	}
 	#menu-box {
 		flex-direction: column;
-		flex-wrap: wrap;
 	}
 	#sidebar {
 		order: -1;
-		min-width: initial;
-		justify-content: flex-start;
-		align-items: center;
+		min-width: none;
 	}
-	#search-filter > h1, #search-filter > label  {
-		float: left;
-		margin: 0.5rem 4px;
-		height: 2rem;
-		line-height: 2rem;
+	#sidebar > div { display: inline-block; }
+	#search-filter h1 { display: none; }
+	#search-filter label:before {
+		content: "Search: ";
+		margin-right: 0.25em;
 	}
 	#settings-box {
 		flex-direction: column;
@@ -78,8 +71,8 @@
 	}
 }
 @media all and (max-width: 640px) {
-	body {
-		font-size: 12.5px;
+	html {
+		font-size: 0.8em;
 	}
 	button {
 		min-width: 74px;

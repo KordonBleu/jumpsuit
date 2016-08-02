@@ -18,7 +18,7 @@ module.exports = function(engine) {
 		this.resetWorld();
 	}
 	Lobby.prototype.lobbyStates = {NOT_ENOUGH_PLAYER: 0, TRANSMITTING_DATA: 1, PLAYING: 2, DISPLAYING_SCORES: 3};
-	Lobby.prototype.stateTimes = [-1, -1, 1200, 50];
+	Lobby.prototype.stateTimes = [-1, -1, 50, 50];
 	Lobby.prototype.broadcast = function(message, exclude) {
 		this.players.forEach(function(player) {
 			if (player !== exclude) player.send(message);
@@ -73,7 +73,7 @@ module.exports = function(engine) {
 	};
 	Lobby.prototype.updateLobby = function() {
 		if (this.lobbyState === this.lobbyStates["NOT_ENOUGH_PLAYER"]) {
-			if (this.players.actualLength >= this.maxPlayers * 0.5) {
+			if (this.players.actualLength() >= this.maxPlayers * 0.5) {
 				this.stateTimer = 0;
 				this.lobbyState = 1;
 				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
@@ -186,11 +186,9 @@ module.exports = function(engine) {
 			_teams.splice(teamIndex, 1);
 		}
 		this.enabledTeams = Object.keys(this.teamScores);
-		this.players.forEach(function(player) {//TODO: This. Better.
-			var ws = player.ws;
-			player = new engine.Player(player.name);//resetPlayers for team-reassignment
-			player.ws = ws;
-		}, this);
+		this.players.forEach(function(player) {
+			player.controls = {};
+		});
 	};
 	Lobby.prototype.assignPlayerTeam = function(player) {
 		var teamsPlaying = Object.keys(this.teams);

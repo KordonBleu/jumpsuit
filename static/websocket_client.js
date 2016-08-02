@@ -50,6 +50,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 	//this should return a Promise, dontcha think?
 
 	this.latencyHandler = setInterval(() => {
+		if (game.state !== "PLAYING") return;
 		let param1 = document.getElementById("gui-bad-connection");
 		if (Date.now() - this.lastMessage > 2000) param1.classList.remove("hidden");
 		else param1.classList.add("hidden");
@@ -80,7 +81,10 @@ Connection.prototype.close = function() {
 	this.socket.removeEventListener("error", this.errorHandler);
 	this.socket.removeEventListener("message", this.messageHandler);
 	game.stop();
-//	history.pushState(HISTORY_MENU, "", "/");
+	players.length = 0;
+	lobbyTableElement.classList.remove("hidden");
+	playerTableElement.classList.add("hidden");
+	history.pushState(HISTORY_MENU, "", "/");
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 };
 Connection.prototype.setPreferences = function() {
@@ -140,8 +144,10 @@ Connection.prototype.messageHandler = function(message) {
 			universe.height = val.univHeight;
 
 			let hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, "$1$2");
-
 			location.hash = "#srv=" + hashSocket + "&lobby=" + encodeLobbyNumber(val.lobbyId);
+
+			lobbyTableElement.classList.add("hidden");
+			playerTableElement.classList.remove("hidden");
 			break;
 		}
 		case MESSAGE.ADD_ENTITY.value:
@@ -156,21 +162,21 @@ Connection.prototype.messageHandler = function(message) {
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					let shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					let param1 = players.find(element => { return element !== null && element.pid === origin; });
+					let param1 = players.find(element => { return element !== undefined && element.pid === origin; });
 					if (param1) param1.weaponry.muzzleFlash = type === shot.shotEnum.bullet || type === shot.shotEnum.ball;
 				},
 				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {//add players
-					console.log(pid);
 					let newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
 					newPlayer.pid = pid;
 					newPlayer.box.center.x = x;
 					newPlayer.box.center.y = y;
 					newPlayer.looksLeft = looksLeft;
 					newPlayer.homographId = homographId;
-					printChatMessage(undefined, undefined, newPlayer.getFinalName() + " joined the game");
+					if (!(pid in players)) printChatMessage(undefined, undefined, newPlayer.getFinalName() + " joined the game");
 					players[pid] = newPlayer;
 				}
 			);
+			updatePlayerList();
 			break;
 		case MESSAGE.REMOVE_ENTITY.value:
 			MESSAGE.REMOVE_ENTITY.deserialize(message.data,
@@ -186,9 +192,10 @@ Connection.prototype.messageHandler = function(message) {
 					delete players[id];
 				}
 			);
+			updatePlayerList();
 			break;
 		case MESSAGE.GAME_STATE.value: {
-			let val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length, players.length,
+			let val = MESSAGE.GAME_STATE.deserialize(message.data, planets.length, enemies.length,
 				(id, ownedBy, progress) => {
 					planets[id].progress.team = ownedBy;
 					planets[id].progress.value = progress;
@@ -288,19 +295,20 @@ Connection.prototype.messageHandler = function(message) {
 					pointsElement.appendChild(teamItem);
 				}
 			}
+			game.state = val.state;
 			console.log(val);
-			if (val.state === "PLAYING" && !game.started) game.start();
-			else if (val.state === "DISPLAYING_SCORES") {
-				while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
-				planets.length = 0;
-				enemies.length = 0;
-				shots.length = 0;
+			playerTableStatusElement.textContent = val.state;
+			if (val.state === "NOT_ENOUGH_PLAYERS") {
+				updatePlayerList();
+			} else if (val.state === "PLAYING") {
+				game.start();
+			} else if (val.state === "DISPLAYING_SCORES") {
+				game.stop();
 			}
 			break;
 		}
 	}
 };
-
 
 function connectByHash() {
 	if (location.hash === "") return;

@@ -11,14 +11,13 @@ html {
 	background-image: url("https://jumpsuit.space/assets/images/background.png");
 }
 html, body {
-	font-size: 16px;
 	margin: 0;
 	height: 100%;
 	overflow: hidden;
 	font-family: "Open Sans", Tahoma, sans-serif;
 	-webkit-transform: translate3d(0, 0, 0);
 }
-html, body, button, label, #player-list, #lobby-table thead, #key-settings, .weapon-select {
+html, body, button, label, #gui-chat-player-list, table thead, #key-settings, .weapon-select {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
@@ -28,6 +27,7 @@ body.nogui *[id^=gui]{
 	display: none;
 }
 #menu-box, #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
+	overflow-x: hidden;
 	overflow-y: auto;
 	-webkit-user-select: text;
 	-moz-user-select: text;
@@ -50,7 +50,7 @@ body.nogui *[id^=gui]{
 	border-radius: 3px;
 	border: 2px solid #fff;
 }
-#gui-bad-connection.hidden, #player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden {
+#gui-bad-connection.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden, #lobby-table.hidden, #player-table.hidden {
 	display: none;
 }
 .fa {
@@ -73,11 +73,11 @@ button {
 	outline-color: #702318;
 	box-sizing: border-box;
 	cursor: pointer;
-	margin: 5px;
-	padding: 8px;
+	margin: 0.25rem;
+	padding: 0.5rem;
 	min-width: 100px;
 	text-transform: uppercase;
-	font-size: 0.75em;
+	font-size: 0.75rem;
 	color: #ebedf4;
 	background: #AD3726;
 	font-weight: normal;
@@ -226,6 +226,7 @@ label {
 }
 ::-webkit-scrollbar {
 	width: 8px;	
+	height: 8px;
 }
 ::-webkit-scrollbar-track {
 	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
@@ -291,7 +292,7 @@ label {
 #gui-chat-input:focus {
 	background: rgba(0, 0, 0, 0.3);	
 }
-#player-list {
+#gui-chat-player-list {
 	cursor: inherit;
 	font-size: 0.9em;
 	background: rgba(235, 237, 244, 0.2);
@@ -302,7 +303,7 @@ label {
 	display: flex;
 	flex-wrap: wrap;
 }
-#player-list::before {
+#gui-chat-player-list::before {
 	position: absolute;
 	top: 5px;
 	content: attr(data-desc);
@@ -311,7 +312,7 @@ label {
 	font-size: 0.8em;
 	text-transform: uppercase;
 }
-#player-list::after {/* CSS arrow trick */
+#gui-chat-player-list::after {/* CSS arrow trick */
 	content: " ";
     position: absolute;
 	display: block;
@@ -321,7 +322,7 @@ label {
 	bottom: -8px;
 	left: 19px;
 }
-#player-list li {
+#gui-chat-player-list li {
 	min-width: 100px;	
 	cursor: default;
 	flex-grow: 0;
@@ -445,7 +446,7 @@ label {
 	opacity: 0;
 	display: block;
 }
-#menu-box:first-child {
+#menu-box div:first-child {
 	flex-grow: 1;
 	order: 1;
 }
@@ -462,11 +463,8 @@ label {
 	color: #ebedf4;
 	background-color: #AD3726;
 }
-#lobby-table thead tr th {
-	padding: 1em;
-}
 #lobby-table th {
-	padding: 0.25em;
+	padding: 1em;
 	text-transform: uppercase;
 }
 #lobby-table th:last-child {
@@ -493,7 +491,6 @@ label {
 #lobby-list tr td u {
 	color: #AD3726;
 }
-
 /* #lobby-list button {
 	text-transform: none;
 }
@@ -510,29 +507,60 @@ label {
 	width: 3.5ex;
 	font-weight: 600;
 } */
+
+
+#player-table {
+	width: 100%;
+	box-sizing: border-box;
+	font-size: 1.25em;
+	padding: 1rem;
+	position: relative;
+}
+#player-table > button {
+	position: absolute;
+	top: 0;
+	right: 2em;
+}
+#lobby-status { margin-bottom: 0.75em; }
+#lobby-status:before {
+	content: "Status: ";
+	font-weight: bold;
+	color: #AD3726;
+}
+#player-list {
+	width: 100%;
+	max-width: 1200px;
+	list-style-type: none;
+}
+#player-list li:first-child {
+	border-top: 1px solid #bfbfbf;
+}
+#player-list li {
+	padding: 0.5em 0 0.5em 1em;
+	border-bottom: 1px solid #bfbfbf;
+}
+
+
 #sidebar {
 	flex-grow: 0;
 	order: 2;
 	min-width: 261px;
+}
+#sidebar-buttons {
 	display: flex;
 	flex-direction: row;
-	flex-wrap: wrap;
-	align-content: flex-start;
-	justify-content: space-around;
+	flex-wrap: nowrap;
+}
+#sidebar-buttons > button {
+	flex-grow: 1;
 }
 #search-filter {
 	display: block;
-	flex-grow: 1;
+	padding: 5px;
 }
 #search-filter h1 {
 	margin: 12.5px 0;
 	text-align: center;
-}
-#search-filter label {
-	display: block;
-	font-size: 1em;
-	font-weight: normal;
-	margin: 0.5em 0px;
 }
 #search-input {
 	padding: 2px;

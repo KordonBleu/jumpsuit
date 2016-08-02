@@ -24,6 +24,7 @@ var context = canvas.getContext("2d"),
 		loadingAnimationFrameId: null,		
 		start: function() {
 			game.started = true;
+			document.body.classList.remove("nogui");
 			chatElement.classList.remove("hidden");
 			chatInputContainer.classList.remove("hidden");
 			guiOptionElement.classList.remove("hidden");
@@ -57,11 +58,13 @@ var context = canvas.getContext("2d"),
 			window.removeEventListener("touchmove", handleInputMobile);
 			window.removeEventListener("touchend", handleInputMobile);
 			menuBox.classList.remove("hidden");
-			clearChat();
+			[].forEach.call(controlsElement.querySelectorAll("img"), function(element) {
+				element.removeAttribute("style");
+			});
 			players.forEach(function(player) {
 				if (player.jetpack) player.jetpackSound.stop();
 			});
-			players.length = 0;
+			clearChat();
 			planets.length = 0;
 			enemies.length = 0;
 			window.cancelAnimationFrame(this.animationFrameId);

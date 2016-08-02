@@ -31,7 +31,7 @@
 		<div id="gui-chat" class="hidden"><p id="gui-chat-first"></p></div>
 		<div id="gui-bad-connection" class="hidden"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</div>
 		<div id="gui-chat-input-container" class="hidden">
-			<ul id="player-list" class="hidden"></ul>
+			<ul id="gui-chat-player-list" class="hidden"></ul>
 			<input type="text" id="gui-chat-input" maxlength="150"/>
 		</div>
 		<div id="gui-points" class="hidden">
@@ -56,13 +56,20 @@
 					<tbody id="lobby-list">
 					</tbody>
 				</table>
+				<div id="player-table" class="hidden">
+					<div id="lobby-status">WAITING FOR OTHER PLAYERS</div>
+					<button id="menu-box-leave-button"><i class="fa fa-sign-out"></i>Leave</button>
+					<ul id="player-list"></ul>
+				</div>
 			</div>
 			<div id="sidebar">
-				<button id="menu-box-info-button"><i class="fa fa-info-circle"></i>Info</button>
-				<button id="menu-box-settings-button"><i class="fa fa-wrench"></i>Settings</button>
+				<div id="sidebar-buttons">
+					<button id="menu-box-info-button"><i class="fa fa-info-circle"></i>Info</button>
+					<button id="menu-box-settings-button"><i class="fa fa-wrench"></i>Settings</button>
+				</div>
 				<div id="search-filter">
 					<h1><i class="fa fa-search"></i></h1>
-					<label><input id="search-input" type="text" placeholder="Search..." title="You can even enter RegExp" maxLength=40/></label>
+					<label><input id="search-input" type="text" placeholder="Search query" title="You can even enter RegExp" maxLength=40/></label>
 				</div>
 			</div>
 		</div>

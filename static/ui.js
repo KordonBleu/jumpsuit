@@ -4,12 +4,14 @@ var chatElement = document.getElementById("gui-chat"),
 	chatFirstElement = document.getElementById("gui-chat-first"),
 	chatInputContainer = document.getElementById("gui-chat-input-container"),
 	chatInput = document.getElementById("gui-chat-input"),
-	playerListElement = document.getElementById("player-list"),
+	chatPlayerListElement = document.getElementById("gui-chat-player-list"),
 
 	healthElement = document.getElementById("gui-health"),
 	fuelElement = document.getElementById("gui-fuel"),
 	pointsElement = document.getElementById("gui-points"),
 	messageBox = document.getElementById("gui-message"),
+	controlsElement = document.getElementById("gui-controls"),
+	
 	/* boxed windows */
 	menuBox = document.getElementById("menu-box"),
 	infoBox = document.getElementById("info-box"),
@@ -19,7 +21,9 @@ var chatElement = document.getElementById("gui-chat"),
 	lobbyTableElement = document.getElementById("lobby-table"),
 	lobbyTableHeaderRowElement = lobbyTableElement.firstElementChild.firstElementChild,
 	lobbyListElement = document.getElementById("lobby-list"),
-	teamListElement = document.getElementById("team-list"),
+	playerTableElement = document.getElementById("player-table"),
+	playerTableStatusElement = playerTableElement.firstElementChild,
+	playerListElement = document.getElementById("player-list"),	
 	menuBoxSettingsButton = document.getElementById("menu-box-settings-button"),
 	menuBoxInfoButton = document.getElementById("menu-box-info-button"),
 	/* search options */
@@ -85,9 +89,11 @@ addShowBoxListener(settingsButton, settingsBox);
 addShowBoxListener(menuBoxSettingsButton, settingsBox);
 addShowBoxListener(infoButton, infoBox);
 addShowBoxListener(menuBoxInfoButton, infoBox);
-document.getElementById("leave-button").addEventListener("click", function() {
-	currentConnection.close();
-	game.stop();
+["leave-button", "menu-box-leave-button"].forEach(function(button) {
+	document.getElementById(button).addEventListener("click", function() {
+		currentConnection.close();
+		game.stop();
+	});
 });
 
 /* Port blocked dialog box */
@@ -271,23 +277,23 @@ function clearChat() {
 
 /* Player list */
 chatInput.addEventListener("focus", function() {
-	playerListElement.classList.remove("hidden");
+	chatPlayerListElement.classList.remove("hidden");
 	printPlayerList("");
 });
 chatInput.addEventListener("blur", function() {
-	playerListElement.classList.add("hidden");
+	chatPlayerListElement.classList.add("hidden");
 });
 function printPlayerList(filter) {
-	if (isMobile) playerListElement.dataset.desc = "player list";
-	else playerListElement.dataset.desc = "press tab to complete a player's name";
-	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
+	if (isMobile) chatPlayerListElement.dataset.desc = "player list";
+	else chatPlayerListElement.dataset.desc = "press tab to complete a player's name";
+	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
 	players.forEach(function(player, index) {
 		if (filter !== "" && player.getFinalName().indexOf(filter) === -1) return;
 		var li = document.createElement("li");
 		li.textContent = player.getFinalName();
 		li.style.color = Planet.prototype.teamColors[player.appearance];
 		if (index === ownIdx) li.style.fontWeight = "bold";
-		playerListElement.appendChild(li);
+		chatPlayerListElement.appendChild(li);
 	});
 }
 
@@ -323,6 +329,17 @@ lobbyListElement.addEventListener("click", function(e) {
 		currentConnection = new Connection(e.target.dataset.url);
 	}
 });
+
+/* Player list */
+function updatePlayerList() {
+	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
+	for (let player of players) {
+		if (player === undefined) continue;
+		let newElement = document.createElement("li");
+		newElement.textContent = player.getFinalName();
+		playerListElement.appendChild(newElement);	
+	}
+}
 
 /* Sorting */
 lobbyTableHeaderRowElement.addEventListener("click", function(e) {

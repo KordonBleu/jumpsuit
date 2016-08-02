@@ -55,8 +55,8 @@ function handleInputMobile(e) {
 
 /* Keyboard */
 function handleInput(e) {
+	console.log("a");
 	if (e.code === "Tab") e.preventDefault();
-
 	var s = (e.type === "keydown") * 1,
 		chatInUse = chatInput === document.activeElement;
 	if (!chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {

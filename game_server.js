@@ -19,9 +19,15 @@ const http = require("http"),
 		secure: false,
 		server_name: "JumpSuit server"
 	};
-Array.prototype.actualLength = 0;
+
+
+//TODO: this better, if possible
+Array.prototype.actualLength = function() {
+	let value = 0;
+	for (let entry of this) if (entry !== undefined) value++;
+	return value;
+};
 Array.prototype.append = function(item) {
-	this.actualLength++;
 	for (var i = 0; i !== this.length; i++) {
 		if (this[i] === null || this[i] === undefined) {
 			this[i] = item;
@@ -136,12 +142,10 @@ wss.on("connection", function(ws) {
 				if (player.ws === ws) {
 					logger(logger.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
 					delete lobby.players[pi];
-					lobby.players.actualLength--;
 					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [pi]));
 					if (lobby.players.length === 0) {
 						lobbies[li].close();
 						delete lobbies[li];
-						lobbies.actualLength--;
 					}
 					for (let i = li; i !== lobbies.length; ++i) {
 						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
@@ -177,7 +181,6 @@ wss.on("connection", function(ws) {
 				case MESSAGE.CONNECT.value: {
 					let val = MESSAGE.CONNECT.deserialize(message);
 					var lobby;
-
 					if (val.lobbyId !== undefined) {
 						lobby = lobbies[val.lobbyId];
 						if (lobby === undefined) {
@@ -189,13 +192,13 @@ wss.on("connection", function(ws) {
 						}
 					} else {//public lobby
 						if (!lobbies.some(function(l, i) {//if no not-full lobby
-							if (l.players.actualLength < l.maxPlayers) {
+							if (l.players.actualLength() < l.maxPlayers) {
 								val.lobbyId = i;
 								lobby = lobbies[i];
 								return true;
 							} else return false;
 						})) {//create new lobby
-							lobby = new Lobby(2);
+							lobby = new Lobby(4);
 							lobby.init();
 							val.lobbyId = lobbies.append(lobby);
 						}
