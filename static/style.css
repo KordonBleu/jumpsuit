@@ -491,6 +491,13 @@ label {
 #lobby-list tr td u {
 	color: #AD3726;
 }
+#lobby-list:empty:before {
+	content: "No servers found :(";
+	padding: 1em 0 1em 2em;
+	font-style: italic;
+	display: block;
+	color: #777;
+}
 /* #lobby-list button {
 	text-transform: none;
 }

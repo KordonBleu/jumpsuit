@@ -18,7 +18,7 @@ module.exports = function(engine) {
 		this.resetWorld();
 	}
 	Lobby.prototype.lobbyStates = {NOT_ENOUGH_PLAYER: 0, TRANSMITTING_DATA: 1, PLAYING: 2, DISPLAYING_SCORES: 3};
-	Lobby.prototype.stateTimes = [-1, -1, 50, 50];
+	Lobby.prototype.stateTimes = [-1, -1, 1200, 50];
 	Lobby.prototype.broadcast = function(message, exclude) {
 		this.players.forEach(function(player) {
 			if (player !== exclude) player.send(message);
@@ -188,6 +188,10 @@ module.exports = function(engine) {
 		this.enabledTeams = Object.keys(this.teamScores);
 		this.players.forEach(function(player) {
 			player.controls = {};
+			player.health
+			player.health = 8;
+			player.fuel = 300;
+			player.velocity = new vinage.Vector(0, 0);
 		});
 	};
 	Lobby.prototype.assignPlayerTeam = function(player) {

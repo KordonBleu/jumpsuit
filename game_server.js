@@ -169,7 +169,7 @@ wss.on("connection", function(ws) {
 			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
 				case MESSAGE.SET_PREFERENCES.value: {
-					let playerName = MESSAGE.SET_NAME.deserialize(message);
+					let playerName = MESSAGE.SET_PREFERENCES.deserialize(message);
 					if (playerName === player.name) return;
 					if (player.lobby !== undefined) {
 						player.homographId = player.lobby.getNextHomographId(playerName);

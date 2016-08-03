@@ -278,6 +278,7 @@ Connection.prototype.messageHandler = function(message) {
 		}
 		case MESSAGE.SCORES.value: {
 			let val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
+			game.scores = val;
 			for (let team in val) {
 				let element = document.getElementById("gui-points-" + team);
 				if (element !== null) element.textContent = val[team];
@@ -296,13 +297,22 @@ Connection.prototype.messageHandler = function(message) {
 				}
 			}
 			game.state = val.state;
-			console.log(val);
+			playerTableVictoryElement.style.display = "none";
 			playerTableStatusElement.textContent = val.state;
 			if (val.state === "NOT_ENOUGH_PLAYERS") {
 				updatePlayerList();
 			} else if (val.state === "PLAYING") {
 				game.start();
 			} else if (val.state === "DISPLAYING_SCORES") {
+				var victor = null, a = -Infinity;
+				playerTableVictoryElement.style.display = "initial";
+				for (let team in game.scores) {
+					if (game.scores[team] > a) {
+						a = game.scores[team];
+						victor = team;
+					} else if (game.scores[team] === a) victor = null
+				}
+				playerTableVictoryElement.textContent = !victor ? "Tied!" : victor + " won!";
 				game.stop();
 			}
 			break;
