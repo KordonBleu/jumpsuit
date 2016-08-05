@@ -11,24 +11,48 @@ module.exports = function(engine) {
 		this.enemies = [];
 		this.shots = [];
 		this.processTime = 2;
-		this.stateTimer = 0;
-		this.lobbyState = 0;
+		this.lobbyState = this.lobbyStates.WARMUP;
 		let univSize = 10000;//(1 << 16) - 1 is the max size allowed by the protocol
 		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize/2);
 		this.resetWorld();
+		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
-	Lobby.prototype.lobbyStates = {NOT_ENOUGH_PLAYER: 0, TRANSMITTING_DATA: 1, PLAYING: 2, DISPLAYING_SCORES: 3};
-	Lobby.prototype.stateTimes = [-1, -1, 1200, 50];
+	Lobby.prototype.lobbyStates = {
+		WARMUP: 0,
+		PLAYING: 1,
+		DISPLAYING_SCORES: 2
+	};
+	Lobby.prototype.goToPlayState = function() {
+			this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
+
+			this.lobbyState = this.lobbyStates.PLAYING;
+			this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
+			setTimeout(() => {
+				clearInterval(this.gameCycleId);
+				clearInterval(this.scoreCycleId);
+
+				this.lobbyState = this.lobbyStates.DISPLAYING_SCORES;
+				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
+				setTimeout(() => {
+					this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
+					this.goToPlayState();
+				}, 5000);
+			}, 120000);
+	};
+	Lobby.prototype.addPlayer = function(player) {
+		let retId =  this.players.append(player);
+		if (this.lobbyState === this.lobbyStates.WARMUP && this.players.actualLength() >= this.maxPlayers * 0.5) {
+			this.goToPlayState();
+		}
+
+		return retId;
+	}
 	Lobby.prototype.broadcast = function(message, exclude) {
 		this.players.forEach(function(player) {
 			if (player !== exclude) player.send(message);
 		});
 	};
-	Lobby.prototype.init = function() {
-		this.lobbyCycleId = setInterval(this.updateLobby.bind(this), 100);
-	};
 	Lobby.prototype.close = function() {
-		clearInterval(this.lobbyCycleId);
 		clearInterval(this.gameCycleId);
 		clearInterval(this.scoreCycleId);
 	};
@@ -38,7 +62,7 @@ module.exports = function(engine) {
 			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores);
 
 		//if a shot is added and removed at the same moment, don't send it to clients
-		entitiesDelta.addedShots.forEach(function(shot, iAdd) {
+		entitiesDelta.addedShots.forEach(function(shot, iAdd) { // dat apple fanboy tho
 			var iRm = entitiesDelta.removedShots.indexOf(shot);
 			if (iRm !== -1) {
 				entitiesDelta.addedShots.splice(iAdd, 1);
@@ -72,39 +96,6 @@ module.exports = function(engine) {
 		this.processTime = Date.now() - oldDate;
 	};
 	Lobby.prototype.updateLobby = function() {
-		if (this.lobbyState === this.lobbyStates["NOT_ENOUGH_PLAYER"]) {
-			if (this.players.actualLength() >= this.maxPlayers * 0.5) {
-				this.stateTimer = 0;
-				this.lobbyState = 1;
-				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
-			}
-		} else if (this.lobbyState === this.lobbyStates["TRANSMITTING_DATA"]) {
-			this.resetWorld();
-			this.players.forEach((function(player) {
-				this.assignPlayerTeam(player);
-			}).bind(this));
-			this.broadcast(MESSAGE.ADD_ENTITY.serialize(this.planets, this.enemies, [], this.players));
-			this.stateTimer = 0;
-			this.lobbyState = 2;
-
-			this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState, this.enabledTeams));
-		} else {
-			this.stateTimer++;
-			if (this.stateTimer >= this.stateTimes[this.lobbyState]) {
-				this.stateTimer = 0;
-				this.lobbyState = (this.lobbyState + 1) % this.stateTimes.length;
-				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));	
-			}
-			if (this.lobbyState === this.lobbyStates["PLAYING"]) {
-				if (this.stateTimer === 1) {
-					this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
-					this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
-				}
-			} else {
-				clearInterval(this.gameCycleId);
-				clearInterval(this.scoreCycleId);
-			}
-		}
 	};
 	Lobby.prototype.updateScores = function() {
 		this.planets.forEach((function(planet) {

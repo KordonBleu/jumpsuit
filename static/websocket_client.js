@@ -278,6 +278,7 @@ Connection.prototype.messageHandler = function(message) {
 		}
 		case MESSAGE.SCORES.value: {
 			let val = MESSAGE.SCORES.deserialize(message.data, enabledTeams);
+			console.log(val);
 			game.scores = val;
 			for (let team in val) {
 				let element = document.getElementById("gui-points-" + team);
@@ -287,6 +288,7 @@ Connection.prototype.messageHandler = function(message) {
 		}
 		case MESSAGE.LOBBY_STATE.value: {
 			let val = MESSAGE.LOBBY_STATE.deserialize(message.data);
+			console.log(val.state);
 			if (val.enabledTeams !== undefined) {
 				enabledTeams = val.enabledTeams
 				while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild);
@@ -299,12 +301,15 @@ Connection.prototype.messageHandler = function(message) {
 			game.state = val.state;
 			playerTableVictoryElement.style.display = "none";
 			playerTableStatusElement.textContent = val.state;
-			if (val.state === "NOT_ENOUGH_PLAYERS") {
-				updatePlayerList();
+			if (val.state === "WARMUP") {
+				document.getElementById("gui-warmup").classList.remove("hidden");
+				game.start();
 			} else if (val.state === "PLAYING") {
+				document.getElementById("gui-warmup").classList.add("hidden");
 				game.start();
 			} else if (val.state === "DISPLAYING_SCORES") {
-				var victor = null, a = -Infinity;
+				var victor = null,
+					a = -Infinity;
 				playerTableVictoryElement.style.display = "initial";
 				for (let team in game.scores) {
 					if (game.scores[team] > a) {

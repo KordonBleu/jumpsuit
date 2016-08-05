@@ -50,7 +50,7 @@ body.nogui *[id^=gui]{
 	border-radius: 3px;
 	border: 2px solid #fff;
 }
-#gui-bad-connection.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden, #lobby-table.hidden, #player-table.hidden {
+#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden {
 	display: none;
 }
 .fa {
@@ -337,9 +337,6 @@ label {
 	width: 100%;
 	height: 100%;
 	background: rgba(0, 0, 0, 0.5);	
-}
-#shade-box.hidden {
-	display: none;
 }
 #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	padding: 14px;
@@ -682,7 +679,7 @@ label {
 #gui-health div.heartHalfFilled { background-image: url("https://jumpsuit.space/assets/images/heartHalfFilled.svg"); }
 #gui-health div.heartNotFilled { background-image: url("https://jumpsuit.space/assets/images/heartNotFilled.svg"); }
 
-#gui-bad-connection {
+#gui-bad-connection, #gui-warmup {
 	font-size: 2.75em;
 	position: fixed;
 	top: 20%;
@@ -702,6 +699,12 @@ label {
 	font-size: 1.2rem;
 	text-align: center;
 	content: "The server hasn't send a package for 500ms, your connection is probably interrupted or dead."
+}
+#gui-warmup {
+	text-align: center;
+}
+#gui-warmup i {
+	color: green;
 }
 #gui-points {
 	position: fixed;

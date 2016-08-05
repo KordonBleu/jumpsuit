@@ -11,7 +11,7 @@ var chatElement = document.getElementById("gui-chat"),
 	pointsElement = document.getElementById("gui-points"),
 	messageBox = document.getElementById("gui-message"),
 	controlsElement = document.getElementById("gui-controls"),
-	
+
 	/* boxed windows */
 	menuBox = document.getElementById("menu-box"),
 	infoBox = document.getElementById("info-box"),
@@ -24,7 +24,7 @@ var chatElement = document.getElementById("gui-chat"),
 	playerTableElement = document.getElementById("player-table"),
 	playerTableStatusElement = document.getElementById("lobby-status"),
 	playerTableVictoryElement = document.getElementById("lobby-victory"),
-	playerListElement = document.getElementById("player-list"),	
+	playerListElement = document.getElementById("player-list"),
 	menuBoxSettingsButton = document.getElementById("menu-box-settings-button"),
 	menuBoxInfoButton = document.getElementById("menu-box-info-button"),
 	/* search options */
@@ -338,7 +338,7 @@ function updatePlayerList() {
 		if (player === undefined) continue;
 		let newElement = document.createElement("li");
 		newElement.textContent = player.getFinalName();
-		playerListElement.appendChild(newElement);	
+		playerListElement.appendChild(newElement);
 	}
 }
 

@@ -300,10 +300,9 @@ const MESSAGE = {
 	LOBBY_STATE: {
 		value: 8,
 		LOBBY_STATES: {
-			NOT_ENOUGH_PLAYERS: 0,
-			TRANSMITTING_DATA: 1,
-			PLAYING: 2,
-			DISPLAYING_SCORES: 3
+			WARMUP: 0,
+			PLAYING: 1,
+			DISPLAYING_SCORES: 2
 		},
 		TEAM_MASK: {
 			alienBeige: 16,
@@ -626,7 +625,7 @@ const MESSAGE = {
 			for (let enemy of enemies) {
 				view.setUint8(offset++, radToBrad(enemy.box.angle, 1));
 			}
-			
+
 			for (let player of players) {
 				if (player === undefined) continue;
 				view.setUint8(offset, player.pid);
@@ -779,27 +778,24 @@ const MESSAGE = {
 	},
 	SCORES: {
 		value: 16,
-		PLAYER_APPEARANCE: {
-			alienBlue: 0,
-			alienBeige: 1,
-			alienGreen: 2,
-			alienPink: 3,
-			alienYellow: 4
-		},
 		serialize: function(scoresObj) {
-			var teams = Object.keys(scoresObj),
-				buffer = new ArrayBuffer(1 + teams.length*5),
+			var teams = Object.keys(scoresObj).sort(),
+				buffer = new ArrayBuffer(1 + teams.length*4),
 				view = new DataView(buffer);
 			view.setUint8(0, this.value);
-			teams.forEach((team, i) => {
-				view.setUint8(1 + i*5, this.PLAYER_APPEARANCE[team]);
-				view.setInt32(2 + i*5, scoresObj[team]);
+			teams.forEach(function(team, i) {
+				view.setInt32(1 + i*4, scoresObj[team]);
 			});
+
 			return buffer;
 		},
-		deserialize: function(buffer) {
-			var view = new DataView(buffer, 1), val = {};
-			for (var i = 0; i !== view.byteLength; i+=5) val[Object.keys(this.PLAYER_APPEARANCE)[view.getUint8(i)]] = view.getInt32(i+1);
+		deserialize: function(buffer, enabledTeams) {
+			var view = new DataView(buffer, 1),
+				val = {};
+			enabledTeams.sort().forEach(function(team, i) {
+				val[team] = view.getInt32(i*4);
+			});
+
 			return val;
 		}
 	},

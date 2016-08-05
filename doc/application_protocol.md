@@ -1,20 +1,23 @@
 # JumpSuit's protocol specification
 
-The protocol's endianness is big-endian.
 Messages are serialized with a custom protocol before being sent. This document references JumpSuit's protocol.
-Strings are always encoded as UTF-8. When the protocol mandates the length of a string, it is implied the length is an amount of bytes.
-Angles are always encoded as brads.
+
+The protocol's endianness is big-endian.
+Strings are always encoded as **UTF-8**. When the protocol mandates the length of a string, it is implied the length is an amount of bytes.
+Angles are always encoded as **brads**.
 When a value takes only one byte, 1 means enabled and 0 means disabled.
 
 
 ## Notation
 
 Possible values for a field are noted:
+
  * with a number for the packet type (ex: `4`)
  * with lowercase words for variables (ex: `player name`)
  * with lowercase words between double quotes for strings variables (`"player name"`)
  * with lowercase words starting with a uppercase character for enumerations (ex: `Error Type`)
  * with uppercase snake case for packets and subpayloads (ex: `LOBBY_STATE`)
+
 Values dubbed `unused bits` are not used, but are present to complete a byte.
 
 Values are enclosed in boxes.
@@ -45,7 +48,7 @@ They might be used several times in a packet or in packets with different types.
 
 #### PLANET
 ```
-       2B            2B           2B
+       2B            2B           2B      1B
 +--------------+--------------+--------+------+
 | x-coordinate | y-coordinate | radius | Type |
 +--------------+--------------+--------+------+
@@ -302,21 +305,21 @@ The game server will respond with CONNECT_ACCEPTED.
 #### LOBBY_STATE (game server → client)
 ```
  1B       1B            3b                   5b
-+---+-------------+-------------+------------------------+
-| 8 | lobby state | unused bits |      enabledTeams      |
-+---+-------------+-------------+-  -  -  -  -  -  -  -  +
-                                | e.g.:  0 1 0 1 0       |
-                                |          ^   ^         |
-                                |          |   |         |
-                                |          |   alienPink |
-                                |          alienBlue     |
-                                +------------------------+
++---+-------------+-------------+-------------------------+
+| 8 | Lobby State | unused bits |      enabled teams      |
++---+-------------+-------------+ -  -  -  -  -  -  -  -  +
+                                |  e.g.:  0 1 0 1 0       |
+                                |           ^   ^         |
+                                |           |   |         |
+                                |           |   alienPink |
+                                |           alienBlue     |
+                                +-------------------------+
 
 ```
 
 `Lobby State` must be either:
  0. not enough players
- 1. transmitting data (planets, enmies, players)
+ 1. transmitting data (planets, enemies, players)
  2. playing
  3. displaying scores
 
@@ -385,9 +388,10 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### SCORES (game server → client)
 ```
-  1B      1B        4B
-+----+======================+
-| 16 | team id | team score |
-+----+======================+
+  1B      4B
++----+============+
+| 16 | team score |
++----+============+
 ```
-
+There are as many `team score`s as there are teams playing. Which teams are playing has already been sent with a LOBBY_STATE message.
+The order `team score`s can be mapped to teams is as follow (provided the teams are enabled): beige team, blue team, green team, pink team, yellow team.

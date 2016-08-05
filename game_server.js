@@ -199,11 +199,10 @@ wss.on("connection", function(ws) {
 							} else return false;
 						})) {//create new lobby
 							lobby = new Lobby(4);
-							lobby.init();
 							val.lobbyId = lobbies.append(lobby);
 						}
 					}
-					player.pid = lobby.players.append(player);
+					player.pid = lobby.addPlayer(player);
 					player.name = val.name;
 					player.weaponry.armed = val.primary;
 					player.weaponry.carrying = val.secondary;
@@ -212,12 +211,13 @@ wss.on("connection", function(ws) {
 					player.lobbyId = val.lobbyId;
 
 					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
-					if (Object.keys(lobby.lobbyStates)[lobby.lobbyState] === "PLAYING") {
+					if (Object.keys(lobby.lobbyStates)[lobby.lobbyState] !== "DISPLAYING_SCORES") {
 						lobby.assignPlayerTeam(player);
 						player.send(MESSAGE.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
 					} else player.send(MESSAGE.ADD_ENTITY.serialize([], [], [], lobby.players));
 					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
 					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.lobbyState, lobby.enabledTeams));
+					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
 
 					break;
 				}

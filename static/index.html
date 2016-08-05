@@ -30,12 +30,14 @@
 		</div>
 		<div id="gui-chat" class="hidden"><p id="gui-chat-first"></p></div>
 		<div id="gui-bad-connection" class="hidden"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</div>
+		<div id="gui-warmup"><i class="fa fa-info-circle" aria-hidden="true"></i><b>Warmup mode</b><br/>
+		When more players join the game will start for real ;-)</div>
 		<div id="gui-chat-input-container" class="hidden">
 			<ul id="gui-chat-player-list" class="hidden"></ul>
 			<input type="text" id="gui-chat-input" maxlength="150"/>
 		</div>
 		<div id="gui-points" class="hidden">
-			
+
 		</div>
 		<div id="gui-options" class="hidden">
 			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button>
@@ -93,7 +95,7 @@
 			<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
 			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where - honestly - we could'nt agree more.<br/>
 			<b>TL;DR:</b> Donate us knowledge. Delicious crusty knowledge. Yum!<br/><br/>
-			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height="64" width="64" /><img src="https://twemoji.maxcdn.com/svg/2615.svg" height="64" width="64"/></p>
+			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height="64" width="64"/><img src="https://twemoji.maxcdn.com/svg/2615.svg" height="64" width="64"/></p>
 			<h2>Make a mod!</h2>
 			<p>We aim to make it as easy as possible for you to make mods. Documentation on how to make mods can be found <a href="https://github.com/KordonBleu/jumpsuit/blob/master/doc/modding.md">here</a>.</p>
 		</div>
@@ -105,8 +107,8 @@
 				<label>Name</label><input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 				<h3>Weaponry</h3>
 				<div class="weaponry-container">
-					<div class="weapon-select" id="primary-weapon"><img src="/assets/images/shotgun.svg" data-current-weapon="lmg" /><span></span></div>
-					<div class="weapon-select" id="secondary-weapon"><img src="/assets/images/knife.svg" data-current-weapon="knife" /><span></span></div>
+					<div class="weapon-select" id="primary-weapon"><img src="/assets/images/shotgun.svg" data-current-weapon="lmg"/><span></span></div>
+					<div class="weapon-select" id="secondary-weapon"><img src="/assets/images/knife.svg" data-current-weapon="knife"/><span></span></div>
 				</div>
 				<h3>Volume</h3>
 				<label>Background Music</label><input type="range" value="50" id="music-volume"/><br/>
@@ -124,7 +126,7 @@
 				<button id="key-reset">Reset keymap to default</button>
 			</div>
 		</div>
-		<div id="blocked-port-box" class="hidden">
+		<div id="blocked-port-box" class="hidden"><!-- TODO: add a message for filtered ports -->
 			<h2>The port is blocked</h2>
 			<p>This port is blocked. Please ask your network administrator to open the port <span id="port-number"></span>.</p>
 			<p>If you are at home, your network administrator is your ISP.<br/>
@@ -139,15 +141,17 @@
 			<p>We only support Chrome and Firefox on desktop for now.<br/>
 			Please come back using one of these (on old computers, Firefox is generally faster).</p>
 
-			<button "close-parent">I want to see how broken it is anyways!</button>
+			<button "close-parent">I want to see how broken it is anyway!</button>
 		</div>
 		<div id="device-untested" class="hidden">
 			<h2>The game is likely not to work properly on this device</h2>
 			<p>We plan to support this platform, however it not our highest priority. Thus, the game might not work properly.</p>
 			<p>At the moment, we are primarily focusing on Chrome and Firefox on desktop.<br/>
 			Please come back using one of these (on old computers, Firefox is generally faster).</p>
+
 			<button class="close-parent">Okay</button>
 		</div>
+
 		<script src="https://jumpsuit.space/ipaddr.min.js"></script>
 		<script src="https://jumpsuit.space/audio.js"></script>
 		<script src="https://jumpsuit.space/engine.js"></script>
