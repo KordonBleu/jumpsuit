@@ -506,15 +506,15 @@ const MESSAGE = {
 					view.getUint16(i + 1),//x
 					view.getUint16(i + 3),//y
 					view.getUint8(i + 5),//attached planet
-					radToBrad(view.getUint8(i + 6), 1),//angle
+					bradToRad(view.getUint8(i + 6), 1),//angle
 					enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 					enumByte & this.MASK.JETPACK ? true : false,//jetpack
 					Object.keys(this.PLAYER_APPEARANCE)[enumByte << 29 >>> 29],//appearance
 					Object.keys(this.WALK_FRAME)[enumByte << 26 >>> 29],//walk frame
 					bufferToString(buffer.slice(i + 11, i + 11 + nameLgt)),//name
 					view.getUint8(i + 9),//homographId
-					Object.keys(this.WEAPON)[weaponByte << 30 >> 30],//armedWeapon
-					Object.keys(this.WEAPON)[weaponByte << 28 >> 30]//carriedWeapon
+					Object.keys(this.WEAPON)[weaponByte << 28 >>> 30],//armedWeapon
+					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30]//carriedWeapon
 				);
 				i += nameLgt + 11;
 			}
@@ -634,12 +634,12 @@ const MESSAGE = {
 				view.setUint8(5 + offset, player.attachedPlanet);
 				view.setUint8(6 + offset, radToBrad(player.box.angle, 1));
 				view.setUint8(7 + offset, radToBrad(player.aimAngle, 1));
-				var enumByte = this.WALK_FRAME[player.walkFrame.slice(1)] << 2;//doesn't work directly on buffer for efficiency
+				let enumByte = this.WALK_FRAME[player.walkFrame.slice(1)] << 2;//doesn't work directly on buffer for efficiency
 				if (player.jetpack) enumByte |= this.MASK.JETPACK;
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				if (player.hurt) enumByte |= this.MASK.HURT;
 				view.setUint8(8 + offset, enumByte);
-				var weaponByte = this.WEAPON[player.weaponry.armed] << 2;
+				let weaponByte = this.WEAPON[player.weaponry.armed] << 2;
 				weaponByte += this.WEAPON[player.weaponry.carrying];
 				view.setUint8(9 + offset, weaponByte);
 				offset += 10;
@@ -665,6 +665,7 @@ const MESSAGE = {
 			for (; i !== view.byteLength; i += 10) {
 				let enumByte = view.getUint8(8 + i),
 					weaponByte = view.getUint8(9 + i);
+				if (Object.keys(this.WALK_FRAME)[enumByte << 27 >>> 29] === undefined) console.log(enumByte, enumByte << 27 >>> 29);
 				playersCbk(view.getUint8(i), //pid
 					view.getUint16(1 + i),//x
 					view.getUint16(3 + i),//y
@@ -675,7 +676,7 @@ const MESSAGE = {
 					enumByte & this.MASK.HURT ? true : false,//hurt
 					Object.keys(this.WALK_FRAME)[enumByte << 27 >>> 29],//walkFrame
 					Object.keys(this.WEAPON)[weaponByte >>> 2],//armed weapon
-					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30],//carrying weapon
+					Object.keys(this.WEAPON)[weaponByte << 30 >>> 30],//carried weapon
 					bradToRad(view.getUint8(7 + i), 1)
 				);
 			}

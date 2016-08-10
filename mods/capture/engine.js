@@ -84,7 +84,7 @@ Player.prototype.setWalkFrame = function() {
 	}
 };
 Player.prototype.setBoxSize = function() {
-//	console.log(this.appearance, this.walkFrame);
+	//if (this.walkFrame === undefined) console.log("WARNING: walkframe is undefined");
 	this.box.width = resources[this.appearance + this.walkFrame].width;
 	this.box.height = resources[this.appearance + this.walkFrame].height;
 };

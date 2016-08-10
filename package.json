@@ -6,7 +6,7 @@
     "colors": "1.x",
     "image-size": "0.x",
     "ipaddr.js": "1.x",
-	"vinage": "0.x",
+    "vinage": "0.x",
     "ws": "1.x"
   },
   "optionalDependencies": {
@@ -17,5 +17,11 @@
     "url": "git+https://github.com/KordonBleu/jumpsuit"
   },
   "readme": "readme.md",
-  "license": "MPL-2.0"
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "ava": "^0.16.0"
+  },
+  "scripts": {
+    "test": "./node_modules/ava/cli.js ./tests/message.js"
+  }
 }

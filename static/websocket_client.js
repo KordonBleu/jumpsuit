@@ -213,6 +213,7 @@ Connection.prototype.messageHandler = function(message) {
 							players[pid].jetpackSound.stop();
 						}
 					} else {
+						if (players[pid] === undefined) console.log(players, pid); // this shouldn't happen
 						if (!players[pid].jetpack && jetpack) {
 							setPanner(players[pid].panner, players[pid].box.center.x - players[ownIdx].box.center.x, players[pid].box.center.y - players[ownIdx].box.center.y);
 							players[pid].jetpackSound = jetpackModel.makeSound(players[pid].panner, 1);
@@ -238,6 +239,7 @@ Connection.prototype.messageHandler = function(message) {
 						stepSound.start(0);
 						players[pid].lastSound = (players[pid].lastSound + 1) % 5;
 					}
+					if (walkFrame === undefined) console.log("wowowow stop right there");
 					players[pid].walkFrame = "_" + walkFrame;
 					players[pid].hurt = hurt;
 					players[pid].jetpack = jetpack;

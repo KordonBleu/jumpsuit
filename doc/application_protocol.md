@@ -115,7 +115,10 @@ Owned By must be either:
 +--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+--------------+-------------+--------+
 ```
 The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
-If `attached planet`'s value is 255, the player is not attached to a planet.
+If `attached planet`'s value is 255, the player is not attached to a planet. This also means there cannot be more than 124 planets.
+
+**`looks left` IS NOW USELESS SINCE IT CAN BE DEDUCTED FROM `AIM_ANGLE`.**
+
 `Walk Frame` must be either:
  0. `duck`
  1. `hurt`
@@ -159,11 +162,13 @@ If `attached planet`'s value is 255, the player is not attached to a planet.
 
 #### SHOT
 ```
-      4B         1B         7b            1b
-+-------------+-------+-------------+-------------+
-| LESSER_SHOT | angle | unused bits | from weapon |
-+-------------+-------+-------------+-------------+
+      4B         1B       1B         7b            1b
++-------------+-------+--------+-------------+-------------+
+| LESSER_SHOT | angle | origin | unused bits | from weapon |
++-------------+-------+----------------------+-------------+
 ```
+
+`origin` is 255 when emmitted by an enemy. However, since it is possible to have a player whose `id` is 255, this could lead to conflicts. **THIS PROBLEM MUST BE FIXED.**
 
 
 #### LESSER_SHOT

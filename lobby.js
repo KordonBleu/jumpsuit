@@ -34,8 +34,9 @@ module.exports = function(engine) {
 				this.lobbyState = this.lobbyStates.DISPLAYING_SCORES;
 				this.broadcast(MESSAGE.LOBBY_STATE.serialize(this.lobbyState));
 				setTimeout(() => {
-					this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
+					console.log(this);
 					this.goToPlayState();
+					this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 				}, 5000);
 			}, 120000);
 	};

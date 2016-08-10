@@ -153,7 +153,7 @@ if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
 	let resources = {};
 
 	getFinalResNames((baseName, variants) => {
-		resources[baseName] = sizeOf("./static/assets/images/" + baseName + ".svg");
+		resources[baseName] = sizeOf(__dirname + "/assets/images/" + baseName + ".svg");
 
 		for (let variant in variants) resources[variant] = resources[baseName];
 	});

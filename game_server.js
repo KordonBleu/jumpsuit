@@ -1,6 +1,7 @@
 "use strict";
 
 require("colors");
+require("./proto_mut.js");
 const http = require("http"),
 	WebSocket = require("ws"),
 	interactive = require("./interactive.js"),
@@ -19,23 +20,6 @@ const http = require("http"),
 		secure: false,
 		server_name: "JumpSuit server"
 	};
-
-
-//TODO: this better, if possible
-Array.prototype.actualLength = function() {
-	let value = 0;
-	for (let entry of this) if (entry !== undefined) value++;
-	return value;
-};
-Array.prototype.append = function(item) {
-	for (var i = 0; i !== this.length; i++) {
-		if (this[i] === null || this[i] === undefined) {
-			this[i] = item;
-			return i;
-		}
-	}
-	return this.push(item) - 1;
-};
 
 
 
