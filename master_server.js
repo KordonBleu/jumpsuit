@@ -81,7 +81,6 @@ function loadFile(name, path) {
 		}
 	}
 }
-loadFile("/engine.js", "./mods/capture/engine.js");
 loadFile("/ipaddr.min.js", "./node_modules/ipaddr.js/ipaddr.min.js");
 loadFile("/vinage.js", "./node_modules/vinage/vinage.js");
 
@@ -94,7 +93,8 @@ files.construct = function(path, oName) {
 		} else loadFile(oName + pPath, cPath);
 	});
 };
-files.construct("./static", "/");//load everything under `./static` in RAM for fast access
+files.construct("./static", "/"); // load everything under `./static` in RAM for fast access
+files.construct("./mods/capture", "/"); // default engine, player class etc.
 
 var server = http.createServer(function (req, res) {
 	if (req.url === "/index.html") {

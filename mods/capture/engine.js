@@ -1,9 +1,13 @@
 "use strict";
 
-if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-	var vinage = require("vinage"),
-		resources = require("../../static/resource_loader.js");
-}
+// for Node.js - duck typing FTW!
+if (vinage === undefined) var vinage = require("vinage");
+if (resources === undefined) var resources = require("../../static/resource_loader.js");
+if (Player === undefined) var Player = require("./player.js");
+if (Planet === undefined) var Planet = require("./planet.js");
+if (Enemy === undefined) var Enemy = require("./enemy.js");
+if (Shot === undefined) var Shot = require("./shot.js");
+
 
 function mod(dividend, divisor) {
 	return (dividend + divisor*Math.ceil(Math.abs(dividend / divisor))) % divisor;
@@ -16,119 +20,6 @@ const weaponList = {
 	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2, spray: 0.005}
 };
 
-function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
-	this._walkCounter = 0;
-	this.name = name;
-	this.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
-	this.predictionTarget = {};
-	this.predictionBase = {};
-	this.controls = {jump: 0, crouch: 0, jetpack: 0, moveLeft: 0, moveRight: 0, run: 0, changeWeapon: 0, shoot: 0};
-	this.velocity = new vinage.Vector(0, 0);
-	this._appearance = appearance;
-	this._walkFrame = "_stand";
-	Object.defineProperties(this, {
-		appearance: {
-			get: function() {
-				return this._appearance;
-			},
-			set: function(newAppearance) {
-				this._appearance = newAppearance;
-				this.setBoxSize();
-			}
-		},
-		walkFrame: {
-			get: function() {
-				return this._walkFrame;
-			},
-			set: function(newWalkFrame) {
-				this._walkFrame = newWalkFrame;
-				this.setBoxSize();
-			}
-		}
-	});
-	this.jetpack = jetpack || false;
-	if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
-		this._lastHurt = 0;
-		Object.defineProperty(this, "hurt", {
-			get: function() {
-				return Date.now() - this._lastHurt < 600;
-			},
-			set: function(hurt) {
-				this._lastHurt = hurt ? Date.now() : 0;
-			}
-		});
-	} else this.hurt = false;
-	this.health = health || 8;
-	this.fuel = fuel || 300;
-	this.attachedPlanet = attachedPlanet || -1;
-	this.lastlyAimedAt = Date.now();
-	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0, recoil: 0};
-	this.aimAngle = aimAngle || 0;
-	this.lastSound = 0;
-	if (typeof module === "undefined" || typeof module.exports === "undefined") {
-		this.panner = makePanner(0, 0);//note: won't be used if this is not another player
-	}
-}
-Player.prototype.setWalkFrame = function() {
-	if (this.box === undefined) return;
-	if (this.attachedPlanet === -1){
-		this.walkFrame = "_jump";
-	} else {
-		var leftOrRight = (this.controls["moveLeft"] || this.controls["moveRight"]);
-		if (!leftOrRight) this.walkFrame = (this.controls["crouch"]) ? "_duck" : "_stand";
-		else if (this._walkCounter++ >= (this.controls["run"] > 0 ? 6 : 10)){
-			this._walkCounter = 0;
-			this.walkFrame = (this.walkFrame === "_walk1") ? "_walk2" : "_walk1";
-		}
-		this.setBoxSize();
-	}
-};
-Player.prototype.setBoxSize = function() {
-	//if (this.walkFrame === undefined) console.log("WARNING: walkframe is undefined");
-	this.box.width = resources[this.appearance + this.walkFrame].width;
-	this.box.height = resources[this.appearance + this.walkFrame].height;
-};
-Player.prototype.getFinalName = function() {
-	return this.name + (typeof this.homographId === "number" && this.homographId !== 0 ? " (" + this.homographId + ")" : "");
-};
-
-function Planet(x, y, radius, type) {
-	this.box = new vinage.Circle(new vinage.Point(x, y), radius);
-	this.atmosBox = new vinage.Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
-	this.progress = {team: "neutral", value: 0, color: "rgb(80,80,80)"};
-	this.type = type || Math.round(Math.random());
-}
-Planet.prototype.typeEnum = {
-	CONCRETE: 0,
-	GRASS: 1
-};
-Planet.prototype.teamColors = {"alienBeige": "#e5d9be", "alienBlue": "#a2c2ea", "alienGreen": "#8aceb9", "alienPink": "#f19cb7", "alienYellow": "#fed532" };
-Planet.prototype.updateColor = function() {
-	if (this.progress.team === "neutral") this.progress.color = "rgb(80,80,80)";
-	else {
-		var fadeRGB = [];
-		for (var j = 0; j <= 2; j++) fadeRGB[j] = Math.round(this.progress.value / 100 * (parseInt(this.teamColors[this.progress.team].substr(1 + j * 2, 2), 16) - 80) + 80);
-
-		this.progress.color = "rgb(" + fadeRGB[0] + "," + fadeRGB[1] + "," + fadeRGB[2] + ")";
-	}
-};
-
-function Enemy(x, y, appearance) {
-	this.appearance = appearance || "enemy" + this.resources[Math.floor(Math.random() * this.resources.length)];
-	this.box = new vinage.Rectangle(new vinage.Point(x, y), resources[this.appearance].width, resources[this.appearance].height);
-	this.aggroBox = new vinage.Circle(new vinage.Point(x, y), 350);
-	this.fireRate = 0;
-}
-Enemy.prototype.resources = ["Black1", "Black2", "Black3", "Black4", "Black5", "Blue1", "Blue2", "Blue3", "Green1", "Green2", "Red1", "Red2", "Red3"];
-
-function Shot(x, y, angle, origin, type) {
-	this.box = new vinage.Rectangle(new vinage.Point(x, y), resources["laserBeam"].width, resources["laserBeam"].height, angle);
-	this.lifeTime = 100;
-	this.origin = origin;
-	this.type = type || 0;
-}
-Shot.prototype.shotEnum = {laser: 0, bullet: 1, knife: 2, ball: 3}; //a knife is no shot but can be handled the same way
-Shot.prototype.speed = [30, 25, 13, 22];
 
 function doPrediction(universe, players, enemies, shots) {
 	doPrediction.newTimestamp = Date.now();

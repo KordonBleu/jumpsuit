@@ -164,3 +164,32 @@ test.skip("ADD_SERVERS", t => {
 	let buf1 = message.ADD_SERVERS.serialize(serverList);
 	let res1 = message.ADD_SERVERS.deserialize(buf1);
 });
+
+test("REMOVE_SERVERS", t => {
+	let ids1 = [1, 45, 65535, 5, 899],
+		buf1 = message.REMOVE_SERVERS.serialize(ids1),
+		res1 = message.REMOVE_SERVERS.deserialize(buf1);
+	t.deepEqual(ids1, res1);
+
+	let ids2 = [],
+		buf2 = message.REMOVE_SERVERS.serialize(ids2),
+		res2 = message.REMOVE_SERVERS.deserialize(buf2);
+	t.deepEqual(ids2, res2);
+
+	let ids3 = [99],
+		buf3 = message.REMOVE_SERVERS.serialize(ids3),
+		res3 = message.REMOVE_SERVERS.deserialize(buf3);
+	t.deepEqual(ids3, res3);
+});
+
+test.skip("SET_PREFERENCES", t => {
+	let settings = {
+		name: "Unnamed Player",
+		primary: "lmg",
+		secondary: "knife"
+	},
+		buf = message.SET_PREFERENCES.serialize(settings),
+		res = message.SET_PREFERENCES.deserialize(buf);
+
+	t.deepEqual(settings, res);
+});
