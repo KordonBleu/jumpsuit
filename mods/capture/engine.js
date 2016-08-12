@@ -160,22 +160,10 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			player.weaponry.armed = b;
 			player.weaponry.carrying = a;
 		}
-		if (player.controls["shoot"] !== 0) {
-			if (player.controls["shoot"] === 2 && weaponList[player.weaponry.armed].cycle > 0) player.weaponry.cycle = ++player.weaponry.cycle % weaponList[player.weaponry.armed].cycle;
-			else player.weaponry.cycle = player.controls["shoot"] - 1;
-
-			if (player.weaponry.cycle === 0) {
-				let shotType = weaponList[player.weaponry.armed].shotType, shift = player.looksLeft ? -1 : 1,
-					inaccuracy = (2*Math.random()-1)*weaponList[player.weaponry.armed].spray;
-				for (var i = -1; i <= 1; i++) {
-					if (shotType !== 3 && i !== 0) continue;
-					if (i !== 0) inaccuracy += (2 * Math.random() - 1) * weaponList[player.weaponry.armed].spray * 0.45;
-					let shotX = player.box.center.x + weaponList[player.weaponry.armed].muzzleX * Math.sin(player.aimAngle) + weaponList[player.weaponry.armed].muzzleY * shift * Math.sin(player.aimAngle - Math.PI / 2),
-						shotY = player.box.center.y - weaponList[player.weaponry.armed].muzzleX * Math.cos(player.aimAngle) - weaponList[player.weaponry.armed].muzzleY * shift * Math.cos(player.aimAngle - Math.PI / 2);
-					let newShot = new Shot(shotX, shotY, player.aimAngle + i*0.12 + inaccuracy, player.pid, shotType);
-					shots.push(newShot);
-					entitiesDelta.addedShots.push(newShot);
-				}
+		if (player.controls["shoot"] === 1 || (player.controls["shoot"] === 2 && player.armedWeapon.canRapidFire !== undefined && player.armedWeapon.canRapidFire())) {
+			for (let shot of player.armedWeapon.fire()) {
+				shots.push(shot);
+				entitiesDelta.addedShots.push(shot);
 			}
 		}
 		var needsPressState = {"changeWeapon": null, "shoot": null}; //it needs to be an Object to use the operater `in`

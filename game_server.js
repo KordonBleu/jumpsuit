@@ -188,8 +188,9 @@ wss.on("connection", function(ws) {
 					}
 					player.pid = lobby.addPlayer(player);
 					player.name = val.name;
-					player.weaponry.armed = val.primary;
-					player.weaponry.carrying = val.secondary;
+					//player.weaponry.armed = val.primary;
+					//player.weaponry.carrying = val.secondary;
+					player.armedWeapon = new 
 					player.homographId = lobby.getNextHomographId(player.name);
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;

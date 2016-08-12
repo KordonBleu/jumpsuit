@@ -2,6 +2,7 @@
 
 if (vinage === undefined) var vinage = require("vinage");
 if (resources === undefined) var resources = require("../../static/resource_loader.js");
+if (weapon === undefined) var weapon = require("./weapon.js");
 
 function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 	this._walkCounter = 0;
@@ -50,6 +51,8 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
 	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0, recoil: 0};
+	this.armedWeapon = new weapon.Lmg(this);
+	this.carriedWeapon = new weapon.Lmg(this);
 	this.aimAngle = aimAngle || 0;
 	this.lastSound = 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {

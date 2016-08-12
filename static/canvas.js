@@ -153,10 +153,10 @@ Enemy.prototype.drawAtmos = function() {
 };
 Shot.prototype.draw = function(dead) {
 	var resourceKey;
-	if (this.type === this.shotEnum.bullet && !dead) resourceKey = "rifleShot";
-	else if (this.type === this.shotEnum.knife && !dead) resourceKey = "knife";
-	else if (this.type === this.shotEnum.laser) resourceKey = (dead ? "laserBeamDead" : "laserBeam");
-	else if (this.type === this.shotEnum.ball) resourceKey = "shotgunBall";
+	if (this.type === this.TYPES.BULLET && !dead) resourceKey = "rifleShot";
+	else if (this.type === this.TYPES.KNIFE && !dead) resourceKey = "knife";
+	else if (this.type === this.TYPES.LASER) resourceKey = (dead ? "laserBeamDead" : "laserBeam");
+	else if (this.type === this.TYPES.BALL) resourceKey = "shotgunBall";
 
 	if (resourceKey === undefined) return;
 	windowBox.drawRotatedImage(resources[resourceKey],

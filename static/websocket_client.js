@@ -163,7 +163,7 @@ Connection.prototype.messageHandler = function(message) {
 					let shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
 					let param1 = players.find(element => { return element !== undefined && element.pid === origin; });
-					if (param1) param1.weaponry.muzzleFlash = type === shot.shotEnum.bullet || type === shot.shotEnum.ball;
+					if (param1) param1.weaponry.muzzleFlash = type === shot.TYPES.BULLET || type === shot.TYPES.BALL;
 				},
 				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {//add players
 					let newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
