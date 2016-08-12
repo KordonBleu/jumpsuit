@@ -2,27 +2,30 @@ import test from "ava";
 
 import "../proto_mut.js";
 
-import * as engine from "../mods/capture/engine.js";
+import { default as Planet } from "../mods/capture/planet.js"
+import { default as Enemy } from "../mods/capture/enemy.js"
+import { default as Shot } from "../mods/capture/shot.js"
+import { default as Player } from "../mods/capture/player.js"
 import * as message from "../static/message.js";
 import * as vinage from "vinage";
 
 var planets = [
-		new engine.Planet(12, 434, 23),
-		new engine.Planet(654, 12, 38),
-		new engine.Planet(43, 487, 76)
+		new Planet(12, 434, 23),
+		new Planet(654, 12, 38),
+		new Planet(43, 487, 76)
 	],
 	enemies = [
-		new engine.Enemy(38, 98),
-		new engine.Enemy(555, 543),
-		new engine.Enemy(42, 243)
+		new Enemy(38, 98),
+		new Enemy(555, 543),
+		new Enemy(42, 243)
 	],
 	shots = [
-		new engine.Shot(44, 87, 0.5*Math.PI, -1, 3),
-		new engine.Shot(44, 87, 0.75*Math.PI, 0, 1)
+		new Shot(44, 87, 0.5*Math.PI, -1, 3),
+		new Shot(44, 87, 0.75*Math.PI, 0, 1)
 	],
 	players = [
-		new engine.Player("Charles", "alienBlue", "_hurt", -1, true, 358, 45, "knife", "smg", 0.3*Math.PI),
-		new engine.Player("Lucette", "alienPink", "_stand", -1, false, 27, 0, "lmg", "shotgun", 1.1*Math.PI)
+		new Player("Charles", "alienBlue", "_hurt", -1, true, 358, 45, "knife", "smg", 0.3*Math.PI),
+		new Player("Lucette", "alienPink", "_stand", -1, false, 27, 0, "lmg", "shotgun", 1.1*Math.PI)
 	];
 
 planets[0].progress.team = "alienBlue";

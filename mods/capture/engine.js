@@ -267,8 +267,4 @@ function doPhysicsClient(universe, planets, shots, players) {
 
 if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {
 	doPhysics: doPhysics,
-	Player: Player,
-	Planet: Planet,
-	Enemy: Enemy,
-	Shot: Shot
 };

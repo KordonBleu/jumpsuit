@@ -42,36 +42,16 @@ function changeCbk(newConfig, previousConfig) {
 }
 var config = require("./config.js")(process.argv[2] || "./game_config.json", configSkeleton, changeCbk);
 
-function plugModdedModule(moddedModule, defaultModule) {
-	for (let key in defaultModule) {
-		if (moddedModule[key] === undefined) moddedModule[key] = defaultModule[key];//use default functions and constructor when the mod doesn't implement them
-	}
-}
-var engine,
-	onMessage;
-{
-	let defaultEngine = require("./mods/" + configSkeleton.mod + "/engine.js"),
-		defaultOnMessage = require("./mods/" + configSkeleton.mod + "/on_message.js");
+const {engine, onMessage, Player, Planet, Enemy} = require("./mod_loader.js")(configSkeleton.mod, config.mod, {
+	engine: "engine.js",
+	onMessage: "on_message.js",
+	Player: "player.js",
+	Planet: "planet.js",
+	Enemy: "enemy.js",
+	weapon: "weapon.js"
+});
 
-	try {
-		engine = require("./mods/" + config.mod + "/engine.js");
-		plugModdedModule(engine, defaultEngine);
-		logger(logger.INFO, "Modded engine loaded.");
-	} catch(e) {
-		engine = defaultEngine;
-		logger(logger.INFO, "Engine loaded.");
-	}
-	try {
-		onMessage = require("./mods/" + config.mod + "/on_message.js")(engine);
-		plugModdedModule(onMessage, defaultOnMessage);
-		logger(logger.INFO, "Modded message handler loaded.");
-	} catch(e) {
-		onMessage = defaultOnMessage;
-		logger(logger.INFO, "Message handler loaded.");
-	}
-}
-
-var Lobby = require("./lobby.js")(engine),
+var Lobby = require("./lobby.js")(engine, Planet, Enemy),
 	lobbies = [];
 
 var monitor = require("./monitor.js")(config, lobbies);
@@ -110,7 +90,7 @@ function connectToMaster(){
 }
 connectToMaster();
 
-engine.Player.prototype.send = function(data) {
+Player.prototype.send = function(data) {
 	try {
 		this.ws.send(data, { binary: true, mask: false });
 		if (config.monitor) {
@@ -139,7 +119,7 @@ wss.on("connection", function(ws) {
 			});
 		});
 	}
-	var player = new engine.Player();
+	var player = new Player();
 	player.ws = ws;
 	player.ip = ipaddr.parse(ws._socket.remoteAddress);
 
@@ -188,9 +168,10 @@ wss.on("connection", function(ws) {
 					}
 					player.pid = lobby.addPlayer(player);
 					player.name = val.name;
-					//player.weaponry.armed = val.primary;
-					//player.weaponry.carrying = val.secondary;
-					player.armedWeapon = new 
+					player.weaponry.armed = val.primary;
+					player.weaponry.carrying = val.secondary;
+					//player.armedWeapon = new weapon.whatever
+					//player.carriedWeapon = new weapon.
 					player.homographId = lobby.getNextHomographId(player.name);
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;

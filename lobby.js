@@ -1,6 +1,6 @@
 "use strict";
 
-module.exports = function(engine) {
+module.exports = function(engine, Planet, Enemy) {
 	var vinage = require("vinage"),
 		MESSAGE = require("./static/message.js");
 
@@ -150,7 +150,7 @@ module.exports = function(engine) {
 		}
 		var maxIterations = planetAmount * 4;
 		for (let i = 0, iterations = 0; i !== planetAmount, iterations !== maxIterations; ++i, ++iterations) {
-			let newPlanet = new engine.Planet(Math.random()*this.universe.width, Math.random()*this.universe.height, 100 + Math.random()*300);
+			let newPlanet = new Planet(Math.random()*this.universe.width, Math.random()*this.universe.height, 100 + Math.random()*300);
 			if (this.planets.every(function(planet) { return !this.universe.collide(planet.atmosBox, newPlanet.atmosBox); }.bind(this)) &&
 				newPlanet.box.center.x - newPlanet.box.radius > 50 && newPlanet.box.center.x + newPlanet.box.radius < this.universe.width - 50 &&
 				newPlanet.box.center.y - newPlanet.box.radius > 50 && newPlanet.box.center.y + newPlanet.box.radius < this.universe.height - 50) this.planets.push(newPlanet);
@@ -158,7 +158,7 @@ module.exports = function(engine) {
 		}
 		maxIterations = enemyAmount * 4;
 		for (let i = 0, iterations = 0; i !== enemyAmount, iterations !== maxIterations; ++i, ++iterations) {
-			let newEnemy = new engine.Enemy(Math.random()*this.universe.width, Math.random()*this.universe.height);
+			let newEnemy = new Enemy(Math.random()*this.universe.width, Math.random()*this.universe.height);
 			if (this.planets.every(function(planet) {
 				return distanceBetween(planet.box, newEnemy.box) > planet.box.radius + 420;
 			}.bind(this)) && this.enemies.every(function(enemy) {
