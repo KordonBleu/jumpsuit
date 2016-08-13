@@ -24,8 +24,8 @@ var planets = [
 		new Shot(44, 87, 0.75*Math.PI, 0, 1)
 	],
 	players = [
-		new Player("Charles", "alienBlue", "_hurt", -1, true, 358, 45, "knife", "smg", 0.3*Math.PI),
-		new Player("Lucette", "alienPink", "_stand", -1, false, 27, 0, "lmg", "shotgun", 1.1*Math.PI)
+		new Player("Charles", "alienBlue", "_hurt", -1, true, 358, 45, "Knife", "Smg", 0.3*Math.PI),
+		new Player("Lucette", "alienPink", "_stand", -1, false, 27, 0, "Lmg", "Shotgun", 1.1*Math.PI)
 	];
 
 planets[0].progress.team = "alienBlue";
@@ -88,8 +88,8 @@ test("ADD_ENTITY", t => {
 		t.is(players[playerI].walkFrame, "_" + walkFrame);
 		t.is(players[playerI].name, name);
 		t.is(players[playerI].homographId, homographId);
-		t.is(players[playerI].weaponry.armed, armedWeapon, "player[" + playerI + "]");
-		t.is(players[playerI].weaponry.carrying, carriedWeapon, "player[" + playerI + "]");
+		t.is(players[playerI].armedWeapon.constructor.name, armedWeapon, "player[" + playerI + "]");
+		t.is(players[playerI].carriedWeapon.constructor.name, carriedWeapon, "player[" + playerI + "]");
 
 		++playerI;
 	});
@@ -188,8 +188,8 @@ test("REMOVE_SERVERS", t => {
 test.skip("SET_PREFERENCES", t => {
 	let settings = {
 		name: "Unnamed Player",
-		primary: "lmg",
-		secondary: "knife"
+		primary: "Lmg",
+		secondary: "Knife"
 	},
 		buf = message.SET_PREFERENCES.serialize(settings),
 		res = message.SET_PREFERENCES.deserialize(buf);

@@ -133,10 +133,10 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
  3. `pink team`
  4. `yellow team`
 `Armed Weapon` and `Carried Weapon` must be either:
- 0. `lmg`
- 1. `smg`
- 2. `shotgun`
- 3. `sniper`
+ 0. `Lmg`
+ 1. `Smg`
+ 2. `Shotgun`
+ 3. `Sniper`
 
 
 #### LESSER_PLAYER
@@ -154,10 +154,10 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
  3. `walk1`
  4. `walk2`
 `Armed Weapon` and `Carried Weapon` must be either:
- 0. `lmg`
- 1. `smg`
- 2. `shotgun`
- 3. `sniper`
+ 0. `Lmg`
+ 1. `Smg`
+ 2. `Shotgun`
+ 3. `Sniper`
 
 
 #### SHOT

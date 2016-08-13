@@ -13,12 +13,12 @@ function mod(dividend, divisor) {
 	return (dividend + divisor*Math.ceil(Math.abs(dividend / divisor))) % divisor;
 }
 
-const weaponList = {
+/*const weaponList = {
 	lmg: {offsetX: 13, offsetY: -15, cycle: 9, muzzleX: 81, muzzleY: 6, shotType: 1, spray: 0.025}, //offsetX and offsetY could be packed in one Object but it's kinda stupid having an Object in an Object in an Object
 	smg: {offsetX: 13, offsetY: -3, cycle: 5, muzzleX: 58, muzzleY: -2, shotType: 1, spray: 0.04},
 	shotgun: {offsetX: -13, offsetY: -5, cycle: -1, muzzleX: 84, muzzleY: 2, shotType: 3, spray: 0.05},
 	knife: {offsetX: 23, offsetY: -20, cycle: -1, muzzleX: 23, muzzleY: 0, shotType: 2, spray: 0.005}
-};
+};*/
 
 
 function doPrediction(universe, players, enemies, shots) {
@@ -155,11 +155,8 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
 			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 		}
-		if (player.controls["changeWeapon"] === 1) {
-			var a = player.weaponry.armed, b = player.weaponry.carrying;
-			player.weaponry.armed = b;
-			player.weaponry.carrying = a;
-		}
+		if (player.controls["changeWeapon"] === 1) [player.armedWeapon, player.carriedWeapon] = [player.carriedWeapon, player.armedWeapon];
+
 		if (player.controls["shoot"] === 1 || (player.controls["shoot"] === 2 && player.armedWeapon.canRapidFire !== undefined && player.armedWeapon.canRapidFire())) {
 			for (let shot of player.armedWeapon.fire()) {
 				shots.push(shot);

@@ -162,8 +162,8 @@ Connection.prototype.messageHandler = function(message) {
 					laserModel.makeSound(makePanner(x - players[ownIdx].box.center.x, y - players[ownIdx].box.center.y)).start(0);
 					let shot = new Shot(x, y, angle, origin, type);
 					shots.push(shot);
-					let param1 = players.find(element => { return element !== undefined && element.pid === origin; });
-					if (param1) param1.weaponry.muzzleFlash = type === shot.TYPES.BULLET || type === shot.TYPES.BALL;
+					let originatingPlayer = players.find(element => { return element !== undefined && element.pid === origin; });
+					if (originatingPlayer) originatingPlayer.armedWeapon.muzzleFlash = type === shot.TYPES.BULLET || type === shot.TYPES.BALL;
 				},
 				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {//add players
 					let newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
@@ -245,8 +245,8 @@ Connection.prototype.messageHandler = function(message) {
 					players[pid].jetpack = jetpack;
 
 					players[pid].attachedPlanet = attachedPlanet;
-					players[pid].weaponry.armed = armedWeapon;
-					players[pid].weaponry.carrying = carriedWeapon;
+					players[pid].armedWeapon = players[pid].weapons[armedWeapon];
+					players[pid].carriedWeapon = players[pid].weapons[carriedWeapon];
 				}
 			);
 

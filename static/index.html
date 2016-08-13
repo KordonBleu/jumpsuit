@@ -107,8 +107,8 @@
 				<label>Name</label><input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
 				<h3>Weaponry</h3>
 				<div class="weaponry-container">
-					<div class="weapon-select" id="primary-weapon"><img src="/assets/images/shotgun.svg" data-current-weapon="lmg"/><span></span></div>
-					<div class="weapon-select" id="secondary-weapon"><img src="/assets/images/knife.svg" data-current-weapon="knife"/><span></span></div>
+					<div class="weapon-select" id="primary-weapon"><img src="/assets/images/shotgun.svg" data-current-weapon="Lmg"/><span></span></div>
+					<div class="weapon-select" id="secondary-weapon"><img src="/assets/images/knife.svg" data-current-weapon="Knife"/><span></span></div>
 				</div>
 				<h3>Volume</h3>
 				<label>Background Music</label><input type="range" value="50" id="music-volume"/><br/>
@@ -166,6 +166,7 @@
 		<script src="https://jumpsuit.space/engine.js"></script>
 
 		<script src="https://jumpsuit.space/ui.js"></script>
+		<script src="https://jumpsuit.space/draw.js"></script>
 		<script src="https://jumpsuit.space/canvas.js"></script>
 		<script src="https://jumpsuit.space/message.js"></script>
 		<script src="https://jumpsuit.space/websocket_client.js"></script>

@@ -56,8 +56,8 @@ var chatElement = document.getElementById("gui-chat"),
 		keymap: localStorage.getItem("settings.keymap") || "",
 		volMusic: localStorage.getItem("settings.volume.music") || 50,
 		volEffects: localStorage.getItem("settings.volume.effects") || 50,
-		primary: localStorage.getItem("settings.weaponry.primary") || "lmg",
-		secondary: localStorage.getItem("settings.weaponry.secondary") || "knife"
+		primary: localStorage.getItem("settings.weaponry.primary") || "Lmg",
+		secondary: localStorage.getItem("settings.weaponry.secondary") || "Knife"
 	};
 
 
@@ -188,10 +188,12 @@ nameElement.addEventListener("blur", function(e) {
 });
 
 /* Weaponry */
-var weaponryCycle = ["lmg", "smg", "knife", "shotgun"], weaponNames = {lmg: "Borpov", smg: "Pezcak", knife: "throwable Knife", shotgun: "Azard"};
+var weaponryCycle = ["Lmg", "Smg", "Knife", "Shotgun"],
+	weaponNames = {Lmg: "Borpov", Smg: "Pezcak", Knife: "throwable Knife", Shotgun: "Azard"};
+
 function setGun(element, type) {
 	element.dataset.currentWeapon = type;
-	element.childNodes[0].src = "/assets/images/" + type + ".svg";
+	element.childNodes[0].src = "/assets/images/" + type.toLowerCase() + ".svg";
 	element.childNodes[1].textContent = weaponNames[type];
 	if (typeof currentConnection !== "undefined") currentConnection.setPreferences();
 }

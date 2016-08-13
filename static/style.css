@@ -34,7 +34,7 @@ body.nogui *[id^=gui]{
 	-ms-user-select: text;
 	user-select: text;
 }
-#gui-fuel, #gui-health, #gui-chat, #gui-points, #gui-controls {
+#gui-fuel, #gui-health, #gui-chat, #gui-points, #gui-controls, #gui-warmup {
 	pointer-events: none;
 }
 #gui-controls li img {

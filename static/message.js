@@ -188,10 +188,10 @@ const MESSAGE = {
 	SET_PREFERENCES: {
 		value: 3,
 		WEAPON: {
-			lmg: 0,
-			smg: 1,
-			shotgun: 2,
-			knife: 3
+			Lmg: 0,
+			Smg: 1,
+			Shotgun: 2,
+			Knife: 3
 		},
 		serialize: function(settings) {
 			let nameBuffer = stringToBuffer(settings.name),
@@ -236,10 +236,10 @@ const MESSAGE = {
 	CONNECT: {
 		value: 5,
 		WEAPON: {
-			lmg: 0,
-			smg: 1,
-			shotgun: 2,
-			knife: 3
+			Lmg: 0,
+			Smg: 1,
+			Shotgun: 2,
+			Knife: 3
 		},
 		serialize: function(lobbyId, settings) {
 			let nameBuffer = stringToBuffer(settings.name),
@@ -381,10 +381,10 @@ const MESSAGE = {
 			JETPACK: 64
 		},
 		WEAPON: {
-			lmg: 0,
-			smg: 1,
-			shotgun: 2,
-			knife: 3
+			Lmg: 0,
+			Smg: 1,
+			Shotgun: 2,
+			Knife: 3
 		},
 		serialize: function(planets, enemies, shots, players) {
 			var totalNameSize = 0,
@@ -452,9 +452,9 @@ const MESSAGE = {
 					if (player.jetpack) enumByte |= this.MASK.JETPACK;
 					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 					view.setUint8(7 + offset, enumByte);
-					var weaponByte = this.WEAPON[player.weaponry.armed];
+					var weaponByte = this.WEAPON[player.armedWeapon.constructor.name];
 					weaponByte <<= 2;
-					weaponByte += this.WEAPON[player.weaponry.carrying];
+					weaponByte += this.WEAPON[player.carriedWeapon.constructor.name];
 					view.setUint8(8 + offset, weaponByte);
 					view.setUint8(9 + offset, player.homographId);
 					view.setUint8(10 + offset, playerNameBufs[i].byteLength);
@@ -603,10 +603,10 @@ const MESSAGE = {
 			HURT: 32
 		},
 		WEAPON: {
-			lmg: 0,
-			smg: 1,
-			shotgun: 2,
-			knife: 3
+			Lmg: 0,
+			Smg: 1,
+			Shotgun: 2,
+			Knife: 3
 		},
 		serialize: function(yourHealth, yourFuel, planets, enemies, players) {
 			var buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.actualLength()*10),
@@ -639,8 +639,8 @@ const MESSAGE = {
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				if (player.hurt) enumByte |= this.MASK.HURT;
 				view.setUint8(8 + offset, enumByte);
-				let weaponByte = this.WEAPON[player.weaponry.armed] << 2;
-				weaponByte += this.WEAPON[player.weaponry.carrying];
+				let weaponByte = this.WEAPON[player.armedWeapon.constructor.name] << 2;
+				weaponByte += this.WEAPON[player.carriedWeapon.constructor.name];
 				view.setUint8(9 + offset, weaponByte);
 				offset += 10;
 			}
@@ -665,7 +665,6 @@ const MESSAGE = {
 			for (; i !== view.byteLength; i += 10) {
 				let enumByte = view.getUint8(8 + i),
 					weaponByte = view.getUint8(9 + i);
-				if (Object.keys(this.WALK_FRAME)[enumByte << 27 >>> 29] === undefined) console.log(enumByte, enumByte << 27 >>> 29);
 				playersCbk(view.getUint8(i), //pid
 					view.getUint16(1 + i),//x
 					view.getUint16(3 + i),//y

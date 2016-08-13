@@ -50,9 +50,15 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 	this.fuel = fuel || 300;
 	this.attachedPlanet = attachedPlanet || -1;
 	this.lastlyAimedAt = Date.now();
-	this.weaponry = {armed: armedWeapon || "lmg", carrying: carriedWeapon || "smg", cycle: 0, recoil: 0};
-	this.armedWeapon = new weapon.Lmg(this);
-	this.carriedWeapon = new weapon.Lmg(this);
+	this.weapons = {
+		Smg: new weapon.Smg(this),
+		Lmg: new weapon.Lmg(this),
+		Shotgun: new weapon.Shotgun(this),
+		Knife: new weapon.Knife(this)
+	};
+	this.armedWeapon = armedWeapon !== undefined ? this.weapons[armedWeapon] : this.weapons.Lmg;
+	console.log(this.armedWeapon, armedWeapon, armedWeapon in this.weapons);
+	this.carriedWeapon = carriedWeapon !== undefined ? this.weapons[carriedWeapon] : this.weapons.Smg;
 	this.aimAngle = aimAngle || 0;
 	this.lastSound = 0;
 	if (typeof module === "undefined" || typeof module.exports === "undefined") {

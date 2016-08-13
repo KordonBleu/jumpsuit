@@ -37,6 +37,9 @@ var weapon = (function() {
 	}
 
 	class Lmg extends RapidFireWeapon {
+		constructor(owner) {
+			super(owner);
+		}
 	}
 	Lmg.prototype.offsetX = 13;
 	Lmg.prototype.offsetY = -15;
@@ -46,6 +49,9 @@ var weapon = (function() {
 	Lmg.prototype.spray = 0.025;
 
 	class Smg extends RapidFireWeapon {
+		constructor(owner) {
+			super(owner);
+		}
 	}
 	Smg.prototype.offsetX = 13;
 	Smg.prototype.offsetY = -3;
@@ -55,6 +61,9 @@ var weapon = (function() {
 	Smg.prototype.spray = 0.04;
 
 	class Shotgun extends Weapon {
+		constructor(owner) {
+			super(owner);
+		}
 	}
 	Shotgun.prototype.offsetX = 13;
 	Shotgun.prototype.offsetY = -5;
@@ -63,6 +72,9 @@ var weapon = (function() {
 	Shotgun.prototype.spray = 0.05;
 
 	class Knife extends Weapon {
+		constructor(owner) {
+			super(owner);
+		}
 	}
 	Knife.prototype.offsetX = 23;
 	Knife.prototype.offsetY = -20;
@@ -74,7 +86,8 @@ var weapon = (function() {
 		Lmg,
 		Smg,
 		Shotgun,
-		Knife
+		Knife,
+		Weapon // TODO: remove this maybe?
 	}
 })();
 
