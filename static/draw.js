@@ -147,7 +147,7 @@ weapon.Weapon.prototype.draw = function() {
 			resources["muzzle"].height * windowBox.zoomFactor);//muzzle flash
 
 		this.muzzleFlash = false;
-		this.recoil = (this instanceof Shotgun) ? 27 : 10;
+		this.recoil = (this instanceof weapon.Shotgun) ? 27 : 10;
 	}
 	context.drawImage(resources[this.constructor.name.toLowerCase()], // this is ugly buuuuuuut... it works
 		(this.offsetX - this.recoil)*windowBox.zoomFactor,

@@ -31,14 +31,13 @@ module.exports = (config, lobbies) => {
 		printProperty("Interactive Mode", (config.interactive) ? "Enabled" : "Disabled");
 
 		if (lobbies !== undefined) {
-			console.log(); //newline
 			var headerSizes = [35, 10, 15],
 				headerNames = ["lobby name", "players", "process time"],
 				header = "";
 			headerSizes.forEach((hSize, i) => {
 				header += (i !== 0 ? " | " : "") + headerNames[i].toUpperCase().bold + genSpaces(hSize - headerNames[i].length);
 			});
-			console.log(header);
+			console.log("\n" + header);
 
 			var lobbyAmount = 0, maxLobbies = 8; //should be different according to terminal height and width
 			lobbies.some((lobby, index, array) => {

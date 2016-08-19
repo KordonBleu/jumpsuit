@@ -8,21 +8,15 @@ var weapon = (function() {
 			this.owner = owner;
 			this.recoil = 0;
 		}
-		fire() {
-			let shotType = Shot.prototype.BULLET,
-				shift = this.owner.looksLeft ? -1 : 1,
+		fire(angleOffset) {
+			let shift = this.owner.looksLeft ? -1 : 1,
 				inaccuracy = (2*Math.random()-1)*this.spray,
 				newShots = [];
 
-			for (let i = -1; i <= 1; i++) {
-				if (shotType !== 3 && i !== 0) continue;
-				if (i !== 0) inaccuracy += (2 * Math.random() - 1) * this.spray * 0.45;
-				let shotX = this.owner.box.center.x + this.muzzleX * Math.sin(this.owner.aimAngle) + this.muzzleY * shift * Math.sin(this.owner.aimAngle - Math.PI / 2),
-					shotY = this.owner.box.center.y - this.muzzleX * Math.cos(this.owner.aimAngle) - this.muzzleY * shift * Math.cos(this.owner.aimAngle - Math.PI / 2);
+			let shotX = this.owner.box.center.x + this.muzzleX * Math.sin(this.owner.aimAngle) + this.muzzleY * shift * Math.sin(this.owner.aimAngle - Math.PI / 2),
+				shotY = this.owner.box.center.y - this.muzzleX * Math.cos(this.owner.aimAngle) - this.muzzleY * shift * Math.cos(this.owner.aimAngle - Math.PI / 2);
 
-				newShots.push(new Shot(shotX, shotY, this.owner.aimAngle + i*0.12 + inaccuracy, this.owner.pid, shotType));
-			}
-			return newShots;
+			return [new Shot(shotX, shotY, this.owner.aimAngle + (angleOffset === undefined ? 0 : angleOffset) + inaccuracy, this.owner.pid, this.shotType)];
 		}
 	}
 	class RapidFireWeapon extends Weapon {
@@ -35,6 +29,7 @@ var weapon = (function() {
 			return this.cycle === 0;
 		}
 	}
+	RapidFireWeapon.prototype.shotType = Shot.prototype.TYPES.BULLET;
 
 	class Lmg extends RapidFireWeapon {
 		constructor(owner) {
@@ -64,12 +59,21 @@ var weapon = (function() {
 		constructor(owner) {
 			super(owner);
 		}
+		fire() {
+			let shots = [];
+			for (let i = -1; i !== 1; ++i) {
+				shots = shots.concat(super.fire(i*0.12));
+			}
+
+			return shots;
+		}
 	}
 	Shotgun.prototype.offsetX = 13;
 	Shotgun.prototype.offsetY = -5;
 	Shotgun.prototype.muzzleX = 84;
 	Shotgun.prototype.muzzleY = 2;
 	Shotgun.prototype.spray = 0.05;
+	Shotgun.prototype.shotType = Shot.prototype.TYPES.BALL;
 
 	class Knife extends Weapon {
 		constructor(owner) {
@@ -81,6 +85,7 @@ var weapon = (function() {
 	Knife.prototype.muzzleX = 23;
 	Knife.prototype.muzzleY = 0;
 	Knife.prototype.spray = 0.005;
+	Knife.prototype.shotType = Shot.prototype.TYPES.KNIFE;
 
 	return {
 		Lmg,

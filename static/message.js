@@ -205,8 +205,8 @@ const MESSAGE = {
 		deserialize: function(buffer) {
 			var view = new Uint8Array(buffer);
 			return {
-				primary: view[1],
-				secondary: view[2],
+				primary: Object.keys(this.WEAPON)[view[1]],
+				secondary: Object.keys(this.WEAPON)[view[2]],
 				name: bufferToString(buffer.slice(3))
 			};
 		}
@@ -248,6 +248,7 @@ const MESSAGE = {
 			view.setUint8(0, this.value);
 			view.setUint8(1, lobbyId !== undefined);
 			view.setUint32(2, lobbyId || 0);
+			console.log("serializing " + settings.primary, settings.secondary);
 			view.setUint8(6, this.WEAPON[settings.primary]);
 			view.setUint8(7, this.WEAPON[settings.secondary]);
 			buffer.set(new Uint8Array(nameBuffer), 8);
@@ -293,7 +294,7 @@ const MESSAGE = {
 				lobbyId: view.getUint32(1),
 				playerId: view.getUint8(5),
 				univWidth: view.getUint16(6),
-				univHeight: view.getUint16(8),
+				univHeight: view.getUint16(8)
 			};
 		}
 	},
@@ -639,6 +640,7 @@ const MESSAGE = {
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				if (player.hurt) enumByte |= this.MASK.HURT;
 				view.setUint8(8 + offset, enumByte);
+				//console.log(player.carriedWeapon.constructor.name)
 				let weaponByte = this.WEAPON[player.armedWeapon.constructor.name] << 2;
 				weaponByte += this.WEAPON[player.carriedWeapon.constructor.name];
 				view.setUint8(9 + offset, weaponByte);

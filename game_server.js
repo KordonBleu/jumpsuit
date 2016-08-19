@@ -133,13 +133,15 @@ wss.on("connection", function(ws) {
 			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
 				case MESSAGE.SET_PREFERENCES.value: {
-					let playerName = MESSAGE.SET_PREFERENCES.deserialize(message);
-					if (playerName === player.name) return;
+					let val = MESSAGE.SET_PREFERENCES.deserialize(message);
+					console.log(playerName);
 					if (player.lobby !== undefined) {
-						player.homographId = player.lobby.getNextHomographId(playerName);
-						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), playerName, player.homographId));
+						player.homographId = player.lobby.getNextHomographId(val.name);
+						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
 					}
-					player.name = playerName;
+					player.name = val.name;
+					player.armedWeapon = player.weapons[val.primary];
+					player.carriedWeapon = player.weapons[val.secondary];
 					break;
 				}
 				case MESSAGE.CONNECT.value: {
@@ -168,6 +170,7 @@ wss.on("connection", function(ws) {
 					}
 					player.pid = lobby.addPlayer(player);
 					player.name = val.name;
+					console.log(val.primary, val.secondary);
 					player.armedWeapon = player.weapons[val.primary];
 					player.carriedWeapon = player.weapons[val.secondary];
 					player.homographId = lobby.getNextHomographId(player.name);

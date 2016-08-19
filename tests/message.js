@@ -9,6 +9,150 @@ import { default as Player } from "../mods/capture/player.js"
 import * as message from "../static/message.js";
 import * as vinage from "vinage";
 
+
+test("REGISTER_SERVER", t => {
+	let a = {
+			secure: true,
+			serverPort: 7483,
+			serverName: 'server name',
+			modName: 'mod name'
+		},
+		b = {
+			secure: false,
+			serverPort: 328,
+			serverName: 'The Circlejerk',
+			modName: 'biscuit'
+		};
+	let buf1 = message.REGISTER_SERVER.serialize(a.secure, a.serverPort, a.serverName, a.modName);
+	let res1 = message.REGISTER_SERVER.deserialize(buf1);
+	t.deepEqual(a, res1);
+
+	let buf2 = message.REGISTER_SERVER.serialize(b.secure, b.serverPort, b.serverName, b.modName);
+	let res2 = message.REGISTER_SERVER.deserialize(buf2);
+	t.deepEqual(b, res2);
+});
+
+
+test.skip("ADD_SERVERS", t => {
+	let serverList = [{
+			ip: "2001:0db8:0000:85a3:0000:0000:ac1f:8001",
+			name: "server name",
+			mod: "mod name",
+			port: 7483,
+			secure: true
+		},
+		{
+			ip: "2001:610:240:22::c100:68b",
+			name: "The Circlejerk",
+			mod: "biscuit",
+			port: 31415,
+			secure: false
+		},
+		{
+			ip: "2001:0db8:0000:0000:0000:ff00:0042:8329",
+			name: "Deutsche Qualität",
+			mod: "caractères accentués",
+			port: 7483,
+			secure: true
+		}];
+
+	let buf1 = message.ADD_SERVERS.serialize(serverList);
+	let res1 = message.ADD_SERVERS.deserialize(buf1);
+});
+
+test("REMOVE_SERVERS", t => {
+	let ids1 = [1, 45, 65535, 5, 899],
+		buf1 = message.REMOVE_SERVERS.serialize(ids1),
+		res1 = message.REMOVE_SERVERS.deserialize(buf1);
+	t.deepEqual(ids1, res1);
+
+	let ids2 = [],
+		buf2 = message.REMOVE_SERVERS.serialize(ids2),
+		res2 = message.REMOVE_SERVERS.deserialize(buf2);
+	t.deepEqual(ids2, res2);
+
+	let ids3 = [99],
+		buf3 = message.REMOVE_SERVERS.serialize(ids3),
+		res3 = message.REMOVE_SERVERS.deserialize(buf3);
+	t.deepEqual(ids3, res3);
+});
+
+test("SET_PREFERENCES", t => {
+	let settings = {
+		name: "Unnamed Player",
+		primary: "Lmg",
+		secondary: "Knife"
+	},
+		buf = message.SET_PREFERENCES.serialize(settings),
+		res = message.SET_PREFERENCES.deserialize(buf);
+
+	t.deepEqual(settings, res);
+});
+
+test("SET_NAME_BROADCAST", t => {
+	let val = {
+		id: 5,
+		name: "Jean-Kévin",
+		homographId: 2
+	},
+		buf = message.SET_NAME_BROADCAST.serialize(val.id, val.name, val.homographId),
+		res = message.SET_NAME_BROADCAST.deserialize(buf);
+
+	t.deepEqual(val, res);
+});
+
+test("CONNECT", t => {
+	let buf = message.CONNECT.serialize(45, {
+		name: "កែវ",
+		primary: "Lmg",
+		secondary: "Knife"
+	}),
+		res = message.CONNECT.deserialize(buf);
+
+	t.is(res.lobbyId, 45);
+	t.is(res.primary, "Lmg");
+	t.is(res.secondary, "Knife");
+	t.is(res.name, "កែវ");
+});
+
+test("ERROR", t => {
+	let buf1 = message.ERROR.serialize(message.ERROR.NO_LOBBY),
+		res1 = message.ERROR.deserialize(buf1),
+		buf2 = message.ERROR.serialize(message.ERROR.NO_SLOT),
+		res2 = message.ERROR.deserialize(buf2);
+
+	t.is(res1, message.ERROR.NO_LOBBY);
+	t.is(res2, message.ERROR.NO_SLOT);
+});
+
+test("CONNECT_ACCEPTED", t => {
+	let val =  {
+		lobbyId: 4000000000, // 32 bits
+		playerId: 244, // 8bits
+		univWidth: 65535, // 16 bits
+		univHeight: 30000 // 16 bits
+	},
+		buf = message.CONNECT_ACCEPTED.serialize(val.lobbyId, val.playerId, val.univWidth, val.univHeight),
+		res = message.CONNECT_ACCEPTED.deserialize(buf);
+
+	t.deepEqual(val, res);
+});
+
+test("LOBBY_STATE", t => {
+	let teams = [
+		"alienBeige",
+		"alienBlue",
+		"alienGreen",
+		"alienPink",
+		"alienYellow"
+	],
+		buf = message.LOBBY_STATE.serialize(message.LOBBY_STATE.LOBBY_STATES.WARMUP, teams),
+		res = message.LOBBY_STATE.deserialize(buf);
+
+	t.deepEqual(teams, res.enabledTeams);
+	t.is(res.state, "WARMUP");
+});
+
 var planets = [
 		new Planet(12, 434, 23),
 		new Planet(654, 12, 38),
@@ -116,83 +260,4 @@ test.skip("GAME_STATE", t => {
 
 	let buf = message.GAME_STATE.serialize(8, 400, planets, enemies, shots, players);
 	let res = message.GAME_STATE.deserialize(buf3, planets.length, enemies.length, shots.length, players.length, printArgs, printArgs, printArgs, printArgs);
-});
-
-test("REGISTER_SERVER", t => {
-	let a = {
-			secure: true,
-			serverPort: 7483,
-			serverName: 'server name',
-			modName: 'mod name'
-		},
-		b = {
-			secure: false,
-			serverPort: 328,
-			serverName: 'The Circlejerk',
-			modName: 'biscuit'
-		};
-	let buf1 = message.REGISTER_SERVER.serialize(a.secure, a.serverPort, a.serverName, a.modName);
-	let res1 = message.REGISTER_SERVER.deserialize(buf1);
-	t.deepEqual(a, res1);
-
-	let buf2 = message.REGISTER_SERVER.serialize(b.secure, b.serverPort, b.serverName, b.modName);
-	let res2 = message.REGISTER_SERVER.deserialize(buf2);
-	t.deepEqual(b, res2);
-});
-
-
-test.skip("ADD_SERVERS", t => {
-	let serverList = [{
-			ip: "2001:0db8:0000:85a3:0000:0000:ac1f:8001",
-			name: "server name",
-			mod: "mod name",
-			port: 7483,
-			secure: true
-		},
-		{
-			ip: "2001:610:240:22::c100:68b",
-			name: "The Circlejerk",
-			mod: "biscuit",
-			port: 31415,
-			secure: false
-		},
-		{
-			ip: "2001:0db8:0000:0000:0000:ff00:0042:8329",
-			name: "Deutsche Qualität",
-			mod: "caractères accentués",
-			port: 7483,
-			secure: true
-		}];
-
-	let buf1 = message.ADD_SERVERS.serialize(serverList);
-	let res1 = message.ADD_SERVERS.deserialize(buf1);
-});
-
-test("REMOVE_SERVERS", t => {
-	let ids1 = [1, 45, 65535, 5, 899],
-		buf1 = message.REMOVE_SERVERS.serialize(ids1),
-		res1 = message.REMOVE_SERVERS.deserialize(buf1);
-	t.deepEqual(ids1, res1);
-
-	let ids2 = [],
-		buf2 = message.REMOVE_SERVERS.serialize(ids2),
-		res2 = message.REMOVE_SERVERS.deserialize(buf2);
-	t.deepEqual(ids2, res2);
-
-	let ids3 = [99],
-		buf3 = message.REMOVE_SERVERS.serialize(ids3),
-		res3 = message.REMOVE_SERVERS.deserialize(buf3);
-	t.deepEqual(ids3, res3);
-});
-
-test.skip("SET_PREFERENCES", t => {
-	let settings = {
-		name: "Unnamed Player",
-		primary: "Lmg",
-		secondary: "Knife"
-	},
-		buf = message.SET_PREFERENCES.serialize(settings),
-		res = message.SET_PREFERENCES.deserialize(buf);
-
-	t.deepEqual(settings, res);
 });

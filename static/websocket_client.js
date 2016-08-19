@@ -72,7 +72,6 @@ Connection.prototype.sendMessage = function(messageType, ...args) {
 	}
 };
 Connection.prototype.createLobby = function(name, playerAmount) {
-	if (!currentConnection.alive()) return;
 	this.socket.send(MESSAGE.CREATE_LOBBY.serialize(name, playerAmount));
 };
 Connection.prototype.close = function() {
@@ -88,7 +87,7 @@ Connection.prototype.close = function() {
 	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 };
 Connection.prototype.setPreferences = function() {
-	if (!currentConnection.alive()) return;
+	console.log(settings);
 	this.sendMessage(MESSAGE.SET_PREFERENCES, settings);
 };
 Connection.prototype.sendChat = function(content) {
@@ -106,7 +105,6 @@ Connection.prototype.refreshControls = function(controls) {
 	this.socket.send(MESSAGE.PLAYER_CONTROLS.serialize(controls));
 };
 Connection.prototype.sendMousePos = function(angle) {
-	if (!currentConnection.alive()) return;
 	if (this.lastAngle === undefined) this.lastAngle = 0;
 	if (this.lastAngle !== angle) this.sendMessage(MESSAGE.AIM_ANGLE, angle);
 	this.lastAngle = angle;
@@ -205,6 +203,7 @@ Connection.prototype.messageHandler = function(message) {
 					enemies[id].box.angle = angle;
 				},
 				(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
+					console.log(armedWeapon, carriedWeapon);
 					if (pid === ownIdx) {
 						if (!players[pid].jetpack && jetpack) {
 							players[pid].jetpackSound = jetpackModel.makeSound(soundEffectGain, 1);

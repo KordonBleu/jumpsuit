@@ -57,7 +57,6 @@ function Player(name, appearance, walkFrame, attachedPlanet, jetpack, health, fu
 		Knife: new weapon.Knife(this)
 	};
 	this.armedWeapon = armedWeapon !== undefined ? this.weapons[armedWeapon] : this.weapons.Lmg;
-	console.log(this.armedWeapon, armedWeapon, armedWeapon in this.weapons);
 	this.carriedWeapon = carriedWeapon !== undefined ? this.weapons[carriedWeapon] : this.weapons.Smg;
 	this.aimAngle = aimAngle || 0;
 	this.lastSound = 0;
@@ -80,7 +79,6 @@ Player.prototype.setWalkFrame = function() {
 	}
 };
 Player.prototype.setBoxSize = function() {
-	//if (this.walkFrame === undefined) console.log("WARNING: walkframe is undefined");
 	this.box.width = resources[this.appearance + this.walkFrame].width;
 	this.box.height = resources[this.appearance + this.walkFrame].height;
 };
