@@ -136,6 +136,16 @@ test("CONNECT_ACCEPTED", t => {
 		res = message.CONNECT_ACCEPTED.deserialize(buf);
 
 	t.deepEqual(val, res);
+
+	let val2 = {
+		lobbyId: 989043,
+		playerId: 24,
+		univWidth: 3429,
+		univHeight: 4452
+	},
+		buf2 = message.CONNECT_ACCEPTED.serialize(val2.lobbyId, val2.playerId, val2.univWidth, val2.univHeight);
+
+	t.deepEqual(val2, message.CONNECT_ACCEPTED.deserialize(buf2));
 });
 
 test("LOBBY_STATE", t => {
@@ -191,6 +201,10 @@ enemies[2].box.angle = Math.PI;
 
 var teams = ["alienBlue", "alienGreen", "alienYellow"];
 
+function approxAngle(angle) {
+	return Math.floor(angle*10);
+}
+
 
 test("ADD_ENTITY", t => {
 	let buf = message.ADD_ENTITY.serialize(planets, enemies, shots, players),
@@ -215,7 +229,7 @@ test("ADD_ENTITY", t => {
 	}, (x, y, angle, origin, type) => {
 		t.is(shots[shotI].box.center.x, x);
 		t.is(shots[shotI].box.center.y, y);
-		t.is(Math.floor(shots[shotI].box.angle*10), Math.floor(angle*10)); // there is some imprecision due to brads
+		t.is(approxAngle(shots[shotI].box.angle), approxAngle(angle)); // there is some imprecision due to brads
 		t.is(shots[shotI].origin === -1 ? 255 : shots[shotI].origin, origin); // -1 when originating from enemies, which is 255 when wrapped
 		t.is(shots[shotI].type, type);
 
@@ -225,7 +239,7 @@ test("ADD_ENTITY", t => {
 		t.is(players[playerI].box.center.x, x);
 		t.is(players[playerI].box.center.y, y);
 		t.is(players[playerI].attachedPlanet === -1 ? 255 : players[playerI].attachedPlanet, attachedPlanet); // -1 when in space, which is 255 when wrapped
-		t.is(Math.floor(players[playerI].box.angle*10), Math.floor(angle*10)); // there is some imprecision due to brads
+		t.is(approxAngle(players[playerI].box.angle), approxAngle(angle)); // there is some imprecision due to brads
 		t.is(players[playerI].looksLeft, looksLeft);
 		t.is(players[playerI].jetpack, jetpack);
 		t.is(players[playerI].appearance, appearance);
@@ -240,24 +254,35 @@ test("ADD_ENTITY", t => {
 });
 
 
-test("CONNECT_ACCEPTED", t => {
-	let xpectd_res = {
-		lobbyId: 989043,
-		playerId: 24,
-		univWidth: 3429,
-		univHeight: 4452
-	},
-		buf = message.CONNECT_ACCEPTED.serialize(xpectd_res.lobbyId, xpectd_res.playerId, xpectd_res.univWidth, xpectd_res.univHeight);
+test("GAME_STATE", t => {
+	let buf = message.GAME_STATE.serialize(8, 400, planets, enemies, players),
+		planetI = 0,
+		enemyI = 0,
+		playerI = 0;
+	let res = message.GAME_STATE.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
+		t.is(id, planetI);
+		t.is(planets[planetI].progress.team, ownedBy);
+		t.is(planets[planetI].progress.value, progress);
 
-	t.deepEqual(xpectd_res, message.CONNECT_ACCEPTED.deserialize(buf));
-});
+		++planetI;
+	}, (id, angle) => {
+		t.is(id, enemyI);
+		t.is(approxAngle(enemies[enemyI].box.angle), approxAngle(angle));
 
+		++enemyI;
+	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
+		t.is(pid, playerI);
+		t.is(players[pid].box.center.x, x);
+		t.is(players[pid].box.center.y, y);
+		t.is(players[pid].attachedPlanet === -1 ? 255 : players[pid].attachedPlanet, attachedPlanet); // -1 when in space, which is 255 when wrapped
+		t.is(approxAngle(players[pid].box.angle), approxAngle(angle));
+		t.is(players[pid].looksLeft, looksLeft);
+		t.is(players[pid].jetpack, jetpack);
+		t.is(players[pid].hurt, hurt);
+		t.is(players[pid].walkFrame, walkFrame);
+		t.is(players[pid].armedWeapon.constructor.name, armedWeapon);
+		t.is(players[pid].carriedWeapon.constructor.name, carriedWeapon);
 
-test.skip("GAME_STATE", t => {
-	function printArgs() {
-		console.log(arguments);
-	}
-
-	let buf = message.GAME_STATE.serialize(8, 400, planets, enemies, shots, players);
-	let res = message.GAME_STATE.deserialize(buf3, planets.length, enemies.length, shots.length, players.length, printArgs, printArgs, printArgs, printArgs);
+		++playerI;
+	});
 });

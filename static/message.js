@@ -653,7 +653,8 @@ const MESSAGE = {
 			var view = new DataView(buffer);
 			var i = 4;
 			for (let id = 0; i !== 4 + planetAmount*2; i += 2, ++id) {
-				planetsCbk(id,
+				planetsCbk(
+					id,
 					Object.keys(this.OWNED_BY)[view.getUint8(i)],//ownedBy
 					view.getUint8(i + 1)//progress
 				);
