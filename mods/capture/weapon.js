@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-if (Shot === undefined) var Shot = require("./shot.js");
+if (Shot === undefined) var Shot = require('./shot.js');
 
 var weapon = (function() {
 	class Weapon {
@@ -96,4 +96,4 @@ var weapon = (function() {
 	}
 })();
 
-if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = weapon;
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = weapon;

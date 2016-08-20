@@ -1,12 +1,12 @@
-"use strict";
+'use strict';
 
 // for Node.js - duck typing FTW!
-if (vinage === undefined) var vinage = require("vinage");
-if (resources === undefined) var resources = require("../../static/resource_loader.js");
-if (Player === undefined) var Player = require("./player.js");
-if (Planet === undefined) var Planet = require("./planet.js");
-if (Enemy === undefined) var Enemy = require("./enemy.js");
-if (Shot === undefined) var Shot = require("./shot.js");
+if (vinage === undefined) var vinage = require('vinage');
+if (resources === undefined) var resources = require('../../static/resource_loader.js');
+if (Player === undefined) var Player = require('./player.js');
+if (Planet === undefined) var Planet = require('./planet.js');
+if (Enemy === undefined) var Enemy = require('./enemy.js');
+if (Shot === undefined) var Shot = require('./shot.js');
 
 
 function mod(dividend, divisor) {
@@ -35,14 +35,14 @@ function doPrediction(universe, players, enemies, shots) {
 		return 0;
 	}
 
-	var fps = 1000 / (doPrediction.newTimestamp - doPrediction.oldTimestamp);
+	let fps = 1000 / (doPrediction.newTimestamp - doPrediction.oldTimestamp);
 	game.fps = fps;
 	players.forEach(function(player) {
-		if ("timestamp" in player.predictionTarget) {
-			var now = Date.now(), serverTicks = 50,
+		if ('timestamp' in player.predictionTarget) {
+			let now = Date.now(), serverTicks = 50,
 				smoothingTime = (now - player.predictionTarget.timestamp) / serverTicks;
 
-			var angleOffset = wrapOffset(player.predictionTarget.box.angle, player.predictionBase.box.angle, 2*Math.PI),
+			let angleOffset = wrapOffset(player.predictionTarget.box.angle, player.predictionBase.box.angle, 2*Math.PI),
 				xOffset = wrapOffset(player.predictionTarget.box.center.x, player.predictionBase.box.center.x, universe.width),
 				yOffset = wrapOffset(player.predictionTarget.box.center.y, player.predictionBase.box.center.y, universe.height),
 				aimAngleOffset = wrapOffset(player.predictionTarget.aimAngle, player.predictionBase.aimAngle, 2*Math.PI);
@@ -84,7 +84,7 @@ doPrediction.oldTimestamp = 0;
 doPrediction.newTimestamp = 0;
 
 function doPhysics(universe, players, planets, enemies, shots, teamScores) {
-	var playersOnPlanets = new Array(planets.length),
+	let playersOnPlanets = new Array(planets.length),
 		entitiesDelta = {
 			addedShots: [],
 			removedShots: []
@@ -92,21 +92,21 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 
 	players.forEach(function(player) {
 		if (player.attachedPlanet >= 0) {
-			if (typeof playersOnPlanets[player.attachedPlanet] === "undefined") playersOnPlanets[player.attachedPlanet] = {"alienBeige": 0, "alienBlue": 0, "alienGreen": 0, "alienPink": 0, "alienYellow": 0};
+			if (typeof playersOnPlanets[player.attachedPlanet] === 'undefined') playersOnPlanets[player.attachedPlanet] = {'alienBeige': 0, 'alienBlue': 0, 'alienGreen': 0, 'alienPink': 0, 'alienYellow': 0};
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;
 			player.jetpack = false;
-			var stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius);
-			if (player.controls["moveLeft"] > 0) {
-				stepSize = stepSize * player.controls["moveLeft"];
-				player.box.angle -= (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
+			let stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius);
+			if (player.controls['moveLeft'] > 0) {
+				stepSize = stepSize * player.controls['moveLeft'];
+				player.box.angle -= (player.controls['run']) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = true;
 			}
-			if (player.controls["moveRight"] > 0) {
-				stepSize = stepSize * player.controls["moveRight"];
-				player.box.angle += (player.controls["run"]) ? 1.7 * stepSize : 1 * stepSize;
+			if (player.controls['moveRight'] > 0) {
+				stepSize = stepSize * player.controls['moveRight'];
+				player.box.angle += (player.controls['run']) ? 1.7 * stepSize : 1 * stepSize;
 				player.looksLeft = false;
 			}
-			if (player.controls["moveLeft"] === 0 && player.controls["moveRight"] === 0) {
+			if (player.controls['moveLeft'] === 0 && player.controls['moveRight'] === 0) {
 				player.looksLeft = mod(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 			}
 
@@ -115,7 +115,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			player.velocity.x = 0;
 			player.velocity.y = 0;
 			player.fuel = 400;
-			if (player.controls["jump"] > 0) {
+			if (player.controls['jump'] > 0) {
 				player.attachedPlanet = -1;
 				player.velocity.x = Math.sin(player.box.angle) * 6;
 				player.velocity.y = -Math.cos(player.box.angle) * 6;
@@ -125,8 +125,8 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 		} else {
 			player.looksLeft = (player.aimAngle - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
 			player.jetpack = false;
-			for (var j = 0; j < planets.length; j++){
-				var deltaX = planets[j].box.center.x - player.box.center.x,
+			for (let j = 0; j < planets.length; j++){
+				let deltaX = planets[j].box.center.x - player.box.center.x,
 					deltaY = planets[j].box.center.y - player.box.center.y,
 					distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
@@ -137,34 +137,34 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 					player.box.angle = Math.PI + Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 - Math.atan2(deltaX, deltaY) - Math.PI;
 				}
 			}
-			if (player.controls["jetpack"] > 0 && player.fuel > 0 && player.controls["crouch"] < 1){
-				player.fuel -= player.controls["jetpack"];
-				player.jetpack = (player.controls["jetpack"] > 0);
-				player.velocity.x += (Math.sin(player.box.angle) / 6) * player.controls["jetpack"];
-				player.velocity.y += (-Math.cos(player.box.angle) / 6) * player.controls["jetpack"];
-			} else if (player.controls["crouch"] > 0){
+			if (player.controls['jetpack'] > 0 && player.fuel > 0 && player.controls['crouch'] < 1){
+				player.fuel -= player.controls['jetpack'];
+				player.jetpack = (player.controls['jetpack'] > 0);
+				player.velocity.x += (Math.sin(player.box.angle) / 6) * player.controls['jetpack'];
+				player.velocity.y += (-Math.cos(player.box.angle) / 6) * player.controls['jetpack'];
+			} else if (player.controls['crouch'] > 0){
 				player.velocity.x = player.velocity.x * 0.987;
 				player.velocity.y = player.velocity.y * 0.987;
 			}
-			var runMultiplicator = player.controls["run"] ? 1.7 : 1;
-			if (player.controls["moveLeft"] > 0) player.box.angle -= (Math.PI / 60) * player.controls["moveLeft"] * runMultiplicator;
-			if (player.controls["moveRight"] > 0) player.box.angle += (Math.PI / 60) * player.controls["moveRight"] * runMultiplicator;
+			let runMultiplicator = player.controls['run'] ? 1.7 : 1;
+			if (player.controls['moveLeft'] > 0) player.box.angle -= (Math.PI / 60) * player.controls['moveLeft'] * runMultiplicator;
+			if (player.controls['moveRight'] > 0) player.box.angle += (Math.PI / 60) * player.controls['moveRight'] * runMultiplicator;
 
 			player.box.center.x += player.velocity.x;
 			player.box.center.y += player.velocity.y;
 			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
 			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
 		}
-		if (player.controls["changeWeapon"] === 1) [player.armedWeapon, player.carriedWeapon] = [player.carriedWeapon, player.armedWeapon];
+		if (player.controls['changeWeapon'] === 1) [player.armedWeapon, player.carriedWeapon] = [player.carriedWeapon, player.armedWeapon];
 
-		if (player.controls["shoot"] === 1 || (player.controls["shoot"] === 2 && player.armedWeapon.canRapidFire !== undefined && player.armedWeapon.canRapidFire())) {
+		if (player.controls['shoot'] === 1 || (player.controls['shoot'] === 2 && player.armedWeapon.canRapidFire !== undefined && player.armedWeapon.canRapidFire())) {
 			for (let shot of player.armedWeapon.fire()) {
 				shots.push(shot);
 				entitiesDelta.addedShots.push(shot);
 			}
 		}
-		var needsPressState = {"changeWeapon": null, "shoot": null}; //it needs to be an Object to use the operater `in`
-		for (var key in player.controls) if (player.controls[key] !== 0 && key in needsPressState) player.controls[key] = 2;
+		let needsPressState = {'changeWeapon': null, 'shoot': null}; //it needs to be an Object to use the operater `in`
+		for (let key in player.controls) if (player.controls[key] !== 0 && key in needsPressState) player.controls[key] = 2;
 		player.setWalkFrame();
 	});
 	shots.forEach(function(shot, si) {
@@ -181,7 +181,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 			if (player.pid !== shot.origin && universe.collide(shot.box, player.box)) {
 				player.health -= (player.health === 0) ? 0 : 1;
 				if (player.health <= 0) {
-					var suitablePlanets = [];
+					let suitablePlanets = [];
 					planets.forEach(function(planet, pi) {
 						if (planet.progress.team === player.appearance) suitablePlanets.push(pi);
 					});
@@ -206,7 +206,7 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 		});
 	});
 	enemies.forEach(function(enemy) {
-		var playerToHit = null;
+		let playerToHit = null;
 		players.forEach(function(player) {
 			if (universe.collide(enemy.aggroBox, player.box) && (playerToHit === null || player.lastlyAimedAt < playerToHit.lastlyAimedAt)) {
 				playerToHit = player;
@@ -227,14 +227,14 @@ function doPhysics(universe, players, planets, enemies, shots, teamScores) {
 		}
 	});
 
-	for (var i = 0; i < playersOnPlanets.length; i++){
-		if (typeof playersOnPlanets[i] === "undefined") continue;
-		var toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
+	for (let i = 0; i < playersOnPlanets.length; i++){
+		if (typeof playersOnPlanets[i] === 'undefined') continue;
+		let toArray = Object.keys(playersOnPlanets[i]).map(function (key){return playersOnPlanets[i][key];}),
 			max = Math.max.apply(null, toArray),
-			teams = ["alienBeige", "alienBlue", "alienGreen", "alienPink", "alienYellow"];
+			teams = ['alienBeige', 'alienBlue', 'alienGreen', 'alienPink', 'alienYellow'];
 
 		if (max > 0) {
-			var team, a, b = 0;
+			let team, a, b = 0;
 			while (toArray.indexOf(max) !== -1) {
 				a = toArray.indexOf(max);
 				b++;
@@ -262,6 +262,6 @@ function doPhysicsClient(universe, planets, shots, players) {
 	});
 }
 
-if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = module.exports = {
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = module.exports = {
 	doPhysics: doPhysics,
 };

@@ -5,7 +5,7 @@ Array.prototype.actualLength = function() {
 	return value;
 };
 Array.prototype.append = function(item) {
-	for (var i = 0; i !== this.length; i++) {
+	for (let i = 0; i !== this.length; i++) {
 		if (this[i] === null || this[i] === undefined) {
 			this[i] = item;
 			return i;

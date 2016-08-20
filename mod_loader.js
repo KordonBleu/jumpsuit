@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-const logger = require("./logger.js");
+const logger = require('./logger.js');
 
 module.exports = function(defaultMod, selectedMod, filenameObj) {
 	function plugModdedModule(moddedModule, defaultModule) {
@@ -12,16 +12,16 @@ module.exports = function(defaultMod, selectedMod, filenameObj) {
 	let retVal = {};
 
 	for (let moduleName in filenameObj) {
-		let defaultModule = require("./mods/" + defaultMod + "/" + filenameObj[moduleName]);
+		let defaultModule = require('./mods/' + defaultMod + '/' + filenameObj[moduleName]);
 		try {
-			let moddedModule = require("./mods/" + selectedMod + "/" + filenameObj[moduleName]);
+			let moddedModule = require('./mods/' + selectedMod + '/' + filenameObj[moduleName]);
 			plugModdedModule(moddedModule, defaultModule);
 
 			retVal[moduleName] = moddedModule;
-			logger(logger.INFO, "Modded `" + moduleName + "` loaded.");
+			logger(logger.INFO, 'Modded `' + moduleName + '` loaded.');
 		} catch(e) {
 			retVal[moduleName] = defaultModule;
-			logger(logger.INFO, "Default `" + moduleName + "` loaded.");
+			logger(logger.INFO, 'Default `' + moduleName + '` loaded.');
 		}
 	}
 

@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
 
-var context = canvas.getContext("2d"),
-	minimapContext = minimapCanvas.getContext("2d"),
+let context = canvas.getContext('2d'),
+	minimapContext = minimapCanvas.getContext('2d'),
 	meteors = [],
 	players = [],
 	planets = [],
@@ -24,42 +24,42 @@ var context = canvas.getContext("2d"),
 		loadingAnimationFrameId: null,		
 		start: function() {
 			game.started = true;
-			document.body.classList.remove("nogui");
-			chatElement.classList.remove("hidden");
-			chatInputContainer.classList.remove("hidden");
-			guiOptionElement.classList.remove("hidden");
-			healthElement.classList.remove("hidden");
-			fuelElement.classList.remove("hidden");
-			pointsElement.classList.remove("hidden");
-			minimapCanvas.classList.remove("hidden");
+			document.body.classList.remove('nogui');
+			chatElement.classList.remove('hidden');
+			chatInputContainer.classList.remove('hidden');
+			guiOptionElement.classList.remove('hidden');
+			healthElement.classList.remove('hidden');
+			fuelElement.classList.remove('hidden');
+			pointsElement.classList.remove('hidden');
+			minimapCanvas.classList.remove('hidden');
 			//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
-			var minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
+			let minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
 			//(width)x * (height)x = minimapSurface
 				unitSize = Math.sqrt(minimapSurface/(universe.width*universe.height));//in pixels
 
 			minimapCanvas.width = unitSize*universe.width;
 			minimapCanvas.height = unitSize*universe.height;
-			menuBox.classList.add("hidden");
-			for (let element of document.querySelectorAll("#gui-points th")) {
-				element.style.display = "none";
+			menuBox.classList.add('hidden');
+			for (let element of document.querySelectorAll('#gui-points th')) {
+				element.style.display = 'none';
 			}
-			window.addEventListener("keydown", handleInput);
-			window.addEventListener("keyup", handleInput);
-			window.addEventListener("touchstart", handleInputMobile);
-			window.addEventListener("touchmove", handleInputMobile);
-			window.addEventListener("touchend", handleInputMobile);
+			window.addEventListener('keydown', handleInput);
+			window.addEventListener('keyup', handleInput);
+			window.addEventListener('touchstart', handleInputMobile);
+			window.addEventListener('touchmove', handleInputMobile);
+			window.addEventListener('touchend', handleInputMobile);
 			loop();
 		},
 		stop: function() {
 			game.started = false;
-			window.removeEventListener("keydown", handleInput);
-			window.removeEventListener("keyup", handleInput);
-			window.removeEventListener("touchstart", handleInputMobile);
-			window.removeEventListener("touchmove", handleInputMobile);
-			window.removeEventListener("touchend", handleInputMobile);
-			menuBox.classList.remove("hidden");
-			[].forEach.call(controlsElement.querySelectorAll("img"), function(element) {
-				element.removeAttribute("style");
+			window.removeEventListener('keydown', handleInput);
+			window.removeEventListener('keyup', handleInput);
+			window.removeEventListener('touchstart', handleInputMobile);
+			window.removeEventListener('touchmove', handleInputMobile);
+			window.removeEventListener('touchend', handleInputMobile);
+			menuBox.classList.remove('hidden');
+			[].forEach.call(controlsElement.querySelectorAll('img'), function(element) {
+				element.removeAttribute('style');
 			});
 			players.forEach(function(player) {
 				if (player.jetpack) player.jetpackSound.stop();
@@ -101,7 +101,7 @@ windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY, mirrorX,
 	context.translate(x, y);
 	context.rotate(angle);
 	context.scale(mirrorX === true ? -1 : 1, mirrorY === true ? -1 : 1);
-	var wdt = sizeX || image.width*this.zoomFactor,
+	let wdt = sizeX || image.width*this.zoomFactor,
 		hgt = sizeY || image.height*this.zoomFactor;
 	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
 	context.resetTransform();
@@ -116,67 +116,67 @@ function resizeCanvas() {
 	updateChatOffset();
 }
 resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
 
 
 /* Load image assets */
 function drawBar() {
-	context.fillStyle = "#007d6c";
+	context.fillStyle = '#007d6c';
 	context.fillRect(0, 0, ((loadProgress) / Object.keys(resList).length) * canvas.width, 15);
 }
 function loaderLoop() {
-	context.textBaseline = "top";
-	context.textAlign = "center";
+	context.textBaseline = 'top';
+	context.textAlign = 'center';
 
-	context.fillStyle = "#121012";
+	context.fillStyle = '#121012';
 	context.fillRect(0, 0, canvas.width, canvas.height);
 
-	context.fillStyle = "#eee";
-	context.font = "60px Open Sans";
-	context.fillText("JumpSuit", canvas.width / 2, canvas.height * 0.35);
-	context.font = "28px Open Sans";
-	context.fillText("A canvas game by Getkey & Fju", canvas.width / 2, canvas.height * 0.35 + 80);
+	context.fillStyle = '#eee';
+	context.font = '60px Open Sans';
+	context.fillText('JumpSuit', canvas.width / 2, canvas.height * 0.35);
+	context.font = '28px Open Sans';
+	context.fillText('A canvas game by Getkey & Fju', canvas.width / 2, canvas.height * 0.35 + 80);
 	drawBar();
 	game.loaderAnimationFrameId = window.requestAnimationFrame(loaderLoop);
 }
 loaderLoop();
 
-var allImagesLoaded = Promise.all(imgPromises).then(function() {
+let allImagesLoaded = Promise.all(imgPromises).then(function() {
 	resizeHandler();
 	game.stop();
 	window.cancelAnimationFrame(game.loaderAnimationFrameId);
-	document.body.removeAttribute("class");
+	document.body.removeAttribute('class');
 	handleHistoryState();
 
-	setMouth(resources["alienBeige_duck"], 24.443, 24.781, 15);
-	setMouth(resources["alienBeige_jump"], 22.05, 26.45);
-	setMouth(resources["alienBeige_stand"], 22.05, 26.5);
-	setMouth(resources["alienBeige_walk1"], 25.8, 28.8);
-	setMouth(resources["alienBeige_walk2"], 25.8, 28.8);
+	setMouth(resources['alienBeige_duck'], 24.443, 24.781, 15);
+	setMouth(resources['alienBeige_jump'], 22.05, 26.45);
+	setMouth(resources['alienBeige_stand'], 22.05, 26.5);
+	setMouth(resources['alienBeige_walk1'], 25.8, 28.8);
+	setMouth(resources['alienBeige_walk2'], 25.8, 28.8);
 
-	setMouth(resources["alienBlue_duck"], 26.577, 38.755, 15);
-	setMouth(resources["alienBlue_jump"], 27.75, 35.7);
-	setMouth(resources["alienBlue_stand"], 27.75, 35.7);
-	setMouth(resources["alienBlue_walk1"], 27.75, 37.55);
-	setMouth(resources["alienBlue_walk2"], 27.75, 37.05);
+	setMouth(resources['alienBlue_duck'], 26.577, 38.755, 15);
+	setMouth(resources['alienBlue_jump'], 27.75, 35.7);
+	setMouth(resources['alienBlue_stand'], 27.75, 35.7);
+	setMouth(resources['alienBlue_walk1'], 27.75, 37.55);
+	setMouth(resources['alienBlue_walk2'], 27.75, 37.05);
 
-	setMouth(resources["alienGreen_duck"], 25.443, 35.761, 15);
-	setMouth(resources["alienGreen_jump"], 23.8, 36.1);
-	setMouth(resources["alienGreen_stand"], 23.8, 36.1);
-	setMouth(resources["alienGreen_walk1"], 25.556, 36.1);
-	setMouth(resources["alienGreen_walk2"], 27.656, 36.1);
+	setMouth(resources['alienGreen_duck'], 25.443, 35.761, 15);
+	setMouth(resources['alienGreen_jump'], 23.8, 36.1);
+	setMouth(resources['alienGreen_stand'], 23.8, 36.1);
+	setMouth(resources['alienGreen_walk1'], 25.556, 36.1);
+	setMouth(resources['alienGreen_walk2'], 27.656, 36.1);
 
-	setMouth(resources["alienPink_duck"], 32.05, 31, 14);
-	setMouth(resources["alienPink_jump"], 30.2, 28.55);
-	setMouth(resources["alienPink_stand"], 30.2, 28.4);
-	setMouth(resources["alienPink_walk1"], 31.456, 30.25);
-	setMouth(resources["alienPink_walk2"], 33.206, 30.25);
+	setMouth(resources['alienPink_duck'], 32.05, 31, 14);
+	setMouth(resources['alienPink_jump'], 30.2, 28.55);
+	setMouth(resources['alienPink_stand'], 30.2, 28.4);
+	setMouth(resources['alienPink_walk1'], 31.456, 30.25);
+	setMouth(resources['alienPink_walk2'], 33.206, 30.25);
 
-	setMouth(resources["alienYellow_duck"], 24.446, 37.35, 9.5);
-	setMouth(resources["alienYellow_jump"], 21.8, 40.65);
-	setMouth(resources["alienYellow_stand"], 21.8, 40.65);
-	setMouth(resources["alienYellow_walk1"], 25.056, 40);
-	setMouth(resources["alienYellow_walk2"], 26.806, 40);
+	setMouth(resources['alienYellow_duck'], 24.446, 37.35, 9.5);
+	setMouth(resources['alienYellow_jump'], 21.8, 40.65);
+	setMouth(resources['alienYellow_stand'], 21.8, 40.65);
+	setMouth(resources['alienYellow_walk1'], 25.056, 40);
+	setMouth(resources['alienYellow_walk2'], 26.806, 40);
 });
 function setMouth(body, mouthPosX, mouthPosY, mouthAngle) {
 	body.mouthPosX = mouthPosX;
@@ -184,10 +184,10 @@ function setMouth(body, mouthPosX, mouthPosY, mouthAngle) {
 	if (mouthAngle !== undefined) body.mouthAngle = mouthAngle * Math.PI/180;//deg to rad
 }
 
-var canSpawnMeteor = true;
-var meteorSpawning = setInterval(function() {
+let canSpawnMeteor = true;
+let meteorSpawning = setInterval(function() {
 	if (!canSpawnMeteor || meteors.length > 30 || Math.random() > 0.3) return;
-	var m_resources = ["meteorBig1", "meteorMed2", "meteorSmall1", "meteorTiny1", "meteorTiny2"],
+	let m_resources = ['meteorBig1', 'meteorMed2', 'meteorSmall1', 'meteorTiny1', 'meteorTiny2'],
 		m_rand = Math.floor(m_resources.length * Math.random()),
 		chosen_img = m_resources[m_rand];
 
@@ -229,7 +229,7 @@ function loop() {
 	windowBox.center.y = players[ownIdx].box.center.y + game.dragSmoothed.y;
 
 	//planet
-	var playerInAtmos = false;
+	let playerInAtmos = false;
 	planets.forEach(function (planet) {
 		if (universe.collide(windowBox, planet.atmosBox)) planet.drawAtmos();
 		if (universe.collide(windowBox, planet.box)) planet.draw();
@@ -258,7 +258,7 @@ function loop() {
 	if (particlesElement.checked) {
 		particles.forEach(function(particle, index, array) {
 			if (particle.update()) array.splice(index, 1);
-			else windowBox.drawRotatedImage(resources["jetpackParticle"],
+			else windowBox.drawRotatedImage(resources['jetpackParticle'],
 				windowBox.wrapX(particle.box.center.x),
 				windowBox.wrapY(particle.box.center.y),
 				particle.box.angle, particle.size, particle.size);
@@ -266,9 +266,9 @@ function loop() {
 	}
 
 	//players
-	context.fillStyle = "#eee";
-	context.font = "22px Open Sans";
-	context.textAlign = "center";
+	context.fillStyle = '#eee';
+	context.font = '22px Open Sans';
+	context.textAlign = 'center';
 	players.forEach(function (player, i) {
 		if (universe.collide(windowBox, player.box)) player.draw(i !== ownIdx);
 		if (player.panner !== undefined && player.jetpack) setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
@@ -277,13 +277,13 @@ function loop() {
 
 
 	//layer 2: HUD / GUI
-	//if (player.timestamps._old !== null) document.getElementById("gui-bad-connection").style["display"] = (Date.now() - player.timestamps._old >= 1000) ? "block" : "none";
-	for (let element of document.querySelectorAll("#controls img")) {
-		element.style["opacity"] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
+	//if (player.timestamps._old !== null) document.getElementById('gui-bad-connection').style['display'] = (Date.now() - player.timestamps._old >= 1000) ? 'block' : 'none';
+	for (let element of document.querySelectorAll('#controls img')) {
+		element.style['opacity'] = (0.3 + players[ownIdx].controls[element.id] * 0.7);
 	}
 
 	//minimap	
-	minimapContext.fillStyle = "rgba(0, 0, 0, 0.7)";
+	minimapContext.fillStyle = 'rgba(0, 0, 0, 0.7)';
 	minimapContext.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
 
 	planets.forEach(function (planet) {
@@ -296,7 +296,7 @@ function loop() {
 		minimapContext.fill();
 	});
 
-	minimapContext.fillStyle = "#f33";
+	minimapContext.fillStyle = '#f33';
 	players.forEach(function (player) {
 		if (player.appearance !== players[ownIdx].appearance) return;
 		minimapContext.beginPath();

@@ -1,11 +1,11 @@
-"use strict";
+'use strict';
 
-const defaultKeymap = {ShiftLeft: "run", Space: "jump", ArrowLeft: "moveLeft", ArrowUp: "jetpack", ArrowRight: "moveRight", ArrowDown: "crouch", KeyA: "moveLeft", KeyW: "jetpack", KeyD: "moveRight", KeyS: "crouch", KeyT: "chat", Digit1: "changeWeapon", Digit2: "changeWeapon"};
+const defaultKeymap = {ShiftLeft: 'run', Space: 'jump', ArrowLeft: 'moveLeft', ArrowUp: 'jetpack', ArrowRight: 'moveRight', ArrowDown: 'crouch', KeyA: 'moveLeft', KeyW: 'jetpack', KeyD: 'moveRight', KeyS: 'crouch', KeyT: 'chat', Digit1: 'changeWeapon', Digit2: 'changeWeapon'};
 function sameObjects(a, b) {
 	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
 		return false;
 	}
-	for (var propName in a) {
+	for (let propName in a) {
 		//hasOwnProperty is here in case `a[propName]`'s value is `undefined`
 		if (!b.hasOwnProperty(propName) || a[propName] !== b[propName]) return false;
 	}
@@ -17,36 +17,36 @@ String.prototype.ucFirst = function () {
 };
 function objsInvisible(elArr) {
 	return elArr.every(function(element) {
-		return element.classList.contains("hidden");
+		return element.classList.contains('hidden');
 	});
 }
 
 function handleInputMobile(e) {
 	function transform(touch, type) {
-		var element = touch.target;
-		if (type === "touchstart") {
+		let element = touch.target;
+		if (type === 'touchstart') {
 			element.dataset.touchstart = touch.pageY;
 			element.dataset.touchmove = touch.pageY;
-		} else if (type === "touchmove") {
+		} else if (type === 'touchmove') {
 			element.dataset.touchmove = touch.pageY;
 		} else {//touchend
 			element.dataset.touchstart = 0;
 			element.dataset.touchmove = 0;
 		}
-		var yTransform = -Math.max(0, Math.min(50, Math.floor(element.dataset.touchstart - element.dataset.touchmove)));
-		element.style.transform = "translateY(" + yTransform + "px)";
+		let yTransform = -Math.max(0, Math.min(50, Math.floor(element.dataset.touchstart - element.dataset.touchmove)));
+		element.style.transform = 'translateY(' + yTransform + 'px)';
 		return yTransform;
 	}
 
 	for (touch of e.changedTouches) {
-		var s = e.type !== "touchstart" && e.type === "touchend";
+		let s = e.type !== 'touchstart' && e.type === 'touchend';
 		if (players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
-			if (touch.target.id === "moveLeft" || touch.target.id === "moveRight") {
-				var value = transform(touch, e.type);
-				players[ownIdx].controls["run"] = (-value >= 38) * 1;
+			if (touch.target.id === 'moveLeft' || touch.target.id === 'moveRight') {
+				let value = transform(touch, e.type);
+				players[ownIdx].controls['run'] = (-value >= 38) * 1;
 			}
-			if (e.type !== "touchmove") players[ownIdx].controls[touch.target.id] = s * 1;
+			if (e.type !== 'touchmove') players[ownIdx].controls[touch.target.id] = s * 1;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	}
@@ -55,19 +55,19 @@ function handleInputMobile(e) {
 
 /* Keyboard */
 function handleInput(e) {
-	if (e.code === "Tab") e.preventDefault();
-	var s = (e.type === "keydown") * 1,
+	if (e.code === 'Tab') e.preventDefault();
+	let s = (e.type === 'keydown') * 1,
 		chatInUse = chatInput === document.activeElement;
 	if (!chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
-		var triggered = handleInput.keyMap[e.code];
+		let triggered = handleInput.keyMap[e.code];
 		if (players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
-			var controlElement = document.getElementById(triggered);
-			if (controlElement !== null) controlElement.style["opacity"] = s * 0.7 + 0.3;
+			let controlElement = document.getElementById(triggered);
+			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
 			players[ownIdx].controls[triggered] = s;
 			currentConnection.refreshControls(players[ownIdx].controls);
-		} else if (triggered === "chat" && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
-			chatInput.focus();//the "chat" control (most likelly "t")
+		} else if (triggered === 'chat' && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
+			chatInput.focus();//the 'chat' control (most likelly 't')
 		}, 0);//from being written in the chat
 	}
 }
@@ -75,8 +75,8 @@ handleInput.keyMap = defaultKeymap;
 handleInput.reverseKeyMap = {};
 handleInput.updateReverseKeyMap = function() {
 	handleInput.reverseKeyMap = {};
-	for (var key in handleInput.keyMap) {
-		var action = handleInput.keyMap[key], index;
+	for (let key in handleInput.keyMap) {
+		let action = handleInput.keyMap[key], index;
 		if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
 		if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
 		else index = 0;
@@ -85,9 +85,9 @@ handleInput.updateReverseKeyMap = function() {
 };
 handleInput.updateKeyMap = function() {
 	handleInput.keyMap = {};
-	for (var action in handleInput.reverseKeyMap){
-		var keys = handleInput.reverseKeyMap[action];
-		for (var key in keys) {
+	for (let action in handleInput.reverseKeyMap){
+		let keys = handleInput.reverseKeyMap[action];
+		for (let key in keys) {
 			if (keys[key] !== undefined || keys[key] !== null) handleInput.keyMap[keys[key]] = action;
 		}
 	}
@@ -100,38 +100,38 @@ handleInput.initKeymap = function(fromReversed) {
 	while (keySettingsElement.firstChild) {
 		keySettingsElement.removeChild(keySettingsElement.firstChild);
 	}
-	var tableTitles = ["Actions", "Primary Keys", "Alternate Keys"], firstRow = document.createElement("tr");
+	let tableTitles = ['Actions', 'Primary Keys', 'Alternate Keys'], firstRow = document.createElement('tr');
 	for (let i = 0; i < tableTitles; i++){
-		var tableHead = document.createElement("th");
+		let tableHead = document.createElement('th');
 		tableHead.textContent = tableTitles[i];
 		firstRow.appendChild(tableHead);
 	}
 	keySettingsElement.appendChild(firstRow);
-	for (var action in handleInput.reverseKeyMap) {
-		var rowEl = document.createElement("tr"),
-			actionEl = document.createElement("td"),
+	for (let action in handleInput.reverseKeyMap) {
+		let rowEl = document.createElement('tr'),
+			actionEl = document.createElement('td'),
 			keyEl;
 
 		actionEl.textContent = action;
 		rowEl.appendChild(actionEl);
 
-		var slice = handleInput.reverseKeyMap[action];
+		let slice = handleInput.reverseKeyMap[action];
 		for (let i = 0; i != 2; i++) {
-			keyEl = document.createElement("td");
-			if (typeof slice[i] === "undefined" || slice[i] === "") keyEl.textContent = " - ";
+			keyEl = document.createElement('td');
+			if (typeof slice[i] === 'undefined' || slice[i] === '') keyEl.textContent = ' - ';
 			else keyEl.textContent = slice[i]; //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
 			rowEl.appendChild(keyEl);
 		}
 		keySettingsElement.appendChild(rowEl);
 	}
 
-	document.getElementById("key-reset").disabled = sameObjects(defaultKeymap, handleInput.keyMap);
+	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, handleInput.keyMap);
 	settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
 };
 handleInput.loadKeySettings = function() {
-	if (settings.keymap !== "") handleInput.reverseKeyMap = JSON.parse(settings.keymap);
+	if (settings.keymap !== '') handleInput.reverseKeyMap = JSON.parse(settings.keymap);
 	else handleInput.keyMap = defaultKeymap;
-	handleInput.initKeymap(settings.keymap !== "");
+	handleInput.initKeymap(settings.keymap !== '');
 };
 
 /* Drag & Mouse */
@@ -156,39 +156,39 @@ function dragHandler(e) {
 		dragMove(e);
 	}
 }
-canvas.addEventListener("mousedown", function(e) {
+canvas.addEventListener('mousedown', function(e) {
 	if (e.button === 0) {
 		if (ownIdx in players && currentConnection.alive()) {
-			players[ownIdx].controls["shoot"] = 1;
+			players[ownIdx].controls['shoot'] = 1;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	} else if (e.button === 1) {
 		dragStart(e);
-		canvas.addEventListener("mousemove", dragHandler);
+		canvas.addEventListener('mousemove', dragHandler);
 	}
 });
-canvas.addEventListener("mouseup", function(e) {
+canvas.addEventListener('mouseup', function(e) {
 	if (e.button === 1) {
 		dragEnd(e);
-		canvas.removeEventListener("mousemove", dragHandler);
+		canvas.removeEventListener('mousemove', dragHandler);
 	} else if (e.button === 0) {
 		if (ownIdx in players) {
-			players[ownIdx].controls["shoot"] = 0;
+			players[ownIdx].controls['shoot'] = 0;
 			currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	}
 });
-canvas.addEventListener("touchstart", dragStart);//TODO: action 1 on simple tap on mobile
-//canvas.addEventListener("touchmove", dragMove);
-canvas.addEventListener("touchend", dragEnd);
-document.getElementById("gui-controls").addEventListener("dragstart", function(e) {
+canvas.addEventListener('touchstart', dragStart);//TODO: action 1 on simple tap on mobile
+//canvas.addEventListener('touchmove', dragMove);
+canvas.addEventListener('touchend', dragEnd);
+document.getElementById('gui-controls').addEventListener('dragstart', function(e) {
 	e.preventDefault();//prevent unhandled dragging
 });
-//document.addEventListener("contextmenu", function(e) {
+//document.addEventListener('contextmenu', function(e) {
 	//e.preventDefault();//prevent right-click context menu
 	//unfortunately it also disables the context menu key
 //});
-document.addEventListener("mousemove", function(e) {
+document.addEventListener('mousemove', function(e) {
 	game.mousePos.x = e.clientX;
 	game.mousePos.y = e.clientY;
 	game.mousePos.angle = (2.5*Math.PI + Math.atan2(game.mousePos.y - canvas.height*0.5, game.mousePos.x - canvas.width*0.5)) % (2*Math.PI);
@@ -199,21 +199,21 @@ setInterval(function() {
 
 
 /* Gamepads */
-if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // other browsers
+if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // other browsers
 	//no timed query
 	let intervalId,
 		controllingGamepad = null;
-	window.addEventListener("gamepadconnected", e => {
+	window.addEventListener('gamepadconnected', e => {
 		if (controllingGamepad !== null) {
-			message.showMessage("Gamepad connected", "Gamepad #" + e.gamepad.index + " has been ignored because there is already a gamepad connected");
+			message.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
 		} else {
 			controllingGamepad = e.gamepad.index;
-			message.showMessage("Gamepad connected", "Gamepad #" + e.gamepad.index + " is set as controlling device");
+			message.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
 			intervalId = setInterval(updateControlsViaGamepad, 50, e.gamepad.index);
 		}
 	});
-	window.addEventListener("gamepaddisconnected", e => {
-		message.showMessage("Gamepad disconnected", "Gamepad #" + e.gamepad.index + " was disconnected");
+	window.addEventListener('gamepaddisconnected', e => {
+		message.showMessage('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
 		if (controllingGamepad === e.gamepad.index) {
 			clearInterval(intervalId);
 			controllingGamepad = null;
@@ -223,16 +223,16 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // ot
 	let usingGamepad = -1,
 		intervalId;
 	setInterval(function() { // chrome
-		var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-		if (typeof gamepads[usingGamepad] === "undefined" && usingGamepad !== -1) {
-			message.showMessage("Gamepad disconnected", "Gamepad #" + usingGamepad + " was disconnected");
+		let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+		if (typeof gamepads[usingGamepad] === 'undefined' && usingGamepad !== -1) {
+			message.showMessage('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
 			usingGamepad = -1;
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
 			Array.prototype.forEach.call(gamepads, (gp, i) => { // Chrome workaround
 				usingGamepad = gp.index;
-				message.showMessage("Gamepad connected", "Gamepad #" + usingGamepad + " is set as controlling device");
+				message.showMessage('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);
 			});
 		}
@@ -240,17 +240,17 @@ if ("ongamepadconnected" in window || "ongamepaddisconnected" in window) { // ot
 }
 function updateControlsViaGamepad(usingGamepad) {
 	if (usingGamepad === -1) return;
-	var gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-	var g = gamepads[usingGamepad];
-	if (typeof(g) !== "undefined" && players.length !== 0 && ownIdx in players) {
-		players[ownIdx].controls["jump"] = g.buttons[0].value;
-		players[ownIdx].controls["run"] = g.buttons[1].value;
-		players[ownIdx].controls["crouch"] = g.buttons[4].value;
-		players[ownIdx].controls["jetpack"] = g.buttons[7].value;
+	let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+	let g = gamepads[usingGamepad];
+	if (typeof(g) !== 'undefined' && players.length !== 0 && ownIdx in players) {
+		players[ownIdx].controls['jump'] = g.buttons[0].value;
+		players[ownIdx].controls['run'] = g.buttons[1].value;
+		players[ownIdx].controls['crouch'] = g.buttons[4].value;
+		players[ownIdx].controls['jetpack'] = g.buttons[7].value;
 
-		players[ownIdx].controls["moveLeft"] = 0;
-		players[ownIdx].controls["moveRight"] = 0;
-		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls["move" + ((g.axes[0] < 0) ? "Left" : "Right")] = Math.abs(g.axes[0]);
+		players[ownIdx].controls['moveLeft'] = 0;
+		players[ownIdx].controls['moveRight'] = 0;
+		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
 		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
 		else game.drag.x = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
@@ -260,10 +260,10 @@ function updateControlsViaGamepad(usingGamepad) {
 }
 
 /* Zoom */
-document.addEventListener("wheel", function(e) {
-	var chatInUse = chatInput === document.activeElement;
+document.addEventListener('wheel', function(e) {
+	let chatInUse = chatInput === document.activeElement;
 	if (!chatInUse && objsInvisible([infoBox, settingsBox])) {
-		var z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
+		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
 		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
 		resizeCanvas();
 	}

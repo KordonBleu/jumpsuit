@@ -1,21 +1,21 @@
-"use strict";
+'use strict';
 
 module.exports = (type, content) => {
 	function enumToString(e) {
 		switch (e) {
-			case 0: return "[DEV]".cyan.bold;
-			case 1: return "[INFO]".yellow.bold;
-			case 2: return "[ERR]".red.bold;
-			case 3: return "[REGISTER]".grey.bold;
-			case 4: return "[REGISTER]".green.bold;
+			case 0: return '[DEV]'.cyan.bold;
+			case 1: return '[INFO]'.yellow.bold;
+			case 2: return '[ERR]'.red.bold;
+			case 3: return '[REGISTER]'.grey.bold;
+			case 4: return '[REGISTER]'.green.bold;
 		}
-		return "";
+		return '';
 	}
 
-	if (type === 0 && process.env.NODE_ENV !== "development") return;
+	if (type === 0 && process.env.NODE_ENV !== 'development') return;
 
-	let timestamp = ("[" + Math.round(Date.now() / 1000).toString(16) + "]").grey;
-	console.log(timestamp + enumToString(type) + " " + content);//sanitize string for console output
+	let timestamp = ('[' + Math.round(Date.now() / 1000).toString(16) + ']').grey;
+	console.log(timestamp + enumToString(type) + ' ' + content);//sanitize string for console output
 };
 module.exports.DEV = 0;
 module.exports.INFO = 1;

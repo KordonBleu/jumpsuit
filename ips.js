@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 //IPS aka Intrusion Prevention System
 
-var logger = require("./logger.js"),
+let logger = require('./logger.js'),
 	attackers = new Map();//not an object in order to use an ipaddr object as a key
 
 module.exports.banned = function(ip) {
@@ -11,7 +11,7 @@ module.exports.banned = function(ip) {
 	return false;
 };
 module.exports.ban = function(ip) {
-	logger(logger.INFO, "Received garbage from: " + ip + ". Temporarily banning IP...");
+	logger(logger.INFO, 'Received garbage from: ' + ip + '. Temporarily banning IP...');
 	function unBan() {
 		this.banned = false;
 	}
@@ -32,7 +32,7 @@ module.exports.ban = function(ip) {
 		}
 	}
 
-	var metadataObj = {
+	let metadataObj = {
 		attackAmount: 1,
 		banned: true
 	};

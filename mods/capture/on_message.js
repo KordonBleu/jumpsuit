@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 module.exports.onControls = function(player, controlsObj) {
 	for (let i in controlsObj)

@@ -1,4 +1,5 @@
-"use strict";
+'use strict';
+
 var Player = ((vinage, resources, weapon) => {
 	class Player {
 		constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
@@ -16,7 +17,7 @@ var Player = ((vinage, resources, weapon) => {
 			};
 			this.velocity = new vinage.Vector(0, 0);
 			this._appearance = appearance;
-			this._walkFrame = "_stand";
+			this._walkFrame = 'stand' || walkFrame;
 
 			this.jetpack = jetpack || false;
 			this.health = health || 8;
@@ -49,8 +50,8 @@ var Player = ((vinage, resources, weapon) => {
 		}
 
 		setBoxSize() {
-			this.box.width = resources[this.appearance + this.walkFrame].width;
-			this.box.height = resources[this.appearance + this.walkFrame].height;
+			this.box.width = resources[this.appearance + '_' + this.walkFrame].width;
+			this.box.height = resources[this.appearance + '_' + this.walkFrame].height;
 		};
 	}
 
@@ -70,13 +71,13 @@ var Player = ((vinage, resources, weapon) => {
 		setWalkFrame() {
 			if (this.box === undefined) return;
 			if (this.attachedPlanet === -1){
-				this.walkFrame = "_jump";
+				this.walkFrame = 'jump';
 			} else {
-				var leftOrRight = (this.controls["moveLeft"] || this.controls["moveRight"]);
-				if (!leftOrRight) this.walkFrame = (this.controls["crouch"]) ? "_duck" : "_stand";
-				else if (this._walkCounter++ >= (this.controls["run"] > 0 ? 6 : 10)){
+				let leftOrRight = (this.controls['moveLeft'] || this.controls['moveRight']);
+				if (!leftOrRight) this.walkFrame = (this.controls['crouch']) ? 'duck' : 'stand';
+				else if (this._walkCounter++ >= (this.controls['run'] > 0 ? 6 : 10)){
 					this._walkCounter = 0;
-					this.walkFrame = (this.walkFrame === "_walk1") ? "_walk2" : "_walk1";
+					this.walkFrame = (this.walkFrame === 'walk1') ? 'walk2' : 'walk1';
 				}
 				this.setBoxSize();
 			}
@@ -95,18 +96,18 @@ var Player = ((vinage, resources, weapon) => {
 		}
 
 		getFinalName() {
-			return this.name + (typeof this.homographId === "number" && this.homographId !== 0 ? " (" + this.homographId + ")" : "");
+			return this.name + (typeof this.homographId === 'number' && this.homographId !== 0 ? ' (' + this.homographId + ')' : '');
 		};
 	}
 
 
-	if (typeof module !== "undefined" && typeof module.exports !== "undefined") return SrvPlayer;
+	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') return SrvPlayer;
 	else return ClPlayer;
 
 })(
-	typeof vinage === "undefined" ? require("vinage") : vinage,
-	typeof resources === "undefined" ? require("../../static/resource_loader.js"): resources,
-	typeof weapon === "undefined" ? require("./weapon.js") : weapon
+	typeof vinage === 'undefined' ? require('vinage') : vinage,
+	typeof resources === 'undefined' ? require('../../static/resource_loader.js'): resources,
+	typeof weapon === 'undefined' ? require('./weapon.js') : weapon
 );
 
-if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = Player;
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = Player;

@@ -1,24 +1,24 @@
-"use strict";
+'use strict';
 
-require("colors");
-require("./proto_mut.js");
-const http = require("http"),
-	WebSocket = require("ws"),
-	interactive = require("./interactive.js"),
-	MESSAGE = require("./static/message.js"),
-	logger = require("./logger.js"),
-	ipaddr = require("ipaddr.js"),
-	ips = require("./ips.js"),
+require('colors');
+require('./proto_mut.js');
+const http = require('http'),
+	WebSocket = require('ws'),
+	interactive = require('./interactive.js'),
+	message = require('./static/message.js'),
+	logger = require('./logger.js'),
+	ipaddr = require('ipaddr.js'),
+	ips = require('./ips.js'),
 
 	configSkeleton = {
 		dev: false,
 		interactive: false,
-		master: "ws://jumpsuit.space",
-		mod: "capture",
+		master: 'ws://jumpsuit.space',
+		mod: 'capture',
 		monitor: false,
 		port: 7483,
 		secure: false,
-		server_name: "JumpSuit server"
+		server_name: 'JumpSuit server'
 	};
 
 
@@ -33,57 +33,57 @@ function changeCbk(newConfig, previousConfig) {
 		else monitor.setMonitorMode();
 	}
 	if (newConfig.mod !== previousConfig.mod) {
-		logger(logger.INFO, "Server set to another mod. Please restart the server to apply new config.");
+		logger(logger.INFO, 'Server set to another mod. Please restart the server to apply new config.');
 	}
 	if (newConfig.interactive !== previousConfig.interactive) {
 		if (previousConfig.interactive) interactive.close();
 		else interactive.open();
 	}
 }
-var config = require("./config.js")(process.argv[2] || "./game_config.json", configSkeleton, changeCbk);
+let config = require('./config.js')(process.argv[2] || './game_config.json', configSkeleton, changeCbk);
 
-const {engine, onMessage, Player, Planet, Enemy} = require("./mod_loader.js")(configSkeleton.mod, config.mod, {
-	engine: "engine.js",
-	onMessage: "on_message.js",
-	Player: "player.js",
-	Planet: "planet.js",
-	Enemy: "enemy.js",
-	weapon: "weapon.js"
+const {engine, onMessage, Player, Planet, Enemy} = require('./mod_loader.js')(configSkeleton.mod, config.mod, {
+	engine: 'engine.js',
+	onMessage: 'on_message.js',
+	Player: 'player.js',
+	Planet: 'planet.js',
+	Enemy: 'enemy.js',
+	weapon: 'weapon.js'
 });
 
-var Lobby = require("./lobby.js")(engine, Planet, Enemy),
+let Lobby = require('./lobby.js')(engine, Planet, Enemy),
 	lobbies = [];
 
-var monitor = require("./monitor.js")(config, lobbies);
+let monitor = require('./monitor.js')(config, lobbies);
 if(config.monitor) monitor.setMonitorMode();
 
 if (config.interactive) interactive.open();
 
 
-var server = http.createServer(),//create an independent server so it is easy to
+let server = http.createServer(),//create an independent server so it is easy to
 	wss = new WebSocket.Server({server: server});//change port while running
 server.listen(config.port);
 
 function connectToMaster(){
-	logger(logger.REGISTER, "Attempting to connect to master server");
-	let masterWs = new WebSocket(config.master + "/game_servers"), nextAttemptID;
-	masterWs.on("open", function() {
-		masterWs.send(MESSAGE.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
-		masterWs.on("close", function() {
-			logger(logger.ERROR, "Connection to master server lost! Trying to reconnect in 5s");
+	logger(logger.REGISTER, 'Attempting to connect to master server');
+	let masterWs = new WebSocket(config.master + '/game_servers'), nextAttemptID;
+	masterWs.on('open', function() {
+		masterWs.send(message.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
+		masterWs.on('close', function() {
+			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
 			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
 			nextAttemptID = setTimeout(connectToMaster, 5000);
 		});
 	});
-	masterWs.on("ping", function() {
+	masterWs.on('ping', function() {
 		masterWs.pong();
 	});
-	masterWs.on("message", function(message) {
-		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
-		if (new Uint8Array(message, 0, 1)[0] === MESSAGE.SERVER_REGISTERED.value) logger(logger.S_REGISTER, "Successfully registered at " + config.master.bold);
+	masterWs.on('message', function(msg) {
+		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
+		if (new Uint8Array(msg, 0, 1)[0] === message.SERVER_REGISTERED.value) logger(logger.S_REGISTER, 'Successfully registered at ' + config.master.bold);
 	});
-	masterWs.on("error", function() {
-		logger(logger.ERROR, "Attempt failed, master server is not reachable! Trying to reconnect in 5s");
+	masterWs.on('error', function() {
+		logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s');
 		if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
 		nextAttemptID = setTimeout(connectToMaster, 5000);
 	});
@@ -99,61 +99,61 @@ Player.prototype.send = function(data) {
 	} catch (err) { /* Maybe log this error somewhere? */ }
 };
 
-wss.on("connection", function(ws) {
+wss.on('connection', function(ws) {
 	function cleanup() {
 		lobbies.forEach(function(lobby, li) {
 			lobby.players.some(function(player, pi) {
 				if (player.ws === ws) {
-					logger(logger.DEV, "DISCONNECT".italic + " Lobby: " + lobby.name + " Player: " + player.name);
+					logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: ' + lobby.name + ' Player: ' + player.name);
 					delete lobby.players[pi];
-					lobby.broadcast(MESSAGE.REMOVE_ENTITY.serialize([], [], [], [pi]));
+					lobby.broadcast(message.REMOVE_ENTITY.serialize([], [], [], [pi]));
 					if (lobby.players.length === 0) {
 						lobbies[li].close();
 						delete lobbies[li];
 					}
 					for (let i = li; i !== lobbies.length; ++i) {
-						lobbies[i].name = config.server_name + " - Lobby No." + (i + 1);
+						lobbies[i].name = config.server_name + ' - Lobby No.' + (i + 1);
 					}
 					return true;
 				}
 			});
 		});
 	}
-	var player = new Player();
+	let player = new Player();
 	player.ws = ws;
 	player.ip = ipaddr.parse(ws._socket.remoteAddress);
 
-	ws.on("message", function(message) {
+	ws.on('message', function(msg) {
 		if (ips.banned(player.ip)) return;
 
-		message = message.buffer.slice(message.byteOffset, message.byteOffset + message.byteLength);//convert Buffer to ArrayBuffer
+		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
 
 		try {
-			let state = new Uint8Array(message, 0, 1)[0];
-			if (config.monitor) monitor.getTraffic().beingConstructed.in += message.byteLength;
+			let state = new Uint8Array(msg, 0, 1)[0];
+			if (config.monitor) monitor.getTraffic().beingConstructed.in += msg.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
-				case MESSAGE.SET_PREFERENCES.value: {
-					let val = MESSAGE.SET_PREFERENCES.deserialize(message);
+				case message.SET_PREFERENCES.value: {
+					let val = message.SET_PREFERENCES.deserialize(msg);
 					console.log(playerName);
 					if (player.lobby !== undefined) {
 						player.homographId = player.lobby.getNextHomographId(val.name);
-						player.lobby.broadcast(MESSAGE.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
+						player.lobby.broadcast(message.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
 					}
 					player.name = val.name;
 					player.armedWeapon = player.weapons[val.primary];
 					player.carriedWeapon = player.weapons[val.secondary];
 					break;
 				}
-				case MESSAGE.CONNECT.value: {
-					let val = MESSAGE.CONNECT.deserialize(message);
-					var lobby;
+				case message.CONNECT.value: {
+					let val = message.CONNECT.deserialize(msg);
+					let lobby;
 					if (val.lobbyId !== undefined) {
 						lobby = lobbies[val.lobbyId];
 						if (lobby === undefined) {
-							player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_LOBBY));
+							player.send(message.ERROR.serialize(message.ERROR.NO_LOBBY));
 							break;
 						} else if (lobby.players.length === lobby.maxPlayers) {
-							player.send(MESSAGE.ERROR.serialize(MESSAGE.ERROR.NO_SLOT));
+							player.send(message.ERROR.serialize(message.ERROR.NO_SLOT));
 							break;
 						}
 					} else {//public lobby
@@ -177,40 +177,40 @@ wss.on("connection", function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					player.send(MESSAGE.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
-					if (Object.keys(lobby.lobbyStates)[lobby.lobbyState] !== "DISPLAYING_SCORES") {
+					player.send(message.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
+					if (Object.keys(lobby.lobbyStates)[lobby.lobbyState] !== 'DISPLAYING_SCORES') {
 						lobby.assignPlayerTeam(player);
-						player.send(MESSAGE.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
-					} else player.send(MESSAGE.ADD_ENTITY.serialize([], [], [], lobby.players));
-					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
-					player.send(MESSAGE.LOBBY_STATE.serialize(lobby.lobbyState, lobby.enabledTeams));
-					lobby.broadcast(MESSAGE.ADD_ENTITY.serialize([], [], [], [player]), player);
+						player.send(message.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
+					} else player.send(message.ADD_ENTITY.serialize([], [], [], lobby.players));
+					lobby.broadcast(message.ADD_ENTITY.serialize([], [], [], [player]), player);
+					player.send(message.LOBBY_STATE.serialize(lobby.lobbyState, lobby.enabledTeams));
+					lobby.broadcast(message.ADD_ENTITY.serialize([], [], [], [player]), player);
 
 					break;
 				}
-				case MESSAGE.PLAYER_CONTROLS.value:
-					onMessage.onControls(player, MESSAGE.PLAYER_CONTROLS.deserialize(message));
+				case message.PLAYER_CONTROLS.value:
+					onMessage.onControls(player, message.PLAYER_CONTROLS.deserialize(msg));
 					break;
-				case MESSAGE.CHAT.value: {
-					let chatMsg = MESSAGE.CHAT.deserialize(message);
-					if (chatMsg !== "" && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(MESSAGE.CHAT_BROADCAST.serialize(player.pid, chatMsg), player);
+				case message.CHAT.value: {
+					let chatMsg = message.CHAT.deserialize(msg);
+					if (chatMsg !== '' && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(message.CHAT_BROADCAST.serialize(player.pid, chatMsg), player);
 					break;
 				}
-				case MESSAGE.AIM_ANGLE.value:
-					player.aimAngle = MESSAGE.AIM_ANGLE.deserialize(message);
+				case message.AIM_ANGLE.value:
+					player.aimAngle = message.AIM_ANGLE.deserialize(msg);
 					break;
 				default:
 					ips.ban(player.ip);
 					return;//prevent logging
 			}
-			logger(logger.DEV, MESSAGE.toString(state));
+			logger(logger.DEV, message.toString(state));
 		} catch (err) {
 			console.log(err);
 			ips.ban(player.ip);
 		}
 	});
-	ws.on("pong", function() {
+	ws.on('pong', function() {
 		if (player !== undefined) player.latency = (Date.now() - player.lastPing) / 2;
 	});
-	ws.on("close", cleanup);
+	ws.on('close', cleanup);
 });

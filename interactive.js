@@ -1,18 +1,18 @@
-"use strict";
+'use strict';
 
-var rl,
-	logger = require("./logger.js");
+let rl,
+	logger = require('./logger.js');
 
 function open() {
-	rl = require("readline").createInterface({
+	rl = require('readline').createInterface({
 		input: process.stdin,
 		output: process.stdout
 	});
-	rl.setPrompt("[INPUT] ".blue.bold, "[INPUT] ".length);
-	rl.on("line", function (cmd) {
+	rl.setPrompt('[INPUT] '.blue.bold, '[INPUT] '.length);
+	rl.on('line', function (cmd) {
 		//allowing to output variables on purpose
 		try {
-			var result = eval(cmd);
+			let result = eval(cmd);
 			if (result !== undefined) logger(logger.RESULT, result);
 		} catch (ex) {
 			logger(logger.ERROR, ex);
