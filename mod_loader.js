@@ -13,15 +13,18 @@ module.exports = function(defaultMod, selectedMod, filenameObj) {
 
 	for (let moduleName in filenameObj) {
 		let defaultModule = require('./mods/' + defaultMod + '/' + filenameObj[moduleName]);
-		try {
+		if (defaultMod === selectedMod) {
+			retVal[moduleName] = defaultModule;
+			logger(logger.INFO, selectedMod.green + ': default `' + moduleName + '` loaded.')
+		} else try {
 			let moddedModule = require('./mods/' + selectedMod + '/' + filenameObj[moduleName]);
 			plugModdedModule(moddedModule, defaultModule);
 
 			retVal[moduleName] = moddedModule;
-			logger(logger.INFO, 'Modded `' + moduleName + '` loaded.');
+			logger(logger.INFO, selectedMod.green, ': modded `' + moduleName + '` loaded.');
 		} catch(e) {
 			retVal[moduleName] = defaultModule;
-			logger(logger.INFO, 'Default `' + moduleName + '` loaded.');
+			logger(logger.INFO, selectedMod.green, ': default `' + moduleName + '` loaded.');
 		}
 	}
 

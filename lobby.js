@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(engine, Planet, Enemy) {
-	let vinage = require('vinage'),
+	const vinage = require('vinage'),
 		message = require('./static/message.js');
 
 	function Lobby(maxPlayers) {
@@ -12,7 +12,7 @@ module.exports = function(engine, Planet, Enemy) {
 		this.shots = [];
 		this.processTime = 2;
 		this.lobbyState = this.lobbyStates.WARMUP;
-		let univSize = 10000;//(1 << 16) - 1 is the max size allowed by the protocol
+		let univSize = 10000; // (1 << 16) - 1 is the max size allowed by the protocol
 		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize/2);
 		this.resetWorld();
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);

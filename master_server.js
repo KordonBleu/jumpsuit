@@ -159,7 +159,7 @@ gameServerSocket.on('connection', function(ws) {
 				}, 5000);
 				gameServers.push(gameServer);
 
-				logger(logger.INFO, 'Registered "' + gameServer.mod + '" server "' + gameServer.name + '" @ ' + gameServer.ip + ':' + gameServer.port);
+				logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.mod, gameServer.name);
 				ws.send(message.SERVER_REGISTERED.serialize());
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
@@ -185,7 +185,7 @@ gameServerSocket.on('connection', function(ws) {
 			if (gameServer === gS) {
 				clearInterval(gameServer.pingIntervalId);
 				gameServers.splice(i, 1);
-				logger(logger.INFO, 'Unregistered "' + gS.mod + '" server "' + gS.name + '" @ ' + gS.ip + ':' + gS.port);
+				logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.mod, gS.name);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
 						client.send(message.REMOVE_SERVERS.serialize([i]), wsOptions);

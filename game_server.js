@@ -104,15 +104,12 @@ wss.on('connection', function(ws) {
 		lobbies.forEach(function(lobby, li) {
 			lobby.players.some(function(player, pi) {
 				if (player.ws === ws) {
-					logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: ' + lobby.name + ' Player: ' + player.name);
+					logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
 					delete lobby.players[pi];
 					lobby.broadcast(message.REMOVE_ENTITY.serialize([], [], [], [pi]));
 					if (lobby.players.length === 0) {
 						lobbies[li].close();
 						delete lobbies[li];
-					}
-					for (let i = li; i !== lobbies.length; ++i) {
-						lobbies[i].name = config.server_name + ' - Lobby No.' + (i + 1);
 					}
 					return true;
 				}
@@ -170,7 +167,6 @@ wss.on('connection', function(ws) {
 					}
 					player.pid = lobby.addPlayer(player);
 					player.name = val.name;
-					console.log(val.primary, val.secondary);
 					player.armedWeapon = player.weapons[val.primary];
 					player.carriedWeapon = player.weapons[val.secondary];
 					player.homographId = lobby.getNextHomographId(player.name);
