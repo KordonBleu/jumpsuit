@@ -1,27 +1,28 @@
 {
-  'name': 'jumpsuit',
-  'version': '0.0.0',
-  'description': 'A sweet canvas game',
-  'dependencies': {
-    'colors': '1.x',
-    'image-size': '0.x',
-    'ipaddr.js': '1.x',
-    'vinage': '0.x',
-    'ws': '1.x'
+  "name": "jumpsuit",
+  "version": "0.0.0",
+  "description": "A sweet canvas game",
+  "dependencies": {
+    "colors": "1.x",
+    "image-size": "0.x",
+    "ipaddr.js": "1.x",
+    "vinage": "0.x",
+    "ws": "1.x"
   },
-  'optionalDependencies': {
-    'bufferutil': '1.x'
+  "optionalDependencies": {
+    "bufferutil": "1.x",
+    "utf-8-validate": "1.x"
   },
-  'repository': {
-    'type': 'git',
-    'url': 'git+https://github.com/KordonBleu/jumpsuit'
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KordonBleu/jumpsuit"
   },
-  'readme': 'readme.md',
-  'license': 'MPL-2.0',
-  'devDependencies': {
-    'ava': '^0.16.0'
+  "readme": "readme.md",
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "ava": "^0.16.0"
   },
-  'scripts': {
-    'test': './node_modules/ava/cli.js ./tests/message.js'
+  "scripts": {
+    "test": "./node_modules/ava/cli.js ./tests/message.js"
   }
 }

@@ -186,6 +186,7 @@ wss.on('connection', function(ws) {
 				}
 				case message.PLAYER_CONTROLS.value:
 					onMessage.onControls(player, message.PLAYER_CONTROLS.deserialize(msg));
+					console.log(message.PLAYER_CONTROLS.deserialize(msg));
 					break;
 				case message.CHAT.value: {
 					let chatMsg = message.CHAT.deserialize(msg);

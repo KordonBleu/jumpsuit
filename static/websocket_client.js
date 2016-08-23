@@ -6,8 +6,28 @@ let ownIdx = null,
 	serverList,
 	currentConnection;
 
-const HISTORY_MENU = 0;
-const HISTORY_GAME = 1;
+const HISTORY_MENU = 0,
+	HISTORY_GAME = 1;
+
+let {encodeLobbyNumber, decodeLobbyNumber} = (() => {
+	const pChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&\'()*+,;=:@'; // https://tools.ietf.org/html/rfc3986#section-3.3
+	function encodeLobbyNumber(lobbyNb) {
+		let upperDigit = Math.trunc(lobbyNb/pChars.length),
+			lobbyCode = pChars.charAt(lobbyNb%pChars.length);
+
+		if (upperDigit === 0) return lobbyCode;
+		else return encodeLobbyNumber(upperDigit) + lobbyCode;
+	}
+	function decodeLobbyNumber(lobbyCode) {
+		let lobbyNb = 0;
+
+		for (let i = 0; i !== lobbyCode.length; ++i) lobbyNb += Math.pow(pChars.length, lobbyCode.length - i -1) * pChars.indexOf(lobbyCode.charAt(i));
+
+		return lobbyNb;
+	}
+
+	return {encodeLobbyNumber, decodeLobbyNumber};
+})();
 
 masterSocket.binaryType = 'arraybuffer';
 masterSocket.addEventListener('message', msg => {
