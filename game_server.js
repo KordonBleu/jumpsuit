@@ -174,7 +174,7 @@ wss.on('connection', function(ws) {
 					player.lobbyId = val.lobbyId;
 
 					player.send(message.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
-					if (Object.keys(lobby.lobbyStates)[lobby.lobbyState] !== 'DISPLAYING_SCORES') {
+					if (lobby.lobbyState !== 'displaying_scores') {
 						lobby.assignPlayerTeam(player);
 						player.send(message.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
 					} else player.send(message.ADD_ENTITY.serialize([], [], [], lobby.players));

@@ -67,73 +67,78 @@ var message = ((ipaddr) => {
 					nbr: this._strNbr[key]
 				};
 			}
-    	}
+		}
 	}
 
 	const weaponMap = new BiMap(false,
-			"Lmg",
-			"Smg",
-			"Shotgun",
-			"Knife"
+			'Lmg',
+			'Smg',
+			'Shotgun',
+			'Knife'
 		),
 		errorMap = new BiMap(false,
-			"NO_LOBBY",
-			"NO_SLOT"
+			'NO_LOBBY',
+			'NO_SLOT'
 		),
 		enemyAppearanceMap = new BiMap(false,
-			"enemyBlack1",
-			"enemyBlack2",
-			"enemyBlack3",
-			"enemyBlack4",
-			"enemyBlack5",
-			"enemyBlue1",
-			"enemyBlue2",
-			"enemyBlue3",
-			"enemyBlue4",
-			"enemyBlue5",
-			"enemyGreen1",
-			"enemyGreen2",
-			"enemyGreen3",
-			"enemyGreen4",
-			"enemyGreen5",
-			"enemyRed1",
-			"enemyRed2",
-			"enemyRed3",
-			"enemyRed4",
-			"enemyRed5"
+			'enemyBlack1',
+			'enemyBlack2',
+			'enemyBlack3',
+			'enemyBlack4',
+			'enemyBlack5',
+			'enemyBlue1',
+			'enemyBlue2',
+			'enemyBlue3',
+			'enemyBlue4',
+			'enemyBlue5',
+			'enemyGreen1',
+			'enemyGreen2',
+			'enemyGreen3',
+			'enemyGreen4',
+			'enemyGreen5',
+			'enemyRed1',
+			'enemyRed2',
+			'enemyRed3',
+			'enemyRed4',
+			'enemyRed5'
 		),
-		playerTeamMap = new BiMap(false,
-			"alienBeige",
-			"alienBlue",
-			"alienGreen",
-			"alienPink",
-			"alienYellow",
-			"neutral" // sometimes not used, doesn't matter since it has the highest value
+		teamMap = new BiMap(false,
+			'alienBeige',
+			'alienBlue',
+			'alienGreen',
+			'alienPink',
+			'alienYellow',
+			'neutral' // sometimes not used, doesn't matter since it has the highest value
 		),
-		playerTeamMaskMap = new BiMap(true,
-			"alienBeige",
-			"alienBlue",
-			"alienGreen",
-			"alienPink",
-			"alienYellow"
+		teamMaskMap = new BiMap(true,
+			'alienBeige',
+			'alienBlue',
+			'alienGreen',
+			'alienPink',
+			'alienYellow'
 		),
 		walkFrameMap = new BiMap(false,
-			"duck",
-			"hurt",
-			"jump",
-			"stand",
-			"walk1",
-			"walk2"
+			'duck',
+			'hurt',
+			'jump',
+			'stand',
+			'walk1',
+			'walk2'
 		),
 		controlsMap = new BiMap(true,
-			"jump",
-			"run",
-			"crouch",
-			"jetpack",
-			"moveLeft",
-			"moveRight",
-			"changeWeapon",
-			"shoot"
+			'jump',
+			'run',
+			'crouch',
+			'jetpack',
+			'moveLeft',
+			'moveRight',
+			'changeWeapon',
+			'shoot'
+		),
+		lobbyStateMap = new BiMap(false,
+			'warmup',
+			'playing',
+			'displaying_scores'
 		);
 
 	/* Note: TypedArrays are faster than Dataviews. Therefore, when possible, they should be used.
@@ -376,19 +381,14 @@ var message = ((ipaddr) => {
 		},
 		LOBBY_STATE: {
 			value: 8,
-			LOBBY_STATES: {
-				WARMUP: 0,
-				PLAYING: 1,
-				DISPLAYING_SCORES: 2
-			},
 			serialize: function(state, teams) {
 				let view = new Uint8Array(3),
 					enabledTeams = 0;
 				view[0] =  this.value;
-				view[1] = state;
+				view[1] = lobbyStateMap.getNbr(state);
 				if (teams !== undefined) {
 					teams.forEach(team => {
-						enabledTeams |= playerTeamMaskMap.getNbr(team);
+						enabledTeams |= teamMaskMap.getNbr(team);
 					}, this);
 					view[2] = enabledTeams;
 				}
@@ -397,12 +397,12 @@ var message = ((ipaddr) => {
 			deserialize: function(buffer) {
 				let view = new Uint8Array(buffer),
 					enabledTeams = [];
-				for (let {str, nbr} of playerTeamMaskMap) {
+				for (let {str, nbr} of teamMaskMap) {
 					if (view[2] & nbr) enabledTeams.push(str);
 				}
 
 				return {
-					state: Object.keys(this.LOBBY_STATES)[view[1]], // you serialize a number... and you get back a string TODO: fix this
+					state: lobbyStateMap.getStr(view[1]), // you serialize a number... and you get back a string TODO: fix this
 					enabledTeams: enabledTeams
 				};
 			}
@@ -475,7 +475,7 @@ var message = ((ipaddr) => {
 						view.setUint8(6 + offset, radToBrad(player.box.angle, 1));
 						let enumByte = walkFrameMap.getNbr(player.walkFrame);
 						enumByte <<= 3;
-						enumByte += playerTeamMap.getNbr(player.appearance);
+						enumByte += teamMap.getNbr(player.appearance);
 						if (player.jetpack) enumByte |= this.MASK.JETPACK;
 						if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 						view.setUint8(7 + offset, enumByte);
@@ -536,7 +536,7 @@ var message = ((ipaddr) => {
 						bradToRad(view.getUint8(i + 6), 1),//angle
 						enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 						enumByte & this.MASK.JETPACK ? true : false,//jetpack
-						playerTeamMap.getStr(enumByte << 29 >>> 29),//appearance
+						teamMap.getStr(enumByte << 29 >>> 29),//appearance
 						walkFrameMap.getStr(enumByte << 26 >>> 29),//walk frame
 						bufferToString(buffer.slice(i + 11, i + 11 + nameLgt)),//name
 						view.getUint8(i + 9),//homographId
@@ -591,7 +591,7 @@ var message = ((ipaddr) => {
 			},
 			deserialize: function(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
 				let view = new Uint8Array(buffer);
-				for (let i = 2; i !== view[1] + 2; ++i) {
+				for (var i = 2; i !== view[1] + 2; ++i) {
 					planetsCbk(view[i]);
 				}
 				let limit = view[i] + ++i;
@@ -624,7 +624,7 @@ var message = ((ipaddr) => {
 
 				let offset = 4;
 				for (let planet of planets) {
-					view.setUint8(offset++, playerTeamMap.getNbr(planet.progress.team));
+					view.setUint8(offset++, teamMap.getNbr(planet.progress.team));
 					view.setUint8(offset++, planet.progress.value);
 				}
 
@@ -645,7 +645,6 @@ var message = ((ipaddr) => {
 					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 					if (player.hurt) enumByte |= this.MASK.HURT;
 					view.setUint8(8 + offset, enumByte);
-					//console.log(player.carriedWeapon.constructor.name)
 					let weaponByte = weaponMap.getNbr(player.armedWeapon.constructor.name) << 2;
 					weaponByte += weaponMap.getNbr(player.carriedWeapon.constructor.name);
 					view.setUint8(9 + offset, weaponByte);
@@ -660,7 +659,7 @@ var message = ((ipaddr) => {
 				for (let id = 0; i !== 4 + planetAmount*2; i += 2, ++id) {
 					planetsCbk(
 						id,
-						playerTeamMap.getStr(view.getUint8(i)),//ownedBy
+						teamMap.getStr(view.getUint8(i)),//ownedBy
 						view.getUint8(i + 1)//progress
 					);
 				}
@@ -808,6 +807,6 @@ var message = ((ipaddr) => {
 	});
 
 	return message;
-})(typeof ipaddr === "undefined" ? require('ipaddr.js'): ipaddr);
+})(typeof ipaddr === 'undefined' ? require('ipaddr.js'): ipaddr);
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = message;

@@ -14,21 +14,24 @@ rules:
     - unix
   quotes:
     - error
-    - double
+    - single
   semi:
     - error
     - always
+  no-trailing-spaces: "error"
   no-console: 0
 globals:
   vinage: false
   canvas: false
+  ipaddr: false
   game: false
   ownIdx: true
   players: true
   shots: true
-  MESSAGE: false
+  message: false
   Player: true
   Planet: false
   Enemy: false
   Shot: false
+  weapon: false
   resources: true

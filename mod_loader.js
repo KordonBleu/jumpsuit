@@ -15,7 +15,7 @@ module.exports = function(defaultMod, selectedMod, filenameObj) {
 		let defaultModule = require('./mods/' + defaultMod + '/' + filenameObj[moduleName]);
 		if (defaultMod === selectedMod) {
 			retVal[moduleName] = defaultModule;
-			logger(logger.INFO, selectedMod.green + ': default `' + moduleName + '` loaded.')
+			logger(logger.INFO, selectedMod.green + ': default `' + moduleName + '` loaded.');
 		} else try {
 			let moddedModule = require('./mods/' + selectedMod + '/' + filenameObj[moduleName]);
 			plugModdedModule(moddedModule, defaultModule);

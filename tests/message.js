@@ -2,10 +2,10 @@ import test from 'ava';
 
 import '../proto_mut.js';
 
-import { default as Planet } from '../mods/capture/planet.js'
-import { default as Enemy } from '../mods/capture/enemy.js'
-import { default as Shot } from '../mods/capture/shot.js'
-import { default as Player } from '../mods/capture/player.js'
+import { default as Planet } from '../mods/capture/planet.js';
+import { default as Enemy } from '../mods/capture/enemy.js';
+import { default as Shot } from '../mods/capture/shot.js';
+import { default as Player } from '../mods/capture/player.js';
 import * as message from '../static/message.js';
 import * as vinage from 'vinage';
 
@@ -34,7 +34,8 @@ test('REGISTER_SERVER', t => {
 
 
 test.skip('ADD_SERVERS', t => {
-	let serverList = [{
+	let serverList = [
+		{
 			ip: '2001:0db8:0000:85a3:0000:0000:ac1f:8001',
 			name: 'server name',
 			mod: 'mod name',
@@ -54,7 +55,8 @@ test.skip('ADD_SERVERS', t => {
 			mod: 'caractères accentués',
 			port: 7483,
 			secure: true
-		}];
+		}
+	];
 
 	let buf1 = message.ADD_SERVERS.serialize(serverList);
 	let res1 = message.ADD_SERVERS.deserialize(buf1);
@@ -79,10 +81,10 @@ test('REMOVE_SERVERS', t => {
 
 test('SET_PREFERENCES', t => {
 	let settings = {
-		name: 'Unnamed Player',
-		primary: 'Lmg',
-		secondary: 'Knife'
-	},
+			name: 'Unnamed Player',
+			primary: 'Lmg',
+			secondary: 'Knife'
+		},
 		buf = message.SET_PREFERENCES.serialize(settings),
 		res = message.SET_PREFERENCES.deserialize(buf);
 
@@ -91,10 +93,10 @@ test('SET_PREFERENCES', t => {
 
 test('SET_NAME_BROADCAST', t => {
 	let val = {
-		id: 5,
-		name: 'Jean-Kévin',
-		homographId: 2
-	},
+			id: 5,
+			name: 'Jean-Kévin',
+			homographId: 2
+		},
 		buf = message.SET_NAME_BROADCAST.serialize(val.id, val.name, val.homographId),
 		res = message.SET_NAME_BROADCAST.deserialize(buf);
 
@@ -103,10 +105,10 @@ test('SET_NAME_BROADCAST', t => {
 
 test('CONNECT', t => {
 	let buf = message.CONNECT.serialize(45, {
-		name: 'កែវ',
-		primary: 'Lmg',
-		secondary: 'Knife'
-	}),
+			name: 'កែវ',
+			primary: 'Lmg',
+			secondary: 'Knife'
+		}),
 		res = message.CONNECT.deserialize(buf);
 
 	t.is(res.lobbyId, 45);
@@ -127,22 +129,22 @@ test('ERROR', t => {
 
 test('CONNECT_ACCEPTED', t => {
 	let val =  {
-		lobbyId: 4000000000, // 32 bits
-		playerId: 244, // 8bits
-		univWidth: 65535, // 16 bits
-		univHeight: 30000 // 16 bits
-	},
+			lobbyId: 4000000000, // 32 bits
+			playerId: 244, // 8bits
+			univWidth: 65535, // 16 bits
+			univHeight: 30000 // 16 bits
+		},
 		buf = message.CONNECT_ACCEPTED.serialize(val.lobbyId, val.playerId, val.univWidth, val.univHeight),
 		res = message.CONNECT_ACCEPTED.deserialize(buf);
 
 	t.deepEqual(val, res);
 
 	let val2 = {
-		lobbyId: 989043,
-		playerId: 24,
-		univWidth: 3429,
-		univHeight: 4452
-	},
+			lobbyId: 989043,
+			playerId: 24,
+			univWidth: 3429,
+			univHeight: 4452
+		},
 		buf2 = message.CONNECT_ACCEPTED.serialize(val2.lobbyId, val2.playerId, val2.univWidth, val2.univHeight);
 
 	t.deepEqual(val2, message.CONNECT_ACCEPTED.deserialize(buf2));
@@ -150,17 +152,17 @@ test('CONNECT_ACCEPTED', t => {
 
 test('LOBBY_STATE', t => {
 	let teams = [
-		'alienBeige',
-		'alienBlue',
-		'alienGreen',
-		'alienPink',
-		'alienYellow'
-	],
-		buf = message.LOBBY_STATE.serialize(message.LOBBY_STATE.LOBBY_STATES.WARMUP, teams),
+			'alienBeige',
+			'alienBlue',
+			'alienGreen',
+			'alienPink',
+			'alienYellow'
+		],
+		buf = message.LOBBY_STATE.serialize('warmup', teams),
 		res = message.LOBBY_STATE.deserialize(buf);
 
 	t.deepEqual(teams, res.enabledTeams);
-	t.is(res.state, 'WARMUP');
+	t.is(res.state, 'warmup');
 });
 
 let planets = [
@@ -198,8 +200,6 @@ players[1].homographId = 0;
 
 enemies[0].box.angle = 0.321;
 enemies[2].box.angle = Math.PI;
-
-let teams = ['alienBlue', 'alienGreen', 'alienYellow'];
 
 function approxAngle(angle) {
 	return Math.floor(angle*10);
@@ -255,7 +255,11 @@ test('ADD_ENTITY', t => {
 
 
 test('GAME_STATE', t => {
-	let buf = message.GAME_STATE.serialize(8, 400, planets, enemies, players),
+	let selfParam = {
+			yourHealth: 8,
+			yourFuel: 40
+		},
+		buf = message.GAME_STATE.serialize(selfParam.yourHealth, selfParam.yourFuel, planets, enemies, players),
 		planetI = 0,
 		enemyI = 0,
 		playerI = 0;
@@ -285,4 +289,30 @@ test('GAME_STATE', t => {
 
 		++playerI;
 	});
+
+	t.deepEqual(selfParam, res);
+});
+
+test('PLAYER_CONTROLS', t => {
+	// All the 255 possibilities are tested
+	let controls = {
+		jump: 0,
+		run: 0,
+		crouch: 0,
+		jetpack: 0,
+		moveLeft: 0,
+		moveRight: 0,
+		changeWeapon: 0,
+		shoot: 0,
+	};
+
+	for (let i = 1; i !== 256; ++i) {
+		Object.keys(controls).forEach((key, j) => {
+			controls[key] = i << 31 - j >>> 31;
+		});
+
+		let buf = message.PLAYER_CONTROLS.serialize(controls),
+			res = message.PLAYER_CONTROLS.deserialize(buf);
+		t.deepEqual(res, controls);
+	}
 });

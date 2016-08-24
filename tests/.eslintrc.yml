@@ -1,2 +1,2 @@
-rules:
-  no-unused-vars: 0
+parserOptions:
+  sourceType: "module"

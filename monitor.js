@@ -10,7 +10,7 @@ module.exports = (config, lobbies) => {
 
 	function monitoring() {
 		function genSpaces(amount) {
-			for(let spaces = ''; spaces.length !== amount; spaces += ' ');
+			for (var spaces = ''; spaces.length !== amount; spaces += ' ');
 			return spaces;
 		}
 		function printProperty(caption, content) {

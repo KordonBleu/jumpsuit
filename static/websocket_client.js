@@ -67,10 +67,9 @@ function Connection(url, lobbyId) {// a connection to a game server
 	});
 	this.socket.addEventListener('error', this.errorHandler);
 	this.socket.addEventListener('message', this.messageHandler.bind(this));
-	//this should return a Promise, dontcha think?
 
 	this.latencyHandler = setInterval(() => {
-		if (game.state !== 'PLAYING') return;
+		if (game.state !== 'playing') return;
 		let param1 = document.getElementById('gui-bad-connection');
 		if (Date.now() - this.lastMessage > 2000) param1.classList.remove('hidden');
 		else param1.classList.add('hidden');
@@ -80,6 +79,7 @@ function Connection(url, lobbyId) {// a connection to a game server
 			game.stop();
 		}
 	}, 100);
+	//this should return a Promise, dontcha think?
 }
 Connection.prototype.alive = function() { return this.socket.readyState === 1; };
 Connection.prototype.sendMessage = function(messageType, ...args) {
@@ -309,7 +309,7 @@ Connection.prototype.messageHandler = function(msg) {
 		case message.LOBBY_STATE.value: {
 			let val = message.LOBBY_STATE.deserialize(msg.data);
 			if (val.enabledTeams !== undefined) {
-				enabledTeams = val.enabledTeams
+				enabledTeams = val.enabledTeams;
 				while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild);
 				for (let team of enabledTeams) {
 					let teamItem = document.createElement('div');
@@ -320,13 +320,13 @@ Connection.prototype.messageHandler = function(msg) {
 			game.state = val.state;
 			playerTableVictoryElement.style.display = 'none';
 			playerTableStatusElement.textContent = val.state;
-			if (val.state === 'WARMUP') {
+			if (val.state === 'warmup') {
 				document.getElementById('gui-warmup').classList.remove('hidden');
 				game.start();
-			} else if (val.state === 'PLAYING') {
+			} else if (val.state === 'playing') {
 				document.getElementById('gui-warmup').classList.add('hidden');
 				game.start();
-			} else if (val.state === 'DISPLAYING_SCORES') {
+			} else if (val.state === 'displaying_scores') {
 				let victor = null,
 					a = -Infinity;
 				playerTableVictoryElement.style.display = 'initial';
@@ -334,7 +334,7 @@ Connection.prototype.messageHandler = function(msg) {
 					if (game.scores[team] > a) {
 						a = game.scores[team];
 						victor = team;
-					} else if (game.scores[team] === a) victor = null
+					} else if (game.scores[team] === a) victor = null;
 				}
 				playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
 				game.stop();

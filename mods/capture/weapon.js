@@ -93,7 +93,7 @@ var weapon = (function() {
 		Shotgun,
 		Knife,
 		Weapon // TODO: remove this maybe?
-	}
+	};
 })();
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = weapon;

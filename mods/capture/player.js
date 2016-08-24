@@ -52,7 +52,7 @@ var Player = ((vinage, resources, weapon) => {
 		setBoxSize() {
 			this.box.width = resources[this.appearance + '_' + this.walkFrame].width;
 			this.box.height = resources[this.appearance + '_' + this.walkFrame].height;
-		};
+		}
 	}
 
 	class SrvPlayer extends Player {
@@ -81,7 +81,7 @@ var Player = ((vinage, resources, weapon) => {
 				}
 				this.setBoxSize();
 			}
-		};
+		}
 				
 	}
 
@@ -97,7 +97,7 @@ var Player = ((vinage, resources, weapon) => {
 
 		getFinalName() {
 			return this.name + (typeof this.homographId === 'number' && this.homographId !== 0 ? ' (' + this.homographId + ')' : '');
-		};
+		}
 	}
 
 
