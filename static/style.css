@@ -4,8 +4,8 @@
 @font-face {
 	font-family: "Open Sans";
 	font-style: normal;
-	font-weight: 400;
-	src: local("Open Sans"), url("https://jumpsuit.space/assets/fonts/open_sans_400.woff2") format("woff2"), url("https://jumpsuit.space/assets/fonts/open_sans_400.woff") format("woff");
+	font-weight: normal;
+	src: local("Open Sans"), url("https://jumpsuit.space/assets/fonts/open_sans_40.woff2") format("woff2"), url("https://jumpsuit.space/assets/fonts/open_sans_40.woff") format("woff");
 }
 html {
 	background-image: url("https://jumpsuit.space/assets/images/background.png");
@@ -15,7 +15,6 @@ html, body {
 	height: 100%;
 	overflow: hidden;
 	font-family: "Open Sans", Tahoma, sans-serif;
-	-webkit-transform: translate3d(0, 0, 0);
 }
 html, body, button, label, #gui-chat-player-list, table thead, #key-settings, .weapon-select {
 	-webkit-user-select: none;
@@ -48,7 +47,7 @@ body.nogui *[id^=gui]{
 	top: 52px;
 	right: 8px;
 	border-radius: 3px;
-	border: 2px solid #fff;
+	border: 2px solid white;
 }
 #gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden {
 	display: none;
@@ -57,7 +56,7 @@ body.nogui *[id^=gui]{
 	margin-right: 2px;
 }
 a {
-	color: #AD3726;
+	color: #ad3726;
 	text-decoration: none;
 	font-weight: bold;
 }
@@ -73,15 +72,15 @@ button {
 	outline-color: #702318;
 	box-sizing: border-box;
 	cursor: pointer;
-	margin: 0.25rem;
-	padding: 0.5rem;
+	margin: .25rem;
+	padding: .5rem;
 	min-width: 100px;
 	text-transform: uppercase;
-	font-size: 0.75rem;
+	font-size: .75rem;
 	color: #ebedf4;
-	background: #AD3726;
+	background: #ad3726;
 	font-weight: normal;
-	border: 2px solid #AD3726;
+	border: 2px solid #ad3726;
 	text-align: center;
 	transition: background .2s, color .2s;
 }
@@ -92,7 +91,7 @@ button:disabled {
 }
 button:hover {
 	background: #ebedf4;
-	color: #AD3726;
+	color: #ad3726;
 }
 button:disabled:hover {
 	background: #ebedf4;
@@ -108,42 +107,36 @@ input[type=text] {
 }
 input[type=range] {
 	-webkit-appearance: none;
+	-moz-appearance: none;
 	width: 250px;
 	outline: none;
 	background: transparent;
 	height: 20px;
 	margin-bottom: 15px;
 }
-input[type=range]::-ms-track {
-	width: 100%;
-	cursor: pointer;
-	background: transparent;
-	border-color: transparent;
-	color: transparent;
-}
 input[type=range]::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	height: 18px;
 	width: 18px;
 	border-radius: 50%;
-	border: 2px solid #AD3726;
-	background: #fff;
+	border: 2px solid #ad3726;
+	background: white;
 	margin-top: -7px;
 }
 input[type=range]::-moz-range-thumb {
 	height: 18px;
 	width: 18px;
 	border-radius: 50%;
-	border: 2px solid #AD3726;
-	background: #fff;
+	border: 2px solid #ad3726;
+	background: white;
 	margin-top: -7px;
 }
 input[type=range]::-ms-thumb {
 	height: 18px;
 	width: 18px;
 	border-radius: 50%;
-	border: 2px solid #AD3726;
-	background: #fff;
+	border: 2px solid #ad3726;
+	background: white;
 	margin-top: -7px;
 }
 input[type=range]::-webkit-slider-runnable-track {
@@ -159,11 +152,13 @@ input[type=range]::-moz-range-track {
 input[type=range]::-ms-track {
 	width: 100%;
 	height: 2.4px;
+	cursor: pointer;
 	background: #ccc;
+	border-color: transparent;
+	color: transparent;
 }
 input[type=range]:active {
 	cursor: -webkit-grabbing;
-	cursor: -moz-grabbing;
 	cursor: grabbing;
 }
 input[type=checkbox] {
@@ -175,23 +170,22 @@ input[type=checkbox]::before {
 	width: 14px;
 	display: block;
 	border-radius: 50%;
-	border: 2px solid #AD3726;
-	background: #fff;
+	border: 2px solid #ad3726;
+	background: white;
 	position: absolute;
 	top: 6px;
 	left: 6px;
-	transform: translate(-50%, -50%);		
+	transform: translate(-50%, -50%);
 	cursor: pointer;
 }
 input[type=checkbox]::after {
 	content: " ";
 	transition: transform .15s .1s, opacity .2s;
-	transform: scale(0.4);
 	opacity: 0;
 	display: block;
 	width: 10px;
 	height: 10px;
-	background: #AD3726;
+	background: #ad3726;
 	border-radius: 50%;
 	position: absolute;
 	top: 6px;
@@ -225,17 +219,15 @@ label {
 	display: inline-block;
 }
 ::-webkit-scrollbar {
-	width: 8px;	
+	width: 8px;
 	height: 8px;
 }
 ::-webkit-scrollbar-track {
-	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-	border-radius: 4px;
+	box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
 	border-radius: 4px;
 	margin: 4px 0;
 }
 ::-webkit-scrollbar-thumb {
-	border-radius: 4px;
 	border-radius: 4px;
 	background: #555;
 }
@@ -245,7 +237,7 @@ label {
 	position: fixed;
 	bottom: 0;
 	padding: 0;
-	margin: 0 1vw 1vw 1vw;
+	margin: 0 1vw 1vw;
 	width: 98vw;
 	display: flex;
 	justify-content: space-between;
@@ -257,7 +249,7 @@ label {
 #gui-controls li img {
 	width: 80px;
 	height: 80px;
-	opacity: 0.3;
+	opacity: .3;
 	transition: opacity .15s;
 }
 #name {
@@ -290,16 +282,16 @@ label {
 	border-top-right-radius: 4px;
 }
 #gui-chat-input:focus {
-	background: rgba(0, 0, 0, 0.3);	
+	background: rgba(0, 0, 0, .3);
 }
 #gui-chat-player-list {
 	cursor: inherit;
-	font-size: 0.9em;
-	background: rgba(235, 237, 244, 0.2);
+	font-size: .9em;
+	background: rgba(235, 237, 244, .2);
 	border-radius: 4px;
 	list-style-type: none;
 	position: relative;
-	padding: 22px 8px 8px 8px;	
+	padding: 22px 8px 8px;
 	display: flex;
 	flex-wrap: wrap;
 }
@@ -308,22 +300,22 @@ label {
 	top: 5px;
 	content: attr(data-desc);
 	margin-right: 5px;
-	color: rgba(255, 255, 255, 0.2);
-	font-size: 0.8em;
+	color: rgba(255, 255, 255, .2);
+	font-size: .8em;
 	text-transform: uppercase;
 }
 #gui-chat-player-list::after {/* CSS arrow trick */
 	content: " ";
-    position: absolute;
+	position: absolute;
 	display: block;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 8px solid rgba(235, 237, 244, 0.2);
+	border-left: 8px solid transparent;
+	border-right: 8px solid transparent;
+	border-top: 8px solid rgba(235, 237, 244, .2);
 	bottom: -8px;
 	left: 19px;
 }
 #gui-chat-player-list li {
-	min-width: 100px;	
+	min-width: 100px;
 	cursor: default;
 	flex-grow: 0;
 	overflow: hidden;
@@ -336,7 +328,7 @@ label {
 	display: block;
 	width: 100%;
 	height: 100%;
-	background: rgba(0, 0, 0, 0.5);	
+	background: rgba(0, 0, 0, .5);
 }
 #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	padding: 14px;
@@ -391,10 +383,10 @@ label {
 	display: inline-block;
 	flex-shrink: 1;
 	width: 15em;
-	margin: 2px;	
+	margin: 2px;
 }
 #settings-box .weapon-select:active, #settings-box .weapon-select:hover {
-	background: rgba(0, 0, 0, 0.25);
+	background: rgba(0, 0, 0, .25);
 }
 #settings-box .weapon-select span {
 	display: block;
@@ -412,14 +404,14 @@ label {
 #settings-box > h2, #info-box > h2 {
 	display: block;
 	text-align: center;
-	margin-bottom: 0.5rem;
+	margin-bottom: .5rem;
 	margin-top: 0;
 	width: 100%;
 }
 #settings-box > button, #info-box > button {
 	position: absolute;
-	top: 0.5%;
-	right: 0.5%;
+	top: .5%;
+	right: .5%;
 }
 
 #menu-box {
@@ -458,7 +450,7 @@ label {
 }
 #lobby-table thead {
 	color: #ebedf4;
-	background-color: #AD3726;
+	background-color: #ad3726;
 }
 #lobby-table th {
 	padding: 1em;
@@ -475,7 +467,7 @@ label {
 	font-weight: 600;
 }
 #lobby-list tr:nth-child(even) {
-	background-color: rgba(0, 0, 0, 0.1);
+	background-color: rgba(0, 0, 0, .1);
 }
 #lobby-list tr td:first-child {
 	text-align: left;
@@ -486,9 +478,9 @@ label {
 	word-wrap: break-word;
 }
 #lobby-list tr td u {
-	color: #AD3726;
+	color: #ad3726;
 }
-#lobby-list:empty:before {
+#lobby-list:empty::before {
 	content: "No servers found :(";
 	padding: 1em 0 1em 2em;
 	font-style: italic;
@@ -525,11 +517,11 @@ label {
 	top: 0;
 	right: 2em;
 }
-#lobby-status { margin-bottom: 0.75em; }
-#lobby-status:before {
+#lobby-status { margin-bottom: .75em; }
+#lobby-status::before {
 	content: "Status: ";
 	font-weight: bold;
-	color: #AD3726;
+	color: #ad3726;
 }
 #player-list {
 	width: 100%;
@@ -540,7 +532,7 @@ label {
 	border-top: 1px solid #bfbfbf;
 }
 #player-list li {
-	padding: 0.5em 0 0.5em 1em;
+	padding: .5em 0 .5em 1em;
 	border-bottom: 1px solid #bfbfbf;
 }
 
@@ -578,8 +570,8 @@ label {
 	text-align: left;
 	border-collapse: collapse;
 	cursor: pointer;
-	border: 0.5em solid rgba(0, 0, 0, 0);
-	margin-top: 0.75em;
+	border: .5em solid rgba(0, 0, 0, 0);
+	margin-top: .75em;
 }
 #key-settings #key-action {
 	width: 140px;
@@ -592,11 +584,11 @@ label {
 	padding: 3px;
 }
 #key-settings tr:not(.selected):hover {
-	background: #AD3726;
+	background: #ad3726;
 	color: #ddd;
 }
 #key-settings tr.selected {
-	outline-color: #AD3726;
+	outline-color: #ad3726;
 }
 #gui-chat-first {
 	height: 1px;
@@ -606,10 +598,10 @@ label {
 	position: fixed;
 	top: 95px;
 	left: 18px;
-	font-size: 0.875em;
+	font-size: .875em;
 	width: 300px;
-	height: calc(100vh - 4vh - 270px); /*div ends 15px above controls*/
-	text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+	height: calc(100vh - 4vh - 270px); /* div ends 15px above controls */
+	text-shadow: 1px 1px 4px rgba(0, 0, 0, .5);
 }
 #gui-chat p {
 	margin: 2px 0;
@@ -638,7 +630,7 @@ label {
 	background: transparent;
 	-webkit-appearance: none;
 	display: inline-block;
-	position: relative;/*shitty hack*/
+	position: relative; /* shitty hack */
 	bottom: 20px;
 	left: 77px;
 }
@@ -650,7 +642,7 @@ label {
 }
 #gui-fuel::before {
 	content: "Fuel:";
-	color: #fff;
+	color: white;
 	width: 77px;
 	display: inline-block;
 }
@@ -692,13 +684,13 @@ label {
 	color: #bc4937;
 	vertical-align: middle;
 }
-#gui-bad-connection:after {
+#gui-bad-connection::after {
 	position: absolute;
 	top: 100%;
 	display: block;
 	font-size: 1.2rem;
 	text-align: center;
-	content: "The server hasn't send a package for 500ms, your connection is probably interrupted or dead."
+	content: "The server hasn't send a package for 500ms, your connection is probably interrupted or dead.";
 }
 #gui-warmup {
 	text-align: center;
@@ -713,14 +705,14 @@ label {
 	transform: translateX(-50%);
 	color: #eee;
 	font-size: 1.75em;
-	background: rgba(0, 0, 0, 0.7);
+	background: rgba(0, 0, 0, .7);
 	min-height: none;
 }
 #gui-points div {
 	display: inline-block;
 	width: 4em;
 	font-weight: bold;
-	padding: 0.1em 0;
+	padding: .1em 0;
 	text-align: center;
 }
 #gui-points-alienBeige { color: #e5d9be; }
@@ -738,9 +730,9 @@ label {
 	margin: 6px 2px;
 }
 #gui-message {
-	background: #000;
-	color: #fff;
-	box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.7);
+	background: black;
+	color: white;
+	box-shadow: 0 0 3px rgba(0, 0, 0, .7);
 	padding: 14px;
 	min-width: 120px;
 	width: 30vw;
@@ -748,20 +740,20 @@ label {
 	position: fixed;
 	top: 47px;
 	right: 0;
-	font-size: 0.875em;
+	font-size: .875em;
 	transform: translateX(0);
 	transition: transform .5s;
 }
 #gui-message.hidden {
 	transform: translateX(100%);
 }
-#gui-message:before {
+#gui-message::before {
 	display: block;
 	content: attr(data-title);
 	font-size: 1.3em;
 	margin-right: 50px;
 }
-#gui-message:after {
+#gui-message::after {
 	content: attr(data-desc);
 	font-weight: bold;
 	color: #4dbb63;

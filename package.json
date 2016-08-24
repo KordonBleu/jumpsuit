@@ -13,16 +13,18 @@
     "bufferutil": "1.x",
     "utf-8-validate": "1.x"
   },
+  "devDependencies": {
+    "ava": "0.x",
+    "stylelint": "7.x"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KordonBleu/jumpsuit"
   },
   "readme": "readme.md",
   "license": "MPL-2.0",
-  "devDependencies": {
-    "ava": "^0.16.0"
-  },
   "scripts": {
-    "test": "./node_modules/ava/cli.js ./tests/message.js"
+    "test": "./node_modules/ava/cli.js ./tests/message.js",
+    "stylelint": "./node_modules/stylelint/dist/cli.js ./static/*.css"
   }
 }
