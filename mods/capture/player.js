@@ -1,6 +1,8 @@
 'use strict';
 
-var Player = ((vinage, resources, weapon) => {
+import { makePanner } from '../../client/audio.js';
+
+export default function(resources, weapon) {
 	class Player {
 		constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 			this.name = name;
@@ -82,10 +84,10 @@ var Player = ((vinage, resources, weapon) => {
 				this.setBoxSize();
 			}
 		}
-				
+
 	}
 
-	class ClPlayer extends Player {
+	class CltPlayer extends Player {
 		constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 			super(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle);
 			this.hurt = false;
@@ -101,13 +103,8 @@ var Player = ((vinage, resources, weapon) => {
 	}
 
 
-	if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') return SrvPlayer;
-	else return ClPlayer;
-
-})(
-	typeof vinage === 'undefined' ? require('vinage') : vinage,
-	typeof resources === 'undefined' ? require('../../static/resource_loader.js'): resources,
-	typeof weapon === 'undefined' ? require('./weapon.js') : weapon
-);
-
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = Player;
+	return {
+		CltPlayer,
+		SrvPlayer
+	};
+}

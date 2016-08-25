@@ -7,13 +7,18 @@
     "image-size": "0.x",
     "ipaddr.js": "1.x",
     "vinage": "0.x",
-    "ws": "1.x"
+    "ws": "1.x",
+    "rollup": "0.x",
+    "rollup-plugin-node-resolve": "2.x",
+    "rollup-plugin-commonjs": "3.x",
+    "rollup-plugin-eslint": "2.x"
   },
   "optionalDependencies": {
     "bufferutil": "1.x",
     "utf-8-validate": "1.x"
   },
   "devDependencies": {
+    "source-map-support": "0.x",
     "ava": "0.x",
     "stylelint": "7.x"
   },

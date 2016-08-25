@@ -1,7 +1,5 @@
 'use strict';
 
-if (vinage === undefined) var vinage = require('vinage');
-
 function Planet(x, y, radius, type) {
 	this.box = new vinage.Circle(new vinage.Point(x, y), radius);
 	this.atmosBox = new vinage.Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));
@@ -23,4 +21,4 @@ Planet.prototype.updateColor = function() {
 	}
 };
 
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = Planet;
+export default Planet;

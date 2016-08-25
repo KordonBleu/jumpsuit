@@ -45,7 +45,7 @@ SoundModel.prototype.makeSound = function(nextNode, loop) {
 	return sound;
 };
 
-function makePanner(deltaPosX, deltaPosY) {
+export function makePanner(deltaPosX, deltaPosY) {
 	let panner = audioContext.createPanner();
 	setPanner(panner, deltaPosX, deltaPosY);
 	panner.connect(soundEffectGain);

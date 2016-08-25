@@ -132,6 +132,9 @@ const resList = {
 	'muzzle': {},
 	'muzzle2': {}
 };
+let resources = {};
+
+
 
 function getFinalResNames(cbk) {
 	for (let resName in resList) {
@@ -148,66 +151,70 @@ function getFinalResNames(cbk) {
 	}
 }
 
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	const sizeOf = require('image-size');
-	let resources = {};
+const sizeOf = require('image-size');
 
-	getFinalResNames((baseName, variants) => {
-		resources[baseName] = sizeOf(__dirname + '/assets/images/' + baseName + '.svg');
+getFinalResNames((baseName, variants) => {
+	resources[baseName] = sizeOf(__dirname + '/assets/images/' + baseName + '.svg');
 
-		for (let variant in variants) resources[variant] = resources[baseName];
-	});
+	for (let variant in variants) resources[variant] = resources[baseName];
+});
 
-	module.exports = resources;
-} else {
-	function exportSvg(svgName, variants) {
+export {resources as SrvResources};
 
-		return new Promise((resolve, reject) => {
-			// get svg as a svg element from xhr
-			let xhr = new XMLHttpRequest();
-			xhr.responseType = 'document';
-			xhr.open('GET', 'https://jumpsuit.space/assets/images/' + svgName + '.svg', true);
 
-			let promiseList = [];
-			xhr.addEventListener('load', ev => {
-				function svgToImg(name, svg) {
-					promiseList.push(new Promise((resolve, reject) => {
-						let blob = new Blob([svg.outerHTML], {type: 'image/svg+xml;charset=utf-8'}); // convert DOMString to Blob
 
-						let img = new Image();
-						img.addEventListener('load', function(ev) {
-							resources[name] = ev.target;
-							loadProgress += 1;
-							resolve(ev.target);
-						}.bind(this));
-						img.addEventListener('error', err => {
-							reject(err);
-						});
-						img.src = URL.createObjectURL(blob); // use blob://whatever to create image
-					}));
-				}
-				svgToImg(svgName, ev.target.response.documentElement);
-				for (let variant in variants) svgToImg(variant, variants[variant](ev.target.response.documentElement.cloneNode(true)));
+function exportSvg(svgName, variants) {
 
-				Promise.all(promiseList).then(() => {
-					resolve();
-				}).catch(err => {
-					reject(err);
-				});
-			});
-			xhr.addEventListener('error', err => {
+	return new Promise((resolve, reject) => {
+		// get svg as a svg element from xhr
+		let xhr = new XMLHttpRequest();
+		xhr.responseType = 'document';
+		xhr.open('GET', 'https://jumpsuit.space/assets/images/' + svgName + '.svg', true);
+
+		let promiseList = [];
+		xhr.addEventListener('load', ev => {
+			function svgToImg(name, svg) {
+				promiseList.push(new Promise((resolve, reject) => {
+					let blob = new Blob([svg.outerHTML], {type: 'image/svg+xml;charset=utf-8'}); // convert DOMString to Blob
+
+					let img = new Image();
+					img.addEventListener('load', function(ev) {
+						resources[name] = ev.target;
+						resolve(ev.target);
+					}.bind(this));
+					img.addEventListener('error', err => {
+						reject(err);
+					});
+					img.src = URL.createObjectURL(blob); // use blob://whatever to create image
+				}));
+			}
+			svgToImg(svgName, ev.target.response.documentElement);
+			for (let variant in variants) svgToImg(variant, variants[variant](ev.target.response.documentElement.cloneNode(true)));
+
+			Promise.all(promiseList).then(() => {
+				resolve();
+			}).catch(err => {
 				reject(err);
 			});
-
-			xhr.send();
 		});
-	}
+		xhr.addEventListener('error', err => {
+			reject(err);
+		});
 
-
-	var imgPromises = [],
-		resources = {},
-		loadProgress;
-	getFinalResNames((baseName, variants) => {
-		imgPromises.push(exportSvg(baseName, variants));
+		xhr.send();
 	});
 }
+
+
+let imgPromises = [];
+getFinalResNames((baseName, variants) => {
+	imgPromises.push(exportSvg(baseName, variants));
+});
+
+export let cltResPromise = new Promise((resolve, reject) => {
+	Promise.all(imgPromises).then(() => {
+		resolve(resources);
+	}).catch((err) => {
+		reject(err);
+	});
+});

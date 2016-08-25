@@ -440,4 +440,3 @@ window.onbeforeunload = function() {
 	localStorage.setItem('settings.graphics.meteors', meteorsElement.checked);
 	localStorage.setItem('settings.graphics.particles', particlesElement.checked);
 };
-

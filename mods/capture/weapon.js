@@ -1,8 +1,6 @@
 'use strict';
 
-if (Shot === undefined) var Shot = require('./shot.js');
-
-var weapon = (function() {
+export default function(Shot) {
 	class Weapon {
 		constructor(owner) {
 			this.owner = owner;
@@ -10,8 +8,7 @@ var weapon = (function() {
 		}
 		fire(angleOffset) {
 			let shift = this.owner.looksLeft ? -1 : 1,
-				inaccuracy = (2*Math.random()-1)*this.spray,
-				newShots = [];
+				inaccuracy = (2*Math.random()-1)*this.spray;
 
 			let shotX = this.owner.box.center.x + this.muzzleX * Math.sin(this.owner.aimAngle) + this.muzzleY * shift * Math.sin(this.owner.aimAngle - Math.PI / 2),
 				shotY = this.owner.box.center.y - this.muzzleX * Math.cos(this.owner.aimAngle) - this.muzzleY * shift * Math.cos(this.owner.aimAngle - Math.PI / 2);
@@ -94,6 +91,4 @@ var weapon = (function() {
 		Knife,
 		Weapon // TODO: remove this maybe?
 	};
-})();
-
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = weapon;
+}

@@ -1,5 +1,6 @@
 'use strict';
 
+require('source-map-support').install();
 require('colors');
 const fs = require('fs'),
 	http = require('http'),
@@ -127,7 +128,6 @@ let server = http.createServer(function (req, res) {
 });
 server.listen(config.port);
 
-
 let gameServerSocket = new WebSocketServer({server: server, path: '/game_servers'}),
 	clientsSocket = new WebSocketServer({server: server, path: '/clients'}),
 	wsOptions = { binary: true, mask: false };
@@ -178,7 +178,7 @@ gameServerSocket.on('connection', function(ws) {
 		}
 	});
 	ws.on('pong', function() {
-		gameServer.latency = Date.now() - lastPing;	
+		gameServer.latency = Date.now() - lastPing;
 	});
 	ws.on('close', function() {
 		gameServers.forEach(function(gS, i) {
