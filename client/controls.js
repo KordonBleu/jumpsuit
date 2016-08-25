@@ -1,6 +1,9 @@
 'use strict';
 
-const defaultKeymap = {ShiftLeft: 'run', Space: 'jump', ArrowLeft: 'moveLeft', ArrowUp: 'jetpack', ArrowRight: 'moveRight', ArrowDown: 'crouch', KeyA: 'moveLeft', KeyW: 'jetpack', KeyD: 'moveRight', KeyS: 'crouch', KeyT: 'chat', Digit1: 'changeWeapon', Digit2: 'changeWeapon'};
+import * as ui from './ui.js';
+import * as wsClt from './websocket_client.js';
+
+export const defaultKeymap = {ShiftLeft: 'run', Space: 'jump', ArrowLeft: 'moveLeft', ArrowUp: 'jetpack', ArrowRight: 'moveRight', ArrowDown: 'crouch', KeyA: 'moveLeft', KeyW: 'jetpack', KeyD: 'moveRight', KeyS: 'crouch', KeyT: 'chat', Digit1: 'changeWeapon', Digit2: 'changeWeapon'};
 function sameObjects(a, b) {
 	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
 		return false;
@@ -15,13 +18,8 @@ String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
-function objsInvisible(elArr) {
-	return elArr.every(function(element) {
-		return element.classList.contains('hidden');
-	});
-}
 
-function handleInputMobile(e) {
+export function handleInputMobile(e) {
 	function transform(touch, type) {
 		let element = touch.target;
 		if (type === 'touchstart') {
@@ -38,7 +36,7 @@ function handleInputMobile(e) {
 		return yTransform;
 	}
 
-	for (touch of e.changedTouches) {
+	for (let touch of e.changedTouches) {
 		let s = e.type !== 'touchstart' && e.type === 'touchend';
 		if (players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
@@ -47,27 +45,29 @@ function handleInputMobile(e) {
 				players[ownIdx].controls['run'] = (-value >= 38) * 1;
 			}
 			if (e.type !== 'touchmove') players[ownIdx].controls[touch.target.id] = s * 1;
-			currentConnection.refreshControls(players[ownIdx].controls);
+			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	}
 }
 
 
 /* Keyboard */
-function handleInput(e) {
+export function handleInput(e) {
 	if (e.code === 'Tab') e.preventDefault();
-	let s = (e.type === 'keydown') * 1,
-		chatInUse = chatInput === document.activeElement;
-	if (!chatInUse && objsInvisible([infoBox, settingsBox]) && players[ownIdx] !== undefined) {
+
+	let s = (e.type === 'keydown') * 1;
+
+	if (!ui.chatInUse() && ui.noModalOpen() && players[ownIdx] !== undefined) {
 		let triggered = handleInput.keyMap[e.code];
+
 		if (players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
 			let controlElement = document.getElementById(triggered);
 			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
 			players[ownIdx].controls[triggered] = s;
-			currentConnection.refreshControls(players[ownIdx].controls);
+			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
 		} else if (triggered === 'chat' && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
-			chatInput.focus();//the 'chat' control (most likelly 't')
+			ui.focusChat();//the 'chat' control (most likelly 't')
 		}, 0);//from being written in the chat
 	}
 }
@@ -96,6 +96,8 @@ handleInput.updateKeyMap = function() {
 handleInput.initKeymap = function(fromReversed) {
 	if (fromReversed) handleInput.updateKeyMap();
 	else handleInput.updateReverseKeyMap();
+
+	let keySettingsElement = document.getElementById('key-settings');
 
 	while (keySettingsElement.firstChild) {
 		keySettingsElement.removeChild(keySettingsElement.firstChild);
@@ -126,12 +128,12 @@ handleInput.initKeymap = function(fromReversed) {
 	}
 
 	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, handleInput.keyMap);
-	settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
+	ui.settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
 };
 handleInput.loadKeySettings = function() {
-	if (settings.keymap !== '') handleInput.reverseKeyMap = JSON.parse(settings.keymap);
+	if (ui.settings.keymap !== '') handleInput.reverseKeyMap = JSON.parse(ui.settings.keymap);
 	else handleInput.keyMap = defaultKeymap;
-	handleInput.initKeymap(settings.keymap !== '');
+	handleInput.initKeymap(ui.settings.keymap !== '');
 };
 
 /* Drag & Mouse */
@@ -158,9 +160,9 @@ function dragHandler(e) {
 }
 canvas.addEventListener('mousedown', function(e) {
 	if (e.button === 0) {
-		if (ownIdx in players && currentConnection.alive()) {
+		if (ownIdx in players && wsClt.currentConnection.alive()) {
 			players[ownIdx].controls['shoot'] = 1;
-			currentConnection.refreshControls(players[ownIdx].controls);
+			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	} else if (e.button === 1) {
 		dragStart(e);
@@ -174,7 +176,7 @@ canvas.addEventListener('mouseup', function(e) {
 	} else if (e.button === 0) {
 		if (ownIdx in players) {
 			players[ownIdx].controls['shoot'] = 0;
-			currentConnection.refreshControls(players[ownIdx].controls);
+			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
 		}
 	}
 });
@@ -194,7 +196,7 @@ document.addEventListener('mousemove', function(e) {
 	game.mousePos.angle = (2.5*Math.PI + Math.atan2(game.mousePos.y - canvas.height*0.5, game.mousePos.x - canvas.width*0.5)) % (2*Math.PI);
 });
 setInterval(function() {
-	if (currentConnection !== undefined) currentConnection.sendMousePos(game.mousePos.angle);
+	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.sendMousePos(game.mousePos.angle);
 }, 80);
 
 
@@ -255,14 +257,13 @@ function updateControlsViaGamepad(usingGamepad) {
 		else game.drag.x = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
 		else game.drag.y = 0;
-		currentConnection.refreshControls(players[ownIdx].controls);
+		wsClt.currentConnection.refreshControls(players[ownIdx].controls);
 	}
 }
 
 /* Zoom */
 document.addEventListener('wheel', function(e) {
-	let chatInUse = chatInput === document.activeElement;
-	if (!chatInUse && objsInvisible([infoBox, settingsBox])) {
+	if (!ui.chatInUse() && ui.noModalOpen()) {
 		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
 		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
 		resizeCanvas();

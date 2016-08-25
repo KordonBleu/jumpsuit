@@ -1,7 +1,8 @@
 'use strict';
 
-let audioContext = new AudioContext,
-	soundEffectGain = audioContext.createGain(),
+let audioContext = new AudioContext;
+
+export const soundEffectGain = audioContext.createGain(),
 	musicGain = audioContext.createGain();
 
 soundEffectGain.gain.value = 1;
@@ -52,7 +53,7 @@ export function makePanner(deltaPosX, deltaPosY) {
 
 	return panner;
 }
-function setPanner(panner, deltaPosX, deltaPosY) {
+export function setPanner(panner, deltaPosX, deltaPosY) {
 	if(Math.sqrt(Math.pow(deltaPosX, 2) + Math.pow(deltaPosY, 2)) < 200) {//if dist < 200
 		let ang = Math.atan2(deltaPosX, deltaPosY);//take it to 200
 		deltaPosX = Math.cos(ang) * 200;
@@ -64,14 +65,14 @@ function setPanner(panner, deltaPosX, deltaPosY) {
 }
 
 
-let bgFilter = audioContext.createBiquadFilter();
+export const bgFilter = audioContext.createBiquadFilter();
 bgFilter.type = 'lowpass';
 bgFilter.Q.value = 2;
 bgFilter.frequency.value = 4000;
 
 bgFilter.connect(musicGain);
 
-let laserModel = new SoundModel('/assets/audio/laser.opus'),
+export const laserModel = new SoundModel('/assets/audio/laser.opus'),
 	jetpackModel = new SoundModel('/assets/audio/jetpack.opus'),
 	backgroundModel = new SoundModel('/assets/audio/interstellar.opus', function() {
 		this.makeSound(bgFilter, 110.256).start(0);

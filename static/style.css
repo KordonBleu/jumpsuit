@@ -49,7 +49,7 @@ body.nogui *[id^=gui]{
 	border-radius: 3px;
 	border: 2px solid white;
 }
-#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, .empty-lobby-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden {
+#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden {
 	display: none;
 }
 .fa {

@@ -1,37 +1,30 @@
 'use strict';
 
-let chatElement = document.getElementById('gui-chat'),
-	chatFirstElement = document.getElementById('gui-chat-first'),
-	chatInputContainer = document.getElementById('gui-chat-input-container'),
+import { musicGain, soundEffectGain } from './audio.js';
+import * as wsClt from './websocket_client.js';
+import { handleInput, defaultKeymap } from './controls.js';
+
+let chatFirstElement = document.getElementById('gui-chat-first'),
 	chatInput = document.getElementById('gui-chat-input'),
 	chatPlayerListElement = document.getElementById('gui-chat-player-list'),
 
-	healthElement = document.getElementById('gui-health'),
-	fuelElement = document.getElementById('gui-fuel'),
-	pointsElement = document.getElementById('gui-points'),
 	notifBox = document.getElementById('gui-message'),
-	controlsElement = document.getElementById('gui-controls'),
 
 	/* boxed windows */
-	menuBox = document.getElementById('menu-box'),
 	infoBox = document.getElementById('info-box'),
 	settingsBox = document.getElementById('settings-box'),
 
 	/* inside menu-box */
-	lobbyTableElement = document.getElementById('lobby-table'),
-	lobbyTableHeaderRowElement = lobbyTableElement.firstElementChild.firstElementChild,
+	lobbyTableHeaderRowElement = document.getElementById('lobby-table').firstElementChild.firstElementChild,
 	lobbyListElement = document.getElementById('lobby-list'),
-	playerTableElement = document.getElementById('player-table'),
-	playerTableStatusElement = document.getElementById('lobby-status'),
-	playerTableVictoryElement = document.getElementById('lobby-victory'),
 	playerListElement = document.getElementById('player-list'),
 	menuBoxSettingsButton = document.getElementById('menu-box-settings-button'),
 	menuBoxInfoButton = document.getElementById('menu-box-info-button'),
+
 	/* search options */
 	searchInput = document.getElementById('search-input'),
-	emptyLobbyInput = document.getElementById('empty-lobby'),
+
 	/* inside settings-box */
-	closeSettingsButton = document.getElementById('close-settings-box'),
 	nameElement = document.getElementById('name'),
 	musicVolumeElement = document.getElementById('music-volume'),
 	effectsVolumeElement = document.getElementById('effects-volume'),
@@ -41,24 +34,19 @@ let chatElement = document.getElementById('gui-chat'),
 	secondaryWeaponElement = document.getElementById('secondary-weapon'),
 	particlesElement = document.getElementById('particle-option'),
 	meteorsElement = document.getElementById('meteor-option'),
-	/* inside info-box */
-	closeInfoButton = document.getElementById('close-info-box'),
-	/* in-game buttons */
-	guiOptionElement = document.getElementById('gui-options'),//contains the following buttons
-	settingsButton = document.getElementById('settings-button'),
-	infoButton = document.getElementById('info-button'),
-	/* canvases */
-	canvas = document.getElementById('canvas'),
-	minimapCanvas = document.getElementById('gui-minimap-canvas'),
 
-	settings = {
-		name: localStorage.getItem('settings.name') || 'Unnamed Player',
-		keymap: localStorage.getItem('settings.keymap') || '',
-		volMusic: localStorage.getItem('settings.volume.music') || 50,
-		volEffects: localStorage.getItem('settings.volume.effects') || 50,
-		primary: localStorage.getItem('settings.weaponry.primary') || 'Lmg',
-		secondary: localStorage.getItem('settings.weaponry.secondary') || 'Knife'
-	};
+	/* in-game buttons */
+	settingsButton = document.getElementById('settings-button'),
+	infoButton = document.getElementById('info-button');
+
+export let settings = {
+	name: localStorage.getItem('settings.name') || 'Unnamed Player',
+	keymap: localStorage.getItem('settings.keymap') || '',
+	volMusic: localStorage.getItem('settings.volume.music') || 50,
+	volEffects: localStorage.getItem('settings.volume.effects') || 50,
+	primary: localStorage.getItem('settings.weaponry.primary') || 'Lmg',
+	secondary: localStorage.getItem('settings.weaponry.secondary') || 'Knife'
+};
 
 
 const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
@@ -92,13 +80,23 @@ addShowBoxListener(infoButton, infoBox);
 addShowBoxListener(menuBoxInfoButton, infoBox);
 ['leave-button', 'menu-box-leave-button'].forEach(function(button) {
 	document.getElementById(button).addEventListener('click', function() {
-		currentConnection.close();
+		wsClt.currentConnection.close();
 		game.stop();
 	});
 });
 
+export function noModalOpen() {
+	function objsInvisible(elArr) {
+		return elArr.every(function(element) {
+			return element.classList.contains('hidden');
+		});
+	}
+
+	return objsInvisible([infoBox, settingsBox]);
+}
+
 /* Port blocked dialog box */
-function showBlockedPortDialog(portNumber) {
+export function showBlockedPortDialog(portNumber) {
 	document.getElementById('blocked-port-box').classList.remove('hidden');
 	document.getElementById('shade-box').classList.remove('hidden');
 	document.getElementById('port-number').textContent = portNumber;
@@ -119,8 +117,7 @@ effectsVolumeElement.addEventListener('input', function(ev) {
 });
 
 /* Key settings */
-let changingKeys = false,
-	selectedRow = -1;
+let selectedRow = -1;
 keySettingsElement.addEventListener('click', function(e) {
 	function reselect(obj){
 		document.removeEventListener('keydown', wrap);
@@ -133,18 +130,15 @@ keySettingsElement.addEventListener('click', function(e) {
 		} else {
 			selectedRow = -1;
 			document.removeEventListener('keyup', wrap);
-			changingKeys = false;
 		}
 	}
 	function handleChangeKey(e) {
 		if (selectedRow === -1) return;
 		let keyName = e.code,
-			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent,
-			alreadyTaken = false;
+			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent;
 
 		for (let key in handleInput.keyMap) {
 			if (key !== keyName) continue;
-			alreadyTaken = true;
 			break;
 		}
 		if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
@@ -156,7 +150,6 @@ keySettingsElement.addEventListener('click', function(e) {
 		nE.preventDefault();
 		switch(nE.type) {
 			case 'keydown':
-				changingKeys = true;
 				document.removeEventListener('keydown', wrap);
 				document.addEventListener('keyup', wrap);
 				break;
@@ -184,7 +177,7 @@ nameElement.addEventListener('keydown', function(e) {
 nameElement.addEventListener('blur', function(e) {
 	localStorage.setItem('settings.name', e.target.value);
 	settings.name = e.target.value;
-	currentConnection.setPreferences();
+	wsClt.currentConnection.setPreferences();
 });
 
 /* Weaponry */
@@ -195,7 +188,7 @@ function setGun(element, type) {
 	element.dataset.currentWeapon = type;
 	element.childNodes[0].src = '/assets/images/' + type.toLowerCase() + '.svg';
 	element.childNodes[1].textContent = weaponNames[type];
-	if (typeof currentConnection !== 'undefined') currentConnection.setPreferences();
+	if (typeof wsClt.currentConnection !== 'undefined') wsClt.currentConnection.setPreferences();
 }
 for (let element of document.querySelectorAll('.weapon-select')) {
 	element.addEventListener('click', function() {
@@ -219,8 +212,8 @@ particlesElement.checked = localStorage.getItem('settings.graphics.particles') =
 /* Chat */
 chatInput.addEventListener('keydown', function(e) {
 	if (e.key === 'Enter') {
-		if (!currentConnection.alive()) return;
-		currentConnection.sendChat(this.value);
+		if (!wsClt.currentConnection.alive()) return;
+		wsClt.currentConnection.sendChat(this.value);
 		this.value = '';
 		this.blur();
 	} else if (e.key === 'Tab') {
@@ -252,7 +245,7 @@ chatInput.addEventListener('keydown', function(e) {
 		printPlayerList('');
 	}
 });
-function printChatMessage(name, appearance, content) {
+export function printChatMessage(name, appearance, content) {
 	let element = document.createElement('p'),
 		nameElement = document.createElement('b'),
 		textElement = document.createTextNode(content);
@@ -264,17 +257,19 @@ function printChatMessage(name, appearance, content) {
 	}
 	element.appendChild(nameElement);
 	element.appendChild(textElement);
-	chatElement.appendChild(element);
+	document.getElementById('gui-chat').appendChild(element);
 	updateChatOffset();
 }
 function updateChatOffset(){
-	let messageHeight = 0;
+	let messageHeight = 0,
+		chatElement = document.getElementById('gui-chat');
 	for (let element of chatElement.querySelectorAll('p:not(#gui-chat-first)')) {
 		messageHeight += element.clientHeight + 2;
 	}
 	chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + 'px';
 }
-function clearChat() {
+export function clearChat() {
+	let chatElement = document.getElementById('gui-chat');
 	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
 }
 
@@ -286,7 +281,13 @@ chatInput.addEventListener('focus', function() {
 chatInput.addEventListener('blur', function() {
 	chatPlayerListElement.classList.add('hidden');
 });
-function printPlayerList(filter) {
+export function chatInUse() {
+	chatInput === document.activeElement;
+}
+export function focusChat() {
+	chatInput.focus();
+}
+export function printPlayerList(filter) {
 	if (isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
@@ -301,7 +302,7 @@ function printPlayerList(filter) {
 }
 
 /* Lobby list */
-function addServerRow(server) {
+export function addServerRow(server) {
 	let row = document.createElement('tr'),
 		serverNameTd = document.createElement('td'),
 		modNameTd = document.createElement('td'),
@@ -322,19 +323,19 @@ function addServerRow(server) {
 	lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
 	server.tr = row;
 }
-function removeServer(id) {
-	serverList[id].tr.remove();
-	serverList.splice(id, 1);
+export function removeServer(id) {
+	wsClt.serverList[id].tr.remove();
+	wsClt.serverList.splice(id, 1);
 }
 lobbyListElement.addEventListener('click', function(e) {
 	if (e.target.tagName === 'BUTTON' && e.target.dataset.url !== undefined) {
-		if (currentConnection !== undefined) currentConnection.close();
-		currentConnection = new Connection(e.target.dataset.url);
+		if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
+		wsClt.makeNewCurrentConnection(e.target.dataset.url);
 	}
 });
 
 /* Player list */
-function updatePlayerList() {
+export function updatePlayerList() {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
 	for (let player of players) {
 		if (player === undefined) continue;
@@ -359,12 +360,12 @@ lobbyTableHeaderRowElement.addEventListener('click', function(e) {
 
 				switch (e.target.previousSibling.data.trim()) {
 					case 'Lobby name':
-						serverList.sort(function(a, b) {
+						wsClt.serverList.sort(function(a, b) {
 							return b.name.trim().localeCompare(a.name.trim());
 						});
 						break;
 					case 'Players':
-						serverList.sort(function(a, b) {
+						wsClt.serverList.sort(function(a, b) {
 							if (a.players < b.players || a.players > b.players) return a.players < b.players ? -1 : 1;
 							else return a.maxPlayers < b.maxPlayers ? -1 : a.maxPlayers > b.maxPlayers ? 1 : 0;
 						});
@@ -372,11 +373,11 @@ lobbyTableHeaderRowElement.addEventListener('click', function(e) {
 				break;
 			case '/assets/images/sort_arrow_down.svg':
 				e.target.setAttribute('src', '/assets/images/sort_arrow_up.svg');
-				serverList.reverse();
+				wsClt.serverList.reverse();
 				break;
 			case '/assets/images/sort_arrow_up.svg':
 				e.target.setAttribute('src', '/assets/images/sort_arrow_down.svg');
-				serverList.reverse();
+				wsClt.serverList.reverse();
 				break;
 		}
 		addServerRow();
@@ -384,10 +385,10 @@ lobbyTableHeaderRowElement.addEventListener('click', function(e) {
 });
 
 /* Search filters */
-function applyLobbySearch() {
-	serverList.forEach(function(lobby, index) {
-		//lobbyListElement.children are reversed compared to serverList
-		let currentElem = lobbyListElement.children[serverList.length - index - 1],
+export function applyLobbySearch() {
+	wsClt.serverList.forEach(function(lobby, index) {
+		//lobbyListElement.children are reversed compared to wsClt.serverList
+		let currentElem = lobbyListElement.children[wsClt.serverList.length - index - 1],
 			newValue = currentElem.firstChild.textContent;
 
 		if (searchInput.value === '') currentElem.classList.remove('search-hidden');

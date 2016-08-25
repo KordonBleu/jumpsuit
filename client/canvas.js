@@ -1,10 +1,14 @@
 'use strict';
 
+import * as controls from './controls.js';
+
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
 
-let context = canvas.getContext('2d'),
+let	canvas = document.getElementById('canvas'),
+	minimapCanvas = document.getElementById('gui-minimap-canvas'),
+	context = canvas.getContext('2d'),
 	minimapContext = minimapCanvas.getContext('2d'),
 	meteors = [],
 	players = [],
@@ -25,12 +29,12 @@ let context = canvas.getContext('2d'),
 		start: function() {
 			game.started = true;
 			document.body.classList.remove('nogui');
-			chatElement.classList.remove('hidden');
-			chatInputContainer.classList.remove('hidden');
-			guiOptionElement.classList.remove('hidden');
-			healthElement.classList.remove('hidden');
-			fuelElement.classList.remove('hidden');
-			pointsElement.classList.remove('hidden');
+			document.getElementById('gui-chat').classList.remove('hidden');
+			document.getElementById('gui-chat-input-container').classList.remove('hidden');
+			document.getElementById('gui-options').classList.remove('hidden'); // contains #settings-button and #info-button
+			document.getElementById('gui-health').classList.remove('hidden');
+			document.getElementById('gui-fuel').classList.remove('hidden');
+			document.getElementById('gui-points').classList.remove('hidden');
 			minimapCanvas.classList.remove('hidden');
 			//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
 			let minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
@@ -39,26 +43,26 @@ let context = canvas.getContext('2d'),
 
 			minimapCanvas.width = unitSize*universe.width;
 			minimapCanvas.height = unitSize*universe.height;
-			menuBox.classList.add('hidden');
+			document.getElementById('menu-box').classList.add('hidden');
 			for (let element of document.querySelectorAll('#gui-points th')) {
 				element.style.display = 'none';
 			}
-			window.addEventListener('keydown', handleInput);
-			window.addEventListener('keyup', handleInput);
-			window.addEventListener('touchstart', handleInputMobile);
-			window.addEventListener('touchmove', handleInputMobile);
-			window.addEventListener('touchend', handleInputMobile);
+			window.addEventListener('keydown', controls.handleInput);
+			window.addEventListener('keyup', controls.handleInput);
+			window.addEventListener('touchstart', controls.handleInputMobile);
+			window.addEventListener('touchmove', controls.handleInputMobile);
+			window.addEventListener('touchend', controls.handleInputMobile);
 			loop();
 		},
 		stop: function() {
 			game.started = false;
-			window.removeEventListener('keydown', handleInput);
-			window.removeEventListener('keyup', handleInput);
-			window.removeEventListener('touchstart', handleInputMobile);
-			window.removeEventListener('touchmove', handleInputMobile);
-			window.removeEventListener('touchend', handleInputMobile);
-			menuBox.classList.remove('hidden');
-			[].forEach.call(controlsElement.querySelectorAll('img'), function(element) {
+			window.removeEventListener('keydown', controls.handleInput);
+			window.removeEventListener('keyup', controls.handleInput);
+			window.removeEventListener('touchstart', controls.handleInputMobile);
+			window.removeEventListener('touchmove', controls.handleInputMobile);
+			window.removeEventListener('touchend', controls.handleInputMobile);
+			document.getElementById('menu-box').classList.remove('hidden');
+			[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
 				element.removeAttribute('style');
 			});
 			players.forEach(function(player) {

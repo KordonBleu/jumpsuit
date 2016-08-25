@@ -1,4 +1,4 @@
-import audio from './audio.js';
+//import audio from './audio.js';
 import { cltResPromise as resPromise } from './resource_loader.js';
 
 import shotFactory from '../mods/capture/shot.js';
@@ -6,7 +6,7 @@ import weaponFactory from '../mods/capture/weapon.js';
 import playerFactory from '../mods/capture/player.js';
 import enemyFactory from '../mods/capture/enemy.js';
 import engineFactory from '../mods/capture/engine.js';
-//import * as ui from './ui.js';
+import * as ui from './ui.js';
 
 import Planet from '../mods/capture/planet.js';
 
