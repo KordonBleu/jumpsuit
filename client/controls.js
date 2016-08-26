@@ -2,6 +2,10 @@
 
 import * as ui from './ui.js';
 import * as wsClt from './websocket_client.js';
+import * as draw from './draw.js';
+
+export const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
+	|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
 
 export const defaultKeymap = {ShiftLeft: 'run', Space: 'jump', ArrowLeft: 'moveLeft', ArrowUp: 'jetpack', ArrowRight: 'moveRight', ArrowDown: 'crouch', KeyA: 'moveLeft', KeyW: 'jetpack', KeyD: 'moveRight', KeyS: 'crouch', KeyT: 'chat', Digit1: 'changeWeapon', Digit2: 'changeWeapon'};
 function sameObjects(a, b) {
@@ -265,8 +269,8 @@ function updateControlsViaGamepad(usingGamepad) {
 document.addEventListener('wheel', function(e) {
 	if (!ui.chatInUse() && ui.noModalOpen()) {
 		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
-		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
-		resizeCanvas();
+		draw.windowBox.zoomFactor = Math.max(0.25, Math.min(4, draw.windowBox.zoomFactor * z));
+		ui.resizeCanvas();
 	}
 });
 

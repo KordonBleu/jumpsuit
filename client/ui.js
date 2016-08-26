@@ -2,7 +2,34 @@
 
 import { musicGain, soundEffectGain } from './audio.js';
 import * as wsClt from './websocket_client.js';
-import { handleInput, defaultKeymap } from './controls.js';
+import { handleInput, defaultKeymap, isMobile } from './controls.js';
+import * as draw from './draw.js';
+
+
+// TODO: reimplement the following in HTML whith an event listener on document, triggered in the resource loader
+/* Load image assets */
+/* let loadProgress = 0; // TODO: fix this shit
+function drawBar() {
+	context.fillStyle = '#007d6c';
+	context.fillRect(0, 0, ((loadProgress) / Object.keys(resList).length) * canvas.width, 15);
+}
+function loaderLoop() {
+	context.textBaseline = 'top';
+	context.textAlign = 'center';
+
+	context.fillStyle = '#121012';
+	context.fillRect(0, 0, canvas.width, canvas.height);
+
+	context.fillStyle = '#eee';
+	context.font = '60px Open Sans';
+	context.fillText('JumpSuit', canvas.width / 2, canvas.height * 0.35);
+	context.font = '28px Open Sans';
+	context.fillText('A canvas game by Getkey & Fju', canvas.width / 2, canvas.height * 0.35 + 80);
+	drawBar();
+	game.loaderAnimationFrameId = window.requestAnimationFrame(loaderLoop);
+}
+loaderLoop(); */
+
 
 let chatFirstElement = document.getElementById('gui-chat-first'),
 	chatInput = document.getElementById('gui-chat-input'),
@@ -48,9 +75,6 @@ export let settings = {
 	secondary: localStorage.getItem('settings.weaponry.secondary') || 'Knife'
 };
 
-
-const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
-	|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
 
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
 	document.getElementById('device-not-supported').classList.remove('hidden');
@@ -260,7 +284,7 @@ export function printChatMessage(name, appearance, content) {
 	document.getElementById('gui-chat').appendChild(element);
 	updateChatOffset();
 }
-function updateChatOffset(){
+export function updateChatOffset(){
 	let messageHeight = 0,
 		chatElement = document.getElementById('gui-chat');
 	for (let element of chatElement.querySelectorAll('p:not(#gui-chat-first)')) {
@@ -422,12 +446,23 @@ const notif = {
 
 /* Position fix: settings-box and info-box become blurry due decimal number in CSS's transform */
 window.addEventListener('resize', resizeHandler);
-function resizeHandler() {
+export function resizeHandler() {
 	for (let element of document.querySelectorAll('#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested')) {
 		element.style['margin-top'] = Math.round(element.clientHeight * -0.5) + 'px';
 		element.style['margin-left'] = Math.round(element.clientWidth * -0.5) + 'px';
 	}
 }
+
+export function resizeCanvas() {
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+	draw.windowBox.width = canvas.clientWidth / draw.windowBox.zoomFactor;
+	draw.windowBox.height = canvas.clientHeight / draw.windowBox.zoomFactor;
+
+	updateChatOffset();
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 
 window.onbeforeunload = function() {

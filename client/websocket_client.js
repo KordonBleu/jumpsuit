@@ -2,6 +2,7 @@
 
 import * as ui from './ui.js';
 import * as audio from './audio.js';
+import { planets, enemies, universe, deadShots } from './draw.js';
 
 let ownIdx = null,
 	enabledTeams = [],
@@ -392,7 +393,7 @@ function connectByHash() {
 	}
 }
 
-function handleHistoryState() {
+export function handleHistoryState() {
 	//modifies default history entries due hash changes
 	if (location.hash !== '') history.replaceState(HISTORY_GAME, '', '/' + location.hash);
 	else history.replaceState(HISTORY_MENU, '', '/');

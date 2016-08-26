@@ -1,10 +1,8 @@
 'use strict';
 
-export default function () {
-	function mod(dividend, divisor) {
-		return (dividend + divisor*Math.ceil(Math.abs(dividend / divisor))) % divisor;
-	}
+import mod from '../../mod.js';
 
+export default function () {
 	function doPrediction(universe, players, enemies, shots) {
 		doPrediction.newTimestamp = Date.now();
 		doPrediction.oldTimestamp = doPrediction.oldTimestamp || Date.now();

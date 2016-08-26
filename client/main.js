@@ -7,6 +7,7 @@ import playerFactory from '../mods/capture/player.js';
 import enemyFactory from '../mods/capture/enemy.js';
 import engineFactory from '../mods/capture/engine.js';
 import * as ui from './ui.js';
+import drawFactory from './draw.js';
 
 import Planet from '../mods/capture/planet.js';
 
@@ -15,7 +16,8 @@ resPromise.then((resources) => {
 		weapon = weaponFactory(Shot),
 		Player = playerFactory(resources, weapon).CltPlayer,
 		Enemy = enemyFactory(resources),
-		engine = engineFactory(resources, Player, Planet, Enemy, Shot);
+		engine = engineFactory(resources, Player, Planet, Enemy, Shot),
+		draw = drawFactory(resources, engine);
 });
 /*		<script src="https://jumpsuit.space/audio.js"></script>
 		<script src="https://jumpsuit.space/resource_loader.js"></script>
