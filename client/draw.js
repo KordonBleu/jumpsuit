@@ -211,7 +211,7 @@ export default function(resources, engine) {
 		context.font = '22px Open Sans';
 		context.textAlign = 'center';
 		players.forEach(function (player, i) {
-			if (universe.collide(windowBox, player.box)) player.draw(i !== ownIdx);
+			if (universe.collide(windowBox, player.box)) player.draw(context, windowBox, particles, i !== ownIdx);
 			if (player.panner !== undefined && player.jetpack) audio.setPanner(player.panner, player.box.center.x - players[ownIdx].box.center.x, player.box.center.y - players[ownIdx].box.center.y);
 		});
 

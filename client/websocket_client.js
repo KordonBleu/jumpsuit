@@ -3,6 +3,7 @@
 import * as ui from './ui.js';
 import * as audio from './audio.js';
 import { planets, enemies, universe, deadShots } from './draw.js';
+import message from './message.js';
 
 let ownIdx = null,
 	enabledTeams = [],

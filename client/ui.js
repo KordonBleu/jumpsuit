@@ -432,7 +432,7 @@ export function applyLobbySearch() {
 }
 searchInput.addEventListener('input', applyLobbySearch);
 
-const notif = {
+export const notif = {
 	previousTimeoutId: -1,
 	showMessage: function(title, desc) {
 		if (!title && !desc) return;

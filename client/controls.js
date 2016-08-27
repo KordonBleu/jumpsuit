@@ -211,15 +211,15 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 		controllingGamepad = null;
 	window.addEventListener('gamepadconnected', e => {
 		if (controllingGamepad !== null) {
-			message.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
+			ui.notif.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
 		} else {
 			controllingGamepad = e.gamepad.index;
-			message.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
+			ui.notif.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
 			intervalId = setInterval(updateControlsViaGamepad, 50, e.gamepad.index);
 		}
 	});
 	window.addEventListener('gamepaddisconnected', e => {
-		message.showMessage('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
+		ui.notif.showMessage('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
 		if (controllingGamepad === e.gamepad.index) {
 			clearInterval(intervalId);
 			controllingGamepad = null;
@@ -231,14 +231,14 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 	setInterval(function() { // chrome
 		let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 		if (typeof gamepads[usingGamepad] === 'undefined' && usingGamepad !== -1) {
-			message.showMessage('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
+			ui.notif.showMessage('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
 			usingGamepad = -1;
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
 			Array.prototype.forEach.call(gamepads, (gp) => { // Chrome workaround
 				usingGamepad = gp.index;
-				message.showMessage('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
+				ui.notif.showMessage('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);
 			});
 		}

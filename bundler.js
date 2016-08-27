@@ -36,7 +36,8 @@ rollup.rollup({
 		indent: false,
 		sourceMap: true,
 		globals: {
-			vinage: 'vinage'
+			vinage: 'vinage',
+			'ipaddr.js': 'ipaddr'
 		}
 	});
 	fs.writeFileSync('./static/bundle.js', result.code + '//# sourceMappingURL=' + result.map.toUrl());
