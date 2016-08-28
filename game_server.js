@@ -1,11 +1,12 @@
 'use strict';
 
+import message from './client/message.js';
+
 require('colors');
 require('./proto_mut.js');
 const http = require('http'),
 	WebSocket = require('ws'),
 	interactive = require('./interactive.js'),
-	message = require('./static/message.js'),
 	logger = require('./logger.js'),
 	ipaddr = require('ipaddr.js'),
 	ips = require('./ips.js'),
@@ -14,7 +15,6 @@ const http = require('http'),
 		dev: false,
 		interactive: false,
 		master: 'ws://jumpsuit.space',
-		mod: 'capture',
 		monitor: false,
 		port: 7483,
 		secure: false,
@@ -42,14 +42,12 @@ function changeCbk(newConfig, previousConfig) {
 }
 let config = require('./config.js')(process.argv[2] || './game_config.json', configSkeleton, changeCbk);
 
-const {engine, onMessage, Player, Planet, Enemy} = require('./mod_loader.js')(configSkeleton.mod, config.mod, {
-	engine: 'engine.js',
-	onMessage: 'on_message.js',
-	Player: 'player.js',
-	Planet: 'planet.js',
-	Enemy: 'enemy.js',
-	weapon: 'weapon.js'
-});
+import * as engine from '<@engine@>';
+import * as onMessage from '<@onMessage@>';
+import { SrvPlayer as Player } from '<@Player@>';
+import * as Planet from '<@Planet@>';
+import * as Enemy from '<@Enemy@>';
+const modName = '<@modName@>';
 
 let Lobby = require('./lobby.js')(engine, Planet, Enemy),
 	lobbies = [];
@@ -68,7 +66,7 @@ function connectToMaster(){
 	logger(logger.REGISTER, 'Attempting to connect to master server');
 	let masterWs = new WebSocket(config.master + '/game_servers'), nextAttemptID;
 	masterWs.on('open', function() {
-		masterWs.send(message.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, config.mod, lobbies), { binary: true, mask: false });
+		masterWs.send(message.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, modName, lobbies), { binary: true, mask: false });
 		masterWs.on('close', function() {
 			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
 			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
@@ -131,7 +129,6 @@ wss.on('connection', function(ws) {
 			switch (state) {//shouldn't this be broken into small functions?
 				case message.SET_PREFERENCES.value: {
 					let val = message.SET_PREFERENCES.deserialize(msg);
-					console.log(playerName);
 					if (player.lobby !== undefined) {
 						player.homographId = player.lobby.getNextHomographId(val.name);
 						player.lobby.broadcast(message.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));

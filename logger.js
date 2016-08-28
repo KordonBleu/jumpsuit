@@ -5,6 +5,8 @@ However, as user input should never be trusted, logger provide a facility to esc
 Every argument coming after the message will be escaped and inserted into the message, replacing `{argumentPositionNumber}`.
 Example: `logger(logger.INFO, '"{0}" won the the match! "{1}" comes second and "{2}" third.', playerName1, playerName2, playerName3);` */
 
+require('colors');
+
 module.exports = (type, content, ...toBeEscaped) => {
 	function enumToString(e) {
 		switch (e) {

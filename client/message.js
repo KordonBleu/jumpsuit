@@ -138,7 +138,7 @@ const weaponMap = new BiMap(false,
 
 /* Note: TypedArrays are faster than Dataviews. Therefore, when possible, they should be used.
    But beware of endianness! */
-export default message = {
+const message = {
 	REGISTER_SERVER: {
 		value: 0,
 		serialize: function(secure, serverPort, serverName, modName) {
@@ -800,3 +800,5 @@ Object.defineProperty(message, 'toString', {
 	},
 	enumerable: false
 });
+
+export default message;

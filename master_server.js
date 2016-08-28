@@ -1,12 +1,12 @@
 'use strict';
 
-require('source-map-support').install();
+import message from './client/message.js';
+
 require('colors');
 const fs = require('fs'),
 	http = require('http'),
 	WebSocketServer = require('ws').Server,
 	interactive = require('./interactive.js'),
-	message = require('./static/message.js'),
 	logger = require('./logger.js'),
 	ipaddr = require('ipaddr.js'),
 	ips = require('./ips'),

@@ -11,7 +11,9 @@
     "rollup": "0.x",
     "rollup-plugin-node-resolve": "2.x",
     "rollup-plugin-commonjs": "3.x",
-    "rollup-plugin-eslint": "2.x"
+    "rollup-plugin-eslint": "2.x",
+    "rollup-plugin-replace": "1.x",
+    "rollup-plugin-alias": "1.x"
   },
   "optionalDependencies": {
     "bufferutil": "1.x",

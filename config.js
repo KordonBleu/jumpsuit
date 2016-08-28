@@ -57,10 +57,12 @@ module.exports = function(path, skeleton, changeCbk) {
 		loadConfig();
 	}
 
-	fs.watchFile(path, function() {//refresh config whenever the `config.json` is modified
-		loadConfig();
-		changeCbk(config, previousConfig);
-	});
+	if (changeCbk !== undefined) {
+		fs.watchFile(path, function() {//refresh config whenever the `config.json` is modified
+			loadConfig();
+			changeCbk(config, previousConfig);
+		});
+	}
 
 	return config;
 };
