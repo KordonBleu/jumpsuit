@@ -1,6 +1,6 @@
 'use strict';
 
-import message from './client/message.js';
+import message from './shared/message.js';
 
 require('colors');
 require('./proto_mut.js');
@@ -44,7 +44,7 @@ let config = require('./config.js')(process.argv[2] || './game_config.json', con
 
 import * as engine from '<@engine@>';
 import * as onMessage from '<@onMessage@>';
-import { SrvPlayer as Player } from '<@Player@>';
+import Player from '<@Player@>';
 import * as Planet from '<@Planet@>';
 import * as Enemy from '<@Enemy@>';
 const modName = '<@modName@>';

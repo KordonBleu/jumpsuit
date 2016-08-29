@@ -5,14 +5,14 @@ import * as ui from './ui.js';
 //TODO: set up the UI and add a progress bar for the resources
 
 // those cannot be used until the global `resources` exists
-import Shot from '../mods/capture/shot.js';
+import Shot from './shot.js';
 import weapon from '../mods/capture/weapon.js';
-import player from '../mods/capture/player.js';
-import enemy from '../mods/capture/enemy.js';
+import Player from './player.js';
+import Planet from './planet.js';
+import enemy from './enemy.js';
 import engine from '../mods/capture/engine.js';
 import draw from './draw.js';
-
-import Planet from '../mods/capture/planet.js';
+// at some point the engine will be imported to do the user's character prediction!
 
 resPromise.then((resources) => {
 	window.resources = resources;

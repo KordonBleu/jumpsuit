@@ -1,6 +1,6 @@
 'use strict';
 
-import message from './client/message.js';
+import message from './shared/message.js';
 
 require('colors');
 const fs = require('fs'),

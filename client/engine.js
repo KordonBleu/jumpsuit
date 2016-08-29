@@ -1,7 +1,7 @@
-import * as engine from '../../shared/engine.js';
+import * as engine from '../shared/engine.js';
 
-export let doPrediction = engine.doPrediction;
-export let doPhysics = engine.doPhysics;
+export doPrediction = engine.doPrediction;
+export doPhysics = engine.doPhysics;
 
 export function doPhysicsClient(universe, planets, shots, players) {
 	shots.forEach(function(shot, si) {

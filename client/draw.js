@@ -2,7 +2,7 @@
 
 import * as controls from './controls.js';
 import * as ui from './ui.js';
-import mod from '../mod.js';
+import modulo from '../modulo.js';
 import * as audio from './audio.js';
 import * as wsClt from './websocket_client.js';
 
@@ -26,10 +26,10 @@ let	canvas = document.getElementById('canvas'),
 	particles = [];
 
 windowBox.wrapX = function(entityX) {//get the position where the entity can be drawn on the screen
-	return (mod(entityX + universe.width/2 - this.center.x, universe.width) -universe.width/2 + canvas.width/2 - (this.width*this.zoomFactor - this.width)/2) * this.zoomFactor;
+	return (modulo(entityX + universe.width/2 - this.center.x, universe.width) -universe.width/2 + canvas.width/2 - (this.width*this.zoomFactor - this.width)/2) * this.zoomFactor;
 };
 windowBox.wrapY = function(entityY) {//get the position where the entity can be drawn on the screen
-	return (mod(entityY + universe.height/2 - this.center.y, universe.height) -universe.height/2 + canvas.height/2 - (this.height*this.zoomFactor - this.height)/2) * this.zoomFactor;
+	return (modulo(entityY + universe.height/2 - this.center.y, universe.height) -universe.height/2 + canvas.height/2 - (this.height*this.zoomFactor - this.height)/2) * this.zoomFactor;
 };
 windowBox.zoomFactor = 1;
 windowBox.strokeAtmos = function(cx, cy, r, sw) {

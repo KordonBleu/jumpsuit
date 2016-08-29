@@ -1,6 +1,6 @@
 'use strict';
 
-let audioContext = new AudioContext;
+let audioContext = new AudioContext();
 
 export const soundEffectGain = audioContext.createGain(),
 	musicGain = audioContext.createGain();
