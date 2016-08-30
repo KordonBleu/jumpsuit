@@ -6,7 +6,12 @@ import * as ui from './ui.js';
 
 // those cannot be used until the global `resources` exists
 import Shot from './shot.js';
-import weapon from '../mods/capture/weapon.js';
+
+import Smg from './smg.js';
+import Lmg from './lmg.js';
+import Shotgun from './shotgun.js';
+import Knife from './knife.js';
+
 import Player from './player.js';
 import Planet from './planet.js';
 import enemy from './enemy.js';
