@@ -1,10 +1,10 @@
-'use strict';
+import logger from './logger.js';
 
-module.exports = function(config) {
+export default function(config) {
 	const ipaddr = require('ipaddr.js'),
 		https = require('https'),
-		http = require('http'),
-		logger = require('./logger.js');
+		http = require('http');
+
 	let externalIp,
 		localIp,
 		localNetmask,
@@ -127,4 +127,4 @@ module.exports = function(config) {
 			(serverOnLocalhost && clientOnNetwork)) return Promise.resolve(localIp);
 		else return getExternalIp();
 	};
-};
+}

@@ -2,7 +2,7 @@
 
 import * as controls from './controls.js';
 import * as ui from './ui.js';
-import modulo from '../modulo.js';
+import modulo from '../shared/modulo.js';
 import * as audio from './audio.js';
 import * as wsClt from './websocket_client.js';
 

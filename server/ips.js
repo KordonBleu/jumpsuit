@@ -1,16 +1,16 @@
-'use strict';
 //IPS aka Intrusion Prevention System
 
-let logger = require('./logger.js'),
-	attackers = new Map();//not an object in order to use an ipaddr object as a key
+import logger from './logger.js';
 
-module.exports.banned = function(ip) {
+let attackers = new Map();//not an object in order to use an ipaddr object as a key
+
+export function banned(ip) {
 	for (let [savIp, savObj] of attackers.entries()) {//is using strings faster?
 		if (ip.match(savIp, 128) && savObj.banned) return true;//we would need to create a string per call but looping wouldn't be necessary
 	}
 	return false;
-};
-module.exports.ban = function(ip) {
+}
+export function ban(ip) {
 	logger(logger.INFO, 'Received garbage from: ' + ip + '. Temporarily banning IP...');
 	function unBan() {
 		this.banned = false;
@@ -40,4 +40,4 @@ module.exports.ban = function(ip) {
 	metadataObj.distrustId = setTimeout(unDistrust.bind(ip), 1000);
 
 	attackers.set(ip, metadataObj);
-};
+}

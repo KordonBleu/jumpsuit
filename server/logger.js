@@ -1,5 +1,3 @@
-'use strict';
-
 /* Once `require`d, the logger can be used like this `logger(logger.INFO, 'This is a message printed to the console');`.
 However, as user input should never be trusted, logger provide a facility to escape it in case it contains characters that could be interpreted by the terminal in a way that is unwanted.
 Every argument coming after the message will be escaped and inserted into the message, replacing `{argumentPositionNumber}`.
@@ -7,7 +5,7 @@ Example: `logger(logger.INFO, '"{0}" won the the match! "{1}" comes second and "
 
 require('colors');
 
-module.exports = (type, content, ...toBeEscaped) => {
+export default function logger(type, content, ...toBeEscaped) {
 	function enumToString(e) {
 		switch (e) {
 			case 0: return '[DEV]'.cyan.bold;
@@ -26,9 +24,9 @@ module.exports = (type, content, ...toBeEscaped) => {
 		//sanitize string for console output
 		return toBeEscaped[n].replace(/[\u0000-\u001F\u007F-\u009F]/g, '\ufffd');
 	}));
-};
-module.exports.DEV = 0;
-module.exports.INFO = 1;
-module.exports.ERROR = 2;
-module.exports.REGISTER = 3;
-module.exports.S_REGISTER = 4;
+}
+logger.DEV = 0;
+logger.INFO = 1;
+logger.ERROR = 2;
+logger.REGISTER = 3;
+logger.S_REGISTER = 4;

@@ -1,19 +1,28 @@
 'use strict';
 
-import message from './shared/message.js';
+import message from '../shared/message.js';
+import logger from './logger.js';
+import * as ips from './ips';
+import configLoader from './config_loader.js';
+import Lobby from './lobby.js';
+let lobbies = [];
+
+import * as engine from '<@engine@>';
+import * as onMessage from '<@onMessage@>';
+import Player from '<@Player@>';
+import * as Planet from '<@Planet@>';
+import * as Enemy from '<@Enemy@>';
+
+const modName = '<@modName@>';
 
 require('colors');
 require('./proto_mut.js');
 const http = require('http'),
 	WebSocket = require('ws'),
-	interactive = require('./interactive.js'),
-	logger = require('./logger.js'),
 	ipaddr = require('ipaddr.js'),
-	ips = require('./ips.js'),
 
 	configSkeleton = {
 		dev: false,
-		interactive: false,
 		master: 'ws://jumpsuit.space',
 		monitor: false,
 		port: 7483,
@@ -35,27 +44,12 @@ function changeCbk(newConfig, previousConfig) {
 	if (newConfig.mod !== previousConfig.mod) {
 		logger(logger.INFO, 'Server set to another mod. Please restart the server to apply new config.');
 	}
-	if (newConfig.interactive !== previousConfig.interactive) {
-		if (previousConfig.interactive) interactive.close();
-		else interactive.open();
-	}
 }
-let config = require('./config.js')(process.argv[2] || './game_config.json', configSkeleton, changeCbk);
+let config = configLoader(process.argv[2] || './game_config.json', configSkeleton, changeCbk);
 
-import * as engine from '<@engine@>';
-import * as onMessage from '<@onMessage@>';
-import Player from '<@Player@>';
-import * as Planet from '<@Planet@>';
-import * as Enemy from '<@Enemy@>';
-const modName = '<@modName@>';
-
-let Lobby = require('./lobby.js')(engine, Planet, Enemy),
-	lobbies = [];
 
 let monitor = require('./monitor.js')(config, lobbies);
 if(config.monitor) monitor.setMonitorMode();
-
-if (config.interactive) interactive.open();
 
 
 let server = http.createServer(),//create an independent server so it is easy to

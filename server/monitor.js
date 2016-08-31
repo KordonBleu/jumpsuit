@@ -1,6 +1,4 @@
-'use strict';
-
-module.exports = (config, lobbies) => {
+export default function(config, lobbies) {
 	let monitorTimerID,
 		traffic = {
 			previous: {in: 0, out: 0, http: 0},
@@ -84,4 +82,4 @@ module.exports = (config, lobbies) => {
 			return traffic;
 		}
 	};
-};
+}

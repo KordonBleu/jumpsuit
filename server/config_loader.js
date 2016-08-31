@@ -1,8 +1,9 @@
 'use strict';
 
-module.exports = function(path, skeleton, changeCbk) {
+import logger from './logger.js';
+
+export default function(path, skeleton, changeCbk) {
 	let fs = require('fs'),
-		logger = require('./logger.js'),
 		config,
 		previousConfig;
 
@@ -65,4 +66,4 @@ module.exports = function(path, skeleton, changeCbk) {
 	}
 
 	return config;
-};
+}

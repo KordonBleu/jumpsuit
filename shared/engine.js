@@ -1,4 +1,4 @@
-import modulo from '../modulo.js';
+import modulo from './modulo.js';
 
 export function doPrediction(universe, players, enemies, shots) {
 	doPrediction.newTimestamp = Date.now();

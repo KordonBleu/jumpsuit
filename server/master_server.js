@@ -1,19 +1,20 @@
 'use strict';
 
-import message from './shared/message.js';
+import message from '../shared/message.js';
+import logger from './logger.js';
+import configLoader from './config_loader.js';
+import ipPickerFactory from './ip_picker.js';
+import monitorFactory from './monitor.js';
+import * as ips from './ips';
 
 require('colors');
 const fs = require('fs'),
 	http = require('http'),
 	WebSocketServer = require('ws').Server,
-	interactive = require('./interactive.js'),
-	logger = require('./logger.js'),
 	ipaddr = require('ipaddr.js'),
-	ips = require('./ips'),
 
 	configSkeleton = {
 		dev: true,
-		interactive: false,
 		ipv4_provider: 'https://icanhazip.com/',
 		ipv6_provider: 'https://ipv6.icanhazip.com/',
 		monitor: false,
@@ -49,19 +50,13 @@ function changeCbk(newConfig, previousConfig) {
 			monitor.setMonitorMode();
 		}
 	}
-	if (newConfig.interactive !== previousConfig.interactive) {
-		if (previousConfig.interactive) interactive.close();
-		else interactive.open();
-	}
 }
-let config = require('./config.js')(process.argv[2] || './master_config.json', configSkeleton, changeCbk),
-	ipPicker = require('./ip_picker.js')(config);
+let config = configLoader(process.argv[2] || './master_config.json', configSkeleton, changeCbk),
+	ipPicker = ipPickerFactory(config);
 
 
-let monitor = require('./monitor.js')(config);
+let monitor = monitorFactory(config);
 if(config.monitor) monitor.setMonitorMode();
-
-if (config.interactive) interactive.open();
 
 let files = {};
 function loadFile(name, path) {
