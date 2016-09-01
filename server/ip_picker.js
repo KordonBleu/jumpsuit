@@ -1,23 +1,23 @@
 import logger from './logger.js';
+import ipaddr from 'ipaddr.js';
+import * as http from 'http';
+import * as https from 'https';
+import * as os from 'os';
 
 export default function(config) {
-	const ipaddr = require('ipaddr.js'),
-		https = require('https'),
-		http = require('http');
-
 	let externalIp,
 		localIp,
 		localNetmask,
-		ifaces = require('os').networkInterfaces(),
+		ifaces = os.networkInterfaces(),
 		internal;
 
 	for (let iname in ifaces) {
 		ifaces[iname].forEach(function(iface) {
-			if ((iface.family === 'IPv4' && !iface.internal) || (iface.family === 'IPv6' && (localIp === undefined || internal)) ||//priority to non-localhost IPs
-				(internal !== false && iface.internal && iface.family === 'IPv4') || (internal !== false && iface.internal && iface.family === 'IPv6' && localIp === undefined) ) {
-					localIp = iface.address;
-					localNetmask = iface.netmask;
-					internal = iface.internal;
+			if ((iface.family === 'IPv4' && !iface.internal) || (iface.family === 'IPv6' && (localIp === undefined || internal))//priority to non-localhost IPs
+			|| (internal !== false && iface.internal && iface.family === 'IPv4') || (internal !== false && iface.internal && iface.family === 'IPv6' && localIp === undefined) ) {
+				localIp = iface.address;
+				localNetmask = iface.netmask;
+				internal = iface.internal;
 			}
 		});
 	}

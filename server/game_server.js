@@ -15,20 +15,23 @@ import * as Enemy from '<@Enemy@>';
 
 const modName = '<@modName@>';
 
-require('colors');
-require('./proto_mut.js');
-const http = require('http'),
-	WebSocket = require('ws'),
-	ipaddr = require('ipaddr.js'),
+import 'colors';
+import './proto_mut.js';
 
-	configSkeleton = {
-		dev: false,
-		master: 'ws://jumpsuit.space',
-		monitor: false,
-		port: 7483,
-		secure: false,
-		server_name: 'JumpSuit server'
-	};
+import * as http from 'http';
+import WebSocket from 'ws';
+import ipaddr from 'ipaddr.js';
+
+import monitorFactory from './monitor.js';
+
+const configSkeleton = {
+	dev: false,
+	master: 'ws://jumpsuit.space',
+	monitor: false,
+	port: 7483,
+	secure: false,
+	server_name: 'JumpSuit server'
+};
 
 
 
@@ -48,7 +51,7 @@ function changeCbk(newConfig, previousConfig) {
 let config = configLoader(process.argv[2] || './game_config.json', configSkeleton, changeCbk);
 
 
-let monitor = require('./monitor.js')(config, lobbies);
+let monitor = monitorFactory(config, lobbies);
 if(config.monitor) monitor.setMonitorMode();
 
 

@@ -7,34 +7,36 @@ import ipPickerFactory from './ip_picker.js';
 import monitorFactory from './monitor.js';
 import * as ips from './ips';
 
-require('colors');
-const fs = require('fs'),
-	http = require('http'),
-	WebSocketServer = require('ws').Server,
-	ipaddr = require('ipaddr.js'),
+import 'colors';
+import * as http from 'http';
+import * as fs from 'fs';
+import WebSocket from 'ws';
+import ipaddr from 'ipaddr.js';
 
-	configSkeleton = {
-		dev: true,
-		ipv4_provider: 'https://icanhazip.com/',
-		ipv6_provider: 'https://ipv6.icanhazip.com/',
-		monitor: false,
-		port: 80
-	};
+const configSkeleton = {
+	dev: true,
+	ipv4_provider: 'https://icanhazip.com/',
+	ipv6_provider: 'https://ipv6.icanhazip.com/',
+	monitor: false,
+	port: 80
+};
 
-function GameServer(name, mod, secure, port, ip) {
-	this.name = name;
-	this.mod = mod;
-	this.secure = secure;
-	this.port = port;
-	this.ip = ip;
+class GameServer {
+	constructor(name, mod, secure, port, ip) {
+		this.name = name;
+		this.mod = mod;
+		this.secure = secure;
+		this.port = port;
+		this.ip = ip;
+	}
+	getUrl() {
+		return (this.secure ? 'wss://[' : 'ws://[') + this.ip + ']:' + this.port;
+	}
+	effectiveIp(clientIp) {
+		return ipPicker(this.ip, clientIp);
+	}
 }
 
-GameServer.prototype.getUrl = function() {
-	return (this.secure ? 'wss://[' : 'ws://[') + this.ip + ']:' + this.port;
-};
-GameServer.prototype.effectiveIp = function(clientIp) {
-	return ipPicker(this.ip, clientIp);
-};
 
 let gameServers = [];
 
@@ -123,8 +125,8 @@ let server = http.createServer(function (req, res) {
 });
 server.listen(config.port);
 
-let gameServerSocket = new WebSocketServer({server: server, path: '/game_servers'}),
-	clientsSocket = new WebSocketServer({server: server, path: '/clients'}),
+let gameServerSocket = new WebSocket.Server({server: server, path: '/game_servers'}),
+	clientsSocket = new WebSocket.Server({server: server, path: '/clients'}),
 	wsOptions = { binary: true, mask: false };
 
 gameServerSocket.on('connection', function(ws) {

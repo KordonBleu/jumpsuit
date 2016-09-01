@@ -1,10 +1,10 @@
 'use strict';
 
 import logger from './logger.js';
+import * as fs from 'fs';
 
 export default function(path, skeleton, changeCbk) {
-	let fs = require('fs'),
-		config,
+	let config,
 		previousConfig;
 
 	function loadConfig() {

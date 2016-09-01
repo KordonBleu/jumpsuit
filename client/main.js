@@ -1,5 +1,5 @@
 //import audio from './audio.js';
-import { cltResPromise as resPromise } from './resource_loader.js';
+import resPromise from './resource_loader.js';
 
 import * as ui from './ui.js';
 //TODO: set up the UI and add a progress bar for the resources

@@ -20,6 +20,9 @@ const nodeSrcMapIntro = 'require(\'source-map-support\').install();';
 rollup.rollup({
 	entry: './server/master_server.js',
 	plugins: [
+		alias({
+			'<@convert@>': 'server/convert.js'
+		}),
 		nodeResolve({ jsnext: true, main: true }),
 		commonjs({ include: 'node_modules/**' }),
 		eslint()
@@ -38,6 +41,7 @@ rollup.rollup({
 	console.log('`./master_server_bundle.js` successfully written!');
 });
 
+
 rollup.rollup({
 	entry: './server/game_server.js',
 	plugins: [
@@ -53,7 +57,9 @@ rollup.rollup({
 			'<@Lmg@>': 'mods/' + config.mod + '/lmg.js',
 			'<@Smg@>': 'mods/' + config.mod + '/smg.js',
 			'<@Shotgun@>': 'mods/' + config.mod + '/shotgun.js',
-			'<@Knife@>': 'mods/' + config.mod + '/knife.js'
+			'<@Knife@>': 'mods/' + config.mod + '/knife.js',
+
+			'<@convert@>': 'server/convert.js'
 		}),
 		replace({
 			exclude: 'node_modules/**',
@@ -90,7 +96,9 @@ rollup.rollup({
 			'<@Lmg@>': 'client/lmg.js',
 			'<@Smg@>': 'client/smg.js',
 			'<@Shotgun@>': 'client/shotgun.js',
-			'<@Knife@>': 'client/knife.js'
+			'<@Knife@>': 'client/knife.js',
+
+			'<@convert@>': 'client/convert.js'
 		}),
 		eslint()
 	]
@@ -110,4 +118,3 @@ rollup.rollup({
 }).catch(errorHandler).then(() => {
 	console.log('`./static/bundle.js` successfully written!');
 });
-
