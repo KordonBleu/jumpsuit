@@ -1,5 +1,4 @@
-'use strict';
-
+import settings from './settings.js';
 import * as ui from './ui.js';
 import * as audio from './audio.js';
 import { planets, enemies, universe, deadShots } from './draw.js';
@@ -9,8 +8,8 @@ let ownIdx = null,
 	enabledTeams = [],
 	masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
 
-export let serverList,
-	currentConnection;
+export let serverList;
+export var currentConnection;
 
 const HISTORY_MENU = 0,
 	HISTORY_GAME = 1;
@@ -70,7 +69,7 @@ class Connection {
 		}
 		this.socket.binaryType = 'arraybuffer';
 		this.socket.addEventListener('open', () => {
-			this.sendMessage.call(this, message.CONNECT, lobbyId, ui.settings);
+			this.sendMessage.call(this, message.CONNECT, lobbyId, settings);
 		});
 		this.socket.addEventListener('error', this.errorHandler);
 		this.socket.addEventListener('message', this.messageHandler.bind(this));
@@ -117,7 +116,7 @@ class Connection {
 		while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 	}
 	setPreferences() {
-		this.sendMessage(message.SET_PREFERENCES, ui.settings);
+		this.sendMessage(message.SET_PREFERENCES, settings);
 	}
 	sendChat(content) {
 		this.sendMessage(message.CHAT, content);

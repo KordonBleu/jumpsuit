@@ -70,14 +70,7 @@ function loadFile(name, path) {
 		path: path,
 		mime: extension in mimeList ? mimeList[extension] : 'application/octet-stream'
 	};
-	if (config.dev) {
-		if (extension === 'html' || extension === 'css' || extension === 'js') {
-			files[name].content = files[name].content.toString('utf8').replace(/https:\/\/jumpsuit\.space/g, '');
-		}
-		if (name === '/websocket_client.js') {
-			files[name].content = files[name].content.replace(/'wss:\/\/'/g, '(location.protocol === \'http:\' ? \'ws://\' : \'wss://\')');
-		}
-	}
+	if (config.dev && (extension === 'html' || extension === 'css' || extension === 'js')) files[name].content = files[name].content.toString('utf8').replace(/https:\/\/jumpsuit\.space/g, '');
 }
 loadFile('/ipaddr.min.js', './node_modules/ipaddr.js/ipaddr.min.js');
 loadFile('/vinage.js', './node_modules/vinage/vinage.js');

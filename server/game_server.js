@@ -7,11 +7,8 @@ import configLoader from './config_loader.js';
 import Lobby from './lobby.js';
 let lobbies = [];
 
-import * as engine from '<@engine@>';
 import * as onMessage from '<@onMessage@>';
 import Player from '<@Player@>';
-import * as Planet from '<@Planet@>';
-import * as Enemy from '<@Enemy@>';
 
 const modName = '<@modName@>';
 

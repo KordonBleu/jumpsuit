@@ -4,6 +4,7 @@ import { musicGain, soundEffectGain } from './audio.js';
 import * as wsClt from './websocket_client.js';
 import { handleInput, defaultKeymap, isMobile } from './controls.js';
 import * as draw from './draw.js';
+import settings from './settings.js';
 
 
 // TODO: reimplement the following in HTML whith an event listener on document, triggered in the resource loader
@@ -66,15 +67,6 @@ let chatFirstElement = document.getElementById('gui-chat-first'),
 	settingsButton = document.getElementById('settings-button'),
 	infoButton = document.getElementById('info-button');
 
-export let settings = {
-	name: localStorage.getItem('settings.name') || 'Unnamed Player',
-	keymap: localStorage.getItem('settings.keymap') || '',
-	volMusic: localStorage.getItem('settings.volume.music') || 50,
-	volEffects: localStorage.getItem('settings.volume.effects') || 50,
-	primary: localStorage.getItem('settings.weaponry.primary') || 'Lmg',
-	secondary: localStorage.getItem('settings.weaponry.secondary') || 'Knife'
-};
-
 
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
 	document.getElementById('device-not-supported').classList.remove('hidden');
@@ -130,8 +122,8 @@ export function showBlockedPortDialog(portNumber) {
 /* Audio settings */
 musicVolumeElement.value = settings.volMusic;
 effectsVolumeElement.value = settings.volEffects;
-musicGain.gain.value = settings.volMusic / 100;
-soundEffectGain.gain.value = settings.volEffects / 100;
+musicGain.gain.value = parseInt(settings.volMusic, 10) / 100;
+soundEffectGain.gain.value = parseInt(settings.volEffects, 10) / 100;
 
 musicVolumeElement.addEventListener('input', function(ev) {
 	musicGain.gain.value = ev.target.value/100;
@@ -199,7 +191,6 @@ nameElement.addEventListener('keydown', function(e) {
 	if (e.key === 'Enter') e.target.blur();
 });
 nameElement.addEventListener('blur', function(e) {
-	localStorage.setItem('settings.name', e.target.value);
 	settings.name = e.target.value;
 	wsClt.currentConnection.setPreferences();
 });
@@ -230,8 +221,8 @@ setGun(primaryWeaponElement, settings.primary);
 setGun(secondaryWeaponElement, settings.secondary);
 
 /* Graphics */
-meteorsElement.checked = localStorage.getItem('settings.graphics.meteors') === 'true';
-particlesElement.checked = localStorage.getItem('settings.graphics.particles') === 'true';
+meteorsElement.checked = settings.meteors === 'true';
+particlesElement.checked = settings.particles === 'true';
 
 /* Chat */
 chatInput.addEventListener('keydown', function(e) {
@@ -463,16 +454,3 @@ export function resizeCanvas() {
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
-
-
-window.onbeforeunload = function() {
-	//default values don't need to be saved
-	if (settings.name !== 'Unnamed Player') localStorage.setItem('settings.name', settings.name);
-	if (settings.keymap !== '') localStorage.setItem('settings.keymap', settings.keymap);
-	localStorage.setItem('settings.volume.music', musicVolumeElement.value);
-	localStorage.setItem('settings.volume.effects', effectsVolumeElement.value);
-	localStorage.setItem('settings.weaponry.primary', primaryWeaponElement.dataset.currentWeapon);
-	localStorage.setItem('settings.weaponry.secondary', secondaryWeaponElement.dataset.currentWeapon);
-	localStorage.setItem('settings.graphics.meteors', meteorsElement.checked);
-	localStorage.setItem('settings.graphics.particles', particlesElement.checked);
-};

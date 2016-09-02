@@ -1,5 +1,4 @@
-'use strict';
-
+import settings from './settings.js';
 import * as ui from './ui.js';
 import * as wsClt from './websocket_client.js';
 import * as draw from './draw.js';
@@ -132,12 +131,12 @@ handleInput.initKeymap = function(fromReversed) {
 	}
 
 	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, handleInput.keyMap);
-	ui.settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
+	settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
 };
 handleInput.loadKeySettings = function() {
-	if (ui.settings.keymap !== '') handleInput.reverseKeyMap = JSON.parse(ui.settings.keymap);
+	if (settings.keymap !== '') handleInput.reverseKeyMap = JSON.parse(settings.keymap);
 	else handleInput.keyMap = defaultKeymap;
-	handleInput.initKeymap(ui.settings.keymap !== '');
+	handleInput.initKeymap(settings.keymap !== '');
 };
 
 /* Drag & Mouse */

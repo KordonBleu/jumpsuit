@@ -7,7 +7,7 @@ const rollup = require('rollup'),
 	alias = require('rollup-plugin-alias'),
 	replace = require('rollup-plugin-replace'),
 
-	config = require('./config_loader.js')('../build_config.json', {
+	config = require('./config_loader.js')('./build_config.json', {
 		dev: false, // TODO: whether to include sourcemaps
 		mod: 'capture'
 	});
@@ -87,21 +87,30 @@ rollup.rollup({
 });
 
 
+let clientPlugins = [
+	alias({
+		'<@Weapon@>': 'client/weapon.js',
+		'<@RapidFireWeapon@>': 'client/rapid_fire_weapon.js',
+		'<@Lmg@>': 'client/lmg.js',
+		'<@Smg@>': 'client/smg.js',
+		'<@Shotgun@>': 'client/shotgun.js',
+		'<@Knife@>': 'client/knife.js',
+
+		'<@convert@>': 'client/convert.js'
+	}),
+	eslint()
+];
+console.log(config.dev);
+if (config.dev) clientPlugins.push(replace({
+	include: 'client/websocket_client.js',
+	values: {
+		'\'wss://\'': '(location.protocol === \'http:\' ? \'ws://\' : \'wss://\')'
+	}
+}));
+
 rollup.rollup({
 	entry: './client/main.js',
-	plugins: [
-		alias({
-			'<@Weapon@>': 'client/weapon.js',
-			'<@RapidFireWeapon@>': 'client/rapid_fire_weapon.js',
-			'<@Lmg@>': 'client/lmg.js',
-			'<@Smg@>': 'client/smg.js',
-			'<@Shotgun@>': 'client/shotgun.js',
-			'<@Knife@>': 'client/knife.js',
-
-			'<@convert@>': 'client/convert.js'
-		}),
-		eslint()
-	]
+	plugins: clientPlugins
 }).then((bundle) => {
 	return bundle.write({
 		format: 'iife',

@@ -10,6 +10,13 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
 
+let	canvas = document.getElementById('canvas'),
+	minimapCanvas = document.getElementById('gui-minimap-canvas'),
+	context = canvas.getContext('2d'),
+	minimapContext = minimapCanvas.getContext('2d'),
+	meteors = [],
+	particles = [];
+
 export let windowBox = new vinage.Rectangle(new vinage.Point(null, null), canvas.clientWidth, canvas.clientHeight), // these parameters will be overwritten later
 	universe = new vinage.Rectangle(new vinage.Point(0, 0), null, null), // these parameters will be overwritten later
 	players = [],
@@ -17,13 +24,6 @@ export let windowBox = new vinage.Rectangle(new vinage.Point(null, null), canvas
 	enemies = [],
 	shots = [],
 	deadShots = [];
-
-let	canvas = document.getElementById('canvas'),
-	minimapCanvas = document.getElementById('gui-minimap-canvas'),
-	context = canvas.getContext('2d'),
-	minimapContext = minimapCanvas.getContext('2d'),
-	meteors = [],
-	particles = [];
 
 windowBox.wrapX = function(entityX) {//get the position where the entity can be drawn on the screen
 	return (modulo(entityX + universe.width/2 - this.center.x, universe.width) -universe.width/2 + canvas.width/2 - (this.width*this.zoomFactor - this.width)/2) * this.zoomFactor;
