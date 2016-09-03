@@ -1,4 +1,5 @@
 import vinage from 'vinage';
+import resources from '../server/resource_loader.js';
 
 export default function Shot(x, y, angle, origin, type) {
 	this.box = new vinage.Rectangle(new vinage.Point(x, y), resources['laserBeam'].width, resources['laserBeam'].height, angle);

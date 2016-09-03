@@ -1,3 +1,5 @@
+import vinage from 'vinage';
+
 function Planet(x, y, radius, type) {
 	this.box = new vinage.Circle(new vinage.Point(x, y), radius);
 	this.atmosBox = new vinage.Circle(this.box.center, Math.floor(radius * (1.5 + Math.random()/2)));

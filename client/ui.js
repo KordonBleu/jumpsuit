@@ -1,6 +1,6 @@
 'use strict';
 
-import { musicGain, soundEffectGain } from './audio.js';
+import * as audio from './audio.js';
 import * as wsClt from './websocket_client.js';
 import { handleInput, defaultKeymap, isMobile } from './controls.js';
 import * as draw from './draw.js';
@@ -122,14 +122,12 @@ export function showBlockedPortDialog(portNumber) {
 /* Audio settings */
 musicVolumeElement.value = settings.volMusic;
 effectsVolumeElement.value = settings.volEffects;
-musicGain.gain.value = parseInt(settings.volMusic, 10) / 100;
-soundEffectGain.gain.value = parseInt(settings.volEffects, 10) / 100;
 
 musicVolumeElement.addEventListener('input', function(ev) {
-	musicGain.gain.value = ev.target.value/100;
+	audio.setMusicGain(ev.target.value);
 });
 effectsVolumeElement.addEventListener('input', function(ev) {
-	soundEffectGain.gain.value = ev.target.value/100;
+	audio.setSfxGain(ev.target.value);
 });
 
 /* Key settings */

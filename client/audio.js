@@ -1,15 +1,22 @@
-'use strict';
+import settings from './settings.js';
 
 let audioContext = new AudioContext();
 
-export const soundEffectGain = audioContext.createGain(),
-	musicGain = audioContext.createGain();
+export const sfxGain = audioContext.createGain(); // only to be used as a reference, MUST NOT BE MODIFIED DIRECTLY
+sfxGain.gain.value = parseInt(settings.volEffects, 10) / 100;
+sfxGain.connect(audioContext.destination);
+export function setSfxGain(value) {
+	settings.volEffects = value;
+	sfxGain.gain.value = value / 100;
+}
 
-soundEffectGain.gain.value = 1;
-soundEffectGain.connect(audioContext.destination);
-
-musicGain.gain.value = 0.5;
+const musicGain = audioContext.createGain();
+musicGain.gain.value = parseInt(settings.volMusic, 10) / 100;
 musicGain.connect(audioContext.destination);
+export function setMusicGain(value) {
+	settings.volMusic = value;
+	musicGain.gain.value = value / 100;
+}
 
 function SoundModel(url, callback) {
 	let request = new XMLHttpRequest(),
@@ -49,7 +56,7 @@ SoundModel.prototype.makeSound = function(nextNode, loop) {
 export function makePanner(deltaPosX, deltaPosY) {
 	let panner = audioContext.createPanner();
 	setPanner(panner, deltaPosX, deltaPosY);
-	panner.connect(soundEffectGain);
+	panner.connect(sfxGain);
 
 	return panner;
 }

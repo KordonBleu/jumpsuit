@@ -1,3 +1,11 @@
+import vinage from 'vinage';
+import resources from '../server/resource_loader.js';
+
+import Smg from '<@Smg@>';
+import Lmg from '<@Lmg@>';
+import Shotgun from '<@Shotgun@>';
+import Knife from '<@Knife@>';
+
 export default class {
 	constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 		this.name = name;
@@ -22,10 +30,10 @@ export default class {
 		this.attachedPlanet = attachedPlanet || -1;
 		this.lastlyAimedAt = Date.now();
 		this.weapons = {
-			Smg: new weapon.Smg(this),
-			Lmg: new weapon.Lmg(this),
-			Shotgun: new weapon.Shotgun(this),
-			Knife: new weapon.Knife(this)
+			Smg: new Smg(this),
+			Lmg: new Lmg(this),
+			Shotgun: new Shotgun(this),
+			Knife: new Knife(this)
 		};
 		this.armedWeapon = armedWeapon !== undefined ? this.weapons[armedWeapon] : this.weapons.Lmg;
 		this.carriedWeapon = carriedWeapon !== undefined ? this.weapons[carriedWeapon] : this.weapons.Smg;

@@ -1,4 +1,5 @@
 import Weapon from '<@Weapon@>';
+import Shot from './shot.js';
 
 export default class Knife extends Weapon {
 	constructor(owner) {

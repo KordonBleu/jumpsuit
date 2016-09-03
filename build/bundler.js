@@ -8,7 +8,7 @@ const rollup = require('rollup'),
 	replace = require('rollup-plugin-replace'),
 
 	config = require('./config_loader.js')('./build_config.json', {
-		dev: false, // TODO: whether to include sourcemaps
+		dev: false, // rewrites hardcoded jumpsuit.space URLs + (to be done) whether to include sourcemaps
 		mod: 'capture'
 	});
 
@@ -52,8 +52,11 @@ rollup.rollup({
 			'<@Planet@>': 'mods/' + config.mod + '/planet.js',
 			'<@Enemy@>': 'mods/' + config.mod + '/enemy.js',
 
+			'<@Shot@>': 'mods/' + config.mod + '/shot.js',
+
 			'<@Weapon@>': 'mods/' + config.mod + '/weapon.js',
 			'<@RapidFireWeapon@>': 'mods/' + config.mod + '/rapid_fire_weapon.js',
+
 			'<@Lmg@>': 'mods/' + config.mod + '/lmg.js',
 			'<@Smg@>': 'mods/' + config.mod + '/smg.js',
 			'<@Shotgun@>': 'mods/' + config.mod + '/shotgun.js',
@@ -88,9 +91,18 @@ rollup.rollup({
 
 
 let clientPlugins = [
+	replace({
+		include: 'shared/**',
+		values: {
+			'import resources from \'../server/resource_loader.js\';\n': '' // strip out resources import since it is a global
+		}
+	}),
 	alias({
+		'<@Shot@>': 'client/shot.js',
+
 		'<@Weapon@>': 'client/weapon.js',
 		'<@RapidFireWeapon@>': 'client/rapid_fire_weapon.js',
+
 		'<@Lmg@>': 'client/lmg.js',
 		'<@Smg@>': 'client/smg.js',
 		'<@Shotgun@>': 'client/shotgun.js',
@@ -100,7 +112,6 @@ let clientPlugins = [
 	}),
 	eslint()
 ];
-console.log(config.dev);
 if (config.dev) clientPlugins.push(replace({
 	include: 'client/websocket_client.js',
 	values: {

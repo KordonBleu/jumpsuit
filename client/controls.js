@@ -141,20 +141,20 @@ handleInput.loadKeySettings = function() {
 
 /* Drag & Mouse */
 function dragStart(e) {
-	game.drag.x = e.pageX;
-	game.drag.y = e.pageY;
-	game.dragStart.x = e.pageX;
-	game.dragStart.y = e.pageY;
+	draw.game.drag.x = e.pageX;
+	draw.game.drag.y = e.pageY;
+	draw.game.dragStart.x = e.pageX;
+	draw.game.dragStart.y = e.pageY;
 }
 function dragEnd() {
-	game.drag.x = 0;
-	game.drag.y = 0;
-	game.dragStart.x = 0;
-	game.dragStart.y = 0;
+	draw.game.drag.x = 0;
+	draw.game.drag.y = 0;
+	draw.game.dragStart.x = 0;
+	draw.game.dragStart.y = 0;
 }
 function dragMove(e) {
-	game.drag.x = game.dragStart.x !== 0 ? e.pageX : 0;
-	game.drag.y = game.dragStart.y !== 0 ? e.pageY : 0;
+	draw.game.drag.x = draw.game.dragStart.x !== 0 ? e.pageX : 0;
+	draw.game.drag.y = draw.game.dragStart.y !== 0 ? e.pageY : 0;
 }
 function dragHandler(e) {
 	if (e.buttons & 4) {//middle-click enabled (and possibly other clicks too)
@@ -194,12 +194,12 @@ document.getElementById('gui-controls').addEventListener('dragstart', function(e
 	//unfortunately it also disables the context menu key
 //});
 document.addEventListener('mousemove', function(e) {
-	game.mousePos.x = e.clientX;
-	game.mousePos.y = e.clientY;
-	game.mousePos.angle = (2.5*Math.PI + Math.atan2(game.mousePos.y - canvas.height*0.5, game.mousePos.x - canvas.width*0.5)) % (2*Math.PI);
+	draw.game.mousePos.x = e.clientX;
+	draw.game.mousePos.y = e.clientY;
+	draw.game.mousePos.angle = (2.5*Math.PI + Math.atan2(draw.game.mousePos.y - canvas.height*0.5, draw.game.mousePos.x - canvas.width*0.5)) % (2*Math.PI);
 });
 setInterval(function() {
-	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.sendMousePos(game.mousePos.angle);
+	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.sendMousePos(draw.game.mousePos.angle);
 }, 80);
 
 
@@ -256,10 +256,10 @@ function updateControlsViaGamepad(usingGamepad) {
 		players[ownIdx].controls['moveLeft'] = 0;
 		players[ownIdx].controls['moveRight'] = 0;
 		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
-		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) game.drag.x = -canvas.width / 2 * g.axes[2];
-		else game.drag.x = 0;
-		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) game.drag.y = -canvas.height / 2 * g.axes[3];
-		else game.drag.y = 0;
+		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) draw.game.drag.x = -canvas.width / 2 * g.axes[2];
+		else draw.game.drag.x = 0;
+		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) draw.game.drag.y = -canvas.height / 2 * g.axes[3];
+		else draw.game.drag.y = 0;
 		wsClt.currentConnection.refreshControls(players[ownIdx].controls);
 	}
 }

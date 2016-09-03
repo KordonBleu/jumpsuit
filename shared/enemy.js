@@ -1,3 +1,6 @@
+import vinage from 'vinage';
+import resources from '../server/resource_loader.js';
+
 export default function Enemy(x, y, appearance) {
 	this.appearance = appearance || 'enemy' + this.resources[Math.floor(Math.random() * this.resources.length)];
 	this.box = new vinage.Rectangle(new vinage.Point(x, y), resources[this.appearance].width, resources[this.appearance].height);

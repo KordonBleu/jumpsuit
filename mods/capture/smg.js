@@ -1,3 +1,3 @@
 import Smg from '../../shared/smg.js';
 
-export Smg;
+export default Smg;

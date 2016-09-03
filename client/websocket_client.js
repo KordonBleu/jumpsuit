@@ -1,7 +1,7 @@
 import settings from './settings.js';
 import * as ui from './ui.js';
 import * as audio from './audio.js';
-import { planets, enemies, universe, deadShots } from './draw.js';
+import { planets, enemies, universe, deadShots, game, players } from './draw.js';
 import message from '../shared/message.js';
 
 let ownIdx = null,
@@ -235,10 +235,10 @@ class Connection {
 						enemies[id].box.angle = angle;
 					},
 					(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
-						console.log(armedWeapon, carriedWeapon);
+						console.log(armedWeapon, carriedWeapon, players, pid, ownIdx);
 						if (pid === ownIdx) {
 							if (!players[pid].jetpack && jetpack) {
-								players[pid].jetpackSound = audio.jetpackModel.makeSound(audio.soundEffectGain, 1);
+								players[pid].jetpackSound = audio.jetpackModel.makeSound(audio.sfxGain, 1);
 								players[pid].jetpackSound.start(0);
 							} else if (players[pid].jetpack && !jetpack && players[ownIdx].jetpackSound !== undefined) {
 								players[pid].jetpackSound.stop();
@@ -403,5 +403,6 @@ export function handleHistoryState() {
 		game.stop();
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
+handleHistoryState();
 window.addEventListener('popstate', handleHistoryState);
 
