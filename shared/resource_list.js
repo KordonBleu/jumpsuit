@@ -131,7 +131,7 @@ const resList = {
 	'muzzle2': {}
 };
 
-export default function getFinalResNames(cbk) {
+export function getFinalResNames(cbk) {
 	for (let resName in resList) {
 		let baseName = resName.replace(/\((.+)\)/, '$1'); // get rid of the parens
 
@@ -145,3 +145,5 @@ export default function getFinalResNames(cbk) {
 		cbk(baseName, variants);
 	}
 }
+
+export let resourceAmount = Object.keys(resList).length;

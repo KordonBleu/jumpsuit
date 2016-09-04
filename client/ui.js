@@ -5,31 +5,20 @@ import * as wsClt from './websocket_client.js';
 import { handleInput, defaultKeymap, isMobile } from './controls.js';
 import * as draw from './draw.js';
 import settings from './settings.js';
+import { resourceAmount } from './resource_loader.js';
 
 
-// TODO: reimplement the following in HTML whith an event listener on document, triggered in the resource loader
-/* Load image assets */
-/* let loadProgress = 0; // TODO: fix this shit
-function drawBar() {
-	context.fillStyle = '#007d6c';
-	context.fillRect(0, 0, ((loadProgress) / Object.keys(resList).length) * canvas.width, 15);
-}
-function loaderLoop() {
-	context.textBaseline = 'top';
-	context.textAlign = 'center';
-
-	context.fillStyle = '#121012';
-	context.fillRect(0, 0, canvas.width, canvas.height);
-
-	context.fillStyle = '#eee';
-	context.font = '60px Open Sans';
-	context.fillText('JumpSuit', canvas.width / 2, canvas.height * 0.35);
-	context.font = '28px Open Sans';
-	context.fillText('A canvas game by Getkey & Fju', canvas.width / 2, canvas.height * 0.35 + 80);
-	drawBar();
-	game.loaderAnimationFrameId = window.requestAnimationFrame(loaderLoop);
-}
-loaderLoop(); */
+let loadingProgressElem = document.getElementById('loading-progress');
+loadingProgressElem.setAttribute('max', resourceAmount);
+document.addEventListener('resource loaded', function loadBarHandler() {
+	let newVal = parseInt(loadingProgressElem.getAttribute('value')) + 1;
+	loadingProgressElem.setAttribute('value',  newVal);
+	if (newVal === resourceAmount) {
+		document.removeEventListener('resource loaded', loadBarHandler);
+		document.getElementById('loading').classList.add('hidden'); // hide container
+		document.body.removeAttribute('class');
+	}
+});
 
 
 let chatFirstElement = document.getElementById('gui-chat-first'),

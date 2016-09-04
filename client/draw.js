@@ -114,14 +114,9 @@ export let game = {
 	fps: 0,
 	mousePos: {x: 0, y: 0, angle: 0}
 };
-
-//let allImagesLoaded = Promise.all(imgPromises).then(function() {
-//when canvas is imported it's a given all resources are loaded soooo...
-ui.resizeHandler();
 game.stop();
-window.cancelAnimationFrame(game.loaderAnimationFrameId);
-document.body.removeAttribute('class');
-//});
+
+ui.resizeHandler(); // ?
 
 let canSpawnMeteor = true;
 setInterval(function() {

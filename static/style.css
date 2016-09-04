@@ -49,7 +49,7 @@ body.nogui *[id^=gui]{
 	border-radius: 3px;
 	border: 2px solid white;
 }
-#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden {
+#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden, #loading.hidden {
 	display: none;
 }
 .fa {
@@ -196,18 +196,6 @@ input[type=checkbox]:checked::after {
 	transform: translate(-50%, -50%) scale(1);
 	opacity: 1;
 }
-/*
-=== NOT IN USE ===
-label.checkbox-label[data-beta]::after {
-	font-size: 10px;
-	content: "BETA";
-	display: inline-block;
-	color: #666;
-	position: relative;
-	left: 3px;
-	top: -10px;
-}
-*/
 label.checkbox-label {
 	display: block;
 	margin: 8px 2px;
@@ -329,6 +317,26 @@ label {
 	width: 100%;
 	height: 100%;
 	background: rgba(0, 0, 0, .5);
+}
+#loading {
+	width: 100vw;
+	height: 100vh;
+	font-family: "Open Sans";
+	text-align: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	background-color: #121012;
+	color: #eee;
+}
+#loading progress {
+	width: 100%;
+}
+#loading h1 {
+	font-size: 60px; /* TODO: use rems */
+}
+#loading h2 {
+	font-size: 28px; /* TODO: use rems */
 }
 #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	padding: 14px;

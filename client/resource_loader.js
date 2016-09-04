@@ -1,4 +1,5 @@
-import getFinalResNames from '../shared/resource_list.js';
+import { getFinalResNames } from '../shared/resource_list.js';
+export { resourceAmount } from '../shared/resource_list.js';
 
 let resources = {};
 
@@ -53,7 +54,12 @@ function setMouth(body, mouthPosX, mouthPosY, mouthAngle) {
 
 let imgPromises = [];
 getFinalResNames((baseName, variants) => {
-	imgPromises.push(exportSvg(baseName, variants));
+	let imgPromise = exportSvg(baseName, variants);
+	imgPromise.then(() => {
+		document.dispatchEvent(new Event('resource loaded'));
+	});
+
+	imgPromises.push(imgPromise);
 });
 
 export default new Promise((resolve, reject) => {
