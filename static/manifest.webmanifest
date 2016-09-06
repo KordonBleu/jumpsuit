@@ -1,0 +1,18 @@
+{
+	"name": "JumpSuit",
+	"short_name": "JumpSuit",
+	"start_url": ".",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#121012",
+	"theme_color": "#ad3726",
+	"description": "Multiplayer shooter game - Take control of the galaxy!",
+	"orientation": "landscape",
+	"lang": "en-US",
+	"dir": "ltr",
+	"icons": [{
+		"src": "assets/images/cordonbleu.png",
+		"sizes": "64x64",
+		"type": "image/png"
+	}]
+}
