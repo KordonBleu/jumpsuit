@@ -1,8 +1,10 @@
 import Weapon from '../shared/weapon.js';
+//import Shotgun from './shotgun.js'; //TODO: a special draw for the shotgun
+import * as controls from './controls.js';
 
 export default class extends Weapon {
-	draw(context, windowBox) {
-		let weaponAngle = (this.owner.pid === ownIdx ? game.mousePos.angle : this.aimAngle),
+	draw(context, windowBox, isMe) {
+		let weaponAngle = isMe ? controls.mouseAngle : this.aimAngle,
 			weaponRotFact = this.owner.looksLeft === true ? -(weaponAngle - this.owner.box.angle + Math.PI/2) : (weaponAngle - this.owner.box.angle + 3*Math.PI/2);
 
 		this.recoil = this.recoil < 0.05 ? 0 : this.recoil * 0.7;
@@ -17,7 +19,7 @@ export default class extends Weapon {
 				resources['muzzle'].height * windowBox.zoomFactor);//muzzle flash
 
 			this.muzzleFlash = false;
-			this.recoil = (this instanceof weapon.Shotgun) ? 27 : 10;
+			this.recoil = (this instanceof Shotgun) ? 27 : 10;
 		}
 		context.drawImage(resources[this.constructor.name.toLowerCase()], // this is ugly buuuuuuut... it works
 			(this.offsetX - this.recoil)*windowBox.zoomFactor,

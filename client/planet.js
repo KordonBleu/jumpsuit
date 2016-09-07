@@ -1,7 +1,7 @@
 import Planet from '../shared/planet.js';
 
 export default class CltPlanet extends Planet {
-	construct(x, y, radius, type) {
+	constructor(x, y, radius, type) {
 		super(x, y, radius, type);
 	}
 	updateColor() {

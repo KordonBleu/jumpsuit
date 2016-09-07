@@ -10,7 +10,7 @@ Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 };
 
-let	canvas = document.getElementById('canvas'),
+let canvas = document.getElementById('canvas'),
 	minimapCanvas = document.getElementById('gui-minimap-canvas'),
 	context = canvas.getContext('2d'),
 	minimapContext = minimapCanvas.getContext('2d'),
@@ -110,9 +110,7 @@ export let game = {
 		window.cancelAnimationFrame(this.animationFrameId);
 		context.clearRect(0, 0, canvas.width, canvas.height);
 	},
-	started: false,
-	fps: 0,
-	mousePos: {x: 0, y: 0, angle: 0}
+	started: false
 };
 game.stop();
 

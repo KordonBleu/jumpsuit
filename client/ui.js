@@ -1,6 +1,7 @@
 'use strict';
 
 import * as audio from './audio.js';
+import Planet from './planet.js';
 import * as wsClt from './websocket_client.js';
 import { handleInput, defaultKeymap, isMobile } from './controls.js';
 import * as draw from './draw.js';
@@ -21,18 +22,14 @@ document.addEventListener('resource loaded', function loadBarHandler() {
 });
 
 
-let chatFirstElement = document.getElementById('gui-chat-first'),
-	chatInput = document.getElementById('gui-chat-input'),
+let chatInput = document.getElementById('gui-chat-input'),
 	chatPlayerListElement = document.getElementById('gui-chat-player-list'),
-
-	notifBox = document.getElementById('gui-message'),
 
 	/* boxed windows */
 	infoBox = document.getElementById('info-box'),
 	settingsBox = document.getElementById('settings-box'),
 
 	/* inside menu-box */
-	lobbyTableHeaderRowElement = document.getElementById('lobby-table').firstElementChild.firstElementChild,
 	lobbyListElement = document.getElementById('lobby-list'),
 	playerListElement = document.getElementById('player-list'),
 	menuBoxSettingsButton = document.getElementById('menu-box-settings-button'),
@@ -50,11 +47,7 @@ let chatFirstElement = document.getElementById('gui-chat-first'),
 	primaryWeaponElement = document.getElementById('primary-weapon'),
 	secondaryWeaponElement = document.getElementById('secondary-weapon'),
 	particlesElement = document.getElementById('particle-option'),
-	meteorsElement = document.getElementById('meteor-option'),
-
-	/* in-game buttons */
-	settingsButton = document.getElementById('settings-button'),
-	infoButton = document.getElementById('info-button');
+	meteorsElement = document.getElementById('meteor-option');
 
 
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
@@ -79,14 +72,14 @@ for (let button of document.getElementsByClassName('close-parent')) {
 		document.getElementById('shade-box').classList.add('hidden');
 	});
 }
-addShowBoxListener(settingsButton, settingsBox);
+addShowBoxListener(document.getElementById('settings-button'), settingsBox);
 addShowBoxListener(menuBoxSettingsButton, settingsBox);
-addShowBoxListener(infoButton, infoBox);
+addShowBoxListener(document.getElementById('info-button'), infoBox);
 addShowBoxListener(menuBoxInfoButton, infoBox);
 ['leave-button', 'menu-box-leave-button'].forEach(function(button) {
 	document.getElementById(button).addEventListener('click', function() {
 		wsClt.currentConnection.close();
-		game.stop();
+		draw.game.stop();
 	});
 });
 
@@ -184,7 +177,12 @@ nameElement.addEventListener('blur', function(e) {
 
 /* Weaponry */
 let weaponryCycle = ['Lmg', 'Smg', 'Knife', 'Shotgun'],
-	weaponNames = {Lmg: 'Borpov', Smg: 'Pezcak', Knife: 'throwable Knife', Shotgun: 'Azard'};
+	weaponNames = {
+		Lmg: 'Borpov',
+		Smg: 'Pezcak',
+		Knife: 'throwable Knife',
+		Shotgun: 'Azard'
+	};
 
 function setGun(element, type) {
 	element.dataset.currentWeapon = type;
@@ -232,8 +230,8 @@ chatInput.addEventListener('keydown', function(e) {
 		printPlayerList(this.search);
 
 		let filteredPlayerList = [];
-		for (let pid in players) {
-			if (players[pid].name.indexOf(this.search) !== -1) filteredPlayerList.push(players[pid].name);
+		for (let pid in draw.players) {
+			if (draw.players[pid].name.indexOf(this.search) !== -1) filteredPlayerList.push(draw.players[pid].name);
 		}
 		if (filteredPlayerList.length !== 0) {
 			let cursorPos = this.textParts[0].length + filteredPlayerList[this.searchIndex].length;
@@ -268,7 +266,7 @@ export function updateChatOffset(){
 	for (let element of chatElement.querySelectorAll('p:not(#gui-chat-first)')) {
 		messageHeight += element.clientHeight + 2;
 	}
-	chatFirstElement.style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + 'px';
+	document.getElementById('gui-chat-first').style.marginTop = Math.min(0, chatElement.clientHeight - 2 - messageHeight) + 'px';
 }
 export function clearChat() {
 	let chatElement = document.getElementById('gui-chat');
@@ -293,7 +291,7 @@ export function printPlayerList(filter) {
 	if (isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
-	players.forEach(function(player, index) {
+	draw.players.forEach(function(player, index) {
 		if (filter !== '' && player.getFinalName().indexOf(filter) === -1) return;
 		let li = document.createElement('li');
 		li.textContent = player.getFinalName();
@@ -339,7 +337,7 @@ lobbyListElement.addEventListener('click', function(e) {
 /* Player list */
 export function updatePlayerList() {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-	for (let player of players) {
+	for (let player of draw.players) {
 		if (player === undefined) continue;
 		let newElement = document.createElement('li');
 		newElement.textContent = player.getFinalName();
@@ -348,6 +346,7 @@ export function updatePlayerList() {
 }
 
 /* Sorting */
+let lobbyTableHeaderRowElement = document.getElementById('lobby-table').firstElementChild.firstElementChild;
 lobbyTableHeaderRowElement.addEventListener('click', function(e) {
 	if (e.target.tagName === 'IMG') {
 		switch (e.target.getAttribute('src')) {
@@ -415,6 +414,8 @@ export const notif = {
 	showMessage: function(title, desc) {
 		if (!title && !desc) return;
 		if (notif.previousTimeoutId !== -1) clearTimeout(notif.previousTimeoutId);
+
+		let notifBox = document.getElementById('gui-message');
 		notifBox.setAttribute('data-title', title);
 		notifBox.setAttribute('data-desc', desc);
 		notifBox.classList.remove('hidden');
@@ -432,6 +433,8 @@ export function resizeHandler() {
 }
 
 export function resizeCanvas() {
+	let	canvas = document.getElementById('canvas');
+
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	draw.windowBox.width = canvas.clientWidth / draw.windowBox.zoomFactor;

@@ -1,7 +1,13 @@
 import settings from './settings.js';
 import * as ui from './ui.js';
 import * as audio from './audio.js';
-import { planets, enemies, universe, deadShots, game, players } from './draw.js';
+
+import Planet from './planet.js';
+import Enemy from './enemy.js';
+import Shot from './shot.js';
+import Player from './player.js';
+
+import { planets, enemies, shots, universe, deadShots, game, players } from './draw.js';
 import message from '../shared/message.js';
 
 let ownIdx = null,
@@ -166,6 +172,7 @@ class Connection {
 				players.length = 0;
 
 				ownIdx = val.playerId;
+				console.log('gotten C_ACC', ownIdx);
 				universe.width = val.univWidth;
 				universe.height = val.univHeight;
 

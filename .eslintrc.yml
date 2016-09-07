@@ -24,16 +24,5 @@ parserOptions:
   sourceType: "module"
 globals:
   vinage: false
-  canvas: false
   ipaddr: false
-  game: false
-  ownIdx: true
-  players: true
-  shots: true
-  message: false
-  Player: true
-  Planet: false
-  Enemy: false
-  Shot: false
-  weapon: false
-  resources: true
+  resources: false

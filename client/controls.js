@@ -3,6 +3,8 @@ import * as ui from './ui.js';
 import * as wsClt from './websocket_client.js';
 import * as draw from './draw.js';
 
+const canvas = document.getElementById('canvas');
+
 export const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
 	|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
 
@@ -41,14 +43,14 @@ export function handleInputMobile(e) {
 
 	for (let touch of e.changedTouches) {
 		let s = e.type !== 'touchstart' && e.type === 'touchend';
-		if (players[ownIdx].controls[touch.target.id] !== undefined) {
+		if (draw.players[ownIdx].controls[touch.target.id] !== undefined) {
 			e.preventDefault();
 			if (touch.target.id === 'moveLeft' || touch.target.id === 'moveRight') {
 				let value = transform(touch, e.type);
-				players[ownIdx].controls['run'] = (-value >= 38) * 1;
+				draw.players[ownIdx].controls['run'] = (-value >= 38) * 1;
 			}
-			if (e.type !== 'touchmove') players[ownIdx].controls[touch.target.id] = s * 1;
-			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
+			if (e.type !== 'touchmove') draw.players[ownIdx].controls[touch.target.id] = s * 1;
+			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 		}
 	}
 }
@@ -60,15 +62,15 @@ export function handleInput(e) {
 
 	let s = (e.type === 'keydown') * 1;
 
-	if (!ui.chatInUse() && ui.noModalOpen() && players[ownIdx] !== undefined) {
+	if (!ui.chatInUse() && ui.noModalOpen() && draw.players[ownIdx] !== undefined) {
 		let triggered = handleInput.keyMap[e.code];
 
-		if (players[ownIdx].controls[triggered] !== undefined) {
+		if (draw.players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
 			let controlElement = document.getElementById(triggered);
 			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
-			players[ownIdx].controls[triggered] = s;
-			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
+			draw.players[ownIdx].controls[triggered] = s;
+			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 		} else if (triggered === 'chat' && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
 			ui.focusChat();//the 'chat' control (most likelly 't')
 		}, 0);//from being written in the chat
@@ -163,9 +165,9 @@ function dragHandler(e) {
 }
 canvas.addEventListener('mousedown', function(e) {
 	if (e.button === 0) {
-		if (ownIdx in players && wsClt.currentConnection.alive()) {
-			players[ownIdx].controls['shoot'] = 1;
-			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
+		if (ownIdx in draw.players && wsClt.currentConnection.alive()) {
+			draw.players[ownIdx].controls['shoot'] = 1;
+			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 		}
 	} else if (e.button === 1) {
 		dragStart(e);
@@ -177,9 +179,9 @@ canvas.addEventListener('mouseup', function(e) {
 		dragEnd(e);
 		canvas.removeEventListener('mousemove', dragHandler);
 	} else if (e.button === 0) {
-		if (ownIdx in players) {
-			players[ownIdx].controls['shoot'] = 0;
-			wsClt.currentConnection.refreshControls(players[ownIdx].controls);
+		if (ownIdx in draw.players) {
+			draw.players[ownIdx].controls['shoot'] = 0;
+			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 		}
 	}
 });
@@ -193,13 +195,13 @@ document.getElementById('gui-controls').addEventListener('dragstart', function(e
 	//e.preventDefault();//prevent right-click context menu
 	//unfortunately it also disables the context menu key
 //});
+
+export let mouseAngle = 0;
 document.addEventListener('mousemove', function(e) {
-	draw.game.mousePos.x = e.clientX;
-	draw.game.mousePos.y = e.clientY;
-	draw.game.mousePos.angle = (2.5*Math.PI + Math.atan2(draw.game.mousePos.y - canvas.height*0.5, draw.game.mousePos.x - canvas.width*0.5)) % (2*Math.PI);
+	mouseAngle = (2.5*Math.PI + Math.atan2(e.clientY - canvas.height*0.5, e.clientX - canvas.width*0.5)) % (2*Math.PI);
 });
 setInterval(function() {
-	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.sendMousePos(draw.game.mousePos.angle);
+	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.sendMousePos(mouseAngle);
 }, 80);
 
 
@@ -247,20 +249,20 @@ function updateControlsViaGamepad(usingGamepad) {
 	if (usingGamepad === -1) return;
 	let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 	let g = gamepads[usingGamepad];
-	if (typeof(g) !== 'undefined' && players.length !== 0 && ownIdx in players) {
-		players[ownIdx].controls['jump'] = g.buttons[0].value;
-		players[ownIdx].controls['run'] = g.buttons[1].value;
-		players[ownIdx].controls['crouch'] = g.buttons[4].value;
-		players[ownIdx].controls['jetpack'] = g.buttons[7].value;
+	if (typeof(g) !== 'undefined' && draw.players.length !== 0 && ownIdx in draw.players) {
+		draw.players[ownIdx].controls['jump'] = g.buttons[0].value;
+		draw.players[ownIdx].controls['run'] = g.buttons[1].value;
+		draw.players[ownIdx].controls['crouch'] = g.buttons[4].value;
+		draw.players[ownIdx].controls['jetpack'] = g.buttons[7].value;
 
-		players[ownIdx].controls['moveLeft'] = 0;
-		players[ownIdx].controls['moveRight'] = 0;
-		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) players[ownIdx].controls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
+		draw.players[ownIdx].controls['moveLeft'] = 0;
+		draw.players[ownIdx].controls['moveRight'] = 0;
+		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) draw.players[ownIdx].controls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
 		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) draw.game.drag.x = -canvas.width / 2 * g.axes[2];
 		else draw.game.drag.x = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) draw.game.drag.y = -canvas.height / 2 * g.axes[3];
 		else draw.game.drag.y = 0;
-		wsClt.currentConnection.refreshControls(players[ownIdx].controls);
+		wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 	}
 }
 

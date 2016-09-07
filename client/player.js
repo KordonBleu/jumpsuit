@@ -33,14 +33,14 @@ export default class extends Player {
 	getFinalName() {
 		return this.name + (typeof this.homographId === 'number' && this.homographId !== 0 ? ' (' + this.homographId + ')' : '');
 	}
-	draw(context, windowBox, particles, showName) {
+	draw(context, windowBox, particles, isMe) {
 		let res = resources[this.appearance + '_' + this.walkFrame],
 			playerX = windowBox.wrapX(this.box.center.x),
 			playerY = windowBox.wrapY(this.box.center.y);
 
 
 		//name
-		if (showName) {
+		if (!isMe) {
 			let distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
 			context.fillText(this.name, this, this - distance*windowBox.zoomFactor);
 		}
@@ -82,7 +82,7 @@ export default class extends Player {
 		}
 
 
-		this.armedWeapon.draw();
+		this.armedWeapon.draw(isMe);
 
 		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 

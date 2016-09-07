@@ -98,6 +98,7 @@ let clientPlugins = [
 		}
 	}),
 	alias({
+		'<@Player@>': 'client/player.js',
 		'<@Shot@>': 'client/shot.js',
 
 		'<@Weapon@>': 'client/weapon.js',

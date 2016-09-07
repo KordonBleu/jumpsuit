@@ -1,5 +1,6 @@
 import modulo from './modulo.js';
 import Shot from '<@Shot@>';
+import Player from '<@Player@>';
 
 export function doPrediction(universe, players, enemies, shots) {
 	doPrediction.newTimestamp = Date.now();
@@ -16,7 +17,6 @@ export function doPrediction(universe, players, enemies, shots) {
 	}
 
 	let fps = 1000 / (doPrediction.newTimestamp - doPrediction.oldTimestamp);
-	game.fps = fps;
 	players.forEach(function(player) {
 		if ('timestamp' in player.predictionTarget) {
 			let now = Date.now(), serverTicks = 50,
