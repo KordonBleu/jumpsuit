@@ -8,17 +8,6 @@ const canvas = document.getElementById('canvas');
 export const isMobile = (navigator.userAgent.match(/Android/i) || navigator.userAgent.match(/webOS/i) || navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i)
 	|| navigator.userAgent.match(/iPod/i) || navigator.userAgent.match(/BlackBerry/i) || navigator.userAgent.match(/Windows Phone/i));
 
-export const defaultKeymap = {ShiftLeft: 'run', Space: 'jump', ArrowLeft: 'moveLeft', ArrowUp: 'jetpack', ArrowRight: 'moveRight', ArrowDown: 'crouch', KeyA: 'moveLeft', KeyW: 'jetpack', KeyD: 'moveRight', KeyS: 'crouch', KeyT: 'chat', Digit1: 'changeWeapon', Digit2: 'changeWeapon'};
-function sameObjects(a, b) {
-	if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
-		return false;
-	}
-	for (let propName in a) {
-		//hasOwnProperty is here in case `a[propName]`'s value is `undefined`
-		if (!b.hasOwnProperty(propName) || a[propName] !== b[propName]) return false;
-	}
-	return true;
-}
 String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
@@ -57,13 +46,13 @@ export function handleInputMobile(e) {
 
 
 /* Keyboard */
-export function handleInput(e) {
+function handleInput(e) {
 	if (e.code === 'Tab') e.preventDefault();
 
 	let s = (e.type === 'keydown') * 1;
 
 	if (!ui.chatInUse() && ui.noModalOpen() && draw.players[ownIdx] !== undefined) {
-		let triggered = handleInput.keyMap[e.code];
+		let triggered = keyMap[e.code];
 
 		if (draw.players[ownIdx].controls[triggered] !== undefined) {
 			e.preventDefault();
@@ -76,87 +65,49 @@ export function handleInput(e) {
 		}, 0);//from being written in the chat
 	}
 }
-handleInput.keyMap = defaultKeymap;
-handleInput.reverseKeyMap = {};
-handleInput.updateReverseKeyMap = function() {
+export let keyMap = JSON.parse(settings.keymap),
+	reverseKeyMap = {};
+
+function updateReverseKeyMap() {
 	handleInput.reverseKeyMap = {};
-	for (let key in handleInput.keyMap) {
-		let action = handleInput.keyMap[key], index;
+	for (let key in keyMap) {
+		let action = keyMap[key], index;
 		if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
 		if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
 		else index = 0;
 		handleInput.reverseKeyMap[action][index] = key;
 	}
-};
-handleInput.updateKeyMap = function() {
-	handleInput.keyMap = {};
+}
+function updateKeyMap() {
+	keyMap = {};
 	for (let action in handleInput.reverseKeyMap){
 		let keys = handleInput.reverseKeyMap[action];
 		for (let key in keys) {
-			if (keys[key] !== undefined || keys[key] !== null) handleInput.keyMap[keys[key]] = action;
+			if (keys[key] !== undefined || keys[key] !== null) keyMap[keys[key]] = action;
 		}
 	}
 
-};
-handleInput.initKeymap = function(fromReversed) {
-	if (fromReversed) handleInput.updateKeyMap();
-	else handleInput.updateReverseKeyMap();
-
-	let keySettingsElement = document.getElementById('key-settings');
-
-	while (keySettingsElement.firstChild) {
-		keySettingsElement.removeChild(keySettingsElement.firstChild);
-	}
-	let tableTitles = ['Actions', 'Primary Keys', 'Alternate Keys'], firstRow = document.createElement('tr');
-	for (let i = 0; i < tableTitles; i++){
-		let tableHead = document.createElement('th');
-		tableHead.textContent = tableTitles[i];
-		firstRow.appendChild(tableHead);
-	}
-	keySettingsElement.appendChild(firstRow);
-	for (let action in handleInput.reverseKeyMap) {
-		let rowEl = document.createElement('tr'),
-			actionEl = document.createElement('td'),
-			keyEl;
-
-		actionEl.textContent = action;
-		rowEl.appendChild(actionEl);
-
-		let slice = handleInput.reverseKeyMap[action];
-		for (let i = 0; i != 2; i++) {
-			keyEl = document.createElement('td');
-			if (typeof slice[i] === 'undefined' || slice[i] === '') keyEl.textContent = ' - ';
-			else keyEl.textContent = slice[i]; //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
-			rowEl.appendChild(keyEl);
-		}
-		keySettingsElement.appendChild(rowEl);
-	}
-
-	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, handleInput.keyMap);
-	settings.keymap = JSON.stringify(handleInput.reverseKeyMap);
-};
-handleInput.loadKeySettings = function() {
-	if (settings.keymap !== '') handleInput.reverseKeyMap = JSON.parse(settings.keymap);
-	else handleInput.keyMap = defaultKeymap;
-	handleInput.initKeymap(settings.keymap !== '');
-};
+}
 
 /* Drag & Mouse */
-function dragStart(e) {
-	draw.game.drag.x = e.pageX;
-	draw.game.drag.y = e.pageY;
-	draw.game.dragStart.x = e.pageX;
-	draw.game.dragStart.y = e.pageY;
+export let dragStart = new vinage.Vector(0, 0),
+	drag = new vinage.Vector(0, 0);
+
+function updateDragStart(e) {
+	drag.x = e.pageX;
+	drag.y = e.pageY;
+	dragStart.x = e.pageX;
+	dragStart.y = e.pageY;
 }
 function dragEnd() {
-	draw.game.drag.x = 0;
-	draw.game.drag.y = 0;
-	draw.game.dragStart.x = 0;
-	draw.game.dragStart.y = 0;
+	drag.x = 0;
+	drag.y = 0;
+	dragStart.x = 0;
+	dragStart.y = 0;
 }
 function dragMove(e) {
-	draw.game.drag.x = draw.game.dragStart.x !== 0 ? e.pageX : 0;
-	draw.game.drag.y = draw.game.dragStart.y !== 0 ? e.pageY : 0;
+	drag.x = dragStart.x !== 0 ? e.pageX : 0;
+	drag.y = dragStart.y !== 0 ? e.pageY : 0;
 }
 function dragHandler(e) {
 	if (e.buttons & 4) {//middle-click enabled (and possibly other clicks too)
@@ -170,7 +121,7 @@ canvas.addEventListener('mousedown', function(e) {
 			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 		}
 	} else if (e.button === 1) {
-		dragStart(e);
+		updateDragStart(e);
 		canvas.addEventListener('mousemove', dragHandler);
 	}
 });
@@ -185,7 +136,7 @@ canvas.addEventListener('mouseup', function(e) {
 		}
 	}
 });
-canvas.addEventListener('touchstart', dragStart);//TODO: action 1 on simple tap on mobile
+canvas.addEventListener('touchstart', updateDragStart);//TODO: action 1 on simple tap on mobile
 //canvas.addEventListener('touchmove', dragMove);
 canvas.addEventListener('touchend', dragEnd);
 document.getElementById('gui-controls').addEventListener('dragstart', function(e) {
@@ -258,10 +209,10 @@ function updateControlsViaGamepad(usingGamepad) {
 		draw.players[ownIdx].controls['moveLeft'] = 0;
 		draw.players[ownIdx].controls['moveRight'] = 0;
 		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) draw.players[ownIdx].controls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
-		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) draw.game.drag.x = -canvas.width / 2 * g.axes[2];
-		else draw.game.drag.x = 0;
-		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) draw.game.drag.y = -canvas.height / 2 * g.axes[3];
-		else draw.game.drag.y = 0;
+		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) drag.x = -canvas.width / 2 * g.axes[2];
+		else drag.x = 0;
+		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) drag.y = -canvas.height / 2 * g.axes[3];
+		else drag.y = 0;
 		wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
 	}
 }
@@ -275,4 +226,17 @@ document.addEventListener('wheel', function(e) {
 	}
 });
 
-if (!isMobile) handleInput.loadKeySettings();
+export function addInputListeners() {
+	window.addEventListener('keydown', handleInput);
+	window.addEventListener('keyup', handleInput);
+	window.addEventListener('touchstart', handleInputMobile);
+	window.addEventListener('touchmove', handleInputMobile);
+	window.addEventListener('touchend', handleInputMobile);
+}
+export function removeInputListeners() {
+	window.removeEventListener('keydown', handleInput);
+	window.removeEventListener('keyup', handleInput);
+	window.removeEventListener('touchstart', handleInputMobile);
+	window.removeEventListener('touchmove', handleInputMobile);
+	window.removeEventListener('touchend', handleInputMobile);
+}

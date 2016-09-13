@@ -3,7 +3,7 @@
 import * as audio from './audio.js';
 import Planet from './planet.js';
 import * as wsClt from './websocket_client.js';
-import { handleInput, defaultKeymap, isMobile } from './controls.js';
+import { keyMap, reverseKeyMap, isMobile } from './controls.js';
 import * as draw from './draw.js';
 import settings from './settings.js';
 import { resourceAmount } from './resource_loader.js';
@@ -113,6 +113,52 @@ effectsVolumeElement.addEventListener('input', function(ev) {
 });
 
 /* Key settings */
+function initKeyTable() {
+	let keySettingsElement = document.getElementById('key-settings');
+
+	while (keySettingsElement.firstChild) {
+		keySettingsElement.removeChild(keySettingsElement.firstChild);
+	}
+	let tableTitles = ['Actions', 'Primary Keys', 'Alternate Keys'], firstRow = document.createElement('tr');
+	for (let i = 0; i < tableTitles; i++){
+		let tableHead = document.createElement('th');
+		tableHead.textContent = tableTitles[i];
+		firstRow.appendChild(tableHead);
+	}
+	keySettingsElement.appendChild(firstRow);
+	for (let action in reverseKeyMap) {
+		let rowEl = document.createElement('tr'),
+			actionEl = document.createElement('td'),
+			keyEl;
+
+		actionEl.textContent = action;
+		rowEl.appendChild(actionEl);
+
+		let slice = reverseKeyMap[action];
+		for (let i = 0; i != 2; i++) {
+			keyEl = document.createElement('td');
+			if (typeof slice[i] === 'undefined' || slice[i] === '') keyEl.textContent = ' - ';
+			else keyEl.textContent = slice[i]; //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
+			rowEl.appendChild(keyEl);
+		}
+		keySettingsElement.appendChild(rowEl);
+	}
+
+	/*function sameObjects(a, b) {
+		if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
+			return false;
+		}
+		for (let propName in a) {
+			//hasOwnProperty is here in case `a[propName]`'s value is `undefined`
+			if (!b.hasOwnProperty(propName) || a[propName] !== b[propName]) return false;
+		}
+		return true;
+	}
+	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, keyMap);*/
+	settings.keymap = JSON.stringify(reverseKeyMap);
+}
+initKeyTable(settings.keymap !== '');
+
 let selectedRow = -1;
 keySettingsElement.addEventListener('click', function(e) {
 	function reselect(obj){
@@ -133,14 +179,15 @@ keySettingsElement.addEventListener('click', function(e) {
 		let keyName = e.code,
 			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent;
 
-		for (let key in handleInput.keyMap) {
+		for (let key in keyMap) {
 			if (key !== keyName) continue;
 			break;
 		}
-		if (handleInput.reverseKeyMap[action][0] === keyName) handleInput.reverseKeyMap[action].length = 1;
-		else handleInput.reverseKeyMap[action][1] = handleInput.reverseKeyMap[action][0];
-		handleInput.reverseKeyMap[action][0] = keyName;
-		handleInput.initKeymap(true);
+		if (reverseKeyMap[action][0] === keyName) reverseKeyMap[action].length = 1;
+		else reverseKeyMap[action][1] = reverseKeyMap[action][0];
+
+		reverseKeyMap[action][0] = keyName;
+		initKeyTable(true);
 	}
 	function wrap(nE) {
 		nE.preventDefault();
@@ -161,8 +208,9 @@ keySettingsElement.addEventListener('click', function(e) {
 	}
 });
 keyResetElement.addEventListener('click', function() {
-	handleInput.keyMap = defaultKeymap;
-	handleInput.initKeymap(false);
+	delete settings.keymap;
+	// TODO: re-grab keymap from the storage
+	initKeyTable(false);
 });
 
 /* Name */
@@ -444,3 +492,28 @@ export function resizeCanvas() {
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+
+export function closeMenu(universe) {
+	document.body.classList.remove('nogui');
+	document.getElementById('gui-chat').classList.remove('hidden');
+	document.getElementById('gui-chat-input-container').classList.remove('hidden');
+	document.getElementById('gui-options').classList.remove('hidden'); // contains #settings-button and #info-button
+	document.getElementById('gui-health').classList.remove('hidden');
+	document.getElementById('gui-fuel').classList.remove('hidden');
+	document.getElementById('gui-points').classList.remove('hidden');
+
+	let minimapCanvas = document.getElementById('gui-minimap-canvas');
+	minimapCanvas.classList.remove('hidden');
+
+	//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
+	let minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
+	//(width)x * (height)x = minimapSurface
+		unitSize = Math.sqrt(minimapSurface/(universe.width*universe.height));//in pixels
+	minimapCanvas.width = unitSize*universe.width;
+	minimapCanvas.height = unitSize*universe.height;
+
+	document.getElementById('menu-box').classList.add('hidden');
+	for (let element of document.querySelectorAll('#gui-points th')) {
+		element.style.display = 'none';
+	}
+}

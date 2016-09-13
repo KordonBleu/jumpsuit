@@ -56,48 +56,17 @@ windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY, mirrorX,
 };
 
 export let game = {
-	dragStart: new vinage.Vector(0, 0),
-	drag: new vinage.Vector(0, 0),
-	dragSmoothed: new vinage.Vector(0,0),
-	connectionProblems: false,
 	animationFrameId: null,
-	loadingAnimationFrameId: null,
+	started: false,
 	start: function() {
 		game.started = true;
-		document.body.classList.remove('nogui');
-		document.getElementById('gui-chat').classList.remove('hidden');
-		document.getElementById('gui-chat-input-container').classList.remove('hidden');
-		document.getElementById('gui-options').classList.remove('hidden'); // contains #settings-button and #info-button
-		document.getElementById('gui-health').classList.remove('hidden');
-		document.getElementById('gui-fuel').classList.remove('hidden');
-		document.getElementById('gui-points').classList.remove('hidden');
-		minimapCanvas.classList.remove('hidden');
-		//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
-		let minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
-		//(width)x * (height)x = minimapSurface
-			unitSize = Math.sqrt(minimapSurface/(universe.width*universe.height));//in pixels
-
-		minimapCanvas.width = unitSize*universe.width;
-		minimapCanvas.height = unitSize*universe.height;
-		document.getElementById('menu-box').classList.add('hidden');
-		for (let element of document.querySelectorAll('#gui-points th')) {
-			element.style.display = 'none';
-		}
-		window.addEventListener('keydown', controls.handleInput);
-		window.addEventListener('keyup', controls.handleInput);
-		window.addEventListener('touchstart', controls.handleInputMobile);
-		window.addEventListener('touchmove', controls.handleInputMobile);
-		window.addEventListener('touchend', controls.handleInputMobile);
+		ui.closeMenu(universe);
+		ui.addInputListeners();
 		loop();
 	},
 	stop: function() {
 		game.started = false;
-		window.removeEventListener('keydown', controls.handleInput);
-		window.removeEventListener('keyup', controls.handleInput);
-		window.removeEventListener('touchstart', controls.handleInputMobile);
-		window.removeEventListener('touchmove', controls.handleInputMobile);
-		window.removeEventListener('touchend', controls.handleInputMobile);
-		document.getElementById('menu-box').classList.remove('hidden');
+		ui.removeInputListeners();
 		[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
 			element.removeAttribute('style');
 		});
@@ -108,9 +77,7 @@ export let game = {
 		planets.length = 0;
 		enemies.length = 0;
 		window.cancelAnimationFrame(this.animationFrameId);
-		context.clearRect(0, 0, canvas.width, canvas.height);
-	},
-	started: false
+	}
 };
 game.stop();
 
@@ -154,11 +121,9 @@ function loop() {
 
 	//layer 1: the game
 	engine.doPrediction(universe, players, enemies, shots);
-	game.dragSmoothed.x = ((game.dragStart.x - game.drag.x) * 1/windowBox.zoomFactor + game.dragSmoothed.x * 4) / 5;
-	game.dragSmoothed.y = ((game.dragStart.y - game.drag.y) * 1/windowBox.zoomFactor + game.dragSmoothed.y * 4) / 5;
 
-	windowBox.center.x = players[ownIdx].box.center.x + game.dragSmoothed.x;
-	windowBox.center.y = players[ownIdx].box.center.y + game.dragSmoothed.y;
+	windowBox.center.x = players[ownIdx].box.center.x + ((ui.dragStart.x - game.drag.x) * 1/windowBox.zoomFactor + game.dragSmoothed.x * 4) / 5;
+	windowBox.center.y = players[ownIdx].box.center.y + ((ui.dragStart.y - game.drag.y) * 1/windowBox.zoomFactor + game.dragSmoothed.y * 4) / 5;
 
 	//planet
 	let playerInAtmos = false;
