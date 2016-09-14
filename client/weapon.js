@@ -1,5 +1,4 @@
 import Weapon from '../shared/weapon.js';
-//import Shotgun from './shotgun.js'; //TODO: a special draw for the shotgun
 import * as controls from './controls.js';
 
 export default class extends Weapon {
@@ -19,7 +18,7 @@ export default class extends Weapon {
 				resources['muzzle'].height * windowBox.zoomFactor);//muzzle flash
 
 			this.muzzleFlash = false;
-			this.recoil = (this instanceof Shotgun) ? 27 : 10;
+			this.recoil = 10;
 		}
 		context.drawImage(resources[this.constructor.name.toLowerCase()], // this is ugly buuuuuuut... it works
 			(this.offsetX - this.recoil)*windowBox.zoomFactor,

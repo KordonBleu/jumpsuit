@@ -1,25 +1,39 @@
 //import audio from './audio.js';
 import resPromise from './resource_loader.js';
 
+import * as entities from './entities.js';
 import * as ui from './ui.js';
-//TODO: set up the UI and add a progress bar for the resources
+import * as controls from './controls.js';
+import * as draw from './draw.js';
 
-// those cannot be used until the global `resources` exists
-/*import Shot from './shot.js';
-
-import Smg from './smg.js';
-import Lmg from './lmg.js';
-import Shotgun from './shotgun.js';
-import Knife from './knife.js';
-
-import Player from './player.js';
-import Planet from './planet.js';
-import enemy from './enemy.js';
-import engine from '../shared/engine.js'; // at some point the engine will be used to do the user's character prediction!
-import draw from './draw.js';*/
 
 resPromise.then((resources) => {
 	window.resources = resources;
-	// start the game !
-	// TODO: add a draw.start() or something
+	window.game = {
+		animationFrameId: null,
+		started: false,
+		ownIdx: null,
+		start: function() {
+			this.started = true;
+			ui.closeMenu(entities.universe);
+			controls.addInputListeners();
+			draw.loop();
+		},
+		stop: function() {
+			this.started = false;
+			controls.removeInputListeners();
+			[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
+				element.removeAttribute('style');
+			});
+			entities.players.forEach(function(player) {
+				if (player.jetpack) player.jetpackSound.stop();
+			});
+			ui.clearChat();
+			entities.planets.length = 0;
+			entities.enemies.length = 0;
+			window.cancelAnimationFrame(this.animationFrameId);
+		}
+	};
+
+	window.game.stop();
 });

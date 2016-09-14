@@ -1,7 +1,7 @@
 import settings from './settings.js';
 import * as ui from './ui.js';
 import * as wsClt from './websocket_client.js';
-import * as draw from './draw.js';
+import * as entities from './entities.js';
 
 const canvas = document.getElementById('canvas');
 
@@ -12,6 +12,8 @@ String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
+
+export let selfControls = {};
 
 export function handleInputMobile(e) {
 	function transform(touch, type) {
@@ -32,14 +34,14 @@ export function handleInputMobile(e) {
 
 	for (let touch of e.changedTouches) {
 		let s = e.type !== 'touchstart' && e.type === 'touchend';
-		if (draw.players[ownIdx].controls[touch.target.id] !== undefined) {
+		if (selfControls[touch.target.id] !== undefined) {
 			e.preventDefault();
 			if (touch.target.id === 'moveLeft' || touch.target.id === 'moveRight') {
 				let value = transform(touch, e.type);
-				draw.players[ownIdx].controls['run'] = (-value >= 38) * 1;
+				selfControls['run'] = (-value >= 38) * 1;
 			}
-			if (e.type !== 'touchmove') draw.players[ownIdx].controls[touch.target.id] = s * 1;
-			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
+			if (e.type !== 'touchmove') selfControls[touch.target.id] = s * 1;
+			wsClt.currentConnection.refreshControls(selfControls);
 		}
 	}
 }
@@ -51,15 +53,15 @@ function handleInput(e) {
 
 	let s = (e.type === 'keydown') * 1;
 
-	if (!ui.chatInUse() && ui.noModalOpen() && draw.players[ownIdx] !== undefined) {
+	if (!ui.chatInUse() && ui.noModalOpen()) {
 		let triggered = keyMap[e.code];
 
-		if (draw.players[ownIdx].controls[triggered] !== undefined) {
+		if (selfControls[triggered] !== undefined) {
 			e.preventDefault();
 			let controlElement = document.getElementById(triggered);
 			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
-			draw.players[ownIdx].controls[triggered] = s;
-			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
+			selfControls[triggered] = s;
+			wsClt.currentConnection.refreshControls(selfControls);
 		} else if (triggered === 'chat' && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
 			ui.focusChat();//the 'chat' control (most likelly 't')
 		}, 0);//from being written in the chat
@@ -90,8 +92,14 @@ function updateKeyMap() {
 }
 
 /* Drag & Mouse */
-export let dragStart = new vinage.Vector(0, 0),
+let dragStart = new vinage.Vector(0, 0),
 	drag = new vinage.Vector(0, 0);
+
+export let dragSmoothed = new vinage.Vector(0, 0);
+export function updateDragSmooth(windowBox) { // this must be run at a certain frequency by the game loop
+	dragSmoothed.x = ((dragStart.x - drag.x) * 1/windowBox.zoomFactor + dragSmoothed.x * 4) / 5;
+	dragSmoothed.y = ((dragStart.y - drag.y) * 1/windowBox.zoomFactor + dragSmoothed.y * 4) / 5;
+}
 
 function updateDragStart(e) {
 	drag.x = e.pageX;
@@ -116,9 +124,9 @@ function dragHandler(e) {
 }
 canvas.addEventListener('mousedown', function(e) {
 	if (e.button === 0) {
-		if (ownIdx in draw.players && wsClt.currentConnection.alive()) {
-			draw.players[ownIdx].controls['shoot'] = 1;
-			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
+		if (wsClt.currentConnection.alive()) {
+			selfControls['shoot'] = 1;
+			wsClt.currentConnection.refreshControls(selfControls);
 		}
 	} else if (e.button === 1) {
 		updateDragStart(e);
@@ -130,9 +138,9 @@ canvas.addEventListener('mouseup', function(e) {
 		dragEnd(e);
 		canvas.removeEventListener('mousemove', dragHandler);
 	} else if (e.button === 0) {
-		if (ownIdx in draw.players) {
-			draw.players[ownIdx].controls['shoot'] = 0;
-			wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
+		if (wsClt.currentConnection.alive()) {
+			selfControls['shoot'] = 0;
+			wsClt.currentConnection.refreshControls(selfControls);
 		}
 	}
 });
@@ -200,20 +208,20 @@ function updateControlsViaGamepad(usingGamepad) {
 	if (usingGamepad === -1) return;
 	let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 	let g = gamepads[usingGamepad];
-	if (typeof(g) !== 'undefined' && draw.players.length !== 0 && ownIdx in draw.players) {
-		draw.players[ownIdx].controls['jump'] = g.buttons[0].value;
-		draw.players[ownIdx].controls['run'] = g.buttons[1].value;
-		draw.players[ownIdx].controls['crouch'] = g.buttons[4].value;
-		draw.players[ownIdx].controls['jetpack'] = g.buttons[7].value;
+	if (typeof(g) !== 'undefined') {
+		selfControls['jump'] = g.buttons[0].value;
+		selfControls['run'] = g.buttons[1].value;
+		selfControls['crouch'] = g.buttons[4].value;
+		selfControls['jetpack'] = g.buttons[7].value;
 
-		draw.players[ownIdx].controls['moveLeft'] = 0;
-		draw.players[ownIdx].controls['moveRight'] = 0;
-		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) draw.players[ownIdx].controls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
+		selfControls['moveLeft'] = 0;
+		selfControls['moveRight'] = 0;
+		if (g.axes[0] < -0.2 || g.axes[0] > 0.2) selfControls['move' + ((g.axes[0] < 0) ? 'Left' : 'Right')] = Math.abs(g.axes[0]);
 		if (g.axes[2] < -0.2 || g.axes[2] > 0.2) drag.x = -canvas.width / 2 * g.axes[2];
 		else drag.x = 0;
 		if ((g.axes[3] < -0.2 || g.axes[3] > 0.2)) drag.y = -canvas.height / 2 * g.axes[3];
 		else drag.y = 0;
-		wsClt.currentConnection.refreshControls(draw.players[ownIdx].controls);
+		wsClt.currentConnection.refreshControls(selfControls);
 	}
 }
 
@@ -221,7 +229,7 @@ function updateControlsViaGamepad(usingGamepad) {
 document.addEventListener('wheel', function(e) {
 	if (!ui.chatInUse() && ui.noModalOpen()) {
 		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
-		draw.windowBox.zoomFactor = Math.max(0.25, Math.min(4, draw.windowBox.zoomFactor * z));
+		entities.windowBox.zoomFactor = Math.max(0.25, Math.min(4, entities.windowBox.zoomFactor * z));
 		ui.resizeCanvas();
 	}
 });

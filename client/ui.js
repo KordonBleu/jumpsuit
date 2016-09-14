@@ -4,7 +4,7 @@ import * as audio from './audio.js';
 import Planet from './planet.js';
 import * as wsClt from './websocket_client.js';
 import { keyMap, reverseKeyMap, isMobile } from './controls.js';
-import * as draw from './draw.js';
+import * as entities from './entities.js';
 import settings from './settings.js';
 import { resourceAmount } from './resource_loader.js';
 
@@ -79,7 +79,7 @@ addShowBoxListener(menuBoxInfoButton, infoBox);
 ['leave-button', 'menu-box-leave-button'].forEach(function(button) {
 	document.getElementById(button).addEventListener('click', function() {
 		wsClt.currentConnection.close();
-		draw.game.stop();
+		window.game.stop();
 	});
 });
 
@@ -278,8 +278,8 @@ chatInput.addEventListener('keydown', function(e) {
 		printPlayerList(this.search);
 
 		let filteredPlayerList = [];
-		for (let pid in draw.players) {
-			if (draw.players[pid].name.indexOf(this.search) !== -1) filteredPlayerList.push(draw.players[pid].name);
+		for (let pid in entities.players) {
+			if (entities.players[pid].name.indexOf(this.search) !== -1) filteredPlayerList.push(entities.players[pid].name);
 		}
 		if (filteredPlayerList.length !== 0) {
 			let cursorPos = this.textParts[0].length + filteredPlayerList[this.searchIndex].length;
@@ -339,12 +339,12 @@ export function printPlayerList(filter) {
 	if (isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
-	draw.players.forEach(function(player, index) {
+	entities.players.forEach(function(player) {
 		if (filter !== '' && player.getFinalName().indexOf(filter) === -1) return;
 		let li = document.createElement('li');
 		li.textContent = player.getFinalName();
 		li.style.color = Planet.prototype.teamColors[player.appearance];
-		if (index === ownIdx) li.style.fontWeight = 'bold';
+		//if (index === ownIdx) li.style.fontWeight = 'bold';
 		chatPlayerListElement.appendChild(li);
 	});
 }
@@ -385,7 +385,7 @@ lobbyListElement.addEventListener('click', function(e) {
 /* Player list */
 export function updatePlayerList() {
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-	for (let player of draw.players) {
+	for (let player of entities.players) {
 		if (player === undefined) continue;
 		let newElement = document.createElement('li');
 		newElement.textContent = player.getFinalName();
@@ -485,8 +485,8 @@ export function resizeCanvas() {
 
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	draw.windowBox.width = canvas.clientWidth / draw.windowBox.zoomFactor;
-	draw.windowBox.height = canvas.clientHeight / draw.windowBox.zoomFactor;
+	entities.windowBox.width = canvas.clientWidth / entities.windowBox.zoomFactor;
+	entities.windowBox.height = canvas.clientHeight / entities.windowBox.zoomFactor;
 
 	updateChatOffset();
 }
