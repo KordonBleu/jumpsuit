@@ -1,5 +1,10 @@
 /node_modules/
 
+/static/bundle.js
+/master_server_bundle.js
+/game_server_bundle.js
+
+/build_config.json
 /game_config.json
 /master_config.json
 

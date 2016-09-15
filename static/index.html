@@ -46,7 +46,7 @@
 			<button id="settings-button"><i class="fa fa-wrench"></i>Settings</button>
 		</div>
 		<div id="gui-message" class="hidden"></div>
-		<div id="menu-box" class="hidden">
+		<div id="menu-box">
 			<div>
 				<table id="lobby-table">
 					<thead>
@@ -78,7 +78,7 @@
 		</div>
 		<div id="shade-box" class="hidden"></div>
 		<div id="info-box" class="hidden">
-			<h2>Informations</h2><button id="close-info-box" class="close-parent"><i class="fa fa-times"></i>Close</button>
+			<h2>Informations</h2><button class="close-parent"><i class="fa fa-times"></i>Close</button>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>And the credits go to...</p>
 				<ul>
@@ -102,7 +102,7 @@
 		</div>
 
 		<div id="settings-box" class="hidden">
-			<h2>Settings</h2><button id="close-settings-box" class="close-parent"><i class="fa fa-times"></i>Close</button>
+			<h2>Settings</h2><button class="close-parent"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<h3>Player</h3>
 				<label>Name</label><input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
@@ -126,6 +126,11 @@
 				<table id="key-settings"></table>
 				<button id="key-reset">Reset keymap to default</button>
 			</div>
+		</div>
+		<div id="loading">
+			<progress id="loading-progress" value="0"></progress>
+			<h1>JumpSuit</h1>
+			<h2>A canvas game by Getkey &amp; Fju</h2>
 		</div>
 		<div id="blocked-port-box" class="hidden"><!-- TODO: add a message for filtered ports -->
 			<h2>The port is blocked</h2>
@@ -156,21 +161,6 @@
 		<script src="https://jumpsuit.space/ipaddr.min.js"></script>
 		<script src="https://jumpsuit.space/vinage.js"></script>
 
-		<script src="https://jumpsuit.space/audio.js"></script>
-		<script src="https://jumpsuit.space/resource_loader.js"></script>
-
-		<script src="https://jumpsuit.space/shot.js"></script>
-		<script src="https://jumpsuit.space/weapon.js"></script>
-		<script src="https://jumpsuit.space/player.js"></script>
-		<script src="https://jumpsuit.space/planet.js"></script>
-		<script src="https://jumpsuit.space/enemy.js"></script>
-		<script src="https://jumpsuit.space/engine.js"></script>
-
-		<script src="https://jumpsuit.space/ui.js"></script>
-		<script src="https://jumpsuit.space/draw.js"></script>
-		<script src="https://jumpsuit.space/canvas.js"></script>
-		<script src="https://jumpsuit.space/message.js"></script>
-		<script src="https://jumpsuit.space/websocket_client.js"></script>
-		<script src="https://jumpsuit.space/controls.js"></script>
+		<script src="https://jumpsuit.space/bundle.js"></script>
 	</body>
 </html>

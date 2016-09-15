@@ -1,5 +1,3 @@
-export * from '../../shared/engine.js';
-
 export function doPhysicsClient(universe, planets, shots, players) {
 	shots.forEach(function(shot, si) {
 		if (--shot.lifeTime === 0 ||
@@ -8,3 +6,5 @@ export function doPhysicsClient(universe, planets, shots, players) {
 		//delete shot, if lifetime equals 0 OR collision with a player that hasn't shot the shot OR collision with a planet
 	});
 }
+
+export * from '../shared/engine.js';
