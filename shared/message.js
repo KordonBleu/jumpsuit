@@ -406,9 +406,9 @@ const message = {
 					if (player.jetpack) enumByte |= this.MASK.JETPACK;
 					if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 					view.setUint8(7 + offset, enumByte);
-					let weaponByte = weaponMap.getNbr(player.armedWeapon.constructor.name);
+					let weaponByte = weaponMap.getNbr(player.armedWeapon.type);
 					weaponByte <<= 2;
-					weaponByte += weaponMap.getNbr(player.carriedWeapon.constructor.name);
+					weaponByte += weaponMap.getNbr(player.carriedWeapon.type);
 					view.setUint8(8 + offset, weaponByte);
 					view.setUint8(9 + offset, player.homographId);
 					view.setUint8(10 + offset, playerNameBufs[i].byteLength);
@@ -572,8 +572,8 @@ const message = {
 				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
 				if (player.hurt) enumByte |= this.MASK.HURT;
 				view.setUint8(8 + offset, enumByte);
-				let weaponByte = weaponMap.getNbr(player.armedWeapon.constructor.name) << 2;
-				weaponByte += weaponMap.getNbr(player.carriedWeapon.constructor.name);
+				let weaponByte = weaponMap.getNbr(player.armedWeapon.type) << 2;
+				weaponByte += weaponMap.getNbr(player.carriedWeapon.type);
 				view.setUint8(9 + offset, weaponByte);
 				offset += 10;
 			}

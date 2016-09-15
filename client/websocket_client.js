@@ -151,7 +151,6 @@ class Connection {
 		this.close();
 	}
 	messageHandler(msg) {
-		console.log('got new message');
 		this.lastMessage = Date.now();
 		switch (new Uint8Array(msg.data, 0, 1)[0]) {
 			case message.ERROR.value: {

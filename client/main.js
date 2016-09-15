@@ -19,6 +19,7 @@ resPromise.then((resources) => {
 			this.started = true;
 			ui.closeMenu(entities.universe);
 			controls.addInputListeners();
+			if (ui.spawnMeteorsEnabled) draw.startMeteorSpawning();
 			draw.loop();
 		},
 		stop: function() {

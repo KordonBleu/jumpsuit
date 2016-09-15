@@ -7,6 +7,7 @@ import { keyMap, reverseKeyMap, isMobile } from './controls.js';
 import * as entities from './entities.js';
 import settings from './settings.js';
 import { resourceAmount } from './resource_loader.js';
+import * as draw from './draw.js';
 
 
 let loadingProgressElem = document.getElementById('loading-progress');
@@ -46,8 +47,7 @@ let chatInput = document.getElementById('gui-chat-input'),
 	keyResetElement = document.getElementById('key-reset'),
 	primaryWeaponElement = document.getElementById('primary-weapon'),
 	secondaryWeaponElement = document.getElementById('secondary-weapon'),
-	particlesElement = document.getElementById('particle-option'),
-	meteorsElement = document.getElementById('meteor-option');
+	particlesElement = document.getElementById('particle-option');
 
 
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
@@ -254,7 +254,15 @@ setGun(primaryWeaponElement, settings.primary);
 setGun(secondaryWeaponElement, settings.secondary);
 
 /* Graphics */
+const meteorsElement = document.getElementById('meteor-option');
 meteorsElement.checked = settings.meteors === 'true';
+meteorsElement.addEventListener('change', (e) => {
+	if (e.target.checked) draw.stopMeteorSpawning();
+	settings.meteors = e.target.checked;
+});
+export function spawnMeteorsEnabled() {
+	return meteorsElement.checked;
+}
 particlesElement.checked = settings.particles === 'true';
 
 /* Chat */

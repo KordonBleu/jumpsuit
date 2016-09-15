@@ -50,33 +50,37 @@ entities.windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY,
 
 ui.resizeHandler(); // ?
 
-let canSpawnMeteor = true;
-setInterval(function() {
-	if (!canSpawnMeteor || meteors.length > 30 || Math.random() > 0.3) return;
-	let m_resources = ['meteorBig1', 'meteorMed2', 'meteorSmall1', 'meteorTiny1', 'meteorTiny2'],
-		m_rand = Math.floor(m_resources.length * Math.random()),
-		chosen_img = m_resources[m_rand];
+let meteorSpawningIntervalId;
+export function startMeteorSpawning() {
+	meteorSpawningIntervalId = setInterval(function() {
+		if (meteors.length > 30 || Math.random() > 0.3) return;
+		let m_resources = ['meteorBig1', 'meteorMed2', 'meteorSmall1', 'meteorTiny1', 'meteorTiny2'],
+			m_rand = Math.floor(m_resources.length * Math.random()),
+			chosen_img = m_resources[m_rand];
 
-	meteors[meteors.length] = {
-		x: -resources[chosen_img].width,
-		y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
-		res: chosen_img,
-		speed: Math.pow(Math.map(Math.random(), 0, 1, 0.5, 1.5), 2),
-		rotAng: 0,
-		rotSpeed: Math.map(Math.random(), 0, 1, -0.034, 0.034)
-	};
-	canSpawnMeteor = false;
-}, 800);
+		meteors.push({
+			x: -resources[chosen_img].width,
+			y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
+			res: chosen_img,
+			speed: Math.pow(Math.map(Math.random(), 0, 1, 0.5, 1.5), 2),
+			rotAng: 0,
+			rotSpeed: Math.map(Math.random(), 0, 1, -0.034, 0.034)
+		});
+	}, 800);
+}
+export function stopMeteorSpawning() {
+	meteors.length = 0;
+	window.clearInterval(meteorSpawningIntervalId);
+}
 
 export function loop() {
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	engine.doPhysicsClient(entities.universe, entities.planets, entities.shots, entities.players);
 
 	//layer 0: meteors
-	if (document.getElementById('meteor-option').checked) {
+	if (meteors.length > 0) {
 		context.globalAlpha = 0.2;
 		meteors.forEach(function(m, i) {
-			canSpawnMeteor = true;
 			m.x += m.speed;
 			m.rotAng += m.rotSpeed;
 			if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
@@ -96,8 +100,8 @@ export function loop() {
 	//planets
 	let playerInAtmos = false;
 	entities.planets.forEach(function (planet) {
-		if (entities.universe.collide(entities.windowBox, planet.atmosBox)) planet.drawAtmos();
-		if (entities.universe.collide(entities.windowBox, planet.box)) planet.draw();
+		if (entities.universe.collide(entities.windowBox, planet.atmosBox)) planet.drawAtmos(context, entities.windowBox);
+		if (entities.universe.collide(entities.windowBox, planet.box)) planet.draw(context, entities.windowBox);
 
 		if (!playerInAtmos && entities.universe.collide(planet.atmosBox, entities.players[window.game.ownIdx].box)) playerInAtmos = true;
 	});
@@ -106,17 +110,17 @@ export function loop() {
 
 	//shots
 	entities.shots.forEach(function (shot) {
-		if (entities.universe.collide(entities.windowBox, shot.box)) shot.draw(false);
+		if (entities.universe.collide(entities.windowBox, shot.box)) shot.draw(context, entities.windowBox, false);
 	});
 	entities.deadShots.forEach(function(shot, si) {
-		if (entities.universe.collide(entities.windowBox, shot.box)) shot.draw(true);
+		if (entities.universe.collide(entities.windowBox, shot.box)) shot.draw(context, entities.windowBox, true);
 		if (++shot.lifeTime <= 60) entities.deadShots.splice(si, 1);
 	});
 
 	//enemies
 	entities.enemies.forEach(function (enemy) {
-		if (entities.universe.collide(entities.windowBox, enemy.aggroBox)) enemy.drawAtmos();
-		if (entities.universe.collide(entities.windowBox, enemy.box)) enemy.draw();
+		if (entities.universe.collide(entities.windowBox, enemy.aggroBox)) enemy.drawAtmos(context, entities.windowBox);
+		if (entities.universe.collide(entities.windowBox, enemy.box)) enemy.draw(context, entities.windowBox);
 	});
 
 	//particles

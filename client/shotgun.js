@@ -8,7 +8,11 @@ export default class CltShotgun extends Shotgun {
 		}
 	}
 }
+
 CltShotgun.prototype.muzzleX = 84;
 CltShotgun.prototype.muzzleY = 2;
+
 CltShotgun.prototype.offsetX = 13;
 CltShotgun.prototype.offsetY = -5;
+
+CltShotgun.prototype.type = 'Shotgun';

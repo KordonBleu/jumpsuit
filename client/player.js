@@ -82,7 +82,7 @@ export default class extends Player {
 		}
 
 
-		this.armedWeapon.draw(isMe);
+		this.armedWeapon.draw(context, windowBox, isMe);
 
 		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 

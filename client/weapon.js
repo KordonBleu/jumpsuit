@@ -20,10 +20,10 @@ export default class extends Weapon {
 			this.muzzleFlash = false;
 			this.recoil = 10;
 		}
-		context.drawImage(resources[this.constructor.name.toLowerCase()], // this is ugly buuuuuuut... it works
+		context.drawImage(resources[this.type.toLowerCase()], // this is ugly buuuuuuut... it works
 			(this.offsetX - this.recoil)*windowBox.zoomFactor,
 			this.offsetY*windowBox.zoomFactor,
-			resources[this.constructor.name.toLowerCase()].width*windowBox.zoomFactor, resources[this.constructor.name.toLowerCase()].height*windowBox.zoomFactor
+			resources[this.type.toLowerCase()].width*windowBox.zoomFactor, resources[this.type.toLowerCase()].height*windowBox.zoomFactor
 		);
 		context.rotate(-weaponRotFact);
 	}

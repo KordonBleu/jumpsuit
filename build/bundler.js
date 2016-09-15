@@ -45,6 +45,12 @@ rollup.rollup({
 rollup.rollup({
 	entry: './server/game_server.js',
 	plugins: [
+		replace({
+			include: 'shared/**',
+			values: {
+				'import vinage from \'vinage\';': 'const vinage = require(\'vinage\');'
+			}
+		}),
 		alias({
 			'<@engine@>': 'mods/' + config.mod + '/engine.js',
 			'<@onMessage@>': 'mods/' + config.mod + '/on_message.js',
