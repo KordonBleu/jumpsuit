@@ -7,15 +7,15 @@ import ipPickerFactory from './ip_picker.js';
 import monitorFactory from './monitor.js';
 import * as ips from './ips';
 
-import 'colors';
-import * as http from 'http';
-import * as fs from 'fs';
-import WebSocket from 'ws';
-import ipaddr from 'ipaddr.js';
+require('colors');
+const http = require('http'),
+	fs = require('fs'),
+	WebSocket = require('ws'),
+	ipaddr = require('ipaddr.js');
 
 const configSkeleton = {
 	dev: true,
-	ipv4_provider: 'https://icanhazip.com/',
+	ipv4_provider: 'https://ipv4.icanhazip.com/',
 	ipv6_provider: 'https://ipv6.icanhazip.com/',
 	monitor: false,
 	port: 80

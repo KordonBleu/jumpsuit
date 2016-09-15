@@ -1,7 +1,7 @@
 'use strict';
 
+const fs = require('fs');
 import logger from './logger.js';
-import * as fs from 'fs';
 
 export default function(path, skeleton, changeCbk) {
 	let config,

@@ -67,17 +67,6 @@ class Connection {
 	constructor(url, lobbyId) {// a connection to a game server
 		this.lastControls = {};
 		this.lastMessage;
-		try {
-			this.socket = new WebSocket(url);
-		} catch (err) {
-			ui.showBlockedPortDialog(url.match(/:(\d+)/)[1]);
-		}
-		this.socket.binaryType = 'arraybuffer';
-		this.socket.addEventListener('open', () => {
-			this.sendMessage.call(this, message.CONNECT, lobbyId, settings);
-		});
-		this.socket.addEventListener('error', this.errorHandler);
-		this.socket.addEventListener('message', this.messageHandler.bind(this));
 
 		this.latencyHandler = setInterval(() => {
 			if (window.game.state !== 'playing') return;
@@ -90,7 +79,22 @@ class Connection {
 				window.game.stop();
 			}
 		}, 100);
-		//this should return a Promise, dontcha think?
+
+		return new Promise((resolve, reject) => {
+			try {
+				this.socket = new WebSocket(url);
+			} catch (err) {
+				reject(err);
+				ui.showBlockedPortDialog(url.match(/:(\d+)/)[1]);
+			}
+			this.socket.binaryType = 'arraybuffer';
+			this.socket.addEventListener('error', this.errorHandler);
+			this.socket.addEventListener('message', this.messageHandler.bind(this));
+			this.socket.addEventListener('open', () => {
+				this.sendMessage.call(this, message.CONNECT, lobbyId, settings);
+				resolve(this);
+			});
+		});
 	}
 	alive() {
 		return this.socket.readyState === 1;
@@ -147,6 +151,7 @@ class Connection {
 		this.close();
 	}
 	messageHandler(msg) {
+		console.log('got new message');
 		this.lastMessage = Date.now();
 		switch (new Uint8Array(msg.data, 0, 1)[0]) {
 			case message.ERROR.value: {
@@ -368,7 +373,12 @@ class Connection {
 }
 
 export function makeNewCurrentConnection(url, id) {
-	currentConnection = new Connection(url, id);
+	new Connection(url, id).then((connection) => {
+		currentConnection = connection;
+		ui.closeMenu(universe);
+	}).catch((err) => {
+		console.error(err);
+	});
 }
 
 function connectByHash() {
@@ -388,11 +398,11 @@ function connectByHash() {
 		if (currentConnection !== undefined) {
 			if (currentConnection.socket.url !== url) {
 				currentConnection.close();
-				currentConnection = new Connection(url, lobbyId);
+				currentConnection = makeNewCurrentConnection(url, lobbyId);
 			} else if (!currentConnection.alive()) {
-				currentConnection = new Connection(url, lobbyId);
+				currentConnection = makeNewCurrentConnection(url, lobbyId);
 			}
-		} else currentConnection = new Connection(url, lobbyId);
+		} else currentConnection = makeNewCurrentConnection(url, lobbyId);
 	} catch (ex) {
 		if (currentConnection !== undefined) currentConnection.close();
 		console.log(ex, ex.stack);
@@ -409,6 +419,5 @@ export function handleHistoryState() {
 		window.game.stop();
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
-handleHistoryState();
 window.addEventListener('popstate', handleHistoryState);
 

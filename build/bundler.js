@@ -8,7 +8,7 @@ const rollup = require('rollup'),
 	replace = require('rollup-plugin-replace'),
 
 	config = require('./config_loader.js')('./build_config.json', {
-		dev: false, // rewrites hardcoded jumpsuit.space URLs + (to be done) whether to include sourcemaps
+		dev: false,
 		mod: 'capture'
 	});
 
@@ -30,10 +30,10 @@ rollup.rollup({
 }).then((bundle) => {
 	return bundle.write({
 		format: 'cjs',
-		intro: nodeSrcMapIntro,
+		intro: config.dev ? nodeSrcMapIntro : '',
 		exports: 'none',
 		indent: false,
-		sourceMap: "inline",
+		sourceMap: config.dev ? 'inline' : false,
 		cache: './master_server_bundle.js',
 		dest: './master_server_bundle.js'
 	});
@@ -78,10 +78,10 @@ rollup.rollup({
 }).then((bundle) => {
 	return bundle.write({
 		format: 'cjs',
-		intro: nodeSrcMapIntro,
+		intro: config.dev ? nodeSrcMapIntro : '',
 		exports: 'none',
 		indent: false,
-		sourceMap: 'inline',
+		sourceMap: config.dev ? 'inline' : false,
 		cache: './game_server_bundle.js',
 		dest: './game_server_bundle.js'
 	});
@@ -128,7 +128,7 @@ rollup.rollup({
 		format: 'iife',
 		exports: 'none',
 		indent: false,
-		sourceMap: 'inline',
+		sourceMap: config.dev ? 'inline' : false,
 		cache: './static/bundle.js',
 		dest: './static/bundle.js',
 		globals: {

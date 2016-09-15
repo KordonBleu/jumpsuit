@@ -4,7 +4,7 @@ import * as engine from '<@engine@>';
 import Planet from '<@Planet@>';
 import Enemy from '<@Enemy@>';
 import message from '../shared/message.js';
-import vinage from 'vinage';
+const vinage = require('vinage');
 
 export default class {
 	constructor(maxPlayers) {

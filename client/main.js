@@ -5,15 +5,17 @@ import * as entities from './entities.js';
 import * as ui from './ui.js';
 import * as controls from './controls.js';
 import * as draw from './draw.js';
+import * as wsClt from './websocket_client.js';
 
 
 resPromise.then((resources) => {
 	window.resources = resources;
-	window.game = {
+	window.game = { // this should eventually be moved to a module
 		animationFrameId: null,
 		started: false,
 		ownIdx: null,
 		start: function() {
+			console.log('game started');
 			this.started = true;
 			ui.closeMenu(entities.universe);
 			controls.addInputListeners();
@@ -34,6 +36,7 @@ resPromise.then((resources) => {
 			window.cancelAnimationFrame(this.animationFrameId);
 		}
 	};
-
 	window.game.stop();
+
+	wsClt.handleHistoryState();
 });

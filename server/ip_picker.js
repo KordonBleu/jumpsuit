@@ -1,8 +1,9 @@
+const ipaddr = require('ipaddr.js'),
+	http = require('http'),
+	https = require('https'),
+	os = require('os');
+
 import logger from './logger.js';
-import ipaddr from 'ipaddr.js';
-import * as http from 'http';
-import * as https from 'https';
-import * as os from 'os';
 
 export default function(config) {
 	let externalIp,

@@ -1,9 +1,11 @@
-/* Once `import`ed, the logger can be used like this `logger(logger.INFO, 'This is a message printed to the console');`.
-However, as user input should never be trusted, logger provide a facility to escape it in case it contains characters that could be interpreted by the terminal in a way that is unwanted.
-Every argument coming after the message will be escaped and inserted into the message, replacing `{argumentPositionNumber}`.
-Example: `logger(logger.INFO, '"{0}" won the the match! "{1}" comes second and "{2}" third.', playerName1, playerName2, playerName3);` */
+/*
+	Once `import`ed, the logger can be used like this `logger(logger.INFO, 'This is a message printed to the console');`.
+	However, as user input should never be trusted, logger provide a facility to escape it in case it contains characters that could be interpreted by the terminal in a way that is unwanted.
+	Every argument coming after the message will be escaped and inserted into the message, replacing `{argumentPositionNumber}`.
+	Example: `logger(logger.INFO, '"{0}" won the the match! "{1}" comes second and "{2}" third.', playerName1, playerName2, playerName3);`
+*/
 
-import 'colors';
+require('colors');
 
 export default function logger(type, content, ...toBeEscaped) {
 	function enumToString(e) {

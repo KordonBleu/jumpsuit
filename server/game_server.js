@@ -12,12 +12,12 @@ import Player from '<@Player@>';
 
 const modName = '<@modName@>';
 
-import 'colors';
-import './proto_mut.js';
+require('colors');
+const http = require('http'),
+	WebSocket = require('ws'),
+	ipaddr = require('ipaddr.js');
 
-import * as http from 'http';
-import WebSocket from 'ws';
-import ipaddr from 'ipaddr.js';
+import './proto_mut.js';
 
 import monitorFactory from './monitor.js';
 
