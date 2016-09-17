@@ -3,8 +3,9 @@ import * as ui from './ui.js';
 import * as controls from './controls.js';
 import * as draw from './draw.js';
 
+let started = false;
+
 export let animationFrameId = null,
-	started = false,
 	ownIdx = null,
 	state = null,
 	scores = null;
@@ -23,24 +24,29 @@ export function setAnimationFrameId(newAnimationFrameId) {
 }
 
 export function start() {
-	started = true;
-	ui.closeMenu(entities.universe);
-	controls.addInputListeners();
-	if (ui.spawnMeteorsEnabled) draw.startMeteorSpawning();
-	draw.loop();
+	if (!started) {
+		started = true;
+		ui.closeMenu(entities.universe);
+		controls.addInputListeners();
+		if (ui.spawnMeteorsEnabled) draw.startMeteorSpawning();
+		draw.loop();
+	}
 }
 export function stop() {
-	started = false;
-	controls.removeInputListeners();
-	[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
-		element.removeAttribute('style');
-	});
-	entities.players.forEach(function(player) {
-		if (player.jetpack) player.jetpackSound.stop();
-	});
-	ui.clearChat();
-	entities.planets.length = 0;
-	entities.enemies.length = 0;
-	window.cancelAnimationFrame(animationFrameId);
+	if (started) {
+		started = false;
+		controls.removeInputListeners();
+		[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
+			element.removeAttribute('style');
+		});
+		entities.players.forEach(function(player) {
+			if (player.jetpack) player.jetpackSound.stop();
+		});
+		ui.clearChat();
+		entities.planets.length = 0;
+		entities.enemies.length = 0;
+		window.cancelAnimationFrame(animationFrameId);
+		ui.showMenu();
+	}
 }
-stop();
+//stop();

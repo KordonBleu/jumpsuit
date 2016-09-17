@@ -22,9 +22,6 @@ html, body, button, label, #gui-chat-player-list, table thead, #key-settings, .w
 	-ms-user-select: none;
 	user-select: none;
 }
-body.nogui *[id^=gui]{
-	display: none;
-}
 #menu-box, #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
 	overflow-x: hidden;
 	overflow-y: auto;

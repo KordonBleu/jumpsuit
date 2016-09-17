@@ -159,9 +159,6 @@ export let mouseAngle = 0;
 document.addEventListener('mousemove', function(e) {
 	mouseAngle = (2.5*Math.PI + Math.atan2(e.clientY - canvas.height*0.5, e.clientX - canvas.width*0.5)) % (2*Math.PI);
 });
-setInterval(function() {
-	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.sendMousePos(mouseAngle);
-}, 80);
 
 
 /* Gamepads */

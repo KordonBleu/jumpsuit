@@ -501,17 +501,7 @@ resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
 export function closeMenu(universe) {
-	document.body.classList.remove('nogui');
-	document.getElementById('gui-chat').classList.remove('hidden');
-	document.getElementById('gui-chat-input-container').classList.remove('hidden');
-	document.getElementById('gui-options').classList.remove('hidden'); // contains #settings-button and #info-button
-	document.getElementById('gui-health').classList.remove('hidden');
-	document.getElementById('gui-fuel').classList.remove('hidden');
-	document.getElementById('gui-points').classList.remove('hidden');
-
 	let minimapCanvas = document.getElementById('gui-minimap-canvas');
-	minimapCanvas.classList.remove('hidden');
-
 	//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
 	let minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
 	//(width)x * (height)x = minimapSurface
@@ -520,7 +510,7 @@ export function closeMenu(universe) {
 	minimapCanvas.height = unitSize*universe.height;
 
 	document.getElementById('menu-box').classList.add('hidden');
-	for (let element of document.querySelectorAll('#gui-points th')) {
-		element.style.display = 'none';
-	}
+}
+export function showMenu() {
+	document.getElementById('menu-box').classList.remove('hidden');
 }

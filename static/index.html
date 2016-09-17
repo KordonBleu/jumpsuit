@@ -11,9 +11,9 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
 		<link rel="icon" href="https://jumpsuit.space/assets/images/cordonbleu.png"/>
 	</head>
-	<body class="nogui">
+	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
-		<canvas id="gui-minimap-canvas" class="hidden"></canvas>
+		<canvas id="gui-minimap-canvas"></canvas>
 		<ul id="gui-controls">
 			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
 				<img src="/assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
@@ -22,25 +22,24 @@
 			<img src="/assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/></li>
 		</ul>
 
-		<meter max="400" value="400" id="gui-fuel" class="hidden"></meter>
-		<div id="gui-health" class="hidden">
+		<meter max="400" value="400" id="gui-fuel"></meter>
+		<div id="gui-health">
 			<div class="heartFilled"></div>
 			<div class="heartFilled"></div>
 			<div class="heartFilled"></div>
 			<div class="heartFilled"></div>
 		</div>
-		<div id="gui-chat" class="hidden"><p id="gui-chat-first"></p></div>
+		<div id="gui-chat"><p id="gui-chat-first"></p></div>
 		<div id="gui-bad-connection" class="hidden"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</div>
 		<div id="gui-warmup"><i class="fa fa-info-circle" aria-hidden="true"></i><b>Warmup mode</b><br/>
 		When more players join the game will start for real ;-)</div>
-		<div id="gui-chat-input-container" class="hidden">
+		<div id="gui-chat-input-container">
 			<ul id="gui-chat-player-list" class="hidden"></ul>
 			<input type="text" id="gui-chat-input" maxlength="150"/>
 		</div>
-		<div id="gui-points" class="hidden">
-
+		<div id="gui-points">
 		</div>
-		<div id="gui-options" class="hidden">
+		<div id="gui-options">
 			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button>
 			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button>
 			<button id="settings-button"><i class="fa fa-wrench"></i>Settings</button>
