@@ -25,4 +25,3 @@ parserOptions:
 globals:
   vinage: false
   ipaddr: false
-  resources: false

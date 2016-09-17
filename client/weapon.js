@@ -9,21 +9,21 @@ export default class extends Weapon {
 		this.recoil = this.recoil < 0.05 ? 0 : this.recoil * 0.7;
 		context.rotate(weaponRotFact);
 		if (document.getElementById('particle-option').checked && this.muzzleFlash === true) {
-			var	muzzleX = this.muzzleX*windowBox.zoomFactor + resources['muzzle'].width*0.5*windowBox.zoomFactor,
-				muzzleY = this.muzzleY*windowBox.zoomFactor - resources['muzzle'].height*0.25*windowBox.zoomFactor;
+			var	muzzleX = this.muzzleX*windowBox.zoomFactor + window.resources['muzzle'].width*0.5*windowBox.zoomFactor,
+				muzzleY = this.muzzleY*windowBox.zoomFactor - window.resources['muzzle'].height*0.25*windowBox.zoomFactor;
 
-			context.drawImage(resources[(Math.random() > 0.5 ? 'muzzle' : 'muzzle2')],
+			context.drawImage(window.resources[(Math.random() > 0.5 ? 'muzzle' : 'muzzle2')],
 				muzzleX, muzzleY + this.offsetY*windowBox.zoomFactor,
-				resources['muzzle'].width * windowBox.zoomFactor,
-				resources['muzzle'].height * windowBox.zoomFactor);//muzzle flash
+				window.resources['muzzle'].width * windowBox.zoomFactor,
+				window.resources['muzzle'].height * windowBox.zoomFactor);//muzzle flash
 
 			this.muzzleFlash = false;
 			this.recoil = 10;
 		}
-		context.drawImage(resources[this.type.toLowerCase()], // this is ugly buuuuuuut... it works
+		context.drawImage(window.resources[this.type.toLowerCase()], // this is ugly buuuuuuut... it works
 			(this.offsetX - this.recoil)*windowBox.zoomFactor,
 			this.offsetY*windowBox.zoomFactor,
-			resources[this.type.toLowerCase()].width*windowBox.zoomFactor, resources[this.type.toLowerCase()].height*windowBox.zoomFactor
+			window.resources[this.type.toLowerCase()].width*windowBox.zoomFactor, window.resources[this.type.toLowerCase()].height*windowBox.zoomFactor
 		);
 		context.rotate(-weaponRotFact);
 	}

@@ -24,7 +24,7 @@ export default class CltPlanet extends Planet {
 		context.fill();
 
 		//apply texture
-		windowBox.drawRotatedImage(resources['planet'], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, 2*this.box.radius, 2*this.box.radius);
+		windowBox.drawRotatedImage(window.resources['planet'], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, 2*this.box.radius, 2*this.box.radius);
 
 		//draw progress indicator
 		context.beginPath();

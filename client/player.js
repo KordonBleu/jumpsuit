@@ -34,7 +34,7 @@ export default class extends Player {
 		return this.name + (typeof this.homographId === 'number' && this.homographId !== 0 ? ' (' + this.homographId + ')' : '');
 	}
 	draw(context, windowBox, particles, isMe) {
-		let res = resources[this.appearance + '_' + this.walkFrame],
+		let res = window.resources[this.appearance + '_' + this.walkFrame],
 			playerX = windowBox.wrapX(this.box.center.x),
 			playerY = windowBox.wrapY(this.box.center.y);
 
@@ -54,10 +54,10 @@ export default class extends Player {
 		context.rotate(this.box.angle);
 		context.scale(this.looksLeft === true ? -1 : 1, 1);
 
-		let jetpackRes = resources['jetpack'],
+		let jetpackRes = window.resources['jetpack'],
 			jetpackX = centerX - 5*windowBox.zoomFactor,
 			jetpackY = centerY + 16*windowBox.zoomFactor;
-		context.drawImage(resources['jetpack'], jetpackX, jetpackY, resources['jetpack'].width*0.75*windowBox.zoomFactor, resources['jetpack'].height*0.75*windowBox.zoomFactor);
+		context.drawImage(window.resources['jetpack'], jetpackX, jetpackY, window.resources['jetpack'].width*0.75*windowBox.zoomFactor, window.resources['jetpack'].height*0.75*windowBox.zoomFactor);
 
 		if (this.jetpack) {
 			let shift = this.looksLeft === true ? -windowBox.zoomFactor : windowBox.zoomFactor;
@@ -76,7 +76,7 @@ export default class extends Player {
 					80));
 			}
 
-			let jetpackFireRes = resources['jetpackFire'];
+			let jetpackFireRes = window.resources['jetpackFire'];
 			context.drawImage(jetpackFireRes, -(jetpackFireRes.width/2)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 			context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
 		}
@@ -86,15 +86,15 @@ export default class extends Player {
 
 		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
-		let helmetRes = resources['astronaut_helmet'];
+		let helmetRes = window.resources['astronaut_helmet'];
 		if (this.walkFrame === 'duck') {
-			let mouthRes = resources[this.appearance + '_mouth_surprise'];
+			let mouthRes = window.resources[this.appearance + '_mouth_surprise'];
 			context.rotate(res.mouthAngle);
 			context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
 			context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
 			context.rotate(-res.mouthAngle);
 		} else {
-			let mouthRes = resources[this.appearance + '_mouth_' + (this.hurt ? 'unhappy' : this.walkFrame === 'jump' ? 'surprise' : 'happy')];
+			let mouthRes = window.resources[this.appearance + '_mouth_' + (this.hurt ? 'unhappy' : this.walkFrame === 'jump' ? 'surprise' : 'happy')];
 			context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
 			context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
 		}

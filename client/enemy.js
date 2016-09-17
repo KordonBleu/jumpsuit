@@ -5,7 +5,7 @@ export default class extends Enemy {
 		super(x, y, appearance);
 	}
 	draw(context, windowBox) {
-		windowBox.drawRotatedImage(resources[this.appearance],
+		windowBox.drawRotatedImage(window.resources[this.appearance],
 			windowBox.wrapX(this.box.center.x),
 			windowBox.wrapY(this.box.center.y),
 			this.box.angle);

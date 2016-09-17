@@ -1,5 +1,4 @@
-'use strict';
-
+import * as game from './game.js';
 import * as audio from './audio.js';
 import Planet from './planet.js';
 import * as wsClt from './websocket_client.js';
@@ -79,7 +78,7 @@ addShowBoxListener(menuBoxInfoButton, infoBox);
 ['leave-button', 'menu-box-leave-button'].forEach(function(button) {
 	document.getElementById(button).addEventListener('click', function() {
 		wsClt.currentConnection.close();
-		window.game.stop();
+		game.stop();
 	});
 });
 

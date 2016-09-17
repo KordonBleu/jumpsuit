@@ -1,5 +1,4 @@
-'use strict';
-
+import * as game from './game.js';
 import * as entities from './entities.js';
 import * as controls from './controls.js';
 import * as ui from './ui.js';
@@ -59,8 +58,8 @@ export function startMeteorSpawning() {
 			chosen_img = m_resources[m_rand];
 
 		meteors.push({
-			x: -resources[chosen_img].width,
-			y: Math.map(Math.random(), 0, 1, -resources[chosen_img].height + 1, canvas.height - resources[chosen_img].height - 1),
+			x: -window.resources[chosen_img].width,
+			y: Math.map(Math.random(), 0, 1, -window.resources[chosen_img].height + 1, canvas.height - window.resources[chosen_img].height - 1),
 			res: chosen_img,
 			speed: Math.pow(Math.map(Math.random(), 0, 1, 0.5, 1.5), 2),
 			rotAng: 0,
@@ -83,8 +82,8 @@ export function loop() {
 		meteors.forEach(function(m, i) {
 			m.x += m.speed;
 			m.rotAng += m.rotSpeed;
-			if (m.x - resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
-			else entities.windowBox.drawRotatedImage(resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, resources[m.res].width / entities.windowBox.zoomFactor, resources[m.res].height / entities.windowBox.zoomFactor);
+			if (m.x - window.resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
+			else entities.windowBox.drawRotatedImage(window.resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, window.resources[m.res].width / entities.windowBox.zoomFactor, window.resources[m.res].height / entities.windowBox.zoomFactor);
 		});
 	}
 	context.globalAlpha = 1;
@@ -94,8 +93,8 @@ export function loop() {
 	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
 
 	controls.updateDragSmooth(entities.windowBox);
-	entities.windowBox.center.x = entities.players[window.game.ownIdx].box.center.x + controls.dragSmoothed.x;
-	entities.windowBox.center.y = entities.players[window.game.ownIdx].box.center.y + controls.dragSmoothed.y;
+	entities.windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;
+	entities.windowBox.center.y = entities.players[game.ownIdx].box.center.y + controls.dragSmoothed.y;
 
 	//planets
 	let playerInAtmos = false;
@@ -103,7 +102,7 @@ export function loop() {
 		if (entities.universe.collide(entities.windowBox, planet.atmosBox)) planet.drawAtmos(context, entities.windowBox);
 		if (entities.universe.collide(entities.windowBox, planet.box)) planet.draw(context, entities.windowBox);
 
-		if (!playerInAtmos && entities.universe.collide(planet.atmosBox, entities.players[window.game.ownIdx].box)) playerInAtmos = true;
+		if (!playerInAtmos && entities.universe.collide(planet.atmosBox, entities.players[game.ownIdx].box)) playerInAtmos = true;
 	});
 	if(playerInAtmos) audio.bgFilter.frequency.value = Math.min(4000, audio.bgFilter.frequency.value * 1.05);
 	else audio.bgFilter.frequency.value = Math.max(200, audio.bgFilter.frequency.value * 0.95);
@@ -127,7 +126,7 @@ export function loop() {
 	if (document.getElementById('particle-option').checked) {
 		particles.forEach(function(particle, index, array) {
 			if (particle.update()) array.splice(index, 1);
-			else entities.windowBox.drawRotatedImage(resources['jetpackParticle'],
+			else entities.windowBox.drawRotatedImage(window.resources['jetpackParticle'],
 				entities.windowBox.wrapX(particle.box.center.x),
 				entities.windowBox.wrapY(particle.box.center.y),
 				particle.box.angle, particle.size, particle.size);
@@ -139,8 +138,8 @@ export function loop() {
 	context.font = '22px Open Sans';
 	context.textAlign = 'center';
 	entities.players.forEach(function (player, i) {
-		if (entities.universe.collide(entities.windowBox, player.box)) player.draw(context, entities.windowBox, particles, i !== window.game.ownIdx);
-		if (player.panner !== undefined && player.jetpack) audio.setPanner(player.panner, player.box.center.x - entities.players[window.game.ownIdx].box.center.x, player.box.center.y - entities.players[window.game.ownIdx].box.center.y);
+		if (entities.universe.collide(entities.windowBox, player.box)) player.draw(context, entities.windowBox, particles, i !== game.ownIdx);
+		if (player.panner !== undefined && player.jetpack) audio.setPanner(player.panner, player.box.center.x - entities.players[game.ownIdx].box.center.x, player.box.center.y - entities.players[game.ownIdx].box.center.y);
 	});
 
 
@@ -148,7 +147,7 @@ export function loop() {
 	//layer 2: HUD / GUI
 	//if (player.timestamps._old !== null) document.getElementById('gui-bad-connection').style['display'] = (Date.now() - player.timestamps._old >= 1000) ? 'block' : 'none';
 	for (let element of document.querySelectorAll('#controls img')) {
-		element.style['opacity'] = (0.3 + entities.players[window.game.ownIdx].controls[element.id] * 0.7);
+		element.style['opacity'] = (0.3 + entities.players[game.ownIdx].controls[element.id] * 0.7);
 	}
 
 	//minimap
@@ -157,8 +156,8 @@ export function loop() {
 
 	entities.planets.forEach(function (planet) {
 		minimapContext.beginPath();
-		minimapContext.arc((planet.box.center.x*minimapCanvas.width/entities.universe.width - entities.players[window.game.ownIdx].box.center.x*minimapCanvas.width/entities.universe.width + minimapCanvas.width*1.5) % minimapCanvas.width,
-		(planet.box.center.y*minimapCanvas.height/entities.universe.height - entities.players[window.game.ownIdx].box.center.y*minimapCanvas.height/entities.universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
+		minimapContext.arc((planet.box.center.x*minimapCanvas.width/entities.universe.width - entities.players[game.ownIdx].box.center.x*minimapCanvas.width/entities.universe.width + minimapCanvas.width*1.5) % minimapCanvas.width,
+		(planet.box.center.y*minimapCanvas.height/entities.universe.height - entities.players[game.ownIdx].box.center.y*minimapCanvas.height/entities.universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
 			(planet.box.radius/entities.universe.width)*150, 0, 2*Math.PI);
 		minimapContext.closePath();
 		minimapContext.fillStyle = planet.progress.color;
@@ -167,14 +166,14 @@ export function loop() {
 
 	minimapContext.fillStyle = '#f33';
 	entities.players.forEach(function (player) {
-		if (player.appearance !== entities.players[window.game.ownIdx].appearance) return;
+		if (player.appearance !== entities.players[game.ownIdx].appearance) return;
 		minimapContext.beginPath();
-		minimapContext.arc((player.box.center.x*minimapCanvas.width/entities.universe.width - entities.players[window.game.ownIdx].box.center.x*minimapCanvas.width/entities.universe.width + minimapCanvas.width*1.5) % minimapCanvas.width,
-			(player.box.center.y*minimapCanvas.height/entities.universe.height - entities.players[window.game.ownIdx].box.center.y*minimapCanvas.height/entities.universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
+		minimapContext.arc((player.box.center.x*minimapCanvas.width/entities.universe.width - entities.players[game.ownIdx].box.center.x*minimapCanvas.width/entities.universe.width + minimapCanvas.width*1.5) % minimapCanvas.width,
+			(player.box.center.y*minimapCanvas.height/entities.universe.height - entities.players[game.ownIdx].box.center.y*minimapCanvas.height/entities.universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
 			2.5, 0, 2*Math.PI);
 		minimapContext.closePath();
 		minimapContext.fill();
 	});
 
-	window.game.animationFrameId = window.requestAnimationFrame(loop);
+	game.setAnimationFrameId(window.requestAnimationFrame(loop));
 }

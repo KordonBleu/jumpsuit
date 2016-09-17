@@ -1,4 +1,5 @@
 import settings from './settings.js';
+import * as game from './game.js';
 import * as ui from './ui.js';
 import * as audio from './audio.js';
 
@@ -69,14 +70,14 @@ class Connection {
 		this.lastMessage;
 
 		this.latencyHandler = setInterval(() => {
-			if (window.game.state !== 'playing') return;
+			if (game.state !== 'playing') return;
 			let param1 = document.getElementById('gui-bad-connection');
 			if (Date.now() - this.lastMessage > 2000) param1.classList.remove('hidden');
 			else param1.classList.add('hidden');
 
 			if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
 				currentConnection.close();
-				window.game.stop();
+				game.stop();
 			}
 		}, 100);
 
@@ -116,7 +117,7 @@ class Connection {
 		this.socket.close();
 		this.socket.removeEventListener('error', this.errorHandler);
 		this.socket.removeEventListener('message', this.messageHandler);
-		window.game.stop();
+		game.stop();
 		players.length = 0;
 		document.getElementById('lobby-table').classList.remove('hidden');
 		document.getElementById('player-table').classList.add('hidden');
@@ -129,7 +130,7 @@ class Connection {
 	}
 	sendChat(content) {
 		this.sendMessage(message.CHAT, content);
-		ui.printChatMessage(players[window.game.ownIdx].getFinalName(), players[window.game.ownIdx].appearance, content);
+		ui.printChatMessage(players[game.ownIdx].getFinalName(), players[game.ownIdx].appearance, content);
 	}
 	refreshControls(selfControls) {
 		let accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
@@ -174,8 +175,8 @@ class Connection {
 				shots.length = 0;
 				players.length = 0;
 
-				window.game.ownIdx = val.playerId;
-				console.log('gotten C_ACC', window.game.ownIdx);
+				game.setOwnIdx(val.playerId);
+				console.log('gotten C_ACC', game.ownIdx);
 				universe.width = val.univWidth;
 				universe.height = val.univHeight;
 
@@ -195,7 +196,7 @@ class Connection {
 						enemies.push(new Enemy(x, y, appearance));
 					},
 					(x, y, angle, origin, type) => {//add shots
-						audio.laserModel.makeSound(audio.makePanner(x - players[window.game.ownIdx].box.center.x, y - players[window.game.ownIdx].box.center.y)).start(0);
+						audio.laserModel.makeSound(audio.makePanner(x - players[game.ownIdx].box.center.x, y - players[game.ownIdx].box.center.y)).start(0);
 						let shot = new Shot(x, y, angle, origin, type);
 						shots.push(shot);
 						let originatingPlayer = players.find(element => { return element !== undefined && element.pid === origin; });
@@ -245,18 +246,18 @@ class Connection {
 						enemies[id].box.angle = angle;
 					},
 					(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
-						console.log(armedWeapon, carriedWeapon, players, pid, window.game.ownIdx);
-						if (pid === window.game.ownIdx) {
+						console.log(armedWeapon, carriedWeapon, players, pid, game.ownIdx);
+						if (pid === game.ownIdx) {
 							if (!players[pid].jetpack && jetpack) {
 								players[pid].jetpackSound = audio.jetpackModel.makeSound(audio.sfxGain, 1);
 								players[pid].jetpackSound.start(0);
-							} else if (players[pid].jetpack && !jetpack && players[window.game.ownIdx].jetpackSound !== undefined) {
+							} else if (players[pid].jetpack && !jetpack && players[game.ownIdx].jetpackSound !== undefined) {
 								players[pid].jetpackSound.stop();
 							}
 						} else {
 							if (players[pid] === undefined) console.log(players, pid); // this shouldn't happen
 							if (!players[pid].jetpack && jetpack) {
-								audio.setPanner(players[pid].panner, players[pid].box.center.x - players[window.game.ownIdx].box.center.x, players[pid].box.center.y - players[window.game.ownIdx].box.center.y);
+								audio.setPanner(players[pid].panner, players[pid].box.center.x - players[game.ownIdx].box.center.x, players[pid].box.center.y - players[game.ownIdx].box.center.y);
 								players[pid].jetpackSound = audio.jetpackModel.makeSound(players[pid].panner, 1);
 								players[pid].jetpackSound.start(0);
 							} else if(players[pid].jetpack && !jetpack && players[pid].jetpackSound !== undefined) {
@@ -271,7 +272,7 @@ class Connection {
 						players[pid].looksLeft = looksLeft;
 						if ((players[pid].walkFrame === 'walk1' && walkFrame === 'walk2') || (players[pid].walkFrame === 'walk2' && walkFrame === 'walk1')) {
 							let type = planets[players[pid].attachedPlanet].type,
-								stepSound = audio.stepModels[type][players[pid].lastSound].makeSound(audio.makePanner(x - players[window.game.ownIdx].box.center.x, y - players[window.game.ownIdx].box.center.y));
+								stepSound = audio.stepModels[type][players[pid].lastSound].makeSound(audio.makePanner(x - players[game.ownIdx].box.center.x, y - players[game.ownIdx].box.center.y));
 							if (stepSound.buffer !== undefined) {
 								stepSound.playbackRate.value = Math.random() + 0.5;//pitch is modified from 50% to 150%
 							} else {//hack for Chrome (doesn't sound as good)
@@ -290,13 +291,13 @@ class Connection {
 					}
 				);
 
-				players[window.game.ownIdx].health = val.yourHealth;
-				players[window.game.ownIdx].fuel = val.yourFuel;
+				players[game.ownIdx].health = val.yourHealth;
+				players[game.ownIdx].fuel = val.yourFuel;
 
 				Array.prototype.forEach.call(document.querySelectorAll('#gui-health div'), (element, index) => {
 					let state = 'heartFilled';
-					if (index * 2 + 2 <= players[window.game.ownIdx].health) state = 'heartFilled';
-					else if (index * 2 + 1 === players[window.game.ownIdx].health) state = 'heartHalfFilled';
+					if (index * 2 + 2 <= players[game.ownIdx].health) state = 'heartFilled';
+					else if (index * 2 + 1 === players[game.ownIdx].health) state = 'heartHalfFilled';
 					else state = 'heartNotFilled';
 					element.className = state;
 				});
@@ -322,7 +323,7 @@ class Connection {
 			case message.SCORES.value: {
 				let val = message.SCORES.deserialize(msg.data, enabledTeams);
 				console.log(val);
-				window.game.scores = val;
+				game.setScores(val);
 				for (let team in val) {
 					let element = document.getElementById('gui-points-' + team);
 					if (element !== null) element.textContent = val[team];
@@ -341,29 +342,29 @@ class Connection {
 						pointsElement.appendChild(teamItem);
 					}
 				}
-				window.game.state = val.state;
+				game.setState(val.state);
 
 				let playerTableVictoryElement = document.getElementById('lobby-victory');
 				playerTableVictoryElement.style.display = 'none';
 				document.getElementById('lobby-status').textContent = val.state;
 				if (val.state === 'warmup') {
 					document.getElementById('gui-warmup').classList.remove('hidden');
-					window.game.start();
+					game.start();
 				} else if (val.state === 'playing') {
 					document.getElementById('gui-warmup').classList.add('hidden');
-					window.game.start();
+					game.start();
 				} else if (val.state === 'displaying_scores') {
 					let victor = null,
 						a = -Infinity;
 					playerTableVictoryElement.style.display = 'initial';
-					for (let team in window.game.scores) {
-						if (window.game.scores[team] > a) {
-							a = window.game.scores[team];
+					for (let team in game.scores) {
+						if (game.scores[team] > a) {
+							a = game.scores[team];
 							victor = team;
-						} else if (window.game.scores[team] === a) victor = null;
+						} else if (game.scores[team] === a) victor = null;
 					}
 					playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
-					window.game.stop();
+					game.stop();
 				}
 				break;
 			}
@@ -415,7 +416,7 @@ export function handleHistoryState() {
 	if (history.state === HISTORY_MENU) {
 		//if navigated to / stop the game + display menu
 		if (currentConnection !== undefined) currentConnection.close();
-		window.game.stop();
+		game.stop();
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
 window.addEventListener('popstate', handleHistoryState);

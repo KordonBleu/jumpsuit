@@ -12,7 +12,7 @@ export default class extends Shot {
 		else if (this.type === this.TYPES.BALL) resourceKey = 'shotgunBall';
 
 		if (resourceKey === undefined) return;
-		windowBox.drawRotatedImage(resources[resourceKey],
+		windowBox.drawRotatedImage(window.resources[resourceKey],
 			windowBox.wrapX(this.box.center.x),
 			windowBox.wrapY(this.box.center.y),
 			this.box.angle + (resourceKey === 'knife' ? (100 - this.lifeTime) * Math.PI * 0.04 - Math.PI / 2 : 0));
