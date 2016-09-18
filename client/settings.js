@@ -54,6 +54,8 @@ let proxy = new Proxy(settings, {
 	},
 	deleteProperty: (target, property) => {
 		if (defaultSettings[property] !== undefined) proxy[property] = defaultSettings[property];
+
+		return true;
 	}
 });
 

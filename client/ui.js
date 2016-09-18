@@ -42,7 +42,6 @@ let chatInput = document.getElementById('gui-chat-input'),
 	nameElement = document.getElementById('name'),
 	musicVolumeElement = document.getElementById('music-volume'),
 	effectsVolumeElement = document.getElementById('effects-volume'),
-	keySettingsElement = document.getElementById('key-settings'),
 	keyResetElement = document.getElementById('key-reset'),
 	primaryWeaponElement = document.getElementById('primary-weapon'),
 	secondaryWeaponElement = document.getElementById('secondary-weapon'),
@@ -111,106 +110,74 @@ effectsVolumeElement.addEventListener('input', function(ev) {
 	audio.setSfxGain(ev.target.value);
 });
 
+
 /* Key settings */
 function initKeyTable() {
-	let keySettingsElement = document.getElementById('key-settings');
+	let keySettingsTbody = document.getElementById('key-settings-body');
 
-	while (keySettingsElement.firstChild) {
-		keySettingsElement.removeChild(keySettingsElement.firstChild);
+	while (keySettingsTbody.firstChild) {
+		keySettingsTbody.removeChild(keySettingsTbody.firstChild);
 	}
-	let tableTitles = ['Actions', 'Primary Keys', 'Alternate Keys'], firstRow = document.createElement('tr');
-	for (let i = 0; i < tableTitles; i++){
-		let tableHead = document.createElement('th');
-		tableHead.textContent = tableTitles[i];
-		firstRow.appendChild(tableHead);
-	}
-	keySettingsElement.appendChild(firstRow);
-	for (let action in controls.reverseKeyMap) {
+	for (let {action, associatedKeys} of controls.keyMap) {
 		let rowEl = document.createElement('tr'),
-			actionEl = document.createElement('td'),
-			keyEl;
-
+			actionEl = document.createElement('th');
 		actionEl.textContent = action;
 		rowEl.appendChild(actionEl);
 
-		let slice = controls.reverseKeyMap[action];
-		for (let i = 0; i != 2; i++) {
-			keyEl = document.createElement('td');
-			if (typeof slice[i] === 'undefined' || slice[i] === '') keyEl.textContent = ' - ';
-			else keyEl.textContent = slice[i]; //fixes a bug: if slice[i] is a numeric input it has no replace function -> always convert it to string
+		for (let key of associatedKeys) {
+			let keyEl = document.createElement('td');
+			keyEl.textContent = key;
 			rowEl.appendChild(keyEl);
 		}
-		keySettingsElement.appendChild(rowEl);
-	}
+		for (let i = associatedKeys.size; i < 2; ++i) {
+			// add empty cells if needed
+			let keyEl = document.createElement('td');
+			rowEl.appendChild(keyEl);
+		}
 
-	/*function sameObjects(a, b) {
-		if (Object.getOwnPropertyNames(a).length !== Object.getOwnPropertyNames(b).length) {
-			return false;
-		}
-		for (let propName in a) {
-			//hasOwnProperty is here in case `a[propName]`'s value is `undefined`
-			if (!b.hasOwnProperty(propName) || a[propName] !== b[propName]) return false;
-		}
-		return true;
+		keySettingsTbody.appendChild(rowEl);
 	}
-	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, controls.keyMap);*/
-	settings.keymap = JSON.stringify(controls.reverseKeyMap);
 }
-initKeyTable(settings.keymap !== '');
+initKeyTable();
 
-let selectedRow = -1;
-keySettingsElement.addEventListener('click', function(e) {
-	function reselect(obj){
-		document.removeEventListener('keydown', wrap);
-		for (let row of keySettingsElement.childNodes) row.classList.remove('selected');
-		if (typeof obj !== 'undefined') {
-			obj.classList.add('selected');
-			let nsr = [].slice.call(obj.parentNode.childNodes, 0).indexOf(obj);
-			if (nsr === selectedRow) reselect();
-			else selectedRow = nsr;
-		} else {
-			selectedRow = -1;
-			document.removeEventListener('keyup', wrap);
-		}
+let selectedCell = null;
+function deselectRow() {
+	selectedCell.classList.remove('selected');
+	selectedCell = null;
+	document.getElementById('key-settings-body').classList.remove('highlight-disabled');
+	document.removeEventListener('keyup', handleChangeKey);
+}
+function handleChangeKey(e) {
+	console.log(e, selectedCell);
+	try {
+		if (selectedCell.textContent !== '') controls.keyMap.deleteKey(selectedCell.textContent);
+		let action = selectedCell.parentElement.firstElementChild.textContent;
+		controls.keyMap.addMapping(action, e.code);
+		selectedCell.textContent = e.code;
+		deselectRow();
+		settings.keymap = controls.keyMap.stringify();
+	} catch (err) {
+		alert(err);
 	}
-	function handleChangeKey(e) {
-		if (selectedRow === -1) return;
-		let keyName = e.code,
-			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent;
-
-		for (let key in controls.keyMap) {
-			if (key !== keyName) continue;
-			break;
-		}
-		if (controls.reverseKeyMap[action][0] === keyName) controls.reverseKeyMap[action].length = 1;
-		else controls.reverseKeyMap[action][1] = controls.reverseKeyMap[action][0];
-
-		controls.reverseKeyMap[action][0] = keyName;
-		initKeyTable(true);
-	}
-	function wrap(nE) {
-		nE.preventDefault();
-		switch(nE.type) {
-			case 'keydown':
-				document.removeEventListener('keydown', wrap);
-				document.addEventListener('keyup', wrap);
-				break;
-			case 'keyup':
-				handleChangeKey(nE);
-				reselect();
-				break;
-		}
-	}
+}
+document.getElementById('key-settings-body').addEventListener('click', function(e) {
 	if (e.target.nodeName === 'TD') {
-		reselect(e.target.parentNode);
-		document.addEventListener('keydown', wrap);
+		if (selectedCell === e.target) deselectRow(); // user clicks again on same row
+		else {
+			if (selectedCell !== null) deselectRow();
+
+			selectedCell = e.target;
+			selectedCell.classList.add('selected');
+			document.getElementById('key-settings-body').classList.add('highlight-disabled');
+			document.addEventListener('keyup', handleChangeKey);
+		}
 	}
 });
 keyResetElement.addEventListener('click', function() {
-	delete settings.keymap;
-	// TODO: re-grab keymap from the storage
-	initKeyTable(false);
+	controls.resetKeyMap();
+	initKeyTable();
 });
+
 
 /* Name */
 nameElement.value = settings.name;
@@ -337,7 +304,7 @@ chatInput.addEventListener('blur', function() {
 	chatPlayerListElement.classList.add('hidden');
 });
 export function chatInUse() {
-	chatInput === document.activeElement;
+	return chatInput === document.activeElement;
 }
 export function focusChat() {
 	chatInput.focus();

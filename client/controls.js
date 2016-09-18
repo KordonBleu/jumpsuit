@@ -1,7 +1,10 @@
 import settings from './settings.js';
+import * as bimap from '../shared/bimap.js';
+
+import * as entities from './entities.js';
+
 import * as ui from './ui.js';
 import * as wsClt from './websocket_client.js';
-import * as entities from './entities.js';
 
 const canvas = document.getElementById('canvas');
 
@@ -13,7 +16,22 @@ String.prototype.ucFirst = function () {
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
 
-export let selfControls = {};
+export let selfControls = {
+		changeWeapon: 0,
+		crouch: 0,
+		jetpack: 0,
+		jump: 0,
+		moveLeft: 0,
+		moveRight: 0,
+		run: 0,
+		shoot: 0
+	},
+	keyMap = new bimap.KeyActionMap(settings.keymap);
+
+export function resetKeyMap() {
+	delete settings.keymap;
+	keyMap.parse(settings.keymap);
+}
 
 export function handleInputMobile(e) {
 	function transform(touch, type) {
@@ -49,47 +67,25 @@ export function handleInputMobile(e) {
 
 /* Keyboard */
 function handleInput(e) {
-	console.log(e, selfControls);
-	if (e.code === 'Tab') e.preventDefault();
-
 	let s = (e.type === 'keydown') * 1;
 
 	if (!ui.chatInUse() && ui.noModalOpen()) {
-		let triggered = keyMap[e.code];
+		let triggered = keyMap.getAction(e.code);
 
 		if (selfControls[triggered] !== undefined) {
 			e.preventDefault();
 			let controlElement = document.getElementById(triggered);
 			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
+			console.log(s, selfControls);
 			selfControls[triggered] = s;
 			wsClt.currentConnection.refreshControls(selfControls);
-		} else if (triggered === 'chat' && s === 1) window.setTimeout(function() {//prevent the letter corresponding to
-			ui.focusChat();//the 'chat' control (most likelly 't')
-		}, 0);//from being written in the chat
-	}
-}
-export let keyMap = JSON.parse(settings.keymap),
-	reverseKeyMap = {};
-
-function updateReverseKeyMap() {
-	handleInput.reverseKeyMap = {};
-	for (let key in keyMap) {
-		let action = keyMap[key], index;
-		if (handleInput.reverseKeyMap[action] === undefined) handleInput.reverseKeyMap[action] = [];
-		if (handleInput.reverseKeyMap[action][0] !== undefined) index = 1;
-		else index = 0;
-		handleInput.reverseKeyMap[action][index] = key;
-	}
-}
-function updateKeyMap() {
-	keyMap = {};
-	for (let action in handleInput.reverseKeyMap){
-		let keys = handleInput.reverseKeyMap[action];
-		for (let key in keys) {
-			if (keys[key] !== undefined || keys[key] !== null) keyMap[keys[key]] = action;
+		} else if (triggered === 'chat' && s === 1) {
+			e.preventDefault();
+			window.setTimeout(function() { // prevent the letter corresponding to
+				ui.focusChat(); // the 'chat' control (most likelly 't')
+			}, 0); // from being written in the chat
 		}
 	}
-
 }
 
 /* Drag & Mouse */

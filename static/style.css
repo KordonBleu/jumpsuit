@@ -574,25 +574,26 @@ label {
 	width: 100%;
 	text-align: left;
 	border-collapse: collapse;
-	cursor: pointer;
 	border: .5em solid rgba(0, 0, 0, 0);
 	margin-top: .75em;
-}
-#key-settings #key-action {
-	width: 140px;
-}
-#key-settings tr {
-	transition: background .2s, color .2s;
-	outline: 2px dashed rgba(0, 0, 0, 0);
 }
 #key-settings td {
 	padding: 3px;
 }
-#key-settings tr:not(.selected):hover {
+#key-settings tbody td {
+	cursor: pointer;
+}
+#key-settings tbody tr {
+	transition: background .2s, color .2s;
+}
+#key-settings tbody:not(.highlight-disabled) tr:hover {
 	background: #ad3726;
 	color: #ddd;
 }
-#key-settings tr.selected {
+#key-settings tbody td {
+	outline: 2px dashed rgba(0, 0, 0, 0);
+}
+#key-settings tbody td.selected {
 	outline-color: #ad3726;
 }
 #gui-chat-first {

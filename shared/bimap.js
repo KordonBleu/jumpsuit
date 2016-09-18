@@ -54,10 +54,11 @@ export class BitmaskMap extends StrNbrBiMap {
 // an action can be mapped to multiple keyboard keys, but a keyboard key can only be mapped to one action
 export class KeyActionMap { // note: `key` here does not refer to a key as in 'key <-> value' but as in 'keyboard key'
 	constructor(str) {
-		this._actions = {};
-		this._keys = {};
-
 		if (str !== undefined) this.parse(str);
+		else {
+			this._actions = {};
+			this._keys = {};
+		}
 	}
 	addMapping(action, key) {
 		if (this._keys[key] !== undefined) throw new Error('Key `' + key + '` is already assigned to the action `' + this._keys[key] + '`');
@@ -78,14 +79,24 @@ export class KeyActionMap { // note: `key` here does not refer to a key as in 'k
 		return this._actions[action];
 	}
 	stringify() {
-		JSON.stringify(this._keys);
+		return JSON.stringify(this._keys);
 	}
 	parse(str) {
+		this._actions = {};
 		this._keys = JSON.parse(str);
+
 		for (let key in this._keys) {
 			let action = this._keys[key];
 			if (this._actions[action] === undefined) this._actions[action] = new Set();
 			this._actions[action].add(key);
+		}
+	}
+	*[Symbol.iterator]() {
+		for (let action in this._actions) {
+			yield {
+				action,
+				associatedKeys: this.getKeys(action)
+			};
 		}
 	}
 }
