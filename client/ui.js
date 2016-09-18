@@ -2,7 +2,7 @@ import * as game from './game.js';
 import * as audio from './audio.js';
 import Planet from './planet.js';
 import * as wsClt from './websocket_client.js';
-import { keyMap, reverseKeyMap, isMobile } from './controls.js';
+import * as controls from './controls.js';
 import * as entities from './entities.js';
 import settings from './settings.js';
 import { resourceAmount } from './resource_loader.js';
@@ -52,7 +52,7 @@ let chatInput = document.getElementById('gui-chat-input'),
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
 	document.getElementById('device-not-supported').classList.remove('hidden');
 	document.getElementById('shade-box').classList.remove('hidden');
-} else if (isMobile) {//Chrome or Firefox mobile
+} else if (controls.isMobile) {//Chrome or Firefox mobile
 	document.getElementById('device-untested').classList.remove('hidden');
 	document.getElementById('shade-box').classList.remove('hidden');
 }
@@ -125,7 +125,7 @@ function initKeyTable() {
 		firstRow.appendChild(tableHead);
 	}
 	keySettingsElement.appendChild(firstRow);
-	for (let action in reverseKeyMap) {
+	for (let action in controls.reverseKeyMap) {
 		let rowEl = document.createElement('tr'),
 			actionEl = document.createElement('td'),
 			keyEl;
@@ -133,7 +133,7 @@ function initKeyTable() {
 		actionEl.textContent = action;
 		rowEl.appendChild(actionEl);
 
-		let slice = reverseKeyMap[action];
+		let slice = controls.reverseKeyMap[action];
 		for (let i = 0; i != 2; i++) {
 			keyEl = document.createElement('td');
 			if (typeof slice[i] === 'undefined' || slice[i] === '') keyEl.textContent = ' - ';
@@ -153,8 +153,8 @@ function initKeyTable() {
 		}
 		return true;
 	}
-	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, keyMap);*/
-	settings.keymap = JSON.stringify(reverseKeyMap);
+	document.getElementById('key-reset').disabled = sameObjects(defaultKeymap, controls.keyMap);*/
+	settings.keymap = JSON.stringify(controls.reverseKeyMap);
 }
 initKeyTable(settings.keymap !== '');
 
@@ -178,14 +178,14 @@ keySettingsElement.addEventListener('click', function(e) {
 		let keyName = e.code,
 			action = keySettingsElement.childNodes[selectedRow].firstChild.textContent;
 
-		for (let key in keyMap) {
+		for (let key in controls.keyMap) {
 			if (key !== keyName) continue;
 			break;
 		}
-		if (reverseKeyMap[action][0] === keyName) reverseKeyMap[action].length = 1;
-		else reverseKeyMap[action][1] = reverseKeyMap[action][0];
+		if (controls.reverseKeyMap[action][0] === keyName) controls.reverseKeyMap[action].length = 1;
+		else controls.reverseKeyMap[action][1] = controls.reverseKeyMap[action][0];
 
-		reverseKeyMap[action][0] = keyName;
+		controls.reverseKeyMap[action][0] = keyName;
 		initKeyTable(true);
 	}
 	function wrap(nE) {
@@ -343,7 +343,7 @@ export function focusChat() {
 	chatInput.focus();
 }
 export function printPlayerList(filter) {
-	if (isMobile) chatPlayerListElement.dataset.desc = 'player list';
+	if (controls.isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
 	entities.players.forEach(function(player) {

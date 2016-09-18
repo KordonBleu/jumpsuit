@@ -1,13 +1,13 @@
-import BiMap from './bimap.js';
+import * as bimap from './bimap.js';
 import * as convert from './convert.js';
 
-const weaponMap = new BiMap(false,
+const weaponMap = new bimap.EnumMap(
 		'Lmg',
 		'Smg',
 		'Shotgun',
 		'Knife'
 	),
-	enemyAppearanceMap = new BiMap(false,
+	enemyAppearanceMap = new bimap.EnumMap(
 		'enemyBlack1',
 		'enemyBlack2',
 		'enemyBlack3',
@@ -29,7 +29,7 @@ const weaponMap = new BiMap(false,
 		'enemyRed4',
 		'enemyRed5'
 	),
-	teamMap = new BiMap(false,
+	teamMap = new bimap.EnumMap(
 		'alienBeige',
 		'alienBlue',
 		'alienGreen',
@@ -37,14 +37,14 @@ const weaponMap = new BiMap(false,
 		'alienYellow',
 		'neutral' // sometimes not used, doesn't matter since it has the highest value
 	),
-	teamMaskMap = new BiMap(true,
+	teamMaskMap = new bimap.BitmaskMap(
 		'alienBeige',
 		'alienBlue',
 		'alienGreen',
 		'alienPink',
 		'alienYellow'
 	),
-	walkFrameMap = new BiMap(false,
+	walkFrameMap = new bimap.EnumMap(
 		'duck',
 		'hurt',
 		'jump',
@@ -52,7 +52,7 @@ const weaponMap = new BiMap(false,
 		'walk1',
 		'walk2'
 	),
-	controlsMap = new BiMap(true,
+	controlsMap = new bimap.BitmaskMap(
 		'jump',
 		'run',
 		'crouch',
@@ -62,7 +62,7 @@ const weaponMap = new BiMap(false,
 		'changeWeapon',
 		'shoot'
 	),
-	lobbyStateMap = new BiMap(false,
+	lobbyStateMap = new bimap.EnumMap(
 		'warmup',
 		'playing',
 		'displaying_scores'

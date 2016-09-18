@@ -256,7 +256,6 @@ class Connection {
 						entities.enemies[id].box.angle = angle;
 					},
 					(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
-						console.log(armedWeapon, carriedWeapon, entities.players, pid, game.ownIdx);
 						if (pid === game.ownIdx) {
 							if (!entities.players[pid].jetpack && jetpack) {
 								entities.players[pid].jetpackSound = audio.jetpackModel.makeSound(audio.sfxGain, 1);

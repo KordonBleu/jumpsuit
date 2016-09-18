@@ -49,6 +49,7 @@ export function handleInputMobile(e) {
 
 /* Keyboard */
 function handleInput(e) {
+	console.log(e, selfControls);
 	if (e.code === 'Tab') e.preventDefault();
 
 	let s = (e.type === 'keydown') * 1;
