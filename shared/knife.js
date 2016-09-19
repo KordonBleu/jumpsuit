@@ -8,3 +8,5 @@ export default class Knife extends Weapon {
 }
 Knife.prototype.spray = 0.005;
 Knife.prototype.shotType = Shot.prototype.TYPES.KNIFE;
+
+Knife.prototype.type = 'Knife';

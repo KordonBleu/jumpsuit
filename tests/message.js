@@ -1,12 +1,12 @@
 import test from 'ava';
 
-import '../proto_mut.js';
+import '../server/proto_mut.js';
 
-import { default as Planet } from '../mods/capture/planet.js';
-import { default as Enemy } from '../mods/capture/enemy.js';
-import { default as Shot } from '../mods/capture/shot.js';
-import { default as Player } from '../mods/capture/player.js';
-import * as message from '../static/message.js';
+import Planet from '../shared/planet.js';
+import Enemy from '../shared/enemy.js';
+import Shot from '../shared/shot.js';
+import Player from '../shared/player.js';
+import message from '../shared/message.js';
 import * as vinage from 'vinage';
 
 
@@ -190,13 +190,14 @@ planets[1].progress.value = 33;
 
 players[0].box = new vinage.Rectangle(new vinage.Point(12, 444), 55, 92, 1.5*Math.PI);
 players[1].box = new vinage.Rectangle(new vinage.Point(98, 342), 58, 102);
-players[1].looksLeft = true;
 players[0].pid = 0;
 players[1].pid = 1;
 players[0].looksLeft = true;
 players[1].looksLeft = false;
 players[0].homographId = 0;
 players[1].homographId = 0;
+players[0].hurt = true;
+players[1].hurt = false;
 
 enemies[0].box.angle = 0.321;
 enemies[2].box.angle = Math.PI;
@@ -246,8 +247,8 @@ test('ADD_ENTITY', t => {
 		t.is(players[playerI].walkFrame, walkFrame);
 		t.is(players[playerI].name, name);
 		t.is(players[playerI].homographId, homographId);
-		t.is(players[playerI].armedWeapon.constructor.name, armedWeapon, 'player[' + playerI + ']');
-		t.is(players[playerI].carriedWeapon.constructor.name, carriedWeapon, 'player[' + playerI + ']');
+		t.is(players[playerI].armedWeapon.type, armedWeapon, 'player[' + playerI + ']');
+		t.is(players[playerI].carriedWeapon.type, carriedWeapon, 'player[' + playerI + ']');
 
 		++playerI;
 	});
@@ -284,8 +285,8 @@ test('GAME_STATE', t => {
 		t.is(players[pid].jetpack, jetpack);
 		t.is(players[pid].hurt, hurt);
 		t.is(players[pid].walkFrame, walkFrame);
-		t.is(players[pid].armedWeapon.constructor.name, armedWeapon);
-		t.is(players[pid].carriedWeapon.constructor.name, carriedWeapon);
+		t.is(players[pid].armedWeapon.type, armedWeapon);
+		t.is(players[pid].carriedWeapon.type, carriedWeapon);
 
 		++playerI;
 	});

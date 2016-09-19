@@ -7,3 +7,5 @@ export default class Lmg extends RapidFireWeapon {
 }
 Lmg.prototype.cycleLength = 9;
 Lmg.prototype.spray = 0.025;
+
+Lmg.prototype.type = 'Lmg';

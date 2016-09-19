@@ -6,6 +6,4 @@ Lmg.prototype.muzzleY = 6;
 Lmg.prototype.offsetX = 13;
 Lmg.prototype.offsetY = -15;
 
-Lmg.prototype.type = 'Lmg';
-
 export default Lmg;

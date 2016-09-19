@@ -331,7 +331,6 @@ class Connection {
 			}
 			case message.SCORES.value: {
 				let val = message.SCORES.deserialize(msg.data, enabledTeams);
-				console.log(val);
 				game.setScores(val);
 				for (let team in val) {
 					let element = document.getElementById('gui-points-' + team);

@@ -51,6 +51,12 @@ rollup.rollup({
 				'import vinage from \'vinage\';': 'const vinage = require(\'vinage\');'
 			}
 		}),
+		replace({
+			include: 'server/resource_loader.js',
+			values: {
+				'../static/assets/images/': './static/assets/images/'
+			}
+		}),
 		alias({
 			'<@engine@>': 'mods/' + config.mod + '/engine.js',
 			'<@onMessage@>': 'mods/' + config.mod + '/on_message.js',

@@ -148,7 +148,6 @@ function deselectRow() {
 	document.removeEventListener('keyup', handleChangeKey);
 }
 function handleChangeKey(e) {
-	console.log(e, selectedCell);
 	try {
 		if (selectedCell.textContent !== '') controls.keyMap.deleteKey(selectedCell.textContent);
 		let action = selectedCell.parentElement.firstElementChild.textContent;

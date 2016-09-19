@@ -22,6 +22,8 @@
   "devDependencies": {
     "source-map-support": "0.x",
     "ava": "0.x",
+    "babel-plugin-transform-rename-import": "2.x",
+    "babel-polyfill": "6.x",
     "stylelint": "7.x"
   },
   "repository": {
@@ -33,5 +35,8 @@
   "scripts": {
     "test": "./node_modules/ava/cli.js ./tests/message.js",
     "stylelint": "./node_modules/stylelint/dist/cli.js ./static/*.css"
+  },
+  "ava": {
+    "require": ["babel-polyfill", "babel-register"]
   }
 }

@@ -6,6 +6,4 @@ Smg.prototype.muzzleY = -2;
 Smg.prototype.offsetX = 13;
 Smg.prototype.offsetY = -3;
 
-Smg.prototype.type = 'Smg';
-
 export default Smg;
