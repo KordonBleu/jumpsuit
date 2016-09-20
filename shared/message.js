@@ -1,3 +1,4 @@
+import ipaddr from 'ipaddr.js';
 import * as bimap from './bimap.js';
 import * as convert from './convert.js';
 
@@ -110,7 +111,7 @@ const message = {
 	},
 	ADD_SERVERS: {
 		value: 1,
-		serialize: function(serverList, clientIp) {
+		serialize: function(serverList, ipList) {
 			let partialServerBufs = [],
 				partialServerBufsLength = 0;
 
@@ -122,34 +123,19 @@ const message = {
 
 			let buffer = new ArrayBuffer(1 + serverList.length*16 + partialServerBufsLength),
 				view = new Uint8Array(buffer),
-				offset = 1,
-				promises = [];
+				offset = 1;
 
 			view[0] = this.value;
 
 			partialServerBufs.forEach((partialServerBuf, i) => {
-				let offseti = offset;//a copy of offset local to this scope
-				//because by the moment the promise will be resolved, `offset` will be modified
-
-				let currentPromise = serverList[i].effectiveIp(clientIp);
-				currentPromise.then(function(ip) {
-					view.set(ip.toByteArray(), offseti);
-				});
-				promises.push(currentPromise);
-
+				view.set(ipList[i].toByteArray(), offset);
 				offset += 16;
 				view.set(new Uint8Array(partialServerBuf), offset);
 				offset += partialServerBuf.byteLength;
 
 			});
 
-			return new Promise((resolve, reject) => {
-				Promise.all(promises).then(function() {
-					resolve(buffer);
-				}).catch(function() {
-					reject();
-				});
-			});
+			return buffer;
 		},
 		deserialize: function(buffer) {
 			let view = new DataView(buffer),
@@ -157,12 +143,10 @@ const message = {
 				serverList = [];
 
 			while (offset !== buffer.byteLength) {
-				let ip = ipaddr.fromByteArray(new Uint8Array(buffer.slice(offset, offset += 16)));
+				let ipv6 = ipaddr.fromByteArray(new Uint8Array(buffer.slice(offset, offset += 16)));
 
-				if (ip.isIPv4MappedAddress()) ip = ip.toIPv4Address().toString();
-				else ip = '[' + ip.toString() + ']';
-
-				let url = (view.getUint8(offset++) === 0 ? 'ws://' : 'wss://') + ip + ':' + view.getUint16(offset);
+				let secure = view.getUint8(offset++) !== 0;
+				let port = view.getUint16(offset);
 				offset += 2;
 
 				let serverNameBuf = buffer.slice(offset + 1, offset + 1 + view.getUint8(offset));
@@ -174,7 +158,9 @@ const message = {
 				serverList.push({
 					name: convert.bufferToString(serverNameBuf),
 					mod: convert.bufferToString(modNameBuf),
-					url
+					secure,
+					ipv6,
+					port
 				});
 			}
 

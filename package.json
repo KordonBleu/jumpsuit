@@ -20,10 +20,10 @@
     "utf-8-validate": "1.x"
   },
   "devDependencies": {
-    "source-map-support": "0.x",
     "ava": "0.x",
     "babel-plugin-transform-rename-import": "2.x",
     "babel-polyfill": "6.x",
+    "source-map-support": "0.x",
     "stylelint": "7.x"
   },
   "repository": {
@@ -37,6 +37,9 @@
     "stylelint": "./node_modules/stylelint/dist/cli.js ./static/*.css"
   },
   "ava": {
-    "require": ["babel-polyfill", "babel-register"]
+    "require": [
+      "babel-polyfill",
+      "babel-register"
+    ]
   }
 }

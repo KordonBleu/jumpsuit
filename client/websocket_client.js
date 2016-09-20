@@ -43,17 +43,30 @@ let {encodeLobbyNumber, decodeLobbyNumber} = (() => {
 
 masterSocket.binaryType = 'arraybuffer';
 masterSocket.addEventListener('message', msg => {
+	function determineUrl(server) {
+		let ip;
+		if (server.ipv6.isIPv4MappedAddress()) ip = server.ipv6.toIPv4Address().toString();
+		else ip = '[' + server.ipv6.toString() + ']';
+
+		return (server.secure ? 'ws://' : 'wss://') + ip + ':' + server.port;
+	}
 	switch (new Uint8Array(msg.data, 0, 1)[0]) {
 		case message.ADD_SERVERS.value:
 			console.log('Got some new servers to add ! :D');
 			if (serverList === undefined) {//first time data is inserted
 				serverList = message.ADD_SERVERS.deserialize(msg.data);
-				serverList.forEach(ui.addServerRow);
+				serverList.forEach(server => {
+					server.url = determineUrl(server);
+					ui.addServerRow(server);
+				});
 				ui.applyLobbySearch();//in case the page was refreshed and the
 			} else {
 				let newServers = message.ADD_SERVERS.deserialize(msg.data);
 				serverList = serverList.concat(newServers);
-				newServers.forEach(ui.addServerRow);
+				newServers.forEach(server => {
+					server.url = determineUrl(server);
+					ui.addServerRow(server);
+				});
 			}
 			break;
 		case message.REMOVE_SERVERS.value:

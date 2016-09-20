@@ -76,7 +76,6 @@ function handleInput(e) {
 			e.preventDefault();
 			let controlElement = document.getElementById(triggered);
 			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
-			console.log(s, selfControls);
 			selfControls[triggered] = s;
 			wsClt.currentConnection.refreshControls(selfControls);
 		} else if (triggered === 'chat' && s === 1) {

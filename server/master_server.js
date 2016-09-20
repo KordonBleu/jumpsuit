@@ -138,18 +138,22 @@ gameServerSocket.on('connection', function(ws) {
 					try {
 						ws.ping();
 						lastPing = Date.now();
-					} catch (err) {/* Do nothing */}
+					} catch (err) {
+						console.error(err);
+					}
 				}, 5000);
 				gameServers.push(gameServer);
 
 				logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.mod, gameServer.name);
 				ws.send(message.SERVER_REGISTERED.serialize());
 				clientsSocket.clients.forEach(function(client) {//broadcast
-					try {
-						message.ADD_SERVERS.serialize([gameServer], client.ipAddr).then(function(buf) {
-							client.send(buf, wsOptions);
-						});
-					} catch (err) {/* Do nothing */}
+					gameServer.effectiveIp(client.ipAddr).then(effectiveIp => {
+						try {
+							client.send(message.ADD_SERVERS.serialize([gameServer], [effectiveIp]), wsOptions);
+						} catch (err) {
+							console.error(err);
+						}
+					});
 				});
 			} else {
 				ips.ban(gameServer.ip);
@@ -172,7 +176,9 @@ gameServerSocket.on('connection', function(ws) {
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
 						client.send(message.REMOVE_SERVERS.serialize([i]), wsOptions);
-					} catch (err) {/* Do nothing */}
+					} catch (err) {
+						console.error(err);
+					}
 				});
 			}
 		});
@@ -183,10 +189,16 @@ clientsSocket.on('connection', function(ws) {
 	ws.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
 	if (ws.ipAddr.kind() === 'ipv4') ws.ipAddr = ws.ipAddr.toIPv4MappedAddress();
 
-	try {
-		message.ADD_SERVERS.serialize(gameServers, ws.ipAddr).then(function(buf) {
-			ws.send(buf, wsOptions);
-		});
-	} catch (err) {/* Do nothing */ console.log(err); }
+	let ipPromises = [];
+	for (let gameServer of gameServers) ipPromises.push(gameServer.effectiveIp(ws.ipAddr));
+	Promise.all(ipPromises).then(effectiveIps => {
+		try {
+			ws.send(message.ADD_SERVERS.serialize(gameServers, effectiveIps), wsOptions);
+		} catch (err) {
+			console.log(err);
+		}
+	}).catch(err => {
+		console.error(err);
+	});
 });
 

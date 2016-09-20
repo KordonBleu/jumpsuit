@@ -6,8 +6,11 @@ import Planet from '../shared/planet.js';
 import Enemy from '../shared/enemy.js';
 import Shot from '../shared/shot.js';
 import Player from '../shared/player.js';
+
 import message from '../shared/message.js';
+
 import * as vinage from 'vinage';
+import ipaddr from 'ipaddr.js';
 
 
 test('REGISTER_SERVER', t => {
@@ -33,33 +36,43 @@ test('REGISTER_SERVER', t => {
 });
 
 
-test.skip('ADD_SERVERS', t => {
+test('ADD_SERVERS', t => {
 	let serverList = [
-		{
-			ip: '2001:0db8:0000:85a3:0000:0000:ac1f:8001',
-			name: 'server name',
-			mod: 'mod name',
-			port: 7483,
-			secure: true
-		},
-		{
-			ip: '2001:610:240:22::c100:68b',
-			name: 'The Circlejerk',
-			mod: 'biscuit',
-			port: 31415,
-			secure: false
-		},
-		{
-			ip: '2001:0db8:0000:0000:0000:ff00:0042:8329',
-			name: 'Deutsche Qualität',
-			mod: 'caractères accentués',
-			port: 7483,
-			secure: true
-		}
-	];
+			{
+				name: 'server name',
+				mod: 'mod name',
+				port: 7483,
+				secure: true
+			},
+			{
+				name: 'The Circlejerk',
+				mod: 'biscuit',
+				port: 31415,
+				secure: false
+			},
+			{
+				name: 'Deutsche Qualität',
+				mod: 'caractères accentués',
+				port: 7483,
+				secure: true
+			}
+		],
+		ipList = [
+			ipaddr.parse('2001:0db8:0000:85a3:0000:0000:ac1f:8001'),
+			ipaddr.parse('2001:610:240:22::c100:68b'),
+			ipaddr.parse('2001:0db8:0000:0000:0000:ff00:0042:8329')
+		];
 
-	let buf1 = message.ADD_SERVERS.serialize(serverList);
+	let buf1 = message.ADD_SERVERS.serialize(serverList, ipList);
 	let res1 = message.ADD_SERVERS.deserialize(buf1);
+
+	serverList.forEach((srv, i) => {
+		t.is(srv.name, res1[i].name);
+		t.is(srv.mod, res1[i].mod);
+		t.is(srv.port, res1[i].port);
+		t.is(srv.secure, res1[i].secure);
+		t.is(ipList[i].toString(), res1[i].ipv6.toString());
+	});
 });
 
 test('REMOVE_SERVERS', t => {
