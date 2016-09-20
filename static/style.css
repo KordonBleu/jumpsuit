@@ -580,9 +580,6 @@ label {
 #key-settings td {
 	padding: 3px;
 }
-#key-settings tbody td {
-	cursor: pointer;
-}
 #key-settings tbody tr {
 	transition: background .2s, color .2s;
 }
@@ -591,6 +588,7 @@ label {
 	color: #ddd;
 }
 #key-settings tbody td {
+	cursor: pointer;
 	outline: 2px dashed rgba(0, 0, 0, 0);
 }
 #key-settings tbody td.selected {

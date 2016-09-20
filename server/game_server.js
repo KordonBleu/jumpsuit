@@ -1,9 +1,29 @@
-'use strict';
+import * as config from './config_loader.js';
+config.init(process.argv[2] || './game_config.json', {
+	dev: false,
+	master: 'ws://jumpsuit.space',
+	monitor: false,
+	port: 7483,
+	secure: false,
+	server_name: 'JumpSuit server'
+}, (newConfig, previousConfig) => {
+	if (newConfig.port !== previousConfig.port) {
+		server.close();
+		server.listen(newConfig.port);
+	}
+	if(newConfig.monitor !== previousConfig.monitor) {
+		if (previousConfig.monitor) monitor.unsetMonitorMode();
+		else monitor.setMonitorMode(lobbies);
+	}
+	if (newConfig.mod !== previousConfig.mod) {
+		logger(logger.INFO, 'Server set to another mod. Please restart the server to apply new config.');
+	}
+});
+
 
 import message from '../shared/message.js';
 import logger from './logger.js';
 import * as ips from './ips';
-import configLoader from './config_loader.js';
 import Lobby from './lobby.js';
 let lobbies = [];
 
@@ -19,48 +39,19 @@ const http = require('http'),
 
 import './proto_mut.js';
 
-import monitorFactory from './monitor.js';
-
-const configSkeleton = {
-	dev: false,
-	master: 'ws://jumpsuit.space',
-	monitor: false,
-	port: 7483,
-	secure: false,
-	server_name: 'JumpSuit server'
-};
-
-
-
-function changeCbk(newConfig, previousConfig) {
-	if (newConfig.port !== previousConfig.port) {
-		server.close();
-		server.listen(newConfig.port);
-	}
-	if(newConfig.monitor !== previousConfig.monitor) {
-		if (previousConfig.monitor) monitor.unsetMonitorMode();
-		else monitor.setMonitorMode();
-	}
-	if (newConfig.mod !== previousConfig.mod) {
-		logger(logger.INFO, 'Server set to another mod. Please restart the server to apply new config.');
-	}
-}
-let config = configLoader(process.argv[2] || './game_config.json', configSkeleton, changeCbk);
-
-
-let monitor = monitorFactory(config, lobbies);
-if(config.monitor) monitor.setMonitorMode();
+import * as monitor from './monitor.js';
+if(config.config.monitor) monitor.setMonitorMode(lobbies);
 
 
 let server = http.createServer(),//create an independent server so it is easy to
 	wss = new WebSocket.Server({server: server});//change port while running
-server.listen(config.port);
+server.listen(config.config.port);
 
 function connectToMaster(){
 	logger(logger.REGISTER, 'Attempting to connect to master server');
-	let masterWs = new WebSocket(config.master + '/game_servers'), nextAttemptID;
+	let masterWs = new WebSocket(config.config.master + '/game_servers'), nextAttemptID;
 	masterWs.on('open', function() {
-		masterWs.send(message.REGISTER_SERVER.serialize(config.secure, config.port, config.server_name, modName, lobbies), { binary: true, mask: false });
+		masterWs.send(message.REGISTER_SERVER.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobbies), { binary: true, mask: false });
 		masterWs.on('close', function() {
 			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
 			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
@@ -72,7 +63,7 @@ function connectToMaster(){
 	});
 	masterWs.on('message', function(msg) {
 		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
-		if (new Uint8Array(msg, 0, 1)[0] === message.SERVER_REGISTERED.value) logger(logger.S_REGISTER, 'Successfully registered at ' + config.master.bold);
+		if (new Uint8Array(msg, 0, 1)[0] === message.SERVER_REGISTERED.value) logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
 	});
 	masterWs.on('error', function() {
 		logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s');
@@ -85,8 +76,8 @@ connectToMaster();
 Player.prototype.send = function(data) {
 	try {
 		this.ws.send(data, { binary: true, mask: false });
-		if (config.monitor) {
-			monitor.getTraffic().beingConstructed.out += data.byteLength;//record outgoing traffic for logging
+		if (config.config.monitor) {
+			monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
 		}
 	} catch (err) { /* Maybe log this error somewhere? */ }
 };
@@ -119,7 +110,7 @@ wss.on('connection', function(ws) {
 
 		try {
 			let state = new Uint8Array(msg, 0, 1)[0];
-			if (config.monitor) monitor.getTraffic().beingConstructed.in += msg.byteLength;
+			if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
 			switch (state) {//shouldn't this be broken into small functions?
 				case message.SET_PREFERENCES.value: {
 					let val = message.SET_PREFERENCES.deserialize(msg);

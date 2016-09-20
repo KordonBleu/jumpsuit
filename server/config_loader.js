@@ -1,16 +1,19 @@
-'use strict';
+/*
+	Before using this file, MAKE SURE you have called `init` on it
+	Generally its inclusion and `init`ialization must be the first statements of the entry point of your program
+*/
 
 const fs = require('fs');
 import logger from './logger.js';
 
-export default function(path, skeleton, changeCbk) {
-	let config,
-		previousConfig;
+let previousConfig;
+export let config = {};
 
+export function init(path, skeleton, changeCbk) {
 	function loadConfig() {
 		previousConfig = config;//config will be set to a brand new object so no reference problem doing this
 
-		if (loadConfig.selfModified === true) {
+		if (loadConfig.selfModified === true) { // prevent `changeCbk` from being run again by itself
 			loadConfig.selfModified = false;
 			return;
 		}
@@ -45,17 +48,15 @@ export default function(path, skeleton, changeCbk) {
 
 	try {
 		fs.statSync(path);
+		loadConfig();
 	} catch(err) {
 		if (err.code === 'ENOENT') {
-			console.log('No config file (\u001b[1m' + path + '\u001b[0m) found. Creating it.');
+			logger(logger.ERROR, 'No config file (\u001b[1m' + path + '\u001b[0m) found. Creating it.');
 			fs.writeFileSync(path, JSON.stringify(skeleton, null, '\t'));
-			config = skeleton;
+			config = Object.assign({}, skeleton); // clone skeleton
 		} else {
 			throw err;
 		}
-	}
-	if (config === undefined) {
-		loadConfig();
 	}
 
 	if (changeCbk !== undefined) {
@@ -64,6 +65,4 @@ export default function(path, skeleton, changeCbk) {
 			changeCbk(config, previousConfig);
 		});
 	}
-
-	return config;
 }

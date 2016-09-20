@@ -1,5 +1,3 @@
-'use strict';
-
 import * as engine from '<@engine@>';
 import Planet from '<@Planet@>';
 import Enemy from '<@Enemy@>';

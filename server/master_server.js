@@ -1,10 +1,30 @@
-'use strict';
+import * as config from './config_loader.js';
+config.init(process.argv[2] || './master_config.json', {
+	dev: true,
+	ipv4_provider: 'https://ipv4.icanhazip.com/',
+	ipv6_provider: 'https://ipv6.icanhazip.com/',
+	monitor: false,
+	port: 80
+},
+(newConfig, previousConfig) => {
+	if (newConfig.port !== previousConfig.port) {
+		server.close();
+		server.listen(newConfig.port);
+	}
+	if (newConfig.monitor !== previousConfig.monitor) {
+		if (previousConfig.monitor) {
+			monitor.unsetMonitorMode();
+		} else {
+			monitor.setMonitorMode();
+		}
+	}
+});
+
 
 import message from '../shared/message.js';
 import logger from './logger.js';
-import configLoader from './config_loader.js';
-import ipPickerFactory from './ip_picker.js';
-import monitorFactory from './monitor.js';
+import ipPicker from './ip_picker.js';
+import * as monitor from './monitor.js';
 import * as ips from './ips';
 
 require('colors');
@@ -12,14 +32,6 @@ const http = require('http'),
 	fs = require('fs'),
 	WebSocket = require('ws'),
 	ipaddr = require('ipaddr.js');
-
-const configSkeleton = {
-	dev: true,
-	ipv4_provider: 'https://ipv4.icanhazip.com/',
-	ipv6_provider: 'https://ipv6.icanhazip.com/',
-	monitor: false,
-	port: 80
-};
 
 class GameServer {
 	constructor(name, mod, secure, port, ip) {
@@ -36,29 +48,10 @@ class GameServer {
 		return ipPicker(this.ip, clientIp);
 	}
 }
-
-
 let gameServers = [];
 
-function changeCbk(newConfig, previousConfig) {
-	if (newConfig.port !== previousConfig.port) {
-		server.close();
-		server.listen(newConfig.port);
-	}
-	if (newConfig.monitor !== previousConfig.monitor) {
-		if (previousConfig.monitor) {
-			monitor.unsetMonitorMode();
-		} else {
-			monitor.setMonitorMode();
-		}
-	}
-}
-let config = configLoader(process.argv[2] || './master_config.json', configSkeleton, changeCbk),
-	ipPicker = ipPickerFactory(config);
 
-
-let monitor = monitorFactory(config);
-if(config.monitor) monitor.setMonitorMode();
+if(config.config.monitor) monitor.setMonitorMode();
 
 let files = {};
 function loadFile(name, path) {
@@ -70,7 +63,7 @@ function loadFile(name, path) {
 		path: path,
 		mime: extension in mimeList ? mimeList[extension] : 'application/octet-stream'
 	};
-	if (config.dev && (extension === 'html' || extension === 'css' || extension === 'js')) files[name].content = files[name].content.toString('utf8').replace(/https:\/\/jumpsuit\.space/g, '');
+	if (config.config.dev && (extension === 'html' || extension === 'css' || extension === 'js')) files[name].content = files[name].content.toString('utf8').replace(/https:\/\/jumpsuit\.space/g, '');
 }
 loadFile('/ipaddr.min.js', './node_modules/ipaddr.js/ipaddr.min.js');
 loadFile('/vinage.js', './node_modules/vinage/vinage.js');
@@ -97,7 +90,7 @@ let server = http.createServer(function (req, res) {
 	if (req.url === '/') req.url = '/index.html';
 	if (files[req.url] !== undefined) {
 		res.setHeader('Cache-Control', 'public, no-cache, must-revalidate, proxy-revalidate');
-		if (config.dev) {
+		if (config.config.dev) {
 			try {
 				if (fs.statSync(files[req.url].path).mtime.getTime() !== files[req.url].mtime.getTime()) loadFile(req.url, files[req.url].path);
 			} catch(err) {
@@ -116,7 +109,7 @@ let server = http.createServer(function (req, res) {
 		res.end('Error 404:\nPage not found\n');
 	}
 });
-server.listen(config.port);
+server.listen(config.config.port);
 
 let gameServerSocket = new WebSocket.Server({server: server, path: '/game_servers'}),
 	clientsSocket = new WebSocket.Server({server: server, path: '/clients'}),
@@ -133,7 +126,7 @@ gameServerSocket.on('connection', function(ws) {
 		try {
 			let state = new Uint8Array(msg, 0, 1)[0];
 
-			if (config.monitor) monitor.getTraffic().beingConstructed.in += msg.byteLength;
+			if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
 
 			if (state === message.REGISTER_SERVER.value) {
 				let data = message.REGISTER_SERVER.deserialize(msg);
