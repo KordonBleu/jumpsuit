@@ -48,7 +48,7 @@ masterSocket.addEventListener('message', msg => {
 		if (server.ipv6.isIPv4MappedAddress()) ip = server.ipv6.toIPv4Address().toString();
 		else ip = '[' + server.ipv6.toString() + ']';
 
-		return (server.secure ? 'ws://' : 'wss://') + ip + ':' + server.port;
+		return (server.secure ? 'wss://' : 'ws://') + ip + ':' + server.port;
 	}
 	switch (new Uint8Array(msg.data, 0, 1)[0]) {
 		case message.ADD_SERVERS.value:
@@ -410,9 +410,9 @@ function connectByHash() {
 		lobbyId = decodeLobbyNumber(lobbyId);
 
 		if (ip.startsWith('s')) {
-			protocol = 'ws://';
+			protocol = 'wss://';
 			ip = ip.slice(1);
-		} else protocol = 'wss://';
+		} else protocol = 'ws://';
 
 		let url = protocol + ip + '/';
 
