@@ -330,3 +330,63 @@ test('PLAYER_CONTROLS', t => {
 		t.deepEqual(res, controls);
 	}
 });
+
+test('AIM_ANGLE', t => {
+	for(let angle of [0, Math.PI * 2, Math.PI * 0.487, Math.PI * 1.456, Math.PI]) {
+		let buf = message.AIM_ANGLE.serialize(angle),
+			res = message.AIM_ANGLE.deserialize(buf);
+
+		t.is(approxAngle(res), approxAngle(angle));
+	}
+});
+
+
+let chatMsgs = [
+	'Hi! What\'s up?',
+	'Nuthin',
+	'Did you know Getkey dislikes emojis?',
+	'But it has to be tested, eh?',
+	'Here are some poop emojis: 💩💩💩',
+	'Happy now?',
+	'( ͡° ͜ʖ ͡°)',
+	'自動翻訳は素晴らしいです',
+	'האלפבית העברי הוא הכי המגניב שיש. ברצינות זה נראה מפואר כמו לזיין.',
+	'Fju ist Deutsch also ich wurde einige Ümläüt schreiben. äëüöÄËÜÖööööööööööö',
+	'En français on utilise des accents. Et en plus là je suis sûr qu\'il n\'y a pas de faute grammaticale.',
+	'By the way, did you know accents can be used in english as well? You are now much more learnèd!'
+];
+
+test('CHAT', t => {
+	for (let chatMsg of chatMsgs) {
+		let buf = message.CHAT.serialize(chatMsg),
+			res = message.CHAT.deserialize(buf);
+
+		t.is(chatMsg, res);
+	}
+});
+
+test('CHAT_BROADCAST', t => {
+	let i = 0;
+	for (let chatMsg of chatMsgs) {
+		let buf = message.CHAT_BROADCAST.serialize(i, chatMsg),
+			res = message.CHAT_BROADCAST.deserialize(buf);
+
+		t.is(i, res.id);
+		t.is(chatMsg, res.message);
+
+		++i;
+	}
+});
+
+test('SCORES', t => {
+	let scoresObj = {
+			'alienBeige': 123,
+			'alienGreen': -32, // booo
+			'alienPink': 345
+		},
+		enabledTeams = Object.keys(scoresObj),
+		buf = message.SCORES.serialize(scoresObj),
+		res = message.SCORES.deserialize(buf, enabledTeams);
+
+	t.deepEqual(res, scoresObj);
+});

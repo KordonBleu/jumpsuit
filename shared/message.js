@@ -646,7 +646,7 @@ const message = {
 			return convert.bradToRad(angle, 1);
 		}
 	},
-	CHAT: {//CHAT and SET_NAME are coincidentally serialized the same way
+	CHAT: {
 		value: 14,
 		serialize: function(message) {
 			let nameBuffer = convert.stringToBuffer(message),

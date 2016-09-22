@@ -6,7 +6,7 @@ export function stringToBuffer(string) {
 export function bufferToString(arrayBuffer) {
 	let StringDecoder = require('string_decoder').StringDecoder,
 		decoder = new StringDecoder('utf8'),
-		tmpBuf = new Buffer(arrayBuffer);
+		tmpBuf = Buffer.from(arrayBuffer);
 
 	return decoder.write(tmpBuf);
 }
