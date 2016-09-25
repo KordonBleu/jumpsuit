@@ -21,7 +21,7 @@ config.init(process.argv[2] || './master_config.json', {
 });
 
 
-import message from '../shared/message.js';
+import * as message from '../shared/message.js';
 import logger from './logger.js';
 import ipPicker from './ip_picker.js';
 import * as monitor from './monitor.js';
@@ -124,12 +124,12 @@ gameServerSocket.on('connection', function(ws) {
 
 		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
 		try {
-			let state = new Uint8Array(msg, 0, 1)[0];
+			let serializator = message.getSerializator(msg);
 
 			if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
 
-			if (state === message.REGISTER_SERVER.value) {
-				let data = message.REGISTER_SERVER.deserialize(msg);
+			if (serializator === message.registerServer) {
+				let data = message.registerServer.deserialize(msg);
 				gameServer.name = data.serverName;
 				gameServer.mod = data.modName;
 				gameServer.secure = data.secure;
@@ -145,11 +145,11 @@ gameServerSocket.on('connection', function(ws) {
 				gameServers.push(gameServer);
 
 				logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.mod, gameServer.name);
-				ws.send(message.SERVER_REGISTERED.serialize());
+				ws.send(message.serverRegistered.serialize());
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					gameServer.effectiveIp(client.ipAddr).then(effectiveIp => {
 						try {
-							client.send(message.ADD_SERVERS.serialize([gameServer], [effectiveIp]), wsOptions);
+							client.send(message.addServers.serialize([gameServer], [effectiveIp]), wsOptions);
 						} catch (err) {
 							console.error(err);
 						}
@@ -159,7 +159,7 @@ gameServerSocket.on('connection', function(ws) {
 				ips.ban(gameServer.ip);
 				return;//prevent logging
 			}
-			logger(logger.DEV, (message.toString(state)).italic);
+			logger(logger.DEV, (serializator.toString()).italic);
 		} catch (err) {
 			ips.ban(gameServer.ip);
 		}
@@ -175,7 +175,7 @@ gameServerSocket.on('connection', function(ws) {
 				logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.mod, gS.name);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
-						client.send(message.REMOVE_SERVERS.serialize([i]), wsOptions);
+						client.send(message.removeServers.serialize([i]), wsOptions);
 					} catch (err) {
 						console.error(err);
 					}
@@ -193,7 +193,7 @@ clientsSocket.on('connection', function(ws) {
 	for (let gameServer of gameServers) ipPromises.push(gameServer.effectiveIp(ws.ipAddr));
 	Promise.all(ipPromises).then(effectiveIps => {
 		try {
-			ws.send(message.ADD_SERVERS.serialize(gameServers, effectiveIps), wsOptions);
+			ws.send(message.addServers.serialize(gameServers, effectiveIps), wsOptions);
 		} catch (err) {
 			console.log(err);
 		}

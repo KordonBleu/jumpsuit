@@ -1,7 +1,7 @@
 import * as engine from '<@engine@>';
 import Planet from '<@Planet@>';
 import Enemy from '<@Enemy@>';
-import message from '../shared/message.js';
+import * as message from '../shared/message.js';
 const vinage = require('vinage');
 
 export default class {
@@ -22,13 +22,13 @@ export default class {
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
 		this.lobbyState = 'playing';
-		this.broadcast(message.LOBBY_STATE.serialize(this.lobbyState));
+		this.broadcast(message.lobbyState.serialize(this.lobbyState));
 		setTimeout(() => {
 			clearInterval(this.gameCycleId);
 			clearInterval(this.scoreCycleId);
 
 			this.lobbyState = 'displaying_scores';
-			this.broadcast(message.LOBBY_STATE.serialize(this.lobbyState));
+			this.broadcast(message.lobbyState.serialize(this.lobbyState));
 			setTimeout(() => {
 				console.log(this);
 				this.goToPlayState();
@@ -66,13 +66,13 @@ export default class {
 				entitiesDelta.removedShots.splice(iRm, 1);
 			}
 		});
-		if (entitiesDelta.addedShots.length != 0) this.broadcast(message.ADD_ENTITY.serialize([], [], entitiesDelta.addedShots, []));
-		//if (entitiesDelta.removedShots.length != 0) this.broadcast(message.REMOVE_ENTITY.serialize([], [], entitiesDelta.removedShots, [])); // Why is this disabled?
+		if (entitiesDelta.addedShots.length != 0) this.broadcast(message.addEntity.serialize([], [], entitiesDelta.addedShots, []));
+		//if (entitiesDelta.removedShots.length != 0) this.broadcast(message.removeEntity.serialize([], [], entitiesDelta.removedShots, [])); // Why is this disabled?
 
 
 		this.players.forEach(function(player) {
 			function updPlayer() {
-				player.send(message.GAME_STATE.serialize(player.health, player.fuel, this.planets, this.enemies, this.players));
+				player.send(message.gameState.serialize(player.health, player.fuel, this.planets, this.enemies, this.players));
 				player.needsUpdate = true;
 			}
 			if (player.needsUpdate || player.needsUpdate === undefined) {
@@ -86,7 +86,7 @@ export default class {
 		this.planets.forEach((function(planet) {
 			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
 		}), this);
-		this.broadcast(message.SCORES.serialize(this.teamScores));
+		this.broadcast(message.scores.serialize(this.teamScores));
 	}
 	pingPlayers() {
 		this.players.forEach(function(player) {
@@ -183,11 +183,11 @@ export default class {
 	sendEntityDelta(delta, excludedPlayer) {
 		if (delta !== undefined) {
 			if (delta.addedEnemies !== undefined || delta.addedPlanet !== undefined || delta.addedPlayer !== undefined || delta.addedShots !== undefined) {
-				this.broadcast(message.ADD_ENTITY.serialize(delta.addedPlanet, delta.addedEnemies, delta.addedShots, delta.addedPlayer),
+				this.broadcast(message.addEntity.serialize(delta.addedPlanet, delta.addedEnemies, delta.addedShots, delta.addedPlayer),
 					excludedPlayer);
 			}
 			if (delta.removedEnemies !== undefined || delta.removedPlanet !== undefined || delta.removedPlayer !== undefined || delta.removedShots !== undefined) {
-				this.broadcast(message.REMOVE_ENTITY.serialize(delta.removedPlanet, delta.removedEnemies, delta.removedShots, delta.removedPlayer),
+				this.broadcast(message.removeEntity.serialize(delta.removedPlanet, delta.removedEnemies, delta.removedShots, delta.removedPlayer),
 					excludedPlayer);
 			}
 		}

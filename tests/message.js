@@ -7,13 +7,13 @@ import Enemy from '../shared/enemy.js';
 import Shot from '../shared/shot.js';
 import Player from '../shared/player.js';
 
-import message from '../shared/message.js';
+import * as message from '../shared/message.js';
 
 import * as vinage from 'vinage';
 import ipaddr from 'ipaddr.js';
 
 
-test('REGISTER_SERVER', t => {
+test('registerServer message', t => {
 	let a = {
 			secure: true,
 			serverPort: 7483,
@@ -26,17 +26,16 @@ test('REGISTER_SERVER', t => {
 			serverName: 'The Circlejerk',
 			modName: 'biscuit'
 		};
-	let buf1 = message.REGISTER_SERVER.serialize(a.secure, a.serverPort, a.serverName, a.modName);
-	let res1 = message.REGISTER_SERVER.deserialize(buf1);
+	let buf1 = message.registerServer.serialize(a.secure, a.serverPort, a.serverName, a.modName);
+	let res1 = message.registerServer.deserialize(buf1);
 	t.deepEqual(a, res1);
 
-	let buf2 = message.REGISTER_SERVER.serialize(b.secure, b.serverPort, b.serverName, b.modName);
-	let res2 = message.REGISTER_SERVER.deserialize(buf2);
+	let buf2 = message.registerServer.serialize(b.secure, b.serverPort, b.serverName, b.modName);
+	let res2 = message.registerServer.deserialize(buf2);
 	t.deepEqual(b, res2);
 });
 
-
-test('ADD_SERVERS', t => {
+test('addServers message', t => {
 	let serverList = [
 			{
 				name: 'server name',
@@ -63,8 +62,8 @@ test('ADD_SERVERS', t => {
 			ipaddr.parse('2001:0db8:0000:0000:0000:ff00:0042:8329')
 		];
 
-	let buf1 = message.ADD_SERVERS.serialize(serverList, ipList);
-	let res1 = message.ADD_SERVERS.deserialize(buf1);
+	let buf1 = message.addServers.serialize(serverList, ipList);
+	let res1 = message.addServers.deserialize(buf1);
 
 	serverList.forEach((srv, i) => {
 		t.is(srv.name, res1[i].name);
@@ -75,54 +74,54 @@ test('ADD_SERVERS', t => {
 	});
 });
 
-test('REMOVE_SERVERS', t => {
+test('removeServers message', t => {
 	let ids1 = [1, 45, 65535, 5, 899],
-		buf1 = message.REMOVE_SERVERS.serialize(ids1),
-		res1 = message.REMOVE_SERVERS.deserialize(buf1);
+		buf1 = message.removeServers.serialize(ids1),
+		res1 = message.removeServers.deserialize(buf1);
 	t.deepEqual(ids1, res1);
 
 	let ids2 = [],
-		buf2 = message.REMOVE_SERVERS.serialize(ids2),
-		res2 = message.REMOVE_SERVERS.deserialize(buf2);
+		buf2 = message.removeServers.serialize(ids2),
+		res2 = message.removeServers.deserialize(buf2);
 	t.deepEqual(ids2, res2);
 
 	let ids3 = [99],
-		buf3 = message.REMOVE_SERVERS.serialize(ids3),
-		res3 = message.REMOVE_SERVERS.deserialize(buf3);
+		buf3 = message.removeServers.serialize(ids3),
+		res3 = message.removeServers.deserialize(buf3);
 	t.deepEqual(ids3, res3);
 });
 
-test('SET_PREFERENCES', t => {
+test('setPreferences message', t => {
 	let settings = {
 			name: 'Unnamed Player',
 			primary: 'Lmg',
 			secondary: 'Knife'
 		},
-		buf = message.SET_PREFERENCES.serialize(settings),
-		res = message.SET_PREFERENCES.deserialize(buf);
+		buf = message.setPreferences.serialize(settings),
+		res = message.setPreferences.deserialize(buf);
 
 	t.deepEqual(settings, res);
 });
 
-test('SET_NAME_BROADCAST', t => {
+test('setNameBroadcast message', t => {
 	let val = {
 			id: 5,
 			name: 'Jean-Kévin',
 			homographId: 2
 		},
-		buf = message.SET_NAME_BROADCAST.serialize(val.id, val.name, val.homographId),
-		res = message.SET_NAME_BROADCAST.deserialize(buf);
+		buf = message.setNameBroadcast.serialize(val.id, val.name, val.homographId),
+		res = message.setNameBroadcast.deserialize(buf);
 
 	t.deepEqual(val, res);
 });
 
-test('CONNECT', t => {
-	let buf = message.CONNECT.serialize(45, {
+test('connect message', t => {
+	let buf = message.connect.serialize(45, {
 			name: 'កែវ',
 			primary: 'Lmg',
 			secondary: 'Knife'
 		}),
-		res = message.CONNECT.deserialize(buf);
+		res = message.connect.deserialize(buf);
 
 	t.is(res.lobbyId, 45);
 	t.is(res.primary, 'Lmg');
@@ -130,25 +129,25 @@ test('CONNECT', t => {
 	t.is(res.name, 'កែវ');
 });
 
-test('ERROR', t => {
-	let buf1 = message.ERROR.serialize(message.ERROR.NO_LOBBY),
-		res1 = message.ERROR.deserialize(buf1),
-		buf2 = message.ERROR.serialize(message.ERROR.NO_SLOT),
-		res2 = message.ERROR.deserialize(buf2);
+test('error message', t => {
+	let buf1 = message.error.serialize(message.error.NO_LOBBY),
+		res1 = message.error.deserialize(buf1),
+		buf2 = message.error.serialize(message.error.NO_SLOT),
+		res2 = message.error.deserialize(buf2);
 
-	t.is(res1, message.ERROR.NO_LOBBY);
-	t.is(res2, message.ERROR.NO_SLOT);
+	t.is(res1, message.error.NO_LOBBY);
+	t.is(res2, message.error.NO_SLOT);
 });
 
-test('CONNECT_ACCEPTED', t => {
+test('connectAccepted message', t => {
 	let val =  {
 			lobbyId: 4000000000, // 32 bits
 			playerId: 244, // 8bits
 			univWidth: 65535, // 16 bits
 			univHeight: 30000 // 16 bits
 		},
-		buf = message.CONNECT_ACCEPTED.serialize(val.lobbyId, val.playerId, val.univWidth, val.univHeight),
-		res = message.CONNECT_ACCEPTED.deserialize(buf);
+		buf = message.connectAccepted.serialize(val.lobbyId, val.playerId, val.univWidth, val.univHeight),
+		res = message.connectAccepted.deserialize(buf);
 
 	t.deepEqual(val, res);
 
@@ -158,12 +157,12 @@ test('CONNECT_ACCEPTED', t => {
 			univWidth: 3429,
 			univHeight: 4452
 		},
-		buf2 = message.CONNECT_ACCEPTED.serialize(val2.lobbyId, val2.playerId, val2.univWidth, val2.univHeight);
+		buf2 = message.connectAccepted.serialize(val2.lobbyId, val2.playerId, val2.univWidth, val2.univHeight);
 
-	t.deepEqual(val2, message.CONNECT_ACCEPTED.deserialize(buf2));
+	t.deepEqual(val2, message.connectAccepted.deserialize(buf2));
 });
 
-test('LOBBY_STATE', t => {
+test('lobbyState message', t => {
 	let teams = [
 			'alienBeige',
 			'alienBlue',
@@ -171,8 +170,8 @@ test('LOBBY_STATE', t => {
 			'alienPink',
 			'alienYellow'
 		],
-		buf = message.LOBBY_STATE.serialize('warmup', teams),
-		res = message.LOBBY_STATE.deserialize(buf);
+		buf = message.lobbyState.serialize('warmup', teams),
+		res = message.lobbyState.deserialize(buf);
 
 	t.deepEqual(teams, res.enabledTeams);
 	t.is(res.state, 'warmup');
@@ -220,14 +219,14 @@ function approxAngle(angle) {
 }
 
 
-test('ADD_ENTITY', t => {
-	let buf = message.ADD_ENTITY.serialize(planets, enemies, shots, players),
+test('addEntity message', t => {
+	let buf = message.addEntity.serialize(planets, enemies, shots, players),
 		planetI = 0,
 		enemyI = 0,
 		shotI = 0,
 		playerI = 0;
 
-	message.ADD_ENTITY.deserialize(buf, (x, y, radius, type) => {
+	message.addEntity.deserialize(buf, (x, y, radius, type) => {
 		t.is(planets[planetI].box.center.x, x);
 		t.is(planets[planetI].box.center.y, y);
 		t.is(planets[planetI].box.radius, radius);
@@ -268,16 +267,16 @@ test('ADD_ENTITY', t => {
 });
 
 
-test('GAME_STATE', t => {
+test('gameState message', t => {
 	let selfParam = {
 			yourHealth: 8,
 			yourFuel: 40
 		},
-		buf = message.GAME_STATE.serialize(selfParam.yourHealth, selfParam.yourFuel, planets, enemies, players),
+		buf = message.gameState.serialize(selfParam.yourHealth, selfParam.yourFuel, planets, enemies, players),
 		planetI = 0,
 		enemyI = 0,
 		playerI = 0;
-	let res = message.GAME_STATE.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
+	let res = message.gameState.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
 		t.is(id, planetI);
 		t.is(planets[planetI].progress.team, ownedBy);
 		t.is(planets[planetI].progress.value, progress);
@@ -307,7 +306,7 @@ test('GAME_STATE', t => {
 	t.deepEqual(selfParam, res);
 });
 
-test('PLAYER_CONTROLS', t => {
+test('playerControls message', t => {
 	// All the 255 possibilities are tested
 	let controls = {
 		jump: 0,
@@ -325,16 +324,16 @@ test('PLAYER_CONTROLS', t => {
 			controls[key] = i << 31 - j >>> 31;
 		});
 
-		let buf = message.PLAYER_CONTROLS.serialize(controls),
-			res = message.PLAYER_CONTROLS.deserialize(buf);
+		let buf = message.playerControls.serialize(controls),
+			res = message.playerControls.deserialize(buf);
 		t.deepEqual(res, controls);
 	}
 });
 
-test('AIM_ANGLE', t => {
+test('aimAngle message', t => {
 	for(let angle of [0, Math.PI * 2, Math.PI * 0.487, Math.PI * 1.456, Math.PI]) {
-		let buf = message.AIM_ANGLE.serialize(angle),
-			res = message.AIM_ANGLE.deserialize(buf);
+		let buf = message.aimAngle.serialize(angle),
+			res = message.aimAngle.deserialize(buf);
 
 		t.is(approxAngle(res), approxAngle(angle));
 	}
@@ -356,20 +355,20 @@ let chatMsgs = [
 	'By the way, did you know accents can be used in english as well? You are now much more learnèd!'
 ];
 
-test('CHAT', t => {
+test('chat message', t => {
 	for (let chatMsg of chatMsgs) {
-		let buf = message.CHAT.serialize(chatMsg),
-			res = message.CHAT.deserialize(buf);
+		let buf = message.chat.serialize(chatMsg),
+			res = message.chat.deserialize(buf);
 
 		t.is(chatMsg, res);
 	}
 });
 
-test('CHAT_BROADCAST', t => {
+test('chatBroadcast message', t => {
 	let i = 0;
 	for (let chatMsg of chatMsgs) {
-		let buf = message.CHAT_BROADCAST.serialize(i, chatMsg),
-			res = message.CHAT_BROADCAST.deserialize(buf);
+		let buf = message.chatBroadcast.serialize(i, chatMsg),
+			res = message.chatBroadcast.deserialize(buf);
 
 		t.is(i, res.id);
 		t.is(chatMsg, res.message);
@@ -378,15 +377,15 @@ test('CHAT_BROADCAST', t => {
 	}
 });
 
-test('SCORES', t => {
+test('scores message', t => {
 	let scoresObj = {
 			'alienBeige': 123,
 			'alienGreen': -32, // booo
 			'alienPink': 345
 		},
 		enabledTeams = Object.keys(scoresObj),
-		buf = message.SCORES.serialize(scoresObj),
-		res = message.SCORES.deserialize(buf, enabledTeams);
+		buf = message.scores.serialize(scoresObj),
+		res = message.scores.deserialize(buf, enabledTeams);
 
 	t.deepEqual(res, scoresObj);
 });

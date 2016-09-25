@@ -10,7 +10,7 @@ import Player from './player.js';
 
 import * as controls from './controls.js';
 import * as entities from './entities.js';
-import message from '../shared/message.js';
+import * as message from '../shared/message.js';
 
 let enabledTeams = [],
 	masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
@@ -50,18 +50,18 @@ masterSocket.addEventListener('message', msg => {
 
 		return (server.secure ? 'wss://' : 'ws://') + ip + ':' + server.port;
 	}
-	switch (new Uint8Array(msg.data, 0, 1)[0]) {
-		case message.ADD_SERVERS.value:
+	switch (message.getSerializator(msg.data)) {
+		case message.addServers:
 			console.log('Got some new servers to add ! :D');
 			if (serverList === undefined) {//first time data is inserted
-				serverList = message.ADD_SERVERS.deserialize(msg.data);
+				serverList = message.addServers.deserialize(msg.data);
 				serverList.forEach(server => {
 					server.url = determineUrl(server);
 					ui.addServerRow(server);
 				});
 				ui.applyLobbySearch();//in case the page was refreshed and the
 			} else {
-				let newServers = message.ADD_SERVERS.deserialize(msg.data);
+				let newServers = message.addServers.deserialize(msg.data);
 				serverList = serverList.concat(newServers);
 				newServers.forEach(server => {
 					server.url = determineUrl(server);
@@ -69,9 +69,9 @@ masterSocket.addEventListener('message', msg => {
 				});
 			}
 			break;
-		case message.REMOVE_SERVERS.value:
+		case message.removeServers:
 			console.log('I hafta remove servers :c');
-			for (let id of message.REMOVE_SERVERS.deserialize(msg.data)) {
+			for (let id of message.removeServers.deserialize(msg.data)) {
 				ui.removeServer(id);
 			}
 			break;
@@ -96,7 +96,7 @@ class Connection {
 			this.socket.addEventListener('message', this.constructor.messageHandler.bind(this));
 
 			this.socket.addEventListener('open', () => {
-				this.sendMessage.call(this, message.CONNECT, lobbyId, settings);
+				this.sendMessage.call(this, message.connect, lobbyId, settings);
 
 				this.latencyHandlerId = setInterval(this.constructor.latencyHandler, 100);
 				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
@@ -117,9 +117,6 @@ class Connection {
 			//or is that redudant with the event listener on 'error'?
 		}
 	}
-	createLobby(name, playerAmount) {
-		this.socket.send(message.CREATE_LOBBY.serialize(name, playerAmount));
-	}
 	close() {
 		clearInterval(this.latencyHandlerId);
 		clearInterval(this.mouseAngleUpdateHandlerId);
@@ -135,10 +132,10 @@ class Connection {
 		while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 	}
 	setPreferences() {
-		this.sendMessage(message.SET_PREFERENCES, settings);
+		this.sendMessage(message.setPreferences, settings);
 	}
 	sendChat(content) {
-		this.sendMessage(message.CHAT, content);
+		this.sendMessage(message.chat, content);
 		ui.printChatMessage(entities.players[game.ownIdx].getFinalName(), entities.players[game.ownIdx].appearance, content);
 	}
 	refreshControls(selfControls) {
@@ -149,10 +146,10 @@ class Connection {
 			else this.lastControls[c] = selfControls[c];
 		}
 		if (accordance === b) return;
-		this.socket.send(message.PLAYER_CONTROLS.serialize(selfControls));
+		this.socket.send(message.playerControls.serialize(selfControls));
 	}
 	sendMousePos(angle) {
-		if (this.lastAngle !== angle) this.sendMessage(message.AIM_ANGLE, angle);
+		if (this.lastAngle !== angle) this.sendMessage(message.aimAngle, angle);
 		this.lastAngle = angle;
 	}
 	static errorHandler(err) {
@@ -176,14 +173,14 @@ class Connection {
 	}
 	static messageHandler(msg) {
 		this.lastMessage = Date.now();
-		switch (new Uint8Array(msg.data, 0, 1)[0]) {
-			case message.ERROR.value: {
+		switch (message.getSerializator(msg.data)) {
+			case message.error: {
 				let errDesc;
-				switch(message.ERROR.deserialize(msg.data)) {
-					case message.ERROR.NO_LOBBY:
+				switch(message.error.deserialize(msg.data)) {
+					case message.error.NO_LOBBY:
 						errDesc = 'This lobby doesn\'t exist anymore';//TODO: show this message in a pop-up with 'See the other servers button' to get back to the menu
 						break;
-					case message.ERROR.NO_SLOT:
+					case message.error.NO_SLOT:
 						errDesc = 'There\'s no slot left in the lobby';
 						break;
 				}
@@ -191,8 +188,8 @@ class Connection {
 				alert('Error:\n' + errDesc);
 				break;
 			}
-			case message.CONNECT_ACCEPTED.value: {
-				let val = message.CONNECT_ACCEPTED.deserialize(msg.data);
+			case message.connectAccepted: {
+				let val = message.connectAccepted.deserialize(msg.data);
 				entities.planets.length = 0;
 				entities.enemies.length = 0;
 				entities.shots.length = 0;
@@ -210,8 +207,8 @@ class Connection {
 				document.getElementById('player-table').classList.remove('hidden');
 				break;
 			}
-			case message.ADD_ENTITY.value:
-				message.ADD_ENTITY.deserialize(msg.data,
+			case message.addEntity:
+				message.addEntity.deserialize(msg.data,
 					(x, y, radius, type) => {//add planets
 						entities.planets.push(new Planet(x, y, radius, type));
 					},
@@ -238,8 +235,8 @@ class Connection {
 				);
 				ui.updatePlayerList();
 				break;
-			case message.REMOVE_ENTITY.value:
-				message.REMOVE_ENTITY.deserialize(msg.data,
+			case message.removeEntity:
+				message.removeEntity.deserialize(msg.data,
 					id => {//remove planets
 						console.log('TODO: implement planet removal', id);
 					},
@@ -258,8 +255,8 @@ class Connection {
 				);
 				ui.updatePlayerList();
 				break;
-			case message.GAME_STATE.value: {
-				let val = message.GAME_STATE.deserialize(msg.data, entities.planets.length, entities.enemies.length,
+			case message.gameState: {
+				let val = message.gameState.deserialize(msg.data, entities.planets.length, entities.enemies.length,
 					(id, ownedBy, progress) => {
 						entities.planets[id].progress.team = ownedBy;
 						entities.planets[id].progress.value = progress;
@@ -328,13 +325,13 @@ class Connection {
 
 				break;
 			}
-			case message.CHAT_BROADCAST.value: {
-				let val = message.CHAT_BROADCAST.deserialize(msg.data);
+			case message.chatBroadcast: {
+				let val = message.chatBroadcast.deserialize(msg.data);
 				ui.printChatMessage(entities.players[val.id].getFinalName(), entities.players[val.id].appearance, val.message);
 				break;
 			}
-			case message.SET_NAME_BROADCAST.value: {
-				let val = message.SET_NAME_BROADCAST.deserialize(msg.data),
+			case message.setNameBroadcast: {
+				let val = message.setNameBroadcast.deserialize(msg.data),
 					oldName = entities.players[val.id].getFinalName();
 				entities.players[val.id].name = val.name;
 				entities.players[val.id].homographId = val.homographId;
@@ -342,8 +339,8 @@ class Connection {
 				ui.printPlayerList();
 				break;
 			}
-			case message.SCORES.value: {
-				let val = message.SCORES.deserialize(msg.data, enabledTeams);
+			case message.scores: {
+				let val = message.scores.deserialize(msg.data, enabledTeams);
 				game.setScores(val);
 				for (let team in val) {
 					let element = document.getElementById('gui-points-' + team);
@@ -351,8 +348,8 @@ class Connection {
 				}
 				break;
 			}
-			case message.LOBBY_STATE.value: {
-				let val = message.LOBBY_STATE.deserialize(msg.data);
+			case message.lobbyState: {
+				let val = message.lobbyState.deserialize(msg.data);
 				if (val.enabledTeams !== undefined) {
 					enabledTeams = val.enabledTeams;
 					let pointsElement = document.getElementById('gui-points');

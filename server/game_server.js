@@ -21,7 +21,7 @@ config.init(process.argv[2] || './game_config.json', {
 });
 
 
-import message from '../shared/message.js';
+import * as message from '../shared/message.js';
 import logger from './logger.js';
 import * as ips from './ips';
 import Lobby from './lobby.js';
@@ -51,7 +51,7 @@ function connectToMaster(){
 	logger(logger.REGISTER, 'Attempting to connect to master server');
 	let masterWs = new WebSocket(config.config.master + '/game_servers'), nextAttemptID;
 	masterWs.on('open', function() {
-		masterWs.send(message.REGISTER_SERVER.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobbies), { binary: true, mask: false });
+		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobbies), { binary: true, mask: false });
 		masterWs.on('close', function() {
 			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
 			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
@@ -63,7 +63,7 @@ function connectToMaster(){
 	});
 	masterWs.on('message', function(msg) {
 		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
-		if (new Uint8Array(msg, 0, 1)[0] === message.SERVER_REGISTERED.value) logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
+		if (message.getSerializator(msg) === message.serverRegistered) logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
 	});
 	masterWs.on('error', function() {
 		logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s');
@@ -89,7 +89,7 @@ wss.on('connection', function(ws) {
 				if (player.ws === ws) {
 					logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
 					delete lobby.players[pi];
-					lobby.broadcast(message.REMOVE_ENTITY.serialize([], [], [], [pi]));
+					lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
 					if (lobby.players.length === 0) {
 						lobbies[li].close();
 						delete lobbies[li];
@@ -109,30 +109,30 @@ wss.on('connection', function(ws) {
 		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
 
 		try {
-			let state = new Uint8Array(msg, 0, 1)[0];
+			let serializator = message.getSerializator(msg);
 			if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
-			switch (state) {//shouldn't this be broken into small functions?
-				case message.SET_PREFERENCES.value: {
-					let val = message.SET_PREFERENCES.deserialize(msg);
+			switch (serializator) {
+				case message.setPreferences: {
+					let val = message.setPreferences.deserialize(msg);
 					if (player.lobby !== undefined) {
 						player.homographId = player.lobby.getNextHomographId(val.name);
-						player.lobby.broadcast(message.SET_NAME_BROADCAST.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
+						player.lobby.broadcast(message.setNameBroadcast.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
 					}
 					player.name = val.name;
 					player.armedWeapon = player.weapons[val.primary];
 					player.carriedWeapon = player.weapons[val.secondary];
 					break;
 				}
-				case message.CONNECT.value: {
-					let val = message.CONNECT.deserialize(msg);
+				case message.connect: {
+					let val = message.connect.deserialize(msg);
 					let lobby;
 					if (val.lobbyId !== undefined) {
 						lobby = lobbies[val.lobbyId];
 						if (lobby === undefined) {
-							player.send(message.ERROR.serialize(message.ERROR.NO_LOBBY));
+							player.send(message.error.serialize(message.error.NO_LOBBY));
 							break;
 						} else if (lobby.players.length === lobby.maxPlayers) {
-							player.send(message.ERROR.serialize(message.ERROR.NO_SLOT));
+							player.send(message.error.serialize(message.error.NO_SLOT));
 							break;
 						}
 					} else {//public lobby
@@ -155,33 +155,33 @@ wss.on('connection', function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					player.send(message.CONNECT_ACCEPTED.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
+					player.send(message.connectAccepted.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
 					if (lobby.lobbyState !== 'displaying_scores') {
 						lobby.assignPlayerTeam(player);
-						player.send(message.ADD_ENTITY.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
-					} else player.send(message.ADD_ENTITY.serialize([], [], [], lobby.players));
-					lobby.broadcast(message.ADD_ENTITY.serialize([], [], [], [player]), player);
-					player.send(message.LOBBY_STATE.serialize(lobby.lobbyState, lobby.enabledTeams));
-					lobby.broadcast(message.ADD_ENTITY.serialize([], [], [], [player]), player);
+						player.send(message.addEntity.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
+					} else player.send(message.addEntity.serialize([], [], [], lobby.players));
+					lobby.broadcast(message.addEntity.serialize([], [], [], [player]), player);
+					player.send(message.lobbyState.serialize(lobby.lobbyState, lobby.enabledTeams));
+					lobby.broadcast(message.addEntity.serialize([], [], [], [player]), player);
 
 					break;
 				}
-				case message.PLAYER_CONTROLS.value:
-					onMessage.onControls(player, message.PLAYER_CONTROLS.deserialize(msg));
+				case message.playerControls:
+					onMessage.onControls(player, message.playerControls.deserialize(msg));
 					break;
-				case message.CHAT.value: {
-					let chatMsg = message.CHAT.deserialize(msg);
-					if (chatMsg !== '' && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(message.CHAT_BROADCAST.serialize(player.pid, chatMsg), player);
+				case message.chat: {
+					let chatMsg = message.chat.deserialize(msg);
+					if (chatMsg !== '' && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
 					break;
 				}
-				case message.AIM_ANGLE.value:
-					player.aimAngle = message.AIM_ANGLE.deserialize(msg);
+				case message.aimAngle:
+					player.aimAngle = message.aimAngle.deserialize(msg);
 					break;
 				default:
 					ips.ban(player.ip);
 					return;//prevent logging
 			}
-			logger(logger.DEV, message.toString(state));
+			logger(logger.DEV, serializator.toString());
 		} catch (err) {
 			console.log(err);
 			ips.ban(player.ip);
