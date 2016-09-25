@@ -1,4 +1,4 @@
-import Shotgun from '../../shared/shotgun.js';
+import Shotgun from '../../../shared/shotgun.js';
 
 Shotgun.fire = function fire() {
 	let shots = [];
@@ -8,5 +8,8 @@ Shotgun.fire = function fire() {
 
 	return shots;
 };
+
+Shotgun.prototype.muzzleX = 84;
+Shotgun.prototype.muzzleY = 2;
 
 export default Shotgun;

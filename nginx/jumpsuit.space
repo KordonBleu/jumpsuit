@@ -43,9 +43,6 @@ server {
 	location = /vinage.js {
 		root /home/jumpsuit/jumpsuit/node_modules/vinage/;
 	}
-	location = /engine.js {
-		root /home/jumpsuit/jumpsuit/mods/capture/;
-	}
 	location = /ipaddr.min.js {
 		root /home/jumpsuit/jumpsuit/node_modules/ipaddr.js/;
 	}

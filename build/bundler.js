@@ -58,21 +58,21 @@ rollup.rollup({
 			}
 		}),
 		alias({
-			'<@engine@>': 'mods/' + config.mod + '/engine.js',
-			'<@onMessage@>': 'mods/' + config.mod + '/on_message.js',
-			'<@Player@>': 'mods/' + config.mod + '/player.js',
-			'<@Planet@>': 'mods/' + config.mod + '/planet.js',
-			'<@Enemy@>': 'mods/' + config.mod + '/enemy.js',
+			'<@engine@>': 'server/mods/' + config.mod + '/engine.js',
+			'<@onMessage@>': 'server/mods/' + config.mod + '/on_message.js',
+			'<@Player@>': 'server/mods/' + config.mod + '/player.js',
+			'<@Planet@>': 'server/mods/' + config.mod + '/planet.js',
+			'<@Enemy@>': 'server/mods/' + config.mod + '/enemy.js',
 
-			'<@Shot@>': 'mods/' + config.mod + '/shot.js',
+			'<@Shot@>': 'server/mods/' + config.mod + '/shot.js',
 
-			'<@Weapon@>': 'mods/' + config.mod + '/weapon.js',
-			'<@RapidFireWeapon@>': 'mods/' + config.mod + '/rapid_fire_weapon.js',
+			'<@Weapon@>': 'server/mods/' + config.mod + '/weapon.js',
+			'<@RapidFireWeapon@>': 'server/mods/' + config.mod + '/rapid_fire_weapon.js',
 
-			'<@Lmg@>': 'mods/' + config.mod + '/lmg.js',
-			'<@Smg@>': 'mods/' + config.mod + '/smg.js',
-			'<@Shotgun@>': 'mods/' + config.mod + '/shotgun.js',
-			'<@Knife@>': 'mods/' + config.mod + '/knife.js',
+			'<@Lmg@>': 'server/mods/' + config.mod + '/lmg.js',
+			'<@Smg@>': 'server/mods/' + config.mod + '/smg.js',
+			'<@Shotgun@>': 'server/mods/' + config.mod + '/shotgun.js',
+			'<@Knife@>': 'server/mods/' + config.mod + '/knife.js',
 
 			'<@convert@>': 'server/convert.js'
 		}),

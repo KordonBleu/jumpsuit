@@ -9,6 +9,6 @@ npm-debug.log
 /game_config.json
 /master_config.json
 
-/mods/*
-!/mods/capture
-!/mods/capture/*
+/server/mods/*
+!/server/mods/capture
+!/server/mods/capture/*

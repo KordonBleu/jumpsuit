@@ -1,4 +1,4 @@
-import Weapon from '../../shared/weapon.js';
+import Weapon from '../../../shared/weapon.js';
 import Shot from './shot.js';
 
 export default class extends Weapon {

@@ -1,4 +1,4 @@
-export * from '../../shared/engine.js';
+export * from '../../../shared/engine.js';
 
 export function doPhysicsClient(universe, planets, shots, players) {
 	shots.forEach(function(shot, si) {

@@ -78,7 +78,6 @@ files.construct = function(path, oName) {
 	});
 };
 files.construct('./static', '/'); // load everything under `./static` in RAM for fast access
-files.construct('./mods/capture', '/'); // default engine, player class etc.
 
 let server = http.createServer(function (req, res) {
 	if (req.url === '/index.html') {

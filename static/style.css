@@ -626,9 +626,6 @@ label {
 	height: 10px;
 	width: 200px;
 	background: transparent;
-	-moz-appearance: none;
-	-webkit-appearance: none;
-	appearance: none;
 }
 #gui-fuel::-webkit-meter-bar {
 	background: transparent;

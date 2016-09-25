@@ -1,4 +1,4 @@
-import Player from '../../shared/player.js';
+import Player from '../../../shared/player.js';
 
 export default class SrvPlayer extends Player {
 	constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
