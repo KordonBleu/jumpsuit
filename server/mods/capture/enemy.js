@@ -1,3 +1,1 @@
-import Enemy from '../../../shared/enemy.js';
-
-export default Enemy;
+export * from '../../../shared/enemy.js';

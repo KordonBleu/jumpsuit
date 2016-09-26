@@ -12,3 +12,5 @@ npm-debug.log
 /server/mods/*
 !/server/mods/capture
 !/server/mods/capture/*
+!/server/mods/example
+!/server/mods/example/*

@@ -16,8 +16,7 @@
     "rollup-plugin-alias": "1.x"
   },
   "optionalDependencies": {
-    "bufferutil": "1.x",
-    "utf-8-validate": "1.x"
+    "bufferutil": "1.x"
   },
   "devDependencies": {
     "ava": "0.x",

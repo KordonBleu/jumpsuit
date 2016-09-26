@@ -1,3 +1,1 @@
-import Planet from '../../../shared/planet.js';
-
-export default Planet;
+export * from '../../../shared/planet.js';
