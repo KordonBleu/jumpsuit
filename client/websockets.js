@@ -195,6 +195,7 @@ class Connection {
 				entities.shots.length = 0;
 				entities.players.length = 0;
 
+				console.log('my ownIdx is:', val.playerId);
 				game.setOwnIdx(val.playerId);
 				console.log('gotten C_ACC', game.ownIdx);
 				entities.universe.width = val.univWidth;
@@ -234,6 +235,7 @@ class Connection {
 					}
 				);
 				ui.updatePlayerList();
+				//console.log('got addEntity', entities.players);
 				break;
 			case message.removeEntity:
 				message.removeEntity.deserialize(msg.data,

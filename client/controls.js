@@ -4,7 +4,7 @@ import * as bimap from '../shared/bimap.js';
 import * as entities from './entities.js';
 
 import * as ui from './ui.js';
-import * as wsClt from './websocket_client.js';
+import * as wsClt from './websockets.js';
 
 const canvas = document.getElementById('canvas');
 

@@ -29,10 +29,12 @@ test('registerServer message', t => {
 	let buf1 = message.registerServer.serialize(a.secure, a.serverPort, a.serverName, a.modName);
 	let res1 = message.registerServer.deserialize(buf1);
 	t.deepEqual(a, res1);
+	t.is(message.getSerializator(buf1), message.registerServer);
 
 	let buf2 = message.registerServer.serialize(b.secure, b.serverPort, b.serverName, b.modName);
 	let res2 = message.registerServer.deserialize(buf2);
 	t.deepEqual(b, res2);
+	t.is(message.getSerializator(buf2), message.registerServer);
 });
 
 test('addServers message', t => {
@@ -64,6 +66,7 @@ test('addServers message', t => {
 
 	let buf1 = message.addServers.serialize(serverList, ipList);
 	let res1 = message.addServers.deserialize(buf1);
+	t.is(message.getSerializator(buf1), message.addServers);
 
 	serverList.forEach((srv, i) => {
 		t.is(srv.name, res1[i].name);
@@ -79,16 +82,19 @@ test('removeServers message', t => {
 		buf1 = message.removeServers.serialize(ids1),
 		res1 = message.removeServers.deserialize(buf1);
 	t.deepEqual(ids1, res1);
+	t.is(message.getSerializator(buf1), message.removeServers);
 
 	let ids2 = [],
 		buf2 = message.removeServers.serialize(ids2),
 		res2 = message.removeServers.deserialize(buf2);
 	t.deepEqual(ids2, res2);
+	t.is(message.getSerializator(buf2), message.removeServers);
 
 	let ids3 = [99],
 		buf3 = message.removeServers.serialize(ids3),
 		res3 = message.removeServers.deserialize(buf3);
 	t.deepEqual(ids3, res3);
+	t.is(message.getSerializator(buf3), message.removeServers);
 });
 
 test('setPreferences message', t => {
@@ -101,6 +107,7 @@ test('setPreferences message', t => {
 		res = message.setPreferences.deserialize(buf);
 
 	t.deepEqual(settings, res);
+	t.is(message.getSerializator(buf), message.setPreferences);
 });
 
 test('setNameBroadcast message', t => {
@@ -113,6 +120,7 @@ test('setNameBroadcast message', t => {
 		res = message.setNameBroadcast.deserialize(buf);
 
 	t.deepEqual(val, res);
+	t.is(message.getSerializator(buf), message.setNameBroadcast);
 });
 
 test('connect message', t => {
@@ -127,16 +135,19 @@ test('connect message', t => {
 	t.is(res.primary, 'Lmg');
 	t.is(res.secondary, 'Knife');
 	t.is(res.name, 'កែវ');
+	t.is(message.getSerializator(buf), message.connect);
 });
 
 test('error message', t => {
 	let buf1 = message.error.serialize(message.error.NO_LOBBY),
-		res1 = message.error.deserialize(buf1),
-		buf2 = message.error.serialize(message.error.NO_SLOT),
-		res2 = message.error.deserialize(buf2);
-
+		res1 = message.error.deserialize(buf1);
 	t.is(res1, message.error.NO_LOBBY);
+	t.is(message.getSerializator(buf1), message.error);
+
+	let buf2 = message.error.serialize(message.error.NO_SLOT),
+		res2 = message.error.deserialize(buf2);
 	t.is(res2, message.error.NO_SLOT);
+	t.is(message.getSerializator(buf2), message.error);
 });
 
 test('connectAccepted message', t => {
@@ -150,6 +161,7 @@ test('connectAccepted message', t => {
 		res = message.connectAccepted.deserialize(buf);
 
 	t.deepEqual(val, res);
+	t.is(message.getSerializator(buf), message.connectAccepted);
 
 	let val2 = {
 			lobbyId: 989043,
@@ -160,6 +172,7 @@ test('connectAccepted message', t => {
 		buf2 = message.connectAccepted.serialize(val2.lobbyId, val2.playerId, val2.univWidth, val2.univHeight);
 
 	t.deepEqual(val2, message.connectAccepted.deserialize(buf2));
+	t.is(message.getSerializator(buf2), message.connectAccepted);
 });
 
 test('lobbyState message', t => {
@@ -175,6 +188,7 @@ test('lobbyState message', t => {
 
 	t.deepEqual(teams, res.enabledTeams);
 	t.is(res.state, 'warmup');
+	t.is(message.getSerializator(buf), message.lobbyState);
 });
 
 let planets = [
@@ -264,6 +278,7 @@ test('addEntity message', t => {
 
 		++playerI;
 	});
+	t.is(message.getSerializator(buf), message.addEntity);
 });
 
 
@@ -304,6 +319,7 @@ test('gameState message', t => {
 	});
 
 	t.deepEqual(selfParam, res);
+	t.is(message.getSerializator(buf), message.gameState);
 });
 
 test('playerControls message', t => {
@@ -327,6 +343,7 @@ test('playerControls message', t => {
 		let buf = message.playerControls.serialize(controls),
 			res = message.playerControls.deserialize(buf);
 		t.deepEqual(res, controls);
+		t.is(message.getSerializator(buf), message.playerControls);
 	}
 });
 
@@ -361,6 +378,7 @@ test('chat message', t => {
 			res = message.chat.deserialize(buf);
 
 		t.is(chatMsg, res);
+		t.is(message.getSerializator(buf), message.chat);
 	}
 });
 
@@ -372,6 +390,7 @@ test('chatBroadcast message', t => {
 
 		t.is(i, res.id);
 		t.is(chatMsg, res.message);
+		t.is(message.getSerializator(buf), message.chatBroadcast);
 
 		++i;
 	}
@@ -388,4 +407,10 @@ test('scores message', t => {
 		res = message.scores.deserialize(buf, enabledTeams);
 
 	t.deepEqual(res, scoresObj);
+	t.is(message.getSerializator(buf), message.scores);
+});
+
+test('serverRegistered message', t => {
+	let buf = message.serverRegistered.serialize();
+	t.is(message.getSerializator(buf), message.serverRegistered);
 });

@@ -30,7 +30,6 @@ export default class {
 			this.lobbyState = 'displaying_scores';
 			this.broadcast(message.lobbyState.serialize(this.lobbyState));
 			setTimeout(() => {
-				console.log(this);
 				this.goToPlayState();
 				this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 			}, 5000);

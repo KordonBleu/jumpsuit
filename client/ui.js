@@ -1,7 +1,7 @@
 import * as game from './game.js';
 import * as audio from './audio.js';
 import Planet from './planet.js';
-import * as wsClt from './websocket_client.js';
+import * as wsClt from './websockets.js';
 import * as controls from './controls.js';
 import * as entities from './entities.js';
 import settings from './settings.js';

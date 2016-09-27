@@ -299,6 +299,9 @@ The game server will respond with CONNECT_ACCEPTED.
 
 
 #### CONNECT_ACCEPTED (game server → client)
+
+The game server should first answer with an ADD_ENTITY, then with CONNECT_ACCEPTED.
+
 ```
  1B      4B          1B           2B                2B
 +---+----------+-----------+----------------+-----------------+

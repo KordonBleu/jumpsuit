@@ -16,10 +16,6 @@ export default class extends Weapon {
 			var	muzzleX = this.muzzleX*windowBox.zoomFactor + window.resources['muzzle'].width*0.5*windowBox.zoomFactor,
 				muzzleY = this.muzzleY*windowBox.zoomFactor - window.resources['muzzle'].height*0.25*windowBox.zoomFactor;
 
-			console.log(window.resources[(Math.random() > 0.5 ? 'muzzle' : 'muzzle2')],
-				muzzleX, muzzleY + this.offsetY*windowBox.zoomFactor,
-				window.resources['muzzle'].width * windowBox.zoomFactor,
-				window.resources['muzzle'].height * windowBox.zoomFactor);//muzzle flash
 			context.drawImage(window.resources[(Math.random() > 0.5 ? 'muzzle' : 'muzzle2')],
 				muzzleX, muzzleY + this.offsetY*windowBox.zoomFactor,
 				window.resources['muzzle'].width * windowBox.zoomFactor,
@@ -28,7 +24,6 @@ export default class extends Weapon {
 			this.muzzleFlash = false;
 			this.recoil = 10;
 		}
-		console.log(this.offsetX, this.recoil, windowBox.zoomFactor);
 		context.drawImage(window.resources[this.type.toLowerCase()], // this is ugly buuuuuuut... it works
 			(this.offsetX - this.recoil)*windowBox.zoomFactor,
 			this.offsetY*windowBox.zoomFactor,

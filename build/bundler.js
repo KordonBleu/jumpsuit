@@ -126,7 +126,7 @@ let clientPlugins = [
 	eslint()
 ];
 if (config.dev) clientPlugins.push(replace({
-	include: 'client/websocket_client.js',
+	include: 'client/websockets.js',
 	values: {
 		'\'wss://\'': '(location.protocol === \'http:\' ? \'ws://\' : \'wss://\')'
 	}

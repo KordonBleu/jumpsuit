@@ -155,12 +155,11 @@ wss.on('connection', function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					player.send(message.connectAccepted.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
 					if (lobby.lobbyState !== 'displaying_scores') {
 						lobby.assignPlayerTeam(player);
 						player.send(message.addEntity.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
 					} else player.send(message.addEntity.serialize([], [], [], lobby.players));
-					lobby.broadcast(message.addEntity.serialize([], [], [], [player]), player);
+					player.send(message.connectAccepted.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
 					player.send(message.lobbyState.serialize(lobby.lobbyState, lobby.enabledTeams));
 					lobby.broadcast(message.addEntity.serialize([], [], [], [player]), player);
 
