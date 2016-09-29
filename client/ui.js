@@ -446,12 +446,13 @@ export const notif = {
 
 /* Position fix: settings-box and info-box become blurry due decimal number in CSS's transform */
 window.addEventListener('resize', resizeHandler);
-export function resizeHandler() {
+function resizeHandler() {
 	for (let element of document.querySelectorAll('#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested')) {
 		element.style['margin-top'] = Math.round(element.clientHeight * -0.5) + 'px';
 		element.style['margin-left'] = Math.round(element.clientWidth * -0.5) + 'px';
 	}
 }
+resizeHandler();
 
 export function resizeCanvas() {
 	let	canvas = document.getElementById('canvas');

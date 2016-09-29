@@ -1,7 +1,6 @@
 import * as game from './game.js';
 import * as entities from './entities.js';
 import * as controls from './controls.js';
-import * as ui from './ui.js';
 import modulo from '../shared/modulo.js';
 import * as audio from './audio.js';
 import * as engine from './engine.js';
@@ -47,8 +46,6 @@ entities.windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY,
 	context.resetTransform();
 };
 
-ui.resizeHandler(); // ?
-
 let meteorSpawningIntervalId;
 export function startMeteorSpawning() {
 	meteorSpawningIntervalId = setInterval(function() {
@@ -93,6 +90,7 @@ export function loop() {
 	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
 
 	controls.updateDragSmooth(entities.windowBox);
+	console.log('player lgt', entities.players.length);
 	entities.windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;
 	entities.windowBox.center.y = entities.players[game.ownIdx].box.center.y + controls.dragSmoothed.y;
 

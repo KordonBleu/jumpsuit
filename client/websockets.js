@@ -232,10 +232,10 @@ class Connection {
 						newPlayer.homographId = homographId;
 						if (!(pid in entities.players)) ui.printChatMessage(undefined, undefined, newPlayer.getFinalName() + ' joined the game');
 						entities.players[pid] = newPlayer;
+						console.log('player added', entities.players);
 					}
 				);
 				ui.updatePlayerList();
-				//console.log('got addEntity', entities.players);
 				break;
 			case message.removeEntity:
 				message.removeEntity.deserialize(msg.data,
@@ -252,6 +252,7 @@ class Connection {
 					},
 					id => {//remove players
 						ui.printChatMessage(undefined, undefined, entities.players[id].getFinalName() + ' has left the game');
+						console.log('We\'re gonna remove a player');
 						delete entities.players[id];
 					}
 				);
@@ -325,6 +326,7 @@ class Connection {
 				let fuelElement = document.getElementById('gui-fuel');
 				if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
 
+				console.log('player lgt : ws', entities.players.length);
 				break;
 			}
 			case message.chatBroadcast: {

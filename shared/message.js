@@ -556,6 +556,14 @@ class RemoveEntity extends Serializator {
 
 class GameState extends Serializator {
 	_serialize(yourHealth, yourFuel, planets, enemies, players) {
+		/*var util = require('util');
+		console.log(
+			yourHealth,
+			yourFuel,
+			util.inspect(planets),
+			util.inspect(enemies),
+			util.inspect(players)
+		);*/
 		let buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.actualLength()*10),
 			view = new DataView(buffer);
 

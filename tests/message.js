@@ -291,6 +291,111 @@ test('gameState message', t => {
 		planetI = 0,
 		enemyI = 0,
 		playerI = 0;
+
+	let res = message.gameState.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
+		t.is(id, planetI);
+		t.is(planets[planetI].progress.team, ownedBy);
+		t.is(planets[planetI].progress.value, progress);
+
+		++planetI;
+	}, (id, angle) => {
+		t.is(id, enemyI);
+		t.is(approxAngle(enemies[enemyI].box.angle), approxAngle(angle));
+
+		++enemyI;
+	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
+		t.is(pid, playerI);
+		t.is(players[pid].box.center.x, x);
+		t.is(players[pid].box.center.y, y);
+		t.is(players[pid].attachedPlanet === -1 ? 255 : players[pid].attachedPlanet, attachedPlanet); // -1 when in space, which is 255 when wrapped
+		t.is(approxAngle(players[pid].box.angle), approxAngle(angle));
+		t.is(players[pid].looksLeft, looksLeft);
+		t.is(players[pid].jetpack, jetpack);
+		t.is(players[pid].hurt, hurt);
+		t.is(players[pid].walkFrame, walkFrame);
+		t.is(players[pid].armedWeapon.type, armedWeapon);
+		t.is(players[pid].carriedWeapon.type, carriedWeapon);
+
+		++playerI;
+	});
+
+	t.deepEqual(selfParam, res);
+	t.is(message.getSerializator(buf), message.gameState);
+});
+
+test('gameState message bis', t => {
+	let planets = [
+			{
+				progress: {
+					team: 'neutral',
+					value: 0,
+				}
+			},
+			{
+				progress: {
+					team: 'neutral',
+					value: 0,
+				}
+			},
+			{
+				progress: {
+					team: 'neutral',
+					value: 0,
+				}
+			},
+		],
+		enemies = [
+			{
+				box: {
+				angle: 0.06283185307179585
+				},
+			},
+			{
+				box: {
+				angle: 3.1238214839968435
+				},
+			},
+			{
+				box: {
+				angle: 0.06283185307179585
+				},
+			}
+		],
+		players = [
+			{
+				pid: 0,
+				box: {
+					center: {
+						x: 0,
+						y: 0,
+					},
+					angle: 1.0845553855026504
+				 },
+				aimAngle: 0,
+				walkFrame: 'jump',
+				jetpack: false,
+				looksLeft: true,
+				hurt: true,
+				health: 8,
+				fuel: 300,
+				attachedPlanet: -1,
+				armedWeapon: {
+					type: "Lmg"
+				},
+				carriedWeapon: {
+					type: "Smg"
+				}
+			}
+		];
+	let selfParam = {
+			yourHealth: 8,
+			yourFuel: 300
+		},
+		buf = message.gameState.serialize(selfParam.yourHealth, selfParam.yourFuel, planets, enemies, players),
+		planetI = 0,
+		enemyI = 0,
+		playerI = 0;
+
 	let res = message.gameState.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
 		t.is(id, planetI);
 		t.is(planets[planetI].progress.team, ownedBy);

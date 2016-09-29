@@ -26,17 +26,35 @@ The tilde (~) indicates the value is optional and not repeated.
 The equal sign (=) indicates the value is optional and repeated.
 
 ```
-+-------+
-| value |
-+-------+
+         1B
++---------------------+
+| value taking 1 byte |
++---------------------+
 
-+~~~~~~~~~~~~~~~~+
-| optional value |
-+~~~~~~~~~~~~~~~~+
+               4b
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
+| optional value taking 4 bits |
++~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~+
 
-+================+
-| repeated value |
-+================+
+                   4B  <- this is the space taken by ONE value, not the total amount
++======================================+
+| value repeated between 4 and 6 times |
++======================================+
+                   4-6
+```
+
+When the value is a payload or a subpayload, the space it takes isn't mentioned, you should refer to the section of this document about it.
+
+
+## Packets
+
+The first byte of every packet determines its type. A payload may be placed after this first byte. The payload may contain subpayloads or payloads.
+
+```
+   1B       ?B
++------+-----------
+| Type | payload...
++------+-----------
 ```
 
 
@@ -126,12 +144,14 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
  3. `stand`
  4. `walk1`
  5. `walk2`
+
 `Team` must be either:
  0. `blue team`
  1. `beige team`
  2. `green team`
  3. `pink team`
  4. `yellow team`
+
 `Armed Weapon` and `Carried Weapon` must be either:
  0. `Lmg`
  1. `Smg`
@@ -153,6 +173,7 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
  2. `stand`
  3. `walk1`
  4. `walk2`
+
 `Armed Weapon` and `Carried Weapon` must be either:
  0. `Lmg`
  1. `Smg`
@@ -182,7 +203,7 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 
 #### SERVER
 ```
-  16B         ?B
+  16B
 +------+----------------+
 | ipv6 | PARTIAL_SERVER |
 +------+----------------+
@@ -198,20 +219,34 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 ```
 
 
-## Packets
-
-The first byte of every packet determines its type. A payload may be placed after this first byte. The payload may contain subpayloads or payloads.
-
+#### BOOTSTRAP_UNIVERSE
 ```
-   1B       ?B
-+------+-----------
-| Type | payload...
-+------+-----------
+     4B          1B           2B                2B
++----------+-----------+----------------+-----------------+------------+------------------+
+| lobby id | player id | universe width | universe height | ADD_ENTITY | BOOTSTRAP_SCORES |
++----------+-----------+----------------+-----------------+------------+------------------+
 ```
 
-There are 17 packet types.
+
+#### BOOTSTRAP_SCORES
+```
+      3b                   5b
++-------------+------------------------+--------+
+| unused bits |      enabled teams     | SCORES |
++-------------+ -  -  -  -  -  -  -  - +--------+
+              | e.g.:  0 1 0 1 0       |
+              |          ^   ^         |
+              |          |   |         |
+              |          |   alienPink |
+              |          alienBlue     |
+              +------------------------+
+```
 
 
+
+
+
+## Payloads
 
 ### Master server ↔ Game server
 
@@ -219,10 +254,9 @@ Game servers will attempt to connect to the master server's websocket at "/game_
 
 #### REGISTER_SERVER (game server → master server)
 ```
- 1B          ?B
-+---+----------------+
-| 0 | PARTIAL_SERVER |
-+---+----------------+
++----------------+
+| PARTIAL_SERVER |
++----------------+
 ```
 
 
@@ -232,32 +266,31 @@ Clients will attempt to connect to the master server's websocket at "/clients".
 
 #### ADD_SERVERS (master server → client)
 ```
- 1B    ?*6B
-+---+========+
-| 1 | SERVER |
-+---+========+
++========+
+| SERVER |
++========+
+    1-∞
 ```
 
 
 #### REMOVE_SERVERS (master server → client)
 ```
- 1B      2B
-+---+===========+
-| 2 | server id |
-+---+===========+
+     2B
++===========+
+| server id |
++===========+
+     1-∞
 ```
-
-
 
 
 ### Client ↔ Game server
 
 #### SET_PREFERENCES (client → game server)
 ```
- 1B         1B               1B               0B-?B
-+---+----------------+------------------+---------------+
-| 3 | primary weapon | secondary weapon | "player name" |
-+---+----------------+------------------+---------------+
+        1B               1B               0B-∞B
++----------------+------------------+---------------+
+| primary weapon | secondary weapon | "player name" |
++----------------+------------------+---------------+
 ```
 
 The player must send this message before `CONNECT`.
@@ -265,20 +298,20 @@ The player must send this message before `CONNECT`.
 
 #### SET_NAME_BROADCAST (game server → client)
 ```
- 1B      1B            1B            0B-?B
-+---+-----------+--------------+---------------+
-| 4 | player id | homograph id | "player name" |
-+---+-----------+--------------+---------------+
+     1B            1B            0B-∞B
++-----------+--------------+---------------+
+| player id | homograph id | "player name" |
++-----------+--------------+---------------+
 ```
 The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
 
 
 #### CONNECT (client → game server)
 ```
- 1B        1B            4B           1B                 1B              0B-?B
-+---+---------------+----------+----------------+------------------+---------------+
-| 5 | lobbyDefined? | lobby id | primary weapon | secondary weapon | "player name" |
-+---+---------------+----------+----------------+------------------+---------------+
+       1B            4B           1B                 1B              0B-∞B
++---------------+----------+----------------+------------------+---------------+
+| lobbyDefined? | lobby id | primary weapon | secondary weapon | "player name" |
++---------------+----------+----------------+------------------+---------------+
 ```
 
 The game server will respond with CONNECT_ACCEPTED.
@@ -286,120 +319,114 @@ The `lobby id` must be set only if the player wishes to connect to a specific lo
 
 #### ERROR (game server → client)
 ```
- 1B       1B
-+---+------------+
-| 6 | Error Type |
-+---+------------+
+      1B
++------------+
+| Error Type |
++------------+
 ```
 
 `Error Type` must be either:
- 0. no lobby avalaible
+ 0. no lobby available
 The game server will respond with CONNECT_ACCEPTED.
- 1. no slot avalaible
+ 1. no slot available
 
 
-#### CONNECT_ACCEPTED (game server → client)
-
-The game server should first answer with an ADD_ENTITY, then with CONNECT_ACCEPTED.
-
+#### CONNECT_ACCEPTED_WARMUP
 ```
- 1B      4B          1B           2B                2B
-+---+----------+-----------+----------------+-----------------+
-| 7 | lobby id | player id | universe width | universe height |
-+---+----------+-----------+----------------+-----------------+
+                            3b            5b
++--------------------+-------------+---------------+
+| BOOTSTRAP_UNIVERSE | unused bits | enabled teams |
++--------------------+-------------+---------------+
 ```
 
 
-#### LOBBY_STATE (game server → client)
+#### CONNECT_ACCEPTED_PLAYING
 ```
- 1B       1B            3b                   5b
-+---+-------------+-------------+-------------------------+
-| 8 | Lobby State | unused bits |      enabled teams      |
-+---+-------------+-------------+ -  -  -  -  -  -  -  -  +
-                                |  e.g.:  0 1 0 1 0       |
-                                |           ^   ^         |
-                                |           |   |         |
-                                |           |   alienPink |
-                                |           alienBlue     |
-                                +-------------------------+
-
++--------------------+------------------+
+| BOOTSTRAP_UNIVERSE | BOOTSTRAP_SCORES |
++--------------------+------------------+
 ```
 
-`Lobby State` must be either:
- 0. not enough players
- 1. transmitting data (planets, enemies, players)
- 2. playing
- 3. displaying scores
+#### CONNECT_ACCEPTED_DISPLAYING
+```
++------------------+
+| BOOTSTRAP_SCORES |
++------------------+
+```
 
 
 #### ADD_ENTITY (game server → client)
 ```
-  1B       1B          ?*6B         1B        ?*5B         1B       ?*6B     ?B
-+---+---------------+========+--------------+=======+-------------+======+========+
-| 9 | planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
-+---+---------------+========+--------------+=======+-------------+======+========+
+       1B                       1B                     1B
++---------------+========+--------------+=======+-------------+======+========+
+| planet amount | PLANET | enemy amount | ENEMY | shot amount | SHOT | PLAYER |
++---------------+========+--------------+=======+-------------+======+========+
+                  0-255                   0-255                0-255   0-255
 ```
 
 
 #### REMOVE_ENTITY (game server → client)
 ```
-  1B        1B           ?*1B           1B          ?*1B         1B         ?*1B       ?*1B
-+----+---------------+===========+--------------+==========+-------------+=========+===========+
-| 10 | planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
-+----+---------------+===========+--------------+==========+-------------+=========+===========+
+       1B                          1B                       1B
++---------------+===========+--------------+==========+-------------+=========+===========+
+| planet amount | planet id | enemy amount | enemy id | shot amount | shot id | player id |
++---------------+===========+--------------+==========+-------------+=========+===========+
+                    0-255                     0-255                    0-255      0-255
 ```
 
 
 #### GAME_STATE (game server → client)
 ```
-  1B       1B           2B           ?*3B           ?*1B            ?*9B
-+----+-------------+-----------+===============+=============+===============+
-| 11 | your health | your fuel | LESSER_PLANET | enemy angle | LESSER_PLAYER |
-+----+-------------+-----------+===============+=============+===============+
+      1B           2B
++-------------+-----------+===============+=============+===============+
+| your health | your fuel | LESSER_PLANET | enemy angle | LESSER_PLAYER |
++-------------+-----------+===============+=============+===============+
+                                0-255          0-255          0-255
 ```
 
 
 #### PLAYER_CONTROLS (client → game server)
 ```
-  1B    1b    1b      1b       1b         1b           1b            1b          1b
-+----+------+-----+--------+---------+-----------+------------+---------------+-------+
-| 12 | jump | run | crouch | jetpack | move left | move right | change weapon | shoot |
-+----+------+-----+--------+---------+-----------+------------+---------------+-------+
+   1b    1b      1b       1b         1b           1b            1b          1b
++------+-----+--------+---------+-----------+------------+---------------+-------+
+| jump | run | crouch | jetpack | move left | move right | change weapon | shoot |
++------+-----+--------+---------+-----------+------------+---------------+-------+
 ```
 
 
 #### AIM_ANGLE (client → game server)
 ```
-  1B    1B
-+----+-------+
-| 13 | angle |
-+----+-------+
+   1B
++-------+
+| angle |
++-------+
 ```
 
 
 #### CHAT (client → game server)
 ```
-  1B      1B
-+----+-----------+
-| 14 | "message" |
-+----+-----------+
+     1B
++-----------+
+| "message" |
++-----------+
 ```
 
 
 #### CHAT_BROADCAST (game server → client)
 ```
-  1B      1B          ?B
-+----+-----------+-----------+
-| 15 | player id | "message" |
-+----+-----------+-----------+
+     1B          ?B
++-----------+-----------+
+| player id | "message" |
++-----------+-----------+
 ```
 
 #### SCORES (game server → client)
 ```
-  1B      4B
-+----+============+
-| 16 | team score |
-+----+============+
+     4B
++============+
+| team score |
++============+
+     1-5
 ```
 There are as many `team score`s as there are teams playing. Which teams are playing has already been sent with a LOBBY_STATE message.
 The order `team score`s can be mapped to teams is as follow (provided the teams are enabled): beige team, blue team, green team, pink team, yellow team.
