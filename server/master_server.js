@@ -34,9 +34,9 @@ const http = require('http'),
 	ipaddr = require('ipaddr.js');
 
 class GameServer {
-	constructor(name, mod, secure, port, ip) {
-		this.name = name;
-		this.mod = mod;
+	constructor(serverName, modName, secure, port, ip) {
+		this.serverName = serverName;
+		this.modName = modName;
 		this.secure = secure;
 		this.port = port;
 		this.ip = ip;
@@ -129,10 +129,10 @@ gameServerSocket.on('connection', function(ws) {
 
 			if (serializator === message.registerServer) {
 				let data = message.registerServer.deserialize(msg);
-				gameServer.name = data.serverName;
-				gameServer.mod = data.modName;
+				gameServer.serverName = data.serverName;
+				gameServer.modName = data.modName;
 				gameServer.secure = data.secure;
-				gameServer.port = data.serverPort;
+				gameServer.port = data.port;
 				gameServer.pingIntervalId = setInterval(function() {
 					try {
 						ws.ping();
@@ -143,7 +143,7 @@ gameServerSocket.on('connection', function(ws) {
 				}, 5000);
 				gameServers.push(gameServer);
 
-				logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.mod, gameServer.name);
+				logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.modName, gameServer.serverName);
 				ws.send(message.serverRegistered.serialize());
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					gameServer.effectiveIp(client.ipAddr).then(effectiveIp => {
@@ -171,7 +171,7 @@ gameServerSocket.on('connection', function(ws) {
 			if (gameServer === gS) {
 				clearInterval(gameServer.pingIntervalId);
 				gameServers.splice(i, 1);
-				logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.mod, gS.name);
+				logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.modName, gS.serverName);
 				clientsSocket.clients.forEach(function(client) {//broadcast
 					try {
 						client.send(message.removeServers.serialize([i]), wsOptions);

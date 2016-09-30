@@ -330,8 +330,8 @@ export function addServerRow(server) {
 		buttonTd = document.createElement('td'),
 		button = document.createElement('button');
 
-	serverNameTd.textContent = server.name;
-	modNameTd.textContent = server.mod;
+	serverNameTd.textContent = server.serverName;
+	modNameTd.textContent = server.modName;
 
 	button.textContent = 'Play!';
 	button.dataset.url = server.url;

@@ -32,7 +32,7 @@
   "readme": "readme.md",
   "license": "MPL-2.0",
   "scripts": {
-    "test": "./node_modules/ava/cli.js ./tests/message.js",
+    "test": "./node_modules/ava/cli.js ./tests/payloads.js ./tests/subpayloads.js",
     "stylelint": "./node_modules/stylelint/dist/cli.js ./static/*.css"
   },
   "ava": {
