@@ -102,7 +102,7 @@ export class PartialServer {
 				serverName,
 				modName
 			},
-			offset: view.byteOffset + 5 + view[3] + modNameLgt
+			byteLength: 5 + view[3] + modNameLgt
 		};
 	}
 }
@@ -116,8 +116,51 @@ export class Server {
 	static deserialize(buffer, offset) {
 		let retVal = PartialServer.deserialize(buffer, offset + 16);
 		retVal.data.ipv6 = ipaddr.fromByteArray(new Uint8Array(buffer.slice(offset, offset + 16)));
+		retVal.byteLength += 16;
 
 		return retVal;
+	}
+}
+
+export class PlanetMut {
+	static serialize(buffer, offset, planet) {
+		let view = new Uint8Array(buffer, offset);
+		view[0] = teamMap.getNbr(planet.progress.team);
+		view[1] = planet.progress.value;
+
+		return 2;
+	}
+	static deserialize(buffer, offset, id, planetsCbk) {
+		let view = new Uint8Array(buffer, offset);
+
+		planetsCbk(
+			id,
+			teamMap.getStr(view[0]), // ownedBy
+			view[1] // progress
+		);
+	}
+}
+export class PlanetConst {
+	static serialize(buffer, offset, planet) {
+		let dView = new DataView(buffer, offset);
+
+		dView.setUint16(0, planet.box.center.x);
+		dView.setUint16(2, planet.box.center.y);
+		dView.setUint16(4, planet.radius);
+		dView.setUint8(6, planet.type);
+
+		return 7;
+	}
+	static deserialize(buffer, offset, id, planetsCbk) {
+		let dView = new DataView(buffer, offset);
+
+		planetsCbk(
+			id,
+			dView.getUint16(0), // x
+			dView.getUint16(2), // y
+			dView.getUint16(4), // radius
+			dView.getUint8(6) // type
+		);
 	}
 }
 
@@ -191,7 +234,7 @@ class AddServers extends Serializator {
 		while (offset !== buffer.byteLength) {
 			let serverParams = Server.deserialize(buffer, offset);
 			serverList.push(serverParams.data);
-			offset = serverParams.offset;
+			offset += serverParams.byteLength;
 		}
 
 		return serverList;
@@ -546,14 +589,6 @@ class RemoveEntity extends Serializator {
 
 class GameState extends Serializator {
 	_serialize(yourHealth, yourFuel, planets, enemies, players) {
-		/*var util = require('util');
-		console.log(
-			yourHealth,
-			yourFuel,
-			util.inspect(planets),
-			util.inspect(enemies),
-			util.inspect(players)
-		);*/
 		let buffer = new ArrayBuffer(4 + planets.length*2 + enemies.length + players.actualLength()*10),
 			view = new DataView(buffer);
 

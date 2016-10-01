@@ -66,6 +66,14 @@ They might be used several times in a packet or in packets with different types.
 
 #### PLANET
 ```
++--------------+------------+
+| PLANET_CONST | PLANET_MUT |
++--------------+------------+
+```
+
+
+#### PLANET_CONST
+```
        2B            2B           2B      1B
 +--------------+--------------+--------+------+
 | x-coordinate | y-coordinate | radius | Type |
@@ -77,7 +85,7 @@ They might be used several times in a packet or in packets with different types.
  1. grass
 
 
-#### LESSER_PLANET
+#### PLANET_MUT
 ```
      1B         1B
 +----------+----------+
@@ -95,6 +103,14 @@ Owned By must be either:
 
 
 #### ENEMY
+```
++-------------+-----------+
+| ENEMY_CONST | ENEMY_MUT |
++-------------+-----------+
+```
+
+
+#### ENEMY_CONST
 ```
       2B              2B           1B
 +--------------+--------------+------------+
@@ -125,25 +141,33 @@ Owned By must be either:
  19. `enemyRed5`
 
 
+#### ENEMY_MUT
+```
+   1B
++-------+
+| angle |
++-------+
+```
+
+
 #### PLAYER
 ```
-      2B             2B               1B            1B       1B           1b         1b          3b        3b        4b             2b              2b              1B            1B        0-255B
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+--------------+-------------+--------+
-| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | Walk Frame | Team | unused bits | Armed Weapon | Carried Weapon | homograph id | name length | "name" |
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------------+------+-------------+--------------+----------------+--------------+-------------+--------+
++------------+--------------+
+| PLAYER_MUT | PLAYER_CONST |
++------------+--------------+
+```
+
+`PLAYER_MUT` and `PLAYER_CONST` will be partially merged as to remove as many as possible `unused bits`.
+
+
+#### PLAYER_CONST
+```
+      5b         3b         1B            1B        0-255B
++-------------+---------------------+-------------+--------+
+| unused bits | Team | homograph id | name length | "name" |
++-------------+------+--------------+-------------+--------+
 ```
 The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
-If `attached planet`'s value is 255, the player is not attached to a planet. This also means there cannot be more than 124 planets.
-
-**`looks left` IS NOW USELESS SINCE IT CAN BE DEDUCTED FROM `AIM_ANGLE`.**
-
-`Walk Frame` must be either:
- 0. `duck`
- 1. `hurt`
- 2. `jump`
- 3. `stand`
- 4. `walk1`
- 5. `walk2`
 
 `Team` must be either:
  0. `blue team`
@@ -152,20 +176,17 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
  3. `pink team`
  4. `yellow team`
 
-`Armed Weapon` and `Carried Weapon` must be either:
- 0. `Lmg`
- 1. `Smg`
- 2. `Shotgun`
- 3. `Sniper`
 
+#### PLAYER_MUT
+```
+      2B             2B               1B           1B        1B           1b         1b       1b       3b            2b              2b              6b
++--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+--------------+----------------+-------------+
+| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | hurt | Walk Frame | Armed Weapon | Carried Weapon | unused bits |
++--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+--------------+----------------+-------------+
+```
+If `attached planet`'s value is 255, the player is not attached to a planet. This also means there cannot be more than 255 planets.
 
-#### LESSER_PLAYER
-```
-      2B             2B               1B           1B        1B           1b         1b       1b       3b           6b             2b              2b
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+-------------+--------------+----------------+
-| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | hurt | Walk Frame | unused bits | Armed Weapon | Carried Weapon |
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+-------------+--------------+----------------+
-```
+**`looks left` IS NOW USELESS SINCE IT CAN BE DEDUCTED FROM `AIM_ANGLE`.**
 
 `Walk Frame` must be either:
  0. `duck`
@@ -183,22 +204,13 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 
 #### SHOT
 ```
-      4B         1B       1B         7b            1b
-+-------------+-------+--------+-------------+-------------+
-| LESSER_SHOT | angle | origin | unused bits | from weapon |
-+-------------+-------+----------------------+-------------+
+       2B             2B         1B       1B         6b         2b
++--------------+--------------+-------+--------+-------------+------+
+| x-coordinate | y-coordinate | angle | origin | unused bits | type |
++--------------+--------------+-------+----------------------+------+
 ```
 
-`origin` is 255 when emmitted by an enemy. However, since it is possible to have a player whose `id` is 255, this could lead to conflicts. **THIS PROBLEM MUST BE FIXED.**
-
-
-#### LESSER_SHOT
-```
-      2B              2B
-+--------------+--------------+
-| x-coordinate | y-coordinate |
-+--------------+--------------+
-```
+`origin` is 255 when emmitted by an enemy. However, since it is possible to have a player whose `id` is 255, this could lead to conflicts. **THIS PROBLEM MUST BE FIXED**, for example by using the `unused bits`.
 
 
 #### SERVER
@@ -378,10 +390,10 @@ The game server will respond with CONNECT_ACCEPTED.
 #### GAME_STATE (game server → client)
 ```
       1B           2B
-+-------------+-----------+===============+=============+===============+
-| your health | your fuel | LESSER_PLANET | enemy angle | LESSER_PLAYER |
-+-------------+-----------+===============+=============+===============+
-                                0-255          0-255          0-255
++-------------+-----------+============+===========+============+
+| your health | your fuel | PLANET_MUT | ENEMY_MUT | PLAYER_MUT |
++-------------+-----------+============+===========+============+
+                                0-255       0-255      0-255
 ```
 
 
@@ -405,7 +417,7 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### CHAT (client → game server)
 ```
-     1B
+    0B-∞B
 +-----------+
 | "message" |
 +-----------+
@@ -414,7 +426,7 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### CHAT_BROADCAST (game server → client)
 ```
-     1B          ?B
+     1B         0B-∞B
 +-----------+-----------+
 | player id | "message" |
 +-----------+-----------+
