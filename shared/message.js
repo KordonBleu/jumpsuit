@@ -237,6 +237,36 @@ export class EnemyMut {
 	}
 }
 
+export class PlayerConst {
+	static serialize(buffer, offset, player, playerNameBuf) {
+		let view = new Uint8Array(buffer, offset);
+
+		view[0] = player.pid;
+		view[1] = teamMap.getNbr(player.appearance);
+		view[2] = player.homographId;
+		view[3] = playerNameBuf.byteLength;
+		view.set(new Uint8Array(playerNameBuf), 4);
+
+		return 4 + playerNameBuf.byteLength;
+	}
+	static deserialize(buffer, offset, playersCbk) {
+		let view = new Uint8Array(buffer, offset);
+
+		playersCbk(
+			view[0], // pid
+			teamMap.getStr(view[1]), // appearance
+			view[2], // homographId
+			convert.bufferToString(buffer.slice(offset + 4, offset + 4 + view[3]))
+		);
+
+		return 4 + view[3];
+	}
+}
+PlayerConst.MASK = {
+	LOOKS_LEFT: 128,
+	JETPACK: 64
+};
+
 
 /* Serializators */
 

@@ -153,19 +153,17 @@ Owned By must be either:
 #### PLAYER
 ```
 +------------+--------------+
-| PLAYER_MUT | PLAYER_CONST |
+| PLAYER_CONST | PLAYER_MUT |
 +------------+--------------+
 ```
-
-`PLAYER_MUT` and `PLAYER_CONST` will be partially merged as to remove as many as possible `unused bits`.
 
 
 #### PLAYER_CONST
 ```
-      5b         3b         1B            1B        0-255B
-+-------------+---------------------+-------------+--------+
-| unused bits | Team | homograph id | name length | "name" |
-+-------------+------+--------------+-------------+--------+
+      1B          5b         3b         1B            1B        0-255B
++-----------+-------------+---------------------+-------------+--------+
+| player id | unused bits | Team | homograph id | name length | "name" |
++-----------+-------------+------+--------------+-------------+--------+
 ```
 The `homograph id` is used to distinguish players with the same name. It is unique for every player with the same name.
 

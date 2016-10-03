@@ -130,3 +130,21 @@ test('EnemyConst', t => {
 		t.is(enemy.appearance, appearance);
 	});
 });
+
+test('PlayerConst', t => {
+	let player = {
+		pid: 24,
+		appearance: 'alienGreen',
+		homographId: 5
+	},
+		nameBuf = convert.stringToBuffer('Florian'),
+		buf = new ArrayBuffer(57);
+
+	message.PlayerConst.serialize(buf, 12, player, nameBuf);
+	message.PlayerConst.deserialize(buf, 12, (pid, appearance, homographId, name) => {
+		t.is(pid, player.pid);
+		t.is(appearance, player.appearance);
+		t.is(homographId, player.homographId);
+		t.is(name, 'Florian');
+	});
+});
