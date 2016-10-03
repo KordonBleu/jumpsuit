@@ -138,6 +138,8 @@ export class PlanetMut {
 			teamMap.getStr(view[0]), // ownedBy
 			view[1] // progress
 		);
+
+		return 2;
 	}
 }
 export class PlanetConst {
@@ -146,21 +148,49 @@ export class PlanetConst {
 
 		dView.setUint16(0, planet.box.center.x);
 		dView.setUint16(2, planet.box.center.y);
-		dView.setUint16(4, planet.radius);
+		dView.setUint16(4, planet.box.radius);
 		dView.setUint8(6, planet.type);
 
 		return 7;
 	}
-	static deserialize(buffer, offset, id, planetsCbk) {
+	static deserialize(buffer, offset, planetsCbk) {
 		let dView = new DataView(buffer, offset);
 
 		planetsCbk(
-			id,
 			dView.getUint16(0), // x
 			dView.getUint16(2), // y
 			dView.getUint16(4), // radius
 			dView.getUint8(6) // type
 		);
+
+		return 7;
+	}
+}
+
+export class Shot {
+	static serialize(buffer, offset, shot) {
+		let dView = new DataView(buffer, offset);
+
+		dView.setUint16(0, shot.box.center.x);
+		dView.setUint16(2, shot.box.center.y);
+		dView.setUint8(4, convert.radToBrad(shot.box.angle, 1));
+		dView.setUint8(5, shot.origin);
+		dView.setUint8(6, shot.type);
+
+		return 7;
+	}
+	static deserialize(buffer, offset, shotsCbk) {
+		let dView = new DataView(buffer, offset);
+
+		shotsCbk(
+			dView.getUint16(0), // x
+			dView.getUint16(2), // y
+			convert.bradToRad(dView.getUint8(4), 1), // angle
+			dView.getUint8(5), // origin
+			dView.getUint8(6) // type
+		);
+
+		return 7;
 	}
 }
 
@@ -399,18 +429,15 @@ class AddEntity extends Serializator {
 				totalNameSize += playerNameBufs[i].byteLength;
 			});
 		}
-		let buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*7 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*11 + totalNameSize : 0)),
+		let buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*9 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*11 + totalNameSize : 0)),
 			view = new DataView(buffer);
 
 		let offset = 2;
 		if (planets !== undefined) {
 			view.setUint8(1, planets.length);
 			for (let planet of planets) {
-				view.setUint16(offset, planet.box.center.x);
-				view.setUint16(2 + offset, planet.box.center.y);
-				view.setUint16(4 + offset, planet.box.radius);
-				view.setUint8(6 + offset, planet.type);
-				offset += 7;
+				offset += PlanetConst.serialize(buffer, offset, planet);
+				offset += PlanetMut.serialize(buffer, offset, planet);
 			}
 		} else {
 			view.setUint8(1, 0);
@@ -431,12 +458,7 @@ class AddEntity extends Serializator {
 		if (shots !== undefined) {
 			view.setUint8(offset++, shots.length);
 			shots.forEach(shot => {
-				view.setUint16(offset, shot.box.center.x);
-				view.setUint16(2 + offset, shot.box.center.y);
-				view.setUint8(4 + offset, convert.radToBrad(shot.box.angle, 1));
-				view.setUint8(5 + offset, shot.origin);
-				view.setUint8(6 + offset, shot.type);
-				offset += 7;
+				offset += Shot.serialize(buffer, offset, shot);
 			});
 		} else {
 			view.setUint8(offset++, 0);
@@ -468,58 +490,47 @@ class AddEntity extends Serializator {
 
 		return buffer;
 	}
-	deserialize(buffer, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
-		let view = new DataView(buffer);
+	deserialize(buffer, constructPlanetsCbk, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+		let view = new DataView(buffer),
+			offset = 2;
 
-		for (var i = 2; i !== 7*view.getUint8(1) + 2; i += 7) {
-			planetsCbk(
-				view.getUint16(i),//x
-				view.getUint16(i + 2),//y
-				view.getUint16(i + 4),//radius
-				view.getUint8(i + 6)//type
-			);
+		for (let id = 0; offset !== 9*view.getUint8(1) + 2; ++id) {
+			offset += PlanetConst.deserialize(buffer, offset, constructPlanetsCbk);
+			offset += PlanetMut.deserialize(buffer, offset, id, planetsCbk);
 		}
 
-		let lim = 5*view.getUint8(i) + ++i;
-		for (; i !== lim; i += 5) {
+		let lim = 5*view.getUint8(offset) + ++offset;
+		for (; offset !== lim; offset += 5) {
 			enemiesCbk(
-				view.getUint16(i),//x
-				view.getUint16(i + 2),//y
-				enemyAppearanceMap.getStr(view.getUint8(i + 4)) //appearance
+				view.getUint16(offset),//x
+				view.getUint16(offset + 2),//y
+				enemyAppearanceMap.getStr(view.getUint8(offset + 4)) //appearance
 			);
 		}
 
-		lim = 7*view.getUint8(i) + ++i;
-		for (; i !== lim; i += 7) {
-			shotsCbk(
-				view.getUint16(i),//x
-				view.getUint16(i + 2),//y
-				convert.bradToRad(view.getUint8(i + 4), 1),//angle
-				view.getUint8(i + 5),//origin
-				view.getUint8(i + 6)//type
-			);
+		lim = 7*view.getUint8(offset) + ++offset;
+		while (offset !== lim) offset += Shot.deserialize(buffer, offset, shotsCbk);
 
-		}
-		while (i !== buffer.byteLength) {
-			let nameLgt = view.getUint8(i + 10),
-				enumByte = view.getUint8(i + 7),
-				weaponByte = view.getUint8(i + 8);
+		while (offset !== buffer.byteLength) {
+			let nameLgt = view.getUint8(offset + 10),
+				enumByte = view.getUint8(offset + 7),
+				weaponByte = view.getUint8(offset + 8);
 			playersCbk(
-				view.getUint8(i),//pid
-				view.getUint16(i + 1),//x
-				view.getUint16(i + 3),//y
-				view.getUint8(i + 5),//attached planet
-				convert.bradToRad(view.getUint8(i + 6), 1),//angle
+				view.getUint8(offset),//pid
+				view.getUint16(offset + 1),//x
+				view.getUint16(offset + 3),//y
+				view.getUint8(offset + 5),//attached planet
+				convert.bradToRad(view.getUint8(offset + 6), 1),//angle
 				enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 				enumByte & this.MASK.JETPACK ? true : false,//jetpack
 				teamMap.getStr(enumByte << 29 >>> 29),//appearance
 				walkFrameMap.getStr(enumByte << 26 >>> 29),//walk frame
-				convert.bufferToString(buffer.slice(i + 11, i + 11 + nameLgt)),//name
-				view.getUint8(i + 9),//homographId
+				convert.bufferToString(buffer.slice(offset + 11, offset + 11 + nameLgt)),//name
+				view.getUint8(offset + 9),//homographId
 				weaponMap.getStr(weaponByte << 28 >>> 30),//armedWeapon
 				weaponMap.getStr(weaponByte << 30 >>> 30)//carriedWeapon
 			);
-			i += nameLgt + 11;
+			offset += nameLgt + 11;
 		}
 	}
 }
@@ -596,10 +607,7 @@ class GameState extends Serializator {
 		view.setUint16(2, yourFuel);
 
 		let offset = 4;
-		for (let planet of planets) {
-			view.setUint8(offset++, teamMap.getNbr(planet.progress.team));
-			view.setUint8(offset++, planet.progress.value);
-		}
+		for (let planet of planets) offset += PlanetMut.serialize(buffer, offset, planet);
 
 		for (let enemy of enemies) {
 			view.setUint8(offset++, convert.radToBrad(enemy.box.angle, 1));
@@ -627,36 +635,31 @@ class GameState extends Serializator {
 		return buffer;
 	}
 	deserialize(buffer, planetAmount, enemyAmount, planetsCbk, enemiesCbk, playersCbk) {
-		let view = new DataView(buffer);
-		let i = 4;
-		for (let id = 0; i !== 4 + planetAmount*2; i += 2, ++id) {
-			planetsCbk(
-				id,
-				teamMap.getStr(view.getUint8(i)),//ownedBy
-				view.getUint8(i + 1)//progress
-			);
+		let view = new DataView(buffer),
+			offset = 4;
+
+		for (let id = 0; offset !== 4 + planetAmount*2; ++id) offset += PlanetMut.deserialize(buffer, offset, id, planetsCbk);
+
+		let limit = offset + enemyAmount;
+		for (let id = 0; offset !== limit; ++offset, ++id) {
+			enemiesCbk(id, convert.bradToRad(view.getUint8(offset), 1));//angle
 		}
 
-		let limit = i + enemyAmount;
-		for (let id = 0; i !== limit; ++i, ++id) {
-			enemiesCbk(id, convert.bradToRad(view.getUint8(i), 1));//angle
-		}
-
-		for (; i !== view.byteLength; i += 10) {
-			let enumByte = view.getUint8(8 + i),
-				weaponByte = view.getUint8(9 + i);
-			playersCbk(view.getUint8(i), //pid
-				view.getUint16(1 + i),//x
-				view.getUint16(3 + i),//y
-				view.getUint8(5 + i),//attachedPlanet
-				convert.bradToRad(view.getUint8(6 + i), 1),//angle
+		for (; offset !== view.byteLength; offset += 10) {
+			let enumByte = view.getUint8(8 + offset),
+				weaponByte = view.getUint8(9 + offset);
+			playersCbk(view.getUint8(offset), //pid
+				view.getUint16(1 + offset),//x
+				view.getUint16(3 + offset),//y
+				view.getUint8(5 + offset),//attachedPlanet
+				convert.bradToRad(view.getUint8(6 + offset), 1),//angle
 				enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
 				enumByte & this.MASK.JETPACK ? true : false,//jetpack
 				enumByte & this.MASK.HURT ? true : false,//hurt
 				walkFrameMap.getStr(enumByte << 27 >>> 29),//walkFrame
 				weaponMap.getStr(weaponByte >>> 2),//armed weapon
 				weaponMap.getStr(weaponByte << 30 >>> 30),//carried weapon
-				convert.bradToRad(view.getUint8(7 + i), 1)
+				convert.bradToRad(view.getUint8(7 + offset), 1)
 			);
 		}
 

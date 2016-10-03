@@ -4,6 +4,10 @@ import * as message from '../shared/message.js';
 import * as convert from '../server/convert.js';
 import ipaddr from 'ipaddr.js';
 
+function approxAngle(angle) {
+	return Math.floor(angle*10);
+}
+
 
 test('PartialServer', t => {
 	let offset = 26,
@@ -69,17 +73,40 @@ test('PlanetConst', t => {
 				center: {
 					x: 24,
 					y: 56
-				}
+				},
+				radius: 100
 			},
-			radius: 100,
 			type: 2
 		};
 	message.PlanetConst.serialize(buf, 4, planet);
-	message.PlanetConst.deserialize(buf, 4, 67, (id, x, y, radius, type) => {
-		t.is(id, 67);
+	message.PlanetConst.deserialize(buf, 4, (x, y, radius, type) => {
 		t.is(x, planet.box.center.x);
 		t.is(y, planet.box.center.y);
-		t.is(radius, planet.radius);
+		t.is(radius, planet.box.radius);
 		t.is(type, planet.type);
+	});
+});
+
+test('Shot', t => {
+	let buf = new ArrayBuffer(7 + 1),
+		shot = {
+			box: {
+				center: {
+					x: 78,
+					y: 2321
+				},
+				angle: Math.PI/2
+			},
+			origin: 3,
+			type: 1
+		};
+
+	message.Shot.serialize(buf, 1, shot);
+	message.Shot.deserialize(buf, 1, (x, y, angle, origin, type) => {
+		t.is(x, shot.box.center.x);
+		t.is(y, shot.box.center.y);
+		t.is(approxAngle(angle), approxAngle(shot.box.angle));
+		t.is(origin, shot.origin);
+		t.is(type, shot.type);
 	});
 });

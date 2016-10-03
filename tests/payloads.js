@@ -12,6 +12,10 @@ import * as message from '../shared/message.js';
 import * as vinage from 'vinage';
 import ipaddr from 'ipaddr.js';
 
+function approxAngle(angle) {
+	return Math.floor(angle*10);
+}
+
 
 test('registerServer message', t => {
 	let a = {
@@ -211,6 +215,7 @@ let planets = [
 	];
 
 planets[0].progress.team = 'alienBlue';
+planets[0].progress.value = 0;
 planets[1].progress.team = 'alienPink';
 planets[1].progress.value = 33;
 
@@ -228,10 +233,6 @@ players[1].hurt = false;
 enemies[0].box.angle = 0.321;
 enemies[2].box.angle = Math.PI;
 
-function approxAngle(angle) {
-	return Math.floor(angle*10);
-}
-
 
 test('addEntity message', t => {
 	let buf = message.addEntity.serialize(planets, enemies, shots, players),
@@ -247,6 +248,9 @@ test('addEntity message', t => {
 		t.is(planets[planetI].type, type);
 
 		++planetI;
+	}, (id, ownedBy, progress) => {
+		t.is(planets[id].progress.team, ownedBy);
+		t.is(planets[id].progress.value, progress);
 	}, (x, y, appearance) => {
 		t.is(enemies[enemyI].box.center.x, x);
 		t.is(enemies[enemyI].box.center.y, y);
