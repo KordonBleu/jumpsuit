@@ -110,3 +110,23 @@ test('Shot', t => {
 		t.is(type, shot.type);
 	});
 });
+
+test('EnemyConst', t => {
+	let enemy = {
+		box: {
+			center: {
+				x: 9898,
+				y: 3
+			}
+		},
+		appearance: 'enemyBlue4'
+	},
+		buf = new ArrayBuffer(5);
+
+	message.EnemyConst.serialize(buf, 0, enemy);
+	message.EnemyConst.deserialize(buf, 0, (x, y, appearance) => {
+		t.is(enemy.box.center.x, x);
+		t.is(enemy.box.center.y, y);
+		t.is(enemy.appearance, appearance);
+	});
+});

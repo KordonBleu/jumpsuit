@@ -257,6 +257,8 @@ test('addEntity message', t => {
 		t.is(enemies[enemyI].appearance, appearance);
 
 		++enemyI;
+	}, (id, angle) => {
+		t.is(approxAngle(enemies[id].box.angle), approxAngle(angle));
 	}, (x, y, angle, origin, type) => {
 		t.is(shots[shotI].box.center.x, x);
 		t.is(shots[shotI].box.center.y, y);

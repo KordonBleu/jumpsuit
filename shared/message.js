@@ -194,6 +194,49 @@ export class Shot {
 	}
 }
 
+export class EnemyConst {
+	static serialize(buffer, offset, enemy) {
+		let dView = new DataView(buffer, offset);
+
+		dView.setUint16(0, enemy.box.center.x);
+		dView.setUint16(2, enemy.box.center.y);
+		dView.setUint8(4, enemyAppearanceMap.getNbr(enemy.appearance));
+
+	   return 5;
+	}
+	static deserialize(buffer, offset, enemiesCbk) {
+		let dView = new DataView(buffer, offset);
+
+		enemiesCbk(
+			dView.getUint16(0), // x
+			dView.getUint16(2), // y
+			enemyAppearanceMap.getStr(dView.getUint8(4)) // appearance
+		);
+
+		return 5;
+	}
+}
+
+export class EnemyMut {
+	static serialize(buffer, offset, enemy) {
+		let view = new Uint8Array(buffer, offset);
+
+		view[0] = convert.radToBrad(enemy.box.angle, 1);
+
+		return 1;
+	}
+	static deserialize(buffer, offset, id, enemiesCbk) {
+		let view = new Uint8Array(buffer, offset);
+
+		enemiesCbk(
+			id,
+			convert.bradToRad(view[0], 1) // angle
+		);
+
+		return 1;
+	}
+}
+
 
 /* Serializators */
 
@@ -429,7 +472,7 @@ class AddEntity extends Serializator {
 				totalNameSize += playerNameBufs[i].byteLength;
 			});
 		}
-		let buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*9 : 0) + (enemies !== undefined ? enemies.length*5 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*11 + totalNameSize : 0)),
+		let buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*9 : 0) + (enemies !== undefined ? enemies.length*6 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*11 + totalNameSize : 0)),
 			view = new DataView(buffer);
 
 		let offset = 2;
@@ -446,10 +489,8 @@ class AddEntity extends Serializator {
 		if (enemies !== undefined) {
 			view.setUint8(offset++, enemies.length);
 			for (let enemy of enemies) {
-				view.setUint16(offset, enemy.box.center.x);
-				view.setUint16(2 + offset, enemy.box.center.y);
-				view.setUint8(4 + offset, enemyAppearanceMap.getNbr(enemy.appearance));
-				offset += 5;
+				offset += EnemyConst.serialize(buffer, offset, enemy);
+				offset += EnemyMut.serialize(buffer, offset, enemy);
 			}
 		} else {
 			view.setUint8(offset++, 0);
@@ -490,7 +531,7 @@ class AddEntity extends Serializator {
 
 		return buffer;
 	}
-	deserialize(buffer, constructPlanetsCbk, planetsCbk, enemiesCbk, shotsCbk, playersCbk) {
+	deserialize(buffer, constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, playersCbk) {
 		let view = new DataView(buffer),
 			offset = 2;
 
@@ -499,13 +540,10 @@ class AddEntity extends Serializator {
 			offset += PlanetMut.deserialize(buffer, offset, id, planetsCbk);
 		}
 
-		let lim = 5*view.getUint8(offset) + ++offset;
-		for (; offset !== lim; offset += 5) {
-			enemiesCbk(
-				view.getUint16(offset),//x
-				view.getUint16(offset + 2),//y
-				enemyAppearanceMap.getStr(view.getUint8(offset + 4)) //appearance
-			);
+		let lim = 6*view.getUint8(offset) + ++offset;
+		for (let id = 0; offset !== lim; ++id) {
+			offset += EnemyConst.deserialize(buffer, offset, constructEnemiesCbk);
+			offset += EnemyMut.deserialize(buffer, offset, id, enemiesCbk);
 		}
 
 		lim = 7*view.getUint8(offset) + ++offset;
@@ -609,9 +647,7 @@ class GameState extends Serializator {
 		let offset = 4;
 		for (let planet of planets) offset += PlanetMut.serialize(buffer, offset, planet);
 
-		for (let enemy of enemies) {
-			view.setUint8(offset++, convert.radToBrad(enemy.box.angle, 1));
-		}
+		for (let enemy of enemies) offset += EnemyMut.serialize(buffer, offset, enemy);
 
 		for (let player of players) {
 			if (player === undefined) continue;
@@ -641,9 +677,7 @@ class GameState extends Serializator {
 		for (let id = 0; offset !== 4 + planetAmount*2; ++id) offset += PlanetMut.deserialize(buffer, offset, id, planetsCbk);
 
 		let limit = offset + enemyAmount;
-		for (let id = 0; offset !== limit; ++offset, ++id) {
-			enemiesCbk(id, convert.bradToRad(view.getUint8(offset), 1));//angle
-		}
+		for (let id = 0; offset !== limit; ++id) offset += EnemyMut.deserialize(buffer, offset, id, enemiesCbk);
 
 		for (; offset !== view.byteLength; offset += 10) {
 			let enumByte = view.getUint8(8 + offset),
