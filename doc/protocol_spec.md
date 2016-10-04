@@ -152,9 +152,9 @@ Owned By must be either:
 
 #### PLAYER
 ```
-+------------+--------------+
++--------------+------------+
 | PLAYER_CONST | PLAYER_MUT |
-+------------+--------------+
++--------------+------------+
 ```
 
 
@@ -177,10 +177,10 @@ The `homograph id` is used to distinguish players with the same name. It is uniq
 
 #### PLAYER_MUT
 ```
-      2B             2B               1B           1B        1B           1b         1b       1b       3b            2b              2b              6b
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+--------------+----------------+-------------+
-| x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | hurt | Walk Frame | Armed Weapon | Carried Weapon | unused bits |
-+--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+--------------+----------------+-------------+
+     1B            2B             2B               1B           1B        1B           1b         1b       1b       3b           6b            2b              2b
++-----------+--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+-------------+--------------+----------------+
+| player id | x-coordinate | y-coordinate | attached planet | angle | aim angle | looks left | jetpack | hurt | Walk Frame | unused bits | Armed Weapon | Carried Weapon |
++-----------+--------------+--------------+-----------------+-------+-----------+------------+---------+------+------------+-------------+--------------+----------------+
 ```
 If `attached planet`'s value is 255, the player is not attached to a planet. This also means there cannot be more than 255 planets.
 

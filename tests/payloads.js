@@ -267,7 +267,12 @@ test('addEntity message', t => {
 		t.is(shots[shotI].type, type);
 
 		++shotI;
-	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {
+	}, (pid, appearance, homographId, name) => {
+		t.is(players[playerI].pid, pid);
+		t.is(players[playerI].appearance, appearance);
+		t.is(players[playerI].homographId, homographId);
+		t.is(players[playerI].name, name);
+	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
 		t.is(players[playerI].pid, pid);
 		t.is(players[playerI].box.center.x, x);
 		t.is(players[playerI].box.center.y, y);
@@ -275,10 +280,8 @@ test('addEntity message', t => {
 		t.is(approxAngle(players[playerI].box.angle), approxAngle(angle)); // there is some imprecision due to brads
 		t.is(players[playerI].looksLeft, looksLeft);
 		t.is(players[playerI].jetpack, jetpack);
-		t.is(players[playerI].appearance, appearance);
+		t.is(players[playerI].hurt, hurt);
 		t.is(players[playerI].walkFrame, walkFrame);
-		t.is(players[playerI].name, name);
-		t.is(players[playerI].homographId, homographId);
 		t.is(players[playerI].armedWeapon.type, armedWeapon, 'player[' + playerI + ']');
 		t.is(players[playerI].carriedWeapon.type, carriedWeapon, 'player[' + playerI + ']');
 
@@ -309,7 +312,7 @@ test('gameState message', t => {
 		t.is(approxAngle(enemies[enemyI].box.angle), approxAngle(angle));
 
 		++enemyI;
-	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
+	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
 		t.is(pid, playerI);
 		t.is(players[pid].box.center.x, x);
 		t.is(players[pid].box.center.y, y);
@@ -321,6 +324,7 @@ test('gameState message', t => {
 		t.is(players[pid].walkFrame, walkFrame);
 		t.is(players[pid].armedWeapon.type, armedWeapon);
 		t.is(players[pid].carriedWeapon.type, carriedWeapon);
+		t.is(approxAngle(players[pid].aimAngle), approxAngle(aimAngle));
 
 		++playerI;
 	});

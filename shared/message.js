@@ -256,7 +256,7 @@ export class PlayerConst {
 			view[0], // pid
 			teamMap.getStr(view[1]), // appearance
 			view[2], // homographId
-			convert.bufferToString(buffer.slice(offset + 4, offset + 4 + view[3]))
+			convert.bufferToString(buffer.slice(offset + 4, offset + 4 + view[3])) // name
 		);
 
 		return 4 + view[3];
@@ -265,6 +265,60 @@ export class PlayerConst {
 PlayerConst.MASK = {
 	LOOKS_LEFT: 128,
 	JETPACK: 64
+};
+
+export class PlayerMut {
+	static serialize(buffer, offset, player) {
+		let dView = new DataView(buffer, offset);
+
+		dView.setUint8(0, player.pid);
+		dView.setUint16(1, player.box.center.x);
+		dView.setUint16(3, player.box.center.y);
+		dView.setUint8(5, player.attachedPlanet);
+		dView.setUint8(6, convert.radToBrad(player.box.angle, 1));
+		dView.setUint8(7, convert.radToBrad(player.aimAngle, 1));
+
+		let enumByte = walkFrameMap.getNbr(player.walkFrame) << 2; // do not work directly on buffer for efficiency
+		if (player.jetpack) enumByte |= this.MASK.JETPACK;
+		if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
+		if (player.hurt) enumByte |= this.MASK.HURT;
+		dView.setUint8(8, enumByte);
+
+		let weaponByte = weaponMap.getNbr(player.armedWeapon.type) << 2;
+		weaponByte += weaponMap.getNbr(player.carriedWeapon.type);
+		dView.setUint8(9, weaponByte);
+
+		return 10;
+	}
+	static deserialize(buffer, offset, playersCbk) {
+		let dView = new DataView(buffer, offset),
+			enumByte = dView.getUint8(8),
+			weaponByte = dView.getUint8(9);
+
+			playersCbk(dView.getUint8(0), // pid
+				dView.getUint16(1), // x
+				dView.getUint16(3), // y
+				dView.getUint8(5), // attachedPlanet
+				convert.bradToRad(dView.getUint8(6), 1), // angle
+
+				enumByte & this.MASK.LOOKS_LEFT ? true : false, // looksLeft
+				enumByte & this.MASK.JETPACK ? true : false, // jetpack
+				enumByte & this.MASK.HURT ? true : false, // hurt
+				walkFrameMap.getStr(enumByte << 27 >>> 29), // walkFrame
+
+				weaponMap.getStr(weaponByte >>> 2), // armed weapon
+				weaponMap.getStr(weaponByte << 30 >>> 30), // carried weapon
+
+				convert.bradToRad(dView.getUint8(7), 1) // aimAngle
+			);
+
+		return 10;
+	}
+}
+PlayerMut.MASK = {
+	LOOKS_LEFT: 128,
+	JETPACK: 64,
+	HURT: 32
 };
 
 
@@ -502,7 +556,7 @@ class AddEntity extends Serializator {
 				totalNameSize += playerNameBufs[i].byteLength;
 			});
 		}
-		let buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*9 : 0) + (enemies !== undefined ? enemies.length*6 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*11 + totalNameSize : 0)),
+		let buffer = new ArrayBuffer(4 + (planets !== undefined ? planets.length*9 : 0) + (enemies !== undefined ? enemies.length*6 : 0) + (shots !== undefined ? shots.length*7 : 0) + (players !== undefined ? players.actualLength()*14 + totalNameSize : 0)),
 			view = new DataView(buffer);
 
 		let offset = 2;
@@ -537,31 +591,14 @@ class AddEntity extends Serializator {
 
 		if (players !== undefined) {
 			players.forEach(function(player, i) {
-				view.setUint8(offset, player.pid);
-				view.setUint16(1 + offset, player.box.center.x);
-				view.setUint16(3 + offset, player.box.center.y);
-				view.setUint8(5 + offset, player.attachedPlanet);
-				view.setUint8(6 + offset, convert.radToBrad(player.box.angle, 1));
-				let enumByte = walkFrameMap.getNbr(player.walkFrame);
-				enumByte <<= 3;
-				enumByte += teamMap.getNbr(player.appearance);
-				if (player.jetpack) enumByte |= this.MASK.JETPACK;
-				if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-				view.setUint8(7 + offset, enumByte);
-				let weaponByte = weaponMap.getNbr(player.armedWeapon.type);
-				weaponByte <<= 2;
-				weaponByte += weaponMap.getNbr(player.carriedWeapon.type);
-				view.setUint8(8 + offset, weaponByte);
-				view.setUint8(9 + offset, player.homographId);
-				view.setUint8(10 + offset, playerNameBufs[i].byteLength);
-				new Uint8Array(buffer).set(new Uint8Array(playerNameBufs[i]), 11 + offset);
-				offset += 11 + playerNameBufs[i].byteLength;
-			}, this);
+				offset += PlayerConst.serialize(buffer, offset, player, playerNameBufs[i]);
+				offset += PlayerMut.serialize(buffer, offset, player);
+			});
 		}
 
 		return buffer;
 	}
-	deserialize(buffer, constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, playersCbk) {
+	deserialize(buffer, constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, constructPlayersCbk, playersCbk) {
 		let view = new DataView(buffer),
 			offset = 2;
 
@@ -580,32 +617,11 @@ class AddEntity extends Serializator {
 		while (offset !== lim) offset += Shot.deserialize(buffer, offset, shotsCbk);
 
 		while (offset !== buffer.byteLength) {
-			let nameLgt = view.getUint8(offset + 10),
-				enumByte = view.getUint8(offset + 7),
-				weaponByte = view.getUint8(offset + 8);
-			playersCbk(
-				view.getUint8(offset),//pid
-				view.getUint16(offset + 1),//x
-				view.getUint16(offset + 3),//y
-				view.getUint8(offset + 5),//attached planet
-				convert.bradToRad(view.getUint8(offset + 6), 1),//angle
-				enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
-				enumByte & this.MASK.JETPACK ? true : false,//jetpack
-				teamMap.getStr(enumByte << 29 >>> 29),//appearance
-				walkFrameMap.getStr(enumByte << 26 >>> 29),//walk frame
-				convert.bufferToString(buffer.slice(offset + 11, offset + 11 + nameLgt)),//name
-				view.getUint8(offset + 9),//homographId
-				weaponMap.getStr(weaponByte << 28 >>> 30),//armedWeapon
-				weaponMap.getStr(weaponByte << 30 >>> 30)//carriedWeapon
-			);
-			offset += nameLgt + 11;
+			offset += PlayerConst.deserialize(buffer, offset, constructPlayersCbk);
+			offset += PlayerMut.deserialize(buffer, offset, playersCbk);
 		}
 	}
 }
-AddEntity.prototype.MASK = {
-	LOOKS_LEFT: 128,
-	JETPACK: 64
-};
 
 class RemoveEntity extends Serializator {
 	_serialize(planetIds, enemyIds, shotIds, playerIds) {
@@ -681,21 +697,7 @@ class GameState extends Serializator {
 
 		for (let player of players) {
 			if (player === undefined) continue;
-			view.setUint8(offset, player.pid);
-			view.setUint16(1 + offset, player.box.center.x);
-			view.setUint16(3 + offset, player.box.center.y);
-			view.setUint8(5 + offset, player.attachedPlanet);
-			view.setUint8(6 + offset, convert.radToBrad(player.box.angle, 1));
-			view.setUint8(7 + offset, convert.radToBrad(player.aimAngle, 1));
-			let enumByte = walkFrameMap.getNbr(player.walkFrame) << 2; // do not work directly on buffer for efficiency
-			if (player.jetpack) enumByte |= this.MASK.JETPACK;
-			if (player.looksLeft) enumByte |= this.MASK.LOOKS_LEFT;
-			if (player.hurt) enumByte |= this.MASK.HURT;
-			view.setUint8(8 + offset, enumByte);
-			let weaponByte = weaponMap.getNbr(player.armedWeapon.type) << 2;
-			weaponByte += weaponMap.getNbr(player.carriedWeapon.type);
-			view.setUint8(9 + offset, weaponByte);
-			offset += 10;
+			offset += PlayerMut.serialize(buffer, offset, player);
 		}
 
 		return buffer;
@@ -709,23 +711,7 @@ class GameState extends Serializator {
 		let limit = offset + enemyAmount;
 		for (let id = 0; offset !== limit; ++id) offset += EnemyMut.deserialize(buffer, offset, id, enemiesCbk);
 
-		for (; offset !== view.byteLength; offset += 10) {
-			let enumByte = view.getUint8(8 + offset),
-				weaponByte = view.getUint8(9 + offset);
-			playersCbk(view.getUint8(offset), //pid
-				view.getUint16(1 + offset),//x
-				view.getUint16(3 + offset),//y
-				view.getUint8(5 + offset),//attachedPlanet
-				convert.bradToRad(view.getUint8(6 + offset), 1),//angle
-				enumByte & this.MASK.LOOKS_LEFT ? true : false,//looksLeft
-				enumByte & this.MASK.JETPACK ? true : false,//jetpack
-				enumByte & this.MASK.HURT ? true : false,//hurt
-				walkFrameMap.getStr(enumByte << 27 >>> 29),//walkFrame
-				weaponMap.getStr(weaponByte >>> 2),//armed weapon
-				weaponMap.getStr(weaponByte << 30 >>> 30),//carried weapon
-				convert.bradToRad(view.getUint8(7 + offset), 1)
-			);
-		}
+		while (offset !== view.byteLength) offset += PlayerMut.deserialize(buffer, offset, playersCbk);
 
 		return {
 			yourHealth: view.getUint8(1),
@@ -733,11 +719,6 @@ class GameState extends Serializator {
 		};
 	}
 }
-GameState.prototype.MASK = {
-	LOOKS_LEFT: 128,
-	JETPACK: 64,
-	HURT: 32
-};
 
 class PlayerControls extends Serializator {
 	_serialize(controls) {

@@ -148,3 +148,45 @@ test('PlayerConst', t => {
 		t.is(name, 'Florian');
 	});
 });
+
+test('PlayerMut', t => {
+	let player = {
+		pid: 25,
+		box: {
+			center: {
+				x: 44,
+				y: 100
+			},
+			angle: Math.PI/3
+		},
+		attachedPlanet: 6,
+		aimAngle: Math.PI*1.1,
+		walkFrame: 'jump',
+		jetpack: true,
+		looksLeft: true,
+		hurt: true,
+		armedWeapon: {
+			type: 'Knife'
+		},
+		carriedWeapon: {
+			type: 'Smg'
+		}
+	},
+		buf = new ArrayBuffer(11);
+
+	message.PlayerMut.serialize(buf, 1, player);
+	message.PlayerMut.deserialize(buf, 1, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
+		t.is(pid, player.pid);
+		t.is(x, player.box.center.x);
+		t.is(y, player.box.center.y);
+		t.is(attachedPlanet, player.attachedPlanet);
+		t.is(approxAngle(angle), approxAngle(player.box.angle));
+		t.is(looksLeft, player.looksLeft);
+		t.is(jetpack, player.jetpack);
+		t.is(hurt, player.hurt);
+		t.is(walkFrame, player.walkFrame);
+		t.is(armedWeapon, player.armedWeapon.type);
+		t.is(carriedWeapon, player.carriedWeapon.type);
+		t.is(approxAngle(aimAngle), approxAngle(player.aimAngle));
+	});
+});
