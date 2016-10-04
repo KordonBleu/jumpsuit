@@ -8,10 +8,11 @@ class StrNbrBiMap { // needs to be sublassed in order to be filled with data
 		return this._strNbr[str];
 	}
 	*[Symbol.iterator]() {
-		for (let key in this._strNbr) {
+		// we cannot iterate over `_strNbr` (which seem more efficient) because the order in a for...in loop in arbitrary
+		for (let key of this._nbrStr) {
 			yield {
 				str: key,
-				nbr: this._strNbr[key]
+				nbr: this.getNbr(key)
 			};
 		}
 	}

@@ -238,8 +238,7 @@ test('addEntity message', t => {
 	let buf = message.addEntity.serialize(planets, enemies, shots, players),
 		planetI = 0,
 		enemyI = 0,
-		shotI = 0,
-		playerI = 0;
+		shotI = 0;
 
 	message.addEntity.deserialize(buf, (x, y, radius, type) => {
 		t.is(planets[planetI].box.center.x, x);
@@ -268,24 +267,22 @@ test('addEntity message', t => {
 
 		++shotI;
 	}, (pid, appearance, homographId, name) => {
-		t.is(players[playerI].pid, pid);
-		t.is(players[playerI].appearance, appearance);
-		t.is(players[playerI].homographId, homographId);
-		t.is(players[playerI].name, name);
+		t.is(players[pid].pid, pid);
+		t.is(players[pid].appearance, appearance);
+		t.is(players[pid].homographId, homographId);
+		t.is(players[pid].name, name);
 	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
-		t.is(players[playerI].pid, pid);
-		t.is(players[playerI].box.center.x, x);
-		t.is(players[playerI].box.center.y, y);
-		t.is(players[playerI].attachedPlanet === -1 ? 255 : players[playerI].attachedPlanet, attachedPlanet); // -1 when in space, which is 255 when wrapped
-		t.is(approxAngle(players[playerI].box.angle), approxAngle(angle)); // there is some imprecision due to brads
-		t.is(players[playerI].looksLeft, looksLeft);
-		t.is(players[playerI].jetpack, jetpack);
-		t.is(players[playerI].hurt, hurt);
-		t.is(players[playerI].walkFrame, walkFrame);
-		t.is(players[playerI].armedWeapon.type, armedWeapon, 'player[' + playerI + ']');
-		t.is(players[playerI].carriedWeapon.type, carriedWeapon, 'player[' + playerI + ']');
-
-		++playerI;
+		t.is(players[pid].pid, pid);
+		t.is(players[pid].box.center.x, x);
+		t.is(players[pid].box.center.y, y);
+		t.is(players[pid].attachedPlanet === -1 ? 255 : players[pid].attachedPlanet, attachedPlanet); // -1 when in space, which is 255 when wrapped
+		t.is(approxAngle(players[pid].box.angle), approxAngle(angle)); // there is some imprecision due to brads
+		t.is(players[pid].looksLeft, looksLeft);
+		t.is(players[pid].jetpack, jetpack);
+		t.is(players[pid].hurt, hurt);
+		t.is(players[pid].walkFrame, walkFrame);
+		t.is(players[pid].armedWeapon.type, armedWeapon, 'player[' + pid + ']');
+		t.is(players[pid].carriedWeapon.type, carriedWeapon, 'player[' + pid + ']');
 	});
 	t.is(message.getSerializator(buf), message.addEntity);
 });

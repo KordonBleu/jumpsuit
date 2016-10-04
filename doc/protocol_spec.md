@@ -232,9 +232,9 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 #### BOOTSTRAP_UNIVERSE
 ```
      4B          1B           2B                2B
-+----------+-----------+----------------+-----------------+------------+------------------+
-| lobby id | player id | universe width | universe height | ADD_ENTITY | BOOTSTRAP_SCORES |
-+----------+-----------+----------------+-----------------+------------+------------------+
++----------+-----------+----------------+-----------------+------------+
+| lobby id | player id | universe width | universe height | ADD_ENTITY |
++----------+-----------+----------------+-----------------+------------+
 ```
 
 
@@ -343,17 +343,17 @@ The game server will respond with CONNECT_ACCEPTED.
 
 #### CONNECT_ACCEPTED_WARMUP
 ```
-                            3b            5b
-+--------------------+-------------+---------------+
-| BOOTSTRAP_UNIVERSE | unused bits | enabled teams |
-+--------------------+-------------+---------------+
+       3b            5b
++-------------+---------------+--------------------+
+| unused bits | enabled teams | BOOTSTRAP_UNIVERSE |
++-------------+---------------+--------------------+
 ```
 
 
 #### CONNECT_ACCEPTED_PLAYING
 ```
 +--------------------+------------------+
-| BOOTSTRAP_UNIVERSE | BOOTSTRAP_SCORES |
+| BOOTSTRAP_SCORES | BOOTSTRAP_UNIVERSE |
 +--------------------+------------------+
 ```
 

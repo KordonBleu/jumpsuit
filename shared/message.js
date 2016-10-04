@@ -321,6 +321,64 @@ PlayerMut.MASK = {
 	HURT: 32
 };
 
+export class BootstrapScores {
+	static serialize(buffer, offset, scoresObj) {
+		let dView = new DataView(buffer, offset),
+			teamByte = 0,
+			i = 0;
+
+		for (let team of Object.keys(scoresObj).sort()) {
+			teamByte |= teamMaskMap.getNbr(team);
+			dView.setInt32(1 + i*4, scoresObj[team]);
+			++i;
+		}
+		dView.setUint8(0, teamByte);
+	}
+	static deserialize(buffer, offset) {
+		let dView = new DataView(buffer, offset),
+			teamByte = dView.getUint8(0),
+			i = 0,
+			scoresObj = {};
+
+		for (let {str: team, nbr: mask} of teamMaskMap) {
+			if (teamByte & mask) {
+				scoresObj[team] = dView.getInt32(1 + i*4);
+				++i;
+			}
+		}
+		return {
+			data: scoresObj,
+			byteLength: 1 + i*4
+		};
+	}
+}
+
+export class BootstrapUniverse {
+	static serialize(buffer, offset, lobbyId, playerId, univWidth, univHeight, addEntityBuf) {
+		let dView = new DataView(buffer, offset),
+			view = new Uint8Array(buffer, offset);
+
+		dView.setUint32(0, lobbyId);
+		view[4] = playerId;
+		dView.setUint16(5, univWidth);
+		dView.setUint16(7, univHeight);
+		view.set(new Uint8Array(addEntityBuf.slice(1)), 9);
+	}
+	static deserialize(buffer, offset, constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, constructPlayersCbk, playersCbk) {
+		let dView = new DataView(buffer, offset);
+
+		return {
+			data: {
+				lobbyId: dView.getUint32(0),
+				playerId: dView.getUint8(4),
+				univWidth: dView.getUint16(5),
+				univHeight: dView.getUint16(7)
+			},
+			byteLength: 9 + addEntity.deserialize(buffer.slice(offset + 8), constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, constructPlayersCbk, playersCbk)
+		};
+	}
+}
+
 
 /* Serializators */
 
@@ -620,6 +678,8 @@ class AddEntity extends Serializator {
 			offset += PlayerConst.deserialize(buffer, offset, constructPlayersCbk);
 			offset += PlayerMut.deserialize(buffer, offset, playersCbk);
 		}
+
+		return offset;
 	}
 }
 
