@@ -201,6 +201,21 @@ test('PlayerMut', t => {
 });
 
 
+test('EnabledTeams', t => {
+	let scoresObj = {
+		alienPink: -8,
+		alienBeige: 5000
+	},
+		buf = new ArrayBuffer(89);
+
+	message.EnabledTeams.serialize(buf, 50, scoresObj);
+	let res = message.EnabledTeams.deserialize(buf, 50);
+
+	t.deepEqual(Object.keys(scoresObj).sort(), Object.keys(res.data).sort());
+	t.is(1, res.byteLength);
+});
+
+
 let planets = [
 		new Planet(12, 434, 23),
 		new Planet(654, 12, 38),
@@ -238,36 +253,25 @@ players[1].hurt = false;
 
 enemies[0].box.angle = 0.321;
 enemies[2].box.angle = Math.PI;
-test('BootstrapScores', t => {
-	let scoresObj = {
-		alienPink: -8,
-		alienBeige: 5000
+
+
+test('warmup message', t => {
+	let params = {
+		scoresObj: {
+			alienBlue: 4334532,
+			alienBeige: -65
+		},
+		lobbyId: 123456,
+		playerId: 27,
+		univWidth: 555,
+		univHeight: 666 // oh noes
 	},
-		buf = new ArrayBuffer(89);
-
-	message.BootstrapScores.serialize(buf, 50, scoresObj);
-	let res = message.BootstrapScores.deserialize(buf, 50);
-
-	t.deepEqual(scoresObj, res.data);
-	t.is(9, res.byteLength);
-});
-
-test('BootstrapUniverse', t => {
-	let addEntityBuf = message.addEntity.serialize(planets, enemies, shots, players),
+		buf = message.warmup.serialize(params.scoresObj, params.lobbyId, params.playerId, params.univWidth, params.univHeight, planets, enemies, shots, players),
 		planetI = 0,
 		enemyI = 0,
 		shotI = 0;
-	console.log("qwf", addEntityBuf.byteLength);
 
-	let buf = new ArrayBuffer(1000),
-		data = {
-			lobbyId: 12345,
-			playerId: 100,
-			univWidth: 2000,
-			univHeight: 2500
-		};
-	message.BootstrapUniverse.serialize(buf, 500, data.lobbyId, data.playerId, data.univWidth, data.univHeight, addEntityBuf);
-	let res = message.BootstrapUniverse.deserialize(buf, 500, (x, y, radius, type) => {
+	let res = message.warmup.deserialize(buf, (x, y, radius, type) => {
 		t.is(planets[planetI].box.center.x, x);
 		t.is(planets[planetI].box.center.y, y);
 		t.is(planets[planetI].box.radius, radius);
@@ -295,7 +299,7 @@ test('BootstrapUniverse', t => {
 		++shotI;
 	}, (pid, appearance, homographId, name) => {
 		t.is(players[pid].pid, pid);
-			//t.is(players[pid].appearance, appearance);
+		t.is(players[pid].appearance, appearance);
 		t.is(players[pid].homographId, homographId);
 		t.is(players[pid].name, name);
 	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
@@ -312,5 +316,11 @@ test('BootstrapUniverse', t => {
 		t.is(players[pid].carriedWeapon.type, carriedWeapon, 'player[' + pid + ']');
 	});
 
-	t.deepEqual(data, res.data);
+	t.deepEqual(Object.keys(res.scoresObj).sort(), Object.keys(params.scoresObj).sort());
+	t.is(res.lobbyId, params.lobbyId);
+	t.is(res.playerId, params.playerId);
+	t.is(res.univWidth, params.univWidth);
+	t.is(res.univHeight, params.univHeight);
+
+	t.is(message.getSerializator(buf), message.warmup);
 });

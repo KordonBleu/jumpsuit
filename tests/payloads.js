@@ -154,31 +154,6 @@ test('error message', t => {
 	t.is(message.getSerializator(buf2), message.error);
 });
 
-test('connectAccepted message', t => {
-	let val =  {
-			lobbyId: 4000000000, // 32 bits
-			playerId: 244, // 8bits
-			univWidth: 65535, // 16 bits
-			univHeight: 30000 // 16 bits
-		},
-		buf = message.connectAccepted.serialize(val.lobbyId, val.playerId, val.univWidth, val.univHeight),
-		res = message.connectAccepted.deserialize(buf);
-
-	t.deepEqual(val, res);
-	t.is(message.getSerializator(buf), message.connectAccepted);
-
-	let val2 = {
-			lobbyId: 989043,
-			playerId: 24,
-			univWidth: 3429,
-			univHeight: 4452
-		},
-		buf2 = message.connectAccepted.serialize(val2.lobbyId, val2.playerId, val2.univWidth, val2.univHeight);
-
-	t.deepEqual(val2, message.connectAccepted.deserialize(buf2));
-	t.is(message.getSerializator(buf2), message.connectAccepted);
-});
-
 test('lobbyState message', t => {
 	let teams = [
 			'alienBeige',
@@ -514,9 +489,8 @@ test('scores message', t => {
 			'alienGreen': -32, // booo
 			'alienPink': 345
 		},
-		enabledTeams = Object.keys(scoresObj),
 		buf = message.scores.serialize(scoresObj),
-		res = message.scores.deserialize(buf, enabledTeams);
+		res = message.scores.deserialize(buf, scoresObj);
 
 	t.deepEqual(res, scoresObj);
 	t.is(message.getSerializator(buf), message.scores);
@@ -525,4 +499,17 @@ test('scores message', t => {
 test('serverRegistered message', t => {
 	let buf = message.serverRegistered.serialize();
 	t.is(message.getSerializator(buf), message.serverRegistered);
+});
+
+test('displayScores message', t => {
+	let scoresObj = {
+			'alienBeige': 123,
+			'alienGreen': -32, // booo
+			'alienPink': 345
+		},
+		buf = message.displayScores.serialize(scoresObj),
+		res = message.displayScores.deserialize(buf);
+
+	t.deepEqual(res, scoresObj);
+	t.is(message.getSerializator(buf), message.displayScores);
 });

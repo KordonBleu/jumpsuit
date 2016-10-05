@@ -321,34 +321,31 @@ PlayerMut.MASK = {
 	HURT: 32
 };
 
-export class BootstrapScores {
+export class EnabledTeams {
 	static serialize(buffer, offset, scoresObj) {
-		let dView = new DataView(buffer, offset),
-			teamByte = 0,
-			i = 0;
+		let teamByte = 0;
 
 		for (let team of Object.keys(scoresObj).sort()) {
 			teamByte |= teamMaskMap.getNbr(team);
-			dView.setInt32(1 + i*4, scoresObj[team]);
-			++i;
 		}
-		dView.setUint8(0, teamByte);
+
+		let view = new Uint8Array(buffer, offset);
+		view[0] = teamByte;
+
+		return 1;
 	}
 	static deserialize(buffer, offset) {
-		let dView = new DataView(buffer, offset),
-			teamByte = dView.getUint8(0),
-			i = 0,
+		let teamByte = new Uint8Array(buffer, offset)[0],
 			scoresObj = {};
 
 		for (let {str: team, nbr: mask} of teamMaskMap) {
 			if (teamByte & mask) {
-				scoresObj[team] = dView.getInt32(1 + i*4);
-				++i;
+				scoresObj[team] = null;
 			}
 		}
 		return {
 			data: scoresObj,
-			byteLength: 1 + i*4
+			byteLength: 1
 		};
 	}
 }
@@ -859,14 +856,32 @@ class Scores extends Serializator {
 
 		return buffer;
 	}
-	deserialize(buffer, enabledTeams) {
+	deserialize(buffer, scoresObj) {
 		let view = new DataView(buffer, 1),
 			val = {};
-		enabledTeams.sort().forEach(function(team, i) {
+		Object.keys(scoresObj).sort().forEach(function(team, i) {
 			val[team] = view.getInt32(i*4);
 		});
 
 		return val;
+	}
+}
+
+class DisplayScores extends Serializator {
+	_serialize(scoresObj) {
+		let scoresBuf = scores._serialize(scoresObj).slice(1),
+			buffer = new ArrayBuffer(scoresBuf.byteLength + 2),
+			view = new Uint8Array(buffer);
+
+		EnabledTeams.serialize(buffer, 1, scoresObj);
+		view.set(new Uint8Array(scoresBuf), 2);
+
+			return buffer;
+		}
+	deserialize(buffer) {
+		let scoresObj = EnabledTeams.deserialize(buffer, 1).data;
+
+		return scores.deserialize(buffer.slice(1), scoresObj);
 	}
 }
 
@@ -877,6 +892,37 @@ class ServerRegistered extends Serializator {
 	//no deserialize needed
 }
 
+class Warmup extends Serializator {
+	_serialize(scoresObj, lobbyId, playerId, univWidth, univHeight, planets, enemies, shots, players) {
+		let addEntityBuf = new addEntity._serialize(planets, enemies, shots, players).slice(1),
+			buffer = new ArrayBuffer(addEntityBuf.byteLength + 11),
+			view = new Uint8Array(buffer),
+			dView = new DataView(buffer);
+		EnabledTeams.serialize(buffer, 1, scoresObj);
+		dView.setUint32(2, lobbyId);
+		view[6] = playerId;
+		dView.setUint16(7, univWidth);
+		dView.setUint16(9, univHeight);
+
+		view.set(new Uint8Array(addEntityBuf), 11);
+
+		return buffer;
+	}
+	deserialize(buffer, constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, constructPlayersCbk, playersCbk) {
+		let dView = new DataView(buffer);
+
+		addEntity.deserialize(buffer.slice(10), constructPlanetsCbk, planetsCbk, constructEnemiesCbk, enemiesCbk, shotsCbk, constructPlayersCbk, playersCbk);
+
+		return {
+			scoresObj: EnabledTeams.deserialize(buffer, 1).data,
+			lobbyId: dView.getUint32(2),
+			playerId: dView.getUint8(6),
+			univWidth: dView.getUint16(7),
+			univHeight: dView.getUint16(9)
+		};
+	}
+}
+
 export let registerServer = new RegisterServer(0),
 	addServers = new AddServers(1),
 	removeServers = new RemoveServers(2),
@@ -884,7 +930,7 @@ export let registerServer = new RegisterServer(0),
 	setNameBroadcast = new SetNameBroadcast(4),
 	connect = new Connect(5),
 	error = new ErrorMsg(6),
-	connectAccepted = new ConnectAccepted(7),
+	warmup = new Warmup(7),
 	lobbyState = new LobbyState(8),
 	addEntity = new AddEntity(9),
 	removeEntity = new RemoveEntity(10),
@@ -894,7 +940,8 @@ export let registerServer = new RegisterServer(0),
 	chat = new Chat(14),
 	chatBroadcast = new ChatBroadcast(15),
 	scores = new Scores(16),
-	serverRegistered = new ServerRegistered(17);
+	serverRegistered = new ServerRegistered(17),
+	displayScores = new DisplayScores(19);
 
 export function getSerializator(buffer) {
 	let enumVal = new Uint8Array(buffer)[0];

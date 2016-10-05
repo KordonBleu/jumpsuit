@@ -260,6 +260,8 @@ Game servers will attempt to connect to the master server's websocket at "/game_
 +----------------+
 ```
 
+#### SERVER_REGISTERED
+
 
 ### Client ↔ Master server
 
@@ -311,12 +313,12 @@ The `homograph id` is used to distinguish players with the same name. It is uniq
 ```
        1B            4B           1B                 1B              0B-∞B
 +---------------+----------+----------------+------------------+---------------+
-| lobbyDefined? | lobby id | primary weapon | secondary weapon | "player name" |
+| isLobbyDefined | lobby id | primary weapon | secondary weapon | "player name" |
 +---------------+----------+----------------+------------------+---------------+
 ```
 
-The game server will respond with CONNECT_ACCEPTED.
 The `lobby id` must be set only if the player wishes to connect to a specific lobby (which happens when connecting via a URL).
+
 
 #### ERROR (game server → client)
 ```
@@ -328,7 +330,6 @@ The `lobby id` must be set only if the player wishes to connect to a specific lo
 
 `Error Type` must be either:
  0. no lobby available
-The game server will respond with CONNECT_ACCEPTED.
  1. no slot available
 
 
