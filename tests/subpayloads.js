@@ -257,6 +257,7 @@ test('BootstrapUniverse', t => {
 		planetI = 0,
 		enemyI = 0,
 		shotI = 0;
+	console.log("qwf", addEntityBuf.byteLength);
 
 	let buf = new ArrayBuffer(1000),
 		data = {

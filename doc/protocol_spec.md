@@ -229,21 +229,12 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 ```
 
 
-#### BOOTSTRAP_UNIVERSE
-```
-     4B          1B           2B                2B
-+----------+-----------+----------------+-----------------+------------+
-| lobby id | player id | universe width | universe height | ADD_ENTITY |
-+----------+-----------+----------------+-----------------+------------+
-```
-
-
-#### BOOTSTRAP_SCORES
+#### ENABLED_TEAMS
 ```
       3b                   5b
-+-------------+------------------------+--------+
-| unused bits |      enabled teams     | SCORES |
-+-------------+ -  -  -  -  -  -  -  - +--------+
++-------------+------------------------+
+| unused bits |      enabled teams     |
++-------------+ -  -  -  -  -  -  -  - +
               | e.g.:  0 1 0 1 0       |
               |          ^   ^         |
               |          |   |         |
@@ -341,27 +332,12 @@ The game server will respond with CONNECT_ACCEPTED.
  1. no slot available
 
 
-#### CONNECT_ACCEPTED_WARMUP
+#### WARMUP
 ```
-       3b            5b
-+-------------+---------------+--------------------+
-| unused bits | enabled teams | BOOTSTRAP_UNIVERSE |
-+-------------+---------------+--------------------+
-```
-
-
-#### CONNECT_ACCEPTED_PLAYING
-```
-+--------------------+------------------+
-| BOOTSTRAP_SCORES | BOOTSTRAP_UNIVERSE |
-+--------------------+------------------+
-```
-
-#### CONNECT_ACCEPTED_DISPLAYING
-```
-+------------------+
-| BOOTSTRAP_SCORES |
-+------------------+
+                     4B          1B           2B                2B
++---------------+----------+-----------+----------------+-----------------+------------+
+| ENABLED_TEAMS | lobby id | player id | universe width | universe height | ADD_ENTITY |
++---------------+----------+-----------+----------------+-----------------+------------+
 ```
 
 
@@ -440,3 +416,21 @@ The game server will respond with CONNECT_ACCEPTED.
 ```
 There are as many `team score`s as there are teams playing. Which teams are playing has already been sent with a LOBBY_STATE message.
 The order `team score`s can be mapped to teams is as follow (provided the teams are enabled): beige team, blue team, green team, pink team, yellow team.
+
+
+#### DISPLAY_SCORES
+```
++---------------+--------+
+| ENABLED_TEAMS | SCORES |
++---------------+--------+
+```
+
+
+## Game cycle
+
+A lobby can be in one of 3 different states:
+ * warmup
+ * playing
+ * displaying scores
+
+![Game cycle schema](https://rawcdn.githack.com/KordonBleu/jumpsuit/master/doc/lobby_states.svg)
