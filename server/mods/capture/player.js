@@ -1,8 +1,9 @@
 import Player from '../../../shared/player.js';
 
 export default class SrvPlayer extends Player {
-	constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
-		super(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle);
+	constructor() {
+		super();
+
 		this._lastHurt = 0;
 		this._walkCounter = 0;
 	}

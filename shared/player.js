@@ -7,8 +7,7 @@ import Shotgun from '<@Shotgun@>';
 import Knife from '<@Knife@>';
 
 export default class {
-	constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
-		this.name = name;
+	constructor() {//name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
 		this.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 		this.controls = {
 			jump: 0,
@@ -21,23 +20,24 @@ export default class {
 			shoot: 0
 		};
 		this.velocity = new vinage.Vector(0, 0);
-		this._appearance = appearance;
-		this._walkFrame = 'stand' || walkFrame;
+		this._walkFrame = 'stand';
 
-		this.jetpack = jetpack || false;
-		this.health = health || 8;
-		this.fuel = fuel || 300;
-		this.attachedPlanet = attachedPlanet || -1;
+		this.jetpack = false;
+		this.health =  8;
+		this.fuel =  300;
+		this.attachedPlanet = -1;
 		this.lastlyAimedAt = Date.now();
+
 		this.weapons = {
 			Smg: new Smg(this),
 			Lmg: new Lmg(this),
 			Shotgun: new Shotgun(this),
 			Knife: new Knife(this)
 		};
-		this.armedWeapon = armedWeapon !== undefined ? this.weapons[armedWeapon] : this.weapons.Lmg;
-		this.carriedWeapon = carriedWeapon !== undefined ? this.weapons[carriedWeapon] : this.weapons.Smg;
-		this.aimAngle = aimAngle || 0;
+		this.armedWeapon = this.weapons.Lmg;
+		this.carriedWeapon = this.weapons.Smg;
+
+		this.aimAngle = 0;
 	}
 	get appearance() {
 		return this._appearance;

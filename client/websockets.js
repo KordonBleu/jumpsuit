@@ -1,12 +1,6 @@
 import settings from './settings.js';
 import * as game from './game.js';
 import * as ui from './ui.js';
-import * as audio from './audio.js';
-
-import Planet from './planet.js';
-import Enemy from './enemy.js';
-import Shot from './shot.js';
-import Player from './player.js';
 
 import * as controls from './controls.js';
 import * as entities from './entities.js';
@@ -188,8 +182,8 @@ class Connection {
 				alert('Error:\n' + errDesc);
 				break;
 			}
-			case message.connectAccepted: {
-				let val = message.connectAccepted.deserialize(msg.data);
+			case message.warmup: {
+				let val = message.warmup.deserialize(msg.data);
 				entities.planets.length = 0;
 				entities.enemies.length = 0;
 				entities.shots.length = 0;
@@ -210,31 +204,13 @@ class Connection {
 			}
 			case message.addEntity:
 				message.addEntity.deserialize(msg.data,
-					(x, y, radius, type) => {//add planets
-						entities.planets.push(new Planet(x, y, radius, type));
-					},
-					(x, y, appearance) => {//add enemies
-						entities.enemies.push(new Enemy(x, y, appearance));
-					},
-					(x, y, angle, origin, type) => {//add shots
-						audio.laserModel.makeSound(audio.makePanner(x - entities.players[game.ownIdx].box.center.x, y - entities.players[game.ownIdx].box.center.y)).start(0);
-						let shot = new Shot(x, y, angle, origin, type);
-						entities.shots.push(shot);
-						let originatingPlayer = entities.players.find(element => { return element !== undefined && element.pid === origin; });
-						if (originatingPlayer) originatingPlayer.armedWeapon.muzzleFlash = type === shot.TYPES.BULLET || type === shot.TYPES.BALL;
-					},
-					(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, appearance, walkFrame, name, homographId, armedWeapon, carriedWeapon) => {//add players
-						let newPlayer = new Player(name, appearance, walkFrame, attachedPlanet, jetpack, undefined, undefined, armedWeapon, carriedWeapon);
-						newPlayer.pid = pid;
-						newPlayer.box.center.x = x;
-						newPlayer.box.center.y = y;
-						newPlayer.looksLeft = looksLeft;
-						newPlayer.homographId = homographId;
-						if (!(pid in entities.players)) ui.printChatMessage(undefined, undefined, newPlayer.getFinalName() + ' joined the game');
-						entities.players[pid] = newPlayer;
-						console.log('player added', entities.players);
-					}
-				);
+					entities.addPlanet,
+					entities.updatePlanet,
+					entities.addEnemy,
+					entities.updateEnemy,
+					entities.addShot,
+					entities.addPlayer,
+					entities.updatePlayer);
 				ui.updatePlayerList();
 				break;
 			case message.removeEntity:
@@ -260,73 +236,23 @@ class Connection {
 				break;
 			case message.gameState: {
 				let val = message.gameState.deserialize(msg.data, entities.planets.length, entities.enemies.length,
-					(id, ownedBy, progress) => {
-						entities.planets[id].progress.team = ownedBy;
-						entities.planets[id].progress.value = progress;
-						entities.planets[id].updateColor();
-					},
-					(id, angle) => {
-						entities.enemies[id].box.angle = angle;
-					},
-					(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) => {
-						if (pid === game.ownIdx) {
-							if (!entities.players[pid].jetpack && jetpack) {
-								entities.players[pid].jetpackSound = audio.jetpackModel.makeSound(audio.sfxGain, 1);
-								entities.players[pid].jetpackSound.start(0);
-							} else if (entities.players[pid].jetpack && !jetpack && entities.players[game.ownIdx].jetpackSound !== undefined) {
-								entities.players[pid].jetpackSound.stop();
-							}
-						} else {
-							if (entities.players[pid] === undefined) console.log(entities.players, pid); // this shouldn't happen
-							if (!entities.players[pid].jetpack && jetpack) {
-								audio.setPanner(entities.players[pid].panner, entities.players[pid].box.center.x - entities.players[game.ownIdx].box.center.x, entities.players[pid].box.center.y - entities.players[game.ownIdx].box.center.y);
-								entities.players[pid].jetpackSound = audio.jetpackModel.makeSound(entities.players[pid].panner, 1);
-								entities.players[pid].jetpackSound.start(0);
-							} else if(entities.players[pid].jetpack && !jetpack && entities.players[pid].jetpackSound !== undefined) {
-								entities.players[pid].jetpackSound.stop();
-							}
-						}
-						let param1 = Date.now(), param2 = entities.players[pid];
-
-						if ('timestamp' in entities.players[pid].predictionTarget) param1 = param2.predictionTarget.timestamp;
-						entities.players[pid].predictionTarget = {timestamp: Date.now(), box: new vinage.Rectangle(new vinage.Point(x, y), 0, 0, angle), aimAngle: aimAngle};
-						entities.players[pid].predictionBase = {timestamp: param1, box: new vinage.Rectangle(new vinage.Point(param2.box.center.x, param2.box.center.y), 0, 0, param2.box.angle), aimAngle: param2.aimAngle};
-						entities.players[pid].looksLeft = looksLeft;
-						if ((entities.players[pid].walkFrame === 'walk1' && walkFrame === 'walk2') || (entities.players[pid].walkFrame === 'walk2' && walkFrame === 'walk1')) {
-							let type = entities.planets[entities.players[pid].attachedPlanet].type,
-								stepSound = audio.stepModels[type][entities.players[pid].lastSound].makeSound(audio.makePanner(x - entities.players[game.ownIdx].box.center.x, y - entities.players[game.ownIdx].box.center.y));
-							if (stepSound.buffer !== undefined) {
-								stepSound.playbackRate.value = Math.random() + 0.5;//pitch is modified from 50% to 150%
-							} else {//hack for Chrome (doesn't sound as good)
-								stepSound.mediaElement.playbackRate = Math.random() + 0.5;
-							}
-							stepSound.start(0);
-							entities.players[pid].lastSound = (entities.players[pid].lastSound + 1) % 5;
-						}
-						entities.players[pid].walkFrame = walkFrame;
-						entities.players[pid].hurt = hurt;
-						entities.players[pid].jetpack = jetpack;
-
-						entities.players[pid].attachedPlanet = attachedPlanet;
-						entities.players[pid].armedWeapon = entities.players[pid].weapons[armedWeapon];
-						entities.players[pid].carriedWeapon = entities.players[pid].weapons[carriedWeapon];
-					}
+					entities.updatePlanet,
+					entities.updateEnemy,
+					entities.updatePlayer
 				);
 
-				entities.players[game.ownIdx].health = val.yourHealth;
-				entities.players[game.ownIdx].fuel = val.yourFuel;
+				game.setOwnHealth(val.yourHealth);
+				game.setOwnFuel(val.yourFuel);
 
 				Array.prototype.forEach.call(document.querySelectorAll('#gui-health div'), (element, index) => {
 					let state = 'heartFilled';
-					if (index * 2 + 2 <= entities.players[game.ownIdx].health) state = 'heartFilled';
-					else if (index * 2 + 1 === entities.players[game.ownIdx].health) state = 'heartHalfFilled';
+					if (index * 2 + 2 <= game.ownHealth) state = 'heartFilled';
+					else if (index * 2 + 1 === game.ownHealth) state = 'heartHalfFilled';
 					else state = 'heartNotFilled';
 					element.className = state;
 				});
 				let fuelElement = document.getElementById('gui-fuel');
 				if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
-
-				console.log('player lgt : ws', entities.players.length);
 				break;
 			}
 			case message.chatBroadcast: {

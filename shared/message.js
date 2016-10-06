@@ -62,11 +62,6 @@ const weaponMap = new bimap.EnumMap(
 		'moveRight',
 		'changeWeapon',
 		'shoot'
-	),
-	lobbyStateMap = new bimap.EnumMap(
-		'warmup',
-		'playing',
-		'displaying_scores'
 	);
 
 /* Subpayloads */
@@ -202,7 +197,7 @@ export class EnemyConst {
 		dView.setUint16(2, enemy.box.center.y);
 		dView.setUint8(4, enemyAppearanceMap.getNbr(enemy.appearance));
 
-	   return 5;
+		return 5;
 	}
 	static deserialize(buffer, offset, enemiesCbk) {
 		let dView = new DataView(buffer, offset);
@@ -295,22 +290,22 @@ export class PlayerMut {
 			enumByte = dView.getUint8(8),
 			weaponByte = dView.getUint8(9);
 
-			playersCbk(dView.getUint8(0), // pid
-				dView.getUint16(1), // x
-				dView.getUint16(3), // y
-				dView.getUint8(5), // attachedPlanet
-				convert.bradToRad(dView.getUint8(6), 1), // angle
+		playersCbk(dView.getUint8(0), // pid
+			dView.getUint16(1), // x
+			dView.getUint16(3), // y
+			dView.getUint8(5), // attachedPlanet
+			convert.bradToRad(dView.getUint8(6), 1), // angle
 
-				enumByte & this.MASK.LOOKS_LEFT ? true : false, // looksLeft
-				enumByte & this.MASK.JETPACK ? true : false, // jetpack
-				enumByte & this.MASK.HURT ? true : false, // hurt
-				walkFrameMap.getStr(enumByte << 27 >>> 29), // walkFrame
+			enumByte & this.MASK.LOOKS_LEFT ? true : false, // looksLeft
+			enumByte & this.MASK.JETPACK ? true : false, // jetpack
+			enumByte & this.MASK.HURT ? true : false, // hurt
+			walkFrameMap.getStr(enumByte << 27 >>> 29), // walkFrame
 
-				weaponMap.getStr(weaponByte >>> 2), // armed weapon
-				weaponMap.getStr(weaponByte << 30 >>> 30), // carried weapon
+			weaponMap.getStr(weaponByte >>> 2), // armed weapon
+			weaponMap.getStr(weaponByte << 30 >>> 30), // carried weapon
 
-				convert.bradToRad(dView.getUint8(7), 1) // aimAngle
-			);
+			convert.bradToRad(dView.getUint8(7), 1) // aimAngle
+		);
 
 		return 10;
 	}
@@ -439,8 +434,7 @@ class AddServers extends Serializator {
 		return buffer;
 	}
 	deserialize(buffer) {
-		let view = new DataView(buffer),
-			offset = 1,
+		let offset = 1,
 			serverList = [];
 
 		while (offset !== buffer.byteLength) {
@@ -553,54 +547,6 @@ class ErrorMsg extends Serializator {
 ErrorMsg.prototype.NO_LOBBY = 0;
 ErrorMsg.prototype.NO_SLOT = 1;
 
-class ConnectAccepted extends Serializator {
-	_serialize(lobbyId, playerId, univWidth, univHeight) {
-		let buffer = new ArrayBuffer(11),
-			view = new DataView(buffer);
-		view.setUint32(1, lobbyId);
-		view.setUint8(5, playerId);
-		view.setUint16(6, univWidth);
-		view.setUint16(8, univHeight);
-
-		return buffer;
-	}
-	deserialize(buffer) {
-		let view = new DataView(buffer);
-		return {
-			lobbyId: view.getUint32(1),
-			playerId: view.getUint8(5),
-			univWidth: view.getUint16(6),
-			univHeight: view.getUint16(8)
-		};
-	}
-}
-
-class LobbyState extends Serializator {
-	_serialize(state, teams) {
-		let view = new Uint8Array(3),
-			enabledTeams = 0;
-		view[1] = lobbyStateMap.getNbr(state);
-		if (teams !== undefined) {
-			teams.forEach(team => {
-				enabledTeams |= teamMaskMap.getNbr(team);
-			}, this);
-			view[2] = enabledTeams;
-		}
-		return view.buffer;
-	}
-	deserialize(buffer) {
-		let view = new Uint8Array(buffer),
-			enabledTeams = [];
-		for (let {str, nbr} of teamMaskMap) {
-			if (view[2] & nbr) enabledTeams.push(str);
-		}
-
-		return {
-			state: lobbyStateMap.getStr(view[1]), // you _serialize a number... and you get back a string TODO: fix this
-			enabledTeams: enabledTeams
-		};
-	}
-}
 class AddEntity extends Serializator {
 	_serialize(planets, enemies, shots, players) {
 		let totalNameSize = 0,
@@ -876,8 +822,8 @@ class DisplayScores extends Serializator {
 		EnabledTeams.serialize(buffer, 1, scoresObj);
 		view.set(new Uint8Array(scoresBuf), 2);
 
-			return buffer;
-		}
+		return buffer;
+	}
 	deserialize(buffer) {
 		let scoresObj = EnabledTeams.deserialize(buffer, 1).data;
 
@@ -931,7 +877,6 @@ export let registerServer = new RegisterServer(0),
 	connect = new Connect(5),
 	error = new ErrorMsg(6),
 	warmup = new Warmup(7),
-	lobbyState = new LobbyState(8),
 	addEntity = new AddEntity(9),
 	removeEntity = new RemoveEntity(10),
 	gameState = new GameState(11),

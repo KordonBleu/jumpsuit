@@ -1,5 +1,6 @@
 import Player from '../shared/player.js';
 import * as audio from './audio.js';
+import * as entities from './entities.js';
 
 class Particle {
 	constructor(size, startX, startY, velocityX, velocityY, lifetime) {
@@ -21,13 +22,72 @@ class Particle {
 }
 
 export default class extends Player {
-	constructor(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle) {
-		super(name, appearance, walkFrame, attachedPlanet, jetpack, health, fuel, armedWeapon, carriedWeapon, aimAngle);
-		this.hurt = false;
+	constructor(pid, appearance, homographId, name) {
+		super();
+
+		this.pid = pid;
+		this._appearance = appearance;
+		this.homographId = homographId;
+		this.name = name;
+
+
 		this.panner = audio.makePanner(0, 0);//note: won't be used if this is not another player
 		this.predictionTarget = {};
 		this.predictionBase = {};
 		this.lastSound = 0;
+	}
+	update(x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
+		this.box.center.x = x;
+		this.box.center.x = y;
+		this.attachedPlanet = attachedPlanet;
+		this.looksLeft = looksLeft;
+		this.jetpack = jetpack;
+		this.hurt = hurt;
+		this.walkFrame = walkFrame;
+		this.armedWeapon = this.weapons[armedWeapon];
+		this.carriedWeapon = this.weapons[carriedWeapon];
+		this.aimAngle = aimAngle;
+
+		let param1 = Date.now();
+
+		if ('timestamp' in this.predictionTarget) param1 = this.predictionTarget.timestamp;
+		this.predictionTarget = {
+			timestamp: Date.now(),
+			box: new vinage.Rectangle(new vinage.Point(x, y), 0, 0, angle),
+			aimAngle: aimAngle
+		};
+		this.predictionBase = {
+			timestamp: param1,
+			box: new vinage.Rectangle(new vinage.Point(this.box.center.x, this.box.center.y), 0, 0, this.box.angle),
+			aimAngle: this.aimAngle
+		};
+	}
+	playSteps(ownPlayer, walkFrame, x, y) {
+		if ((this.walkFrame === 'walk1' && walkFrame === 'walk2') || (this.walkFrame === 'walk2' && walkFrame === 'walk1')) {
+			let type = entities.planets[this.attachedPlanet].type,
+				stepSound = audio.stepModels[type][this.lastSound].makeSound(audio.makePanner(x - ownPlayer.box.center.x, y - ownPlayer.box.center.y));
+			stepSound.playbackRate.value = Math.random() + 0.5;//pitch is modified from 50% to 150%
+			stepSound.start(0);
+			this.lastSound = (this.lastSound + 1) % 5;
+		}
+	}
+	playJetpack(ownPlayer, jetpack) {
+		if (this === ownPlayer) {
+			if (!this.jetpack && jetpack) {
+				this.jetpackSound = audio.jetpackModel.makeSound(audio.sfxGain, 1);
+				this.jetpackSound.start(0);
+			} else if (this.jetpack && !jetpack && this.jetpackSound !== undefined) {
+				this.jetpackSound.stop();
+			}
+		} else {
+			if (!this.jetpack && jetpack) {
+				audio.setPanner(this.panner, this.box.center.x - ownPlayer.box.center.x, this.box.center.y - ownPlayer.box.center.y);
+				this.jetpackSound = audio.jetpackModel.makeSound(this.panner, 1);
+				this.jetpackSound.start(0);
+			} else if(this.jetpack && !jetpack && this.jetpackSound !== undefined) {
+				this.jetpackSound.stop();
+			}
+		}
 	}
 
 	getFinalName() {
