@@ -38,8 +38,6 @@ export default class extends Player {
 		this.lastSound = 0;
 	}
 	update(x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
-		this.box.center.x = x;
-		this.box.center.y = y;
 		this.attachedPlanet = attachedPlanet;
 		this.looksLeft = looksLeft;
 		this.jetpack = jetpack;
@@ -47,7 +45,6 @@ export default class extends Player {
 		this.walkFrame = walkFrame;
 		this.armedWeapon = this.weapons[armedWeapon];
 		this.carriedWeapon = this.weapons[carriedWeapon];
-		this.aimAngle = aimAngle;
 
 		let param1 = Date.now();
 

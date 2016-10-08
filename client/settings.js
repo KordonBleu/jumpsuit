@@ -27,7 +27,8 @@ const defaultKeymap = {
 		name: 'Unnamed player',
 		primary: 'Lmg',
 		secondary: 'Smg',
-		keymap: JSON.stringify(defaultKeymap)
+		keymap: JSON.stringify(defaultKeymap),
+		defaultKeymap: defaultKeymap
 	};
 
 let settings = {};

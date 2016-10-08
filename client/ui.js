@@ -140,6 +140,8 @@ function initKeyTable() {
 
 		keySettingsTbody.appendChild(rowEl);
 	}
+
+	keyResetElement.disabled = controls.keyMap.compare(settings.defaultKeymap);
 }
 initKeyTable();
 
@@ -158,6 +160,7 @@ function handleChangeKey(e) {
 		selectedCell.textContent = e.code;
 		deselectRow();
 		settings.keymap = controls.keyMap.stringify();
+		keyResetElement.disabled = controls.keyMap.compare(settings.defaultKeymap);
 	} catch (err) {
 		alert(err);
 	}
