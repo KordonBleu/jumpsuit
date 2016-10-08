@@ -67,7 +67,6 @@ export function loop() {
 	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
 
 	controls.updateDragSmooth(windowBox);
-	console.log('player lgt', entities.players.length);
 	windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;
 	windowBox.center.y = entities.players[game.ownIdx].box.center.y + controls.dragSmoothed.y;
 
@@ -114,6 +113,7 @@ export function loop() {
 	context.font = '22px Open Sans';
 	context.textAlign = 'center';
 	entities.players.forEach(function (player, i) {
+		console.log(entities.universe.collide(windowBox, player.box), entities.universe, windowBox, player.box);
 		if (entities.universe.collide(windowBox, player.box)) player.draw(context, particles, i === game.ownIdx);
 		if (player.panner !== undefined && player.jetpack) audio.setPanner(player.panner, player.box.center.x - entities.players[game.ownIdx].box.center.x, player.box.center.y - entities.players[game.ownIdx].box.center.y);
 	});

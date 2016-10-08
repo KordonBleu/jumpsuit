@@ -21,6 +21,7 @@ export default class {
 
 	warmupToPlaying() {
 		this.lobbyState = 'playing';
+		console.log(this.lobbyState);
 
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
@@ -29,6 +30,7 @@ export default class {
 	}
 	playingToDisplaying() {
 		this.lobbyState = 'displaying_scores';
+		console.log(this.lobbyState);
 
 		clearInterval(this.gameCycleId);
 		clearInterval(this.scoreCycleId);
@@ -41,6 +43,8 @@ export default class {
 	}
 	displayingToWarmup() {
 		this.lobbyState = 'warmup';
+		console.log(this.lobbyState);
+
 		this.resetWorld();
 		//this.broadcast(message.warmup.serialize())
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);

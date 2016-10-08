@@ -8,7 +8,7 @@ const rollup = require('rollup'),
 	replace = require('rollup-plugin-replace'),
 
 	config = require('./config_loader.js')('./build_config.json', {
-		dev: false,
+		dev: true,
 		mod: 'capture'
 	});
 

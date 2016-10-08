@@ -143,7 +143,7 @@ wss.on('connection', function(ws) {
 								return true;
 							} else return false;
 						})) {//create new lobby
-							lobby = new Lobby(4);
+							lobby = new Lobby(1);
 							val.lobbyId = lobbies.append(lobby);
 						}
 					}
@@ -166,7 +166,7 @@ wss.on('connection', function(ws) {
 							player.send(message.scores.serialize(lobby.getScores()));
 							break;
 						case 'displaying_scores':
-							lobby.send(message.displayScores.serialize(lobby.getScores()));
+							player.send(message.displayScores.serialize(lobby.getScores()));
 							break;
 					}
 

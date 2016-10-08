@@ -39,7 +39,7 @@ export default class extends Player {
 	}
 	update(x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
 		this.box.center.x = x;
-		this.box.center.x = y;
+		this.box.center.y = y;
 		this.attachedPlanet = attachedPlanet;
 		this.looksLeft = looksLeft;
 		this.jetpack = jetpack;
