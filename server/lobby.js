@@ -42,6 +42,7 @@ export default class {
 	displayingToWarmup() {
 		this.lobbyState = 'warmup';
 		this.resetWorld();
+		//this.broadcast(message.warmup.serialize())
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
 

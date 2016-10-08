@@ -38,7 +38,7 @@ export function addPlayer(pid, appearance, homographId, name) {
 export function updatePlayer(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
 	players[pid].playSteps(players[game.ownIdx], walkFrame, x, y);
 	players[pid].playJetpack(players[game.ownIdx], jetpack);
-	planets[pid].update(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle);
+	players[pid].update(x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle);
 }
 export function addShot(x, y, angle, origin, type) {
 	audio.laserModel.makeSound(audio.makePanner(x - players[game.ownIdx].box.center.x, y - players[game.ownIdx].box.center.y)).start(0);

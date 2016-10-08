@@ -154,21 +154,6 @@ test('error message', t => {
 	t.is(message.getSerializator(buf2), message.error);
 });
 
-test('lobbyState message', t => {
-	let teams = [
-			'alienBeige',
-			'alienBlue',
-			'alienGreen',
-			'alienPink',
-			'alienYellow'
-		],
-		buf = message.lobbyState.serialize('warmup', teams),
-		res = message.lobbyState.deserialize(buf);
-
-	t.deepEqual(teams, res.enabledTeams);
-	t.is(res.state, 'warmup');
-	t.is(message.getSerializator(buf), message.lobbyState);
-});
 
 let planets = [
 		new Planet(12, 434, 23),
@@ -194,12 +179,18 @@ planets[0].progress.value = 0;
 planets[1].progress.team = 'alienPink';
 planets[1].progress.value = 33;
 
-players[0].box = new vinage.Rectangle(new vinage.Point(12, 444), 55, 92, 1.5*Math.PI);
-players[1].box = new vinage.Rectangle(new vinage.Point(98, 342), 58, 102);
 players[0].pid = 0;
 players[1].pid = 1;
+players[0].box.center.x = 454;
+players[1].box.center.x = 9890;
+players[0].box.center.y = 80;
+players[1].box.center.y = 2890;
 players[0].looksLeft = true;
-players[1].looksLeft = false;
+players[1].looksLeft = false;;
+players[0].name = 'Charles';
+players[1].name = 'Lucette';
+players[0].appearance = 'alienBlue';
+players[1].appearance = 'alienPink';
 players[0].homographId = 0;
 players[1].homographId = 0;
 players[0].hurt = true;
@@ -260,6 +251,76 @@ test('addEntity message', t => {
 		t.is(players[pid].carriedWeapon.type, carriedWeapon, 'player[' + pid + ']');
 	});
 	t.is(message.getSerializator(buf), message.addEntity);
+});
+
+test('warmup message', t => {
+	let params = {
+		scoresObj: {
+			alienBlue: 4334532,
+			alienBeige: -65
+		},
+		lobbyId: 123456,
+		playerId: 27,
+		univWidth: 555,
+		univHeight: 666 // oh noes
+	},
+		buf = message.warmup.serialize(params.scoresObj, params.lobbyId, params.playerId, params.univWidth, params.univHeight, planets, enemies, shots, players),
+		planetI = 0,
+		enemyI = 0,
+		shotI = 0;
+
+	let res = message.warmup.deserialize(buf, (x, y, radius, type) => {
+		t.is(planets[planetI].box.center.x, x);
+		t.is(planets[planetI].box.center.y, y);
+		t.is(planets[planetI].box.radius, radius);
+		t.is(planets[planetI].type, type);
+
+		++planetI;
+	}, (id, ownedBy, progress) => {
+		t.is(planets[id].progress.team, ownedBy);
+		t.is(planets[id].progress.value, progress);
+	}, (x, y, appearance) => {
+		t.is(enemies[enemyI].box.center.x, x);
+		t.is(enemies[enemyI].box.center.y, y);
+		t.is(enemies[enemyI].appearance, appearance);
+
+		++enemyI;
+	}, (id, angle) => {
+		t.is(approxAngle(enemies[id].box.angle), approxAngle(angle));
+	}, (x, y, angle, origin, type) => {
+		t.is(shots[shotI].box.center.x, x);
+		t.is(shots[shotI].box.center.y, y);
+		t.is(approxAngle(shots[shotI].box.angle), approxAngle(angle)); // there is some imprecision due to brads
+		t.is(shots[shotI].origin === -1 ? 255 : shots[shotI].origin, origin); // -1 when originating from enemies, which is 255 when wrapped
+		t.is(shots[shotI].type, type);
+
+		++shotI;
+	}, (pid, appearance, homographId, name) => {
+		t.is(players[pid].pid, pid);
+		t.is(players[pid].appearance, appearance);
+		t.is(players[pid].homographId, homographId);
+		t.is(players[pid].name, name);
+	}, (pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon) => {
+		t.is(players[pid].pid, pid);
+		t.is(players[pid].box.center.x, x);
+		t.is(players[pid].box.center.y, y);
+		t.is(players[pid].attachedPlanet === -1 ? 255 : players[pid].attachedPlanet, attachedPlanet); // -1 when in space, which is 255 when wrapped
+		t.is(approxAngle(players[pid].box.angle), approxAngle(angle)); // there is some imprecision due to brads
+		t.is(players[pid].looksLeft, looksLeft);
+		t.is(players[pid].jetpack, jetpack);
+		t.is(players[pid].hurt, hurt);
+		t.is(players[pid].walkFrame, walkFrame);
+		t.is(players[pid].armedWeapon.type, armedWeapon, 'player[' + pid + ']');
+		t.is(players[pid].carriedWeapon.type, carriedWeapon, 'player[' + pid + ']');
+	});
+
+	t.deepEqual(Object.keys(res.scoresObj).sort(), Object.keys(params.scoresObj).sort());
+	t.is(res.lobbyId, params.lobbyId);
+	t.is(res.playerId, params.playerId);
+	t.is(res.univWidth, params.univWidth);
+	t.is(res.univHeight, params.univHeight);
+
+	t.is(message.getSerializator(buf), message.warmup);
 });
 
 

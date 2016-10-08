@@ -840,7 +840,7 @@ class ServerRegistered extends Serializator {
 
 class Warmup extends Serializator {
 	_serialize(scoresObj, lobbyId, playerId, univWidth, univHeight, planets, enemies, shots, players) {
-		let addEntityBuf = new addEntity._serialize(planets, enemies, shots, players).slice(1),
+		let addEntityBuf = addEntity._serialize(planets, enemies, shots, players).slice(1),
 			buffer = new ArrayBuffer(addEntityBuf.byteLength + 11),
 			view = new Uint8Array(buffer),
 			dView = new DataView(buffer);

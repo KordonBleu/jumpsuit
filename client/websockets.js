@@ -183,6 +183,11 @@ class Connection {
 				break;
 			}
 			case message.warmup: {
+				entities.planets.length = 0;
+				entities.enemies.length = 0;
+				entities.shots.length = 0;
+				entities.players.length = 0;
+
 				let val = message.warmup.deserialize(msg.data,
 					entities.addPlanet,
 					entities.updatePlanet,
@@ -192,10 +197,6 @@ class Connection {
 					entities.addPlayer,
 					entities.updatePlayer
 				);
-				entities.planets.length = 0;
-				entities.enemies.length = 0;
-				entities.shots.length = 0;
-				entities.players.length = 0;
 
 				game.setState('warmup');
 
@@ -209,6 +210,9 @@ class Connection {
 
 				document.getElementById('lobby-table').classList.add('hidden');
 				document.getElementById('player-table').classList.remove('hidden');
+
+				game.start();
+
 				break;
 			}
 			case message.addEntity:
