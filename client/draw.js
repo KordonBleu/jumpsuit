@@ -1,7 +1,7 @@
 import * as game from './game.js';
 import * as entities from './entities.js';
+import windowBox from './windowbox.js';
 import * as controls from './controls.js';
-import modulo from '../shared/modulo.js';
 import * as audio from './audio.js';
 import * as engine from './engine.js';
 
@@ -15,36 +15,6 @@ let canvas = document.getElementById('canvas'),
 	minimapContext = minimapCanvas.getContext('2d'),
 	meteors = [],
 	particles = [];
-
-entities.windowBox.wrapX = function(entityX) {//get the position where the entity can be drawn on the screen
-	return (modulo(entityX + entities.universe.width/2 - this.center.x, entities.universe.width) -entities.universe.width/2 + canvas.width/2 - (this.width*this.zoomFactor - this.width)/2) * this.zoomFactor;
-};
-entities.windowBox.wrapY = function(entityY) {//get the position where the entity can be drawn on the screen
-	return (modulo(entityY + entities.universe.height/2 - this.center.y, entities.universe.height) -entities.universe.height/2 + canvas.height/2 - (this.height*this.zoomFactor - this.height)/2) * this.zoomFactor;
-};
-entities.windowBox.zoomFactor = 1;
-entities.windowBox.strokeAtmos = function(cx, cy, r, sw) {
-	context.beginPath();
-	context.arc(cx, cy, r*this.zoomFactor, 0, 2 * Math.PI, false);
-	context.globalAlpha = 0.1;
-	context.fill();
-	context.globalAlpha = 1;
-	context.lineWidth = sw*this.zoomFactor;
-	context.stroke();
-	context.closePath();
-};
-entities.windowBox.drawRotatedImage = function(image, x, y, angle, sizeX, sizeY, mirrorX, mirrorY) {
-	sizeX *= this.zoomFactor;
-	sizeY *= this.zoomFactor;
-
-	context.translate(x, y);
-	context.rotate(angle);
-	context.scale(mirrorX === true ? -1 : 1, mirrorY === true ? -1 : 1);
-	let wdt = sizeX || image.width*this.zoomFactor,
-		hgt = sizeY || image.height*this.zoomFactor;
-	context.drawImage(image, -(wdt / 2), -(hgt / 2), wdt, hgt);
-	context.resetTransform();
-};
 
 let meteorSpawningIntervalId;
 export function startMeteorSpawning() {
@@ -80,7 +50,14 @@ export function loop() {
 			m.x += m.speed;
 			m.rotAng += m.rotSpeed;
 			if (m.x - window.resources[m.res].width/2 > canvas.width) meteors.splice(i, 1);
-			else entities.windowBox.drawRotatedImage(window.resources[m.res], Math.floor(m.x), Math.floor(m.y), m.rotAng, window.resources[m.res].width / entities.windowBox.zoomFactor, window.resources[m.res].height / entities.windowBox.zoomFactor);
+			else windowBox.drawRotatedImage(context,
+				window.resources[m.res],
+				Math.floor(m.x),
+				Math.floor(m.y),
+				m.rotAng,
+				window.resources[m.res].width / windowBox.zoomFactor,
+				window.resources[m.res].height / windowBox.zoomFactor
+			);
 		});
 	}
 	context.globalAlpha = 1;
@@ -89,16 +66,16 @@ export function loop() {
 	//layer 1: the game
 	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
 
-	controls.updateDragSmooth(entities.windowBox);
+	controls.updateDragSmooth(windowBox);
 	console.log('player lgt', entities.players.length);
-	entities.windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;
-	entities.windowBox.center.y = entities.players[game.ownIdx].box.center.y + controls.dragSmoothed.y;
+	windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;
+	windowBox.center.y = entities.players[game.ownIdx].box.center.y + controls.dragSmoothed.y;
 
 	//planets
 	let playerInAtmos = false;
 	entities.planets.forEach(function (planet) {
-		if (entities.universe.collide(entities.windowBox, planet.atmosBox)) planet.drawAtmos(context, entities.windowBox);
-		if (entities.universe.collide(entities.windowBox, planet.box)) planet.draw(context, entities.windowBox);
+		if (entities.universe.collide(windowBox, planet.atmosBox)) planet.drawAtmos(context, windowBox);
+		if (entities.universe.collide(windowBox, planet.box)) planet.draw(context, windowBox);
 
 		if (!playerInAtmos && entities.universe.collide(planet.atmosBox, entities.players[game.ownIdx].box)) playerInAtmos = true;
 	});
@@ -107,26 +84,27 @@ export function loop() {
 
 	//shots
 	entities.shots.forEach(function (shot) {
-		if (entities.universe.collide(entities.windowBox, shot.box)) shot.draw(context, entities.windowBox, false);
+		if (entities.universe.collide(windowBox, shot.box)) shot.draw(context, false);
 	});
 	entities.deadShots.forEach(function(shot, si) {
-		if (entities.universe.collide(entities.windowBox, shot.box)) shot.draw(context, entities.windowBox, true);
+		if (entities.universe.collide(windowBox, shot.box)) shot.draw(context, true);
 		if (++shot.lifeTime <= 60) entities.deadShots.splice(si, 1);
 	});
 
 	//enemies
 	entities.enemies.forEach(function (enemy) {
-		if (entities.universe.collide(entities.windowBox, enemy.aggroBox)) enemy.drawAtmos(context, entities.windowBox);
-		if (entities.universe.collide(entities.windowBox, enemy.box)) enemy.draw(context, entities.windowBox);
+		if (entities.universe.collide(windowBox, enemy.aggroBox)) enemy.drawAtmos(context, windowBox);
+		if (entities.universe.collide(windowBox, enemy.box)) enemy.draw(context, windowBox);
 	});
 
 	//particles
 	if (document.getElementById('particle-option').checked) {
 		particles.forEach(function(particle, index, array) {
 			if (particle.update()) array.splice(index, 1);
-			else entities.windowBox.drawRotatedImage(window.resources['jetpackParticle'],
-				entities.windowBox.wrapX(particle.box.center.x),
-				entities.windowBox.wrapY(particle.box.center.y),
+			else windowBox.drawRotatedImage(context,
+				window.resources['jetpackParticle'],
+				windowBox.wrapX(particle.box.center.x),
+				windowBox.wrapY(particle.box.center.y),
 				particle.box.angle, particle.size, particle.size);
 		});
 	}
@@ -136,7 +114,7 @@ export function loop() {
 	context.font = '22px Open Sans';
 	context.textAlign = 'center';
 	entities.players.forEach(function (player, i) {
-		if (entities.universe.collide(entities.windowBox, player.box)) player.draw(context, entities.windowBox, particles, i === game.ownIdx);
+		if (entities.universe.collide(windowBox, player.box)) player.draw(context, particles, i === game.ownIdx);
 		if (player.panner !== undefined && player.jetpack) audio.setPanner(player.panner, player.box.center.x - entities.players[game.ownIdx].box.center.x, player.box.center.y - entities.players[game.ownIdx].box.center.y);
 	});
 

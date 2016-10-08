@@ -183,15 +183,24 @@ class Connection {
 				break;
 			}
 			case message.warmup: {
-				let val = message.warmup.deserialize(msg.data);
+				let val = message.warmup.deserialize(msg.data,
+					entities.addPlanet,
+					entities.updatePlanet,
+					entities.addEnemy,
+					entities.updateEnemy,
+					entities.addShot,
+					entities.addPlayer,
+					entities.updatePlayer
+				);
 				entities.planets.length = 0;
 				entities.enemies.length = 0;
 				entities.shots.length = 0;
 				entities.players.length = 0;
 
+				game.setState('warmup');
+
 				console.log('my ownIdx is:', val.playerId);
 				game.setOwnIdx(val.playerId);
-				console.log('gotten C_ACC', game.ownIdx);
 				entities.universe.width = val.univWidth;
 				entities.universe.height = val.univHeight;
 
@@ -210,7 +219,8 @@ class Connection {
 					entities.updateEnemy,
 					entities.addShot,
 					entities.addPlayer,
-					entities.updatePlayer);
+					entities.updatePlayer
+				);
 				ui.updatePlayerList();
 				break;
 			case message.removeEntity:
@@ -272,13 +282,16 @@ class Connection {
 			case message.scores: {
 				let val = message.scores.deserialize(msg.data, enabledTeams);
 				game.setScores(val);
+
+				if (game.state === 'warmup') game.setState('playing');
+
 				for (let team in val) {
 					let element = document.getElementById('gui-points-' + team);
 					if (element !== null) element.textContent = val[team];
 				}
 				break;
 			}
-			case message.lobbyState: {
+			/*case message.lobbyState: {
 				let val = message.lobbyState.deserialize(msg.data);
 				if (val.enabledTeams !== undefined) {
 					enabledTeams = val.enabledTeams;
@@ -315,7 +328,7 @@ class Connection {
 					game.stop();
 				}
 				break;
-			}
+			}*/
 		}
 	}
 }

@@ -7,10 +7,7 @@ import Enemy from './enemy.js';
 import Player from './player.js';
 import Shot from './shot.js';
 
-const canvas = document.getElementById('canvas');
-
-export let windowBox = new vinage.Rectangle(new vinage.Point(null, null), canvas.clientWidth, canvas.clientHeight), // these parameters will be overwritten later
-	universe = new vinage.Rectangle(new vinage.Point(0, 0), null, null), // these parameters will be overwritten later
+export let universe = new vinage.Rectangle(new vinage.Point(0, 0), null, null), // these parameters will be overwritten later
 	players = [],
 	planets = [],
 	enemies = [],

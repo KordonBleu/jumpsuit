@@ -18,27 +18,40 @@ export default class {
 		this.resetWorld();
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
-	goToPlayState() {
+
+	warmupToPlaying() {
+		this.lobbyState = 'playing';
+
+		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		this.lobbyState = 'playing';
-		this.broadcast(message.lobbyState.serialize(this.lobbyState));
-		setTimeout(() => {
-			clearInterval(this.gameCycleId);
-			clearInterval(this.scoreCycleId);
+		setTimeout(this.playingToDisplaying.bind(this), 120000);
+	}
+	playingToDisplaying() {
+		this.lobbyState = 'displaying_scores';
 
-			this.lobbyState = 'displaying_scores';
-			this.broadcast(message.lobbyState.serialize(this.lobbyState));
-			setTimeout(() => {
-				this.goToPlayState();
-				this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
-			}, 5000);
-		}, 120000);
+		clearInterval(this.gameCycleId);
+		clearInterval(this.scoreCycleId);
+		this.broadcast(message.displayScores.serialize(this.getScores()));
+
+		setTimeout(() => {
+			this.displayingToWarmup.bind(this);
+			if (this.enoughPlayers()) this.warmupToPlaying.bind(this)();
+		}, 5000);
+	}
+	displayingToWarmup() {
+		this.lobbyState = 'warmup';
+		this.resetWorld();
+		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
+	}
+
+	enoughPlayers() {
+		return this.players.actualLength() >= this.maxPlayers * 0.5;
 	}
 	addPlayer(player) {
 		let retId =  this.players.append(player);
-		if (this.lobbyState === 'warmup' && this.players.actualLength() >= this.maxPlayers * 0.5) {
-			this.goToPlayState();
+		if (this.lobbyState === 'warmup' && this.enoughPlayers()) {
+			this.warmupToPlaying();
 		}
 
 		return retId;

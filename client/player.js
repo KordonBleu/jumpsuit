@@ -1,6 +1,7 @@
 import Player from '../shared/player.js';
 import * as audio from './audio.js';
 import * as entities from './entities.js';
+import windowBox from './windowbox.js';
 
 class Particle {
 	constructor(size, startX, startY, velocityX, velocityY, lifetime) {
@@ -93,7 +94,7 @@ export default class extends Player {
 	getFinalName() {
 		return this.name + (typeof this.homographId === 'number' && this.homographId !== 0 ? ' (' + this.homographId + ')' : '');
 	}
-	draw(context, windowBox, particles, isMe) {
+	draw(context, particles, isMe) {
 		let res = window.resources[this.appearance + '_' + this.walkFrame],
 			playerX = windowBox.wrapX(this.box.center.x),
 			playerY = windowBox.wrapY(this.box.center.y);
@@ -142,7 +143,7 @@ export default class extends Player {
 		}
 
 
-		this.armedWeapon.draw(context, windowBox, isMe);
+		this.armedWeapon.draw(context, isMe);
 
 		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 

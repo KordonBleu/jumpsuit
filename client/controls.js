@@ -1,7 +1,7 @@
 import settings from './settings.js';
 import * as bimap from '../shared/bimap.js';
 
-import * as entities from './entities.js';
+import windowBox from './windowbox.js';
 
 import * as ui from './ui.js';
 import * as wsClt from './websockets.js';
@@ -222,7 +222,7 @@ function updateControlsViaGamepad(usingGamepad) {
 document.addEventListener('wheel', function(e) {
 	if (!ui.chatInUse() && ui.noModalOpen()) {
 		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
-		entities.windowBox.zoomFactor = Math.max(0.25, Math.min(4, entities.windowBox.zoomFactor * z));
+		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
 		ui.resizeCanvas();
 	}
 });

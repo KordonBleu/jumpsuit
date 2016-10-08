@@ -1,12 +1,13 @@
 import Weapon from '../shared/weapon.js';
 import * as controls from './controls.js';
+import windowBox from './windowbox.js';
 
 export default class extends Weapon {
 	constructor(owner) {
 		super(owner);
 		this.recoil = 0;
 	}
-	draw(context, windowBox, isMe) {
+	draw(context, isMe) {
 		let weaponAngle = isMe ? controls.mouseAngle : this.aimAngle,
 			weaponRotFact = this.owner.looksLeft === true ? -(weaponAngle - this.owner.box.angle + Math.PI/2) : (weaponAngle - this.owner.box.angle + 3*Math.PI/2);
 

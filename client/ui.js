@@ -3,7 +3,10 @@ import * as audio from './audio.js';
 import Planet from './planet.js';
 import * as wsClt from './websockets.js';
 import * as controls from './controls.js';
+
 import * as entities from './entities.js';
+import windowBox from './windowbox.js';
+
 import settings from './settings.js';
 import { resourceAmount } from './resource_loader.js';
 import * as draw from './draw.js';
@@ -459,8 +462,8 @@ export function resizeCanvas() {
 
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	entities.windowBox.width = canvas.clientWidth / entities.windowBox.zoomFactor;
-	entities.windowBox.height = canvas.clientHeight / entities.windowBox.zoomFactor;
+	windowBox.width = canvas.clientWidth / windowBox.zoomFactor;
+	windowBox.height = canvas.clientHeight / windowBox.zoomFactor;
 
 	updateChatOffset();
 }

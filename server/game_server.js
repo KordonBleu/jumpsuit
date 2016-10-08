@@ -155,13 +155,20 @@ wss.on('connection', function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					if (lobby.lobbyState !== 'displaying_scores') {
-						lobby.assignPlayerTeam(player);
-						player.send(message.addEntity.serialize(lobby.planets, lobby.enemies, lobby.shots, lobby.players));
-					} else player.send(message.addEntity.serialize([], [], [], lobby.players));
-					player.send(message.connectAccepted.serialize(val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height));
-					player.send(message.lobbyState.serialize(lobby.lobbyState, lobby.enabledTeams));
-					lobby.broadcast(message.addEntity.serialize([], [], [], [player]), player);
+					switch(lobby.lobbyState) {
+						case 'warmup':
+							lobby.assignPlayerTeam(player);
+							player.send(message.warmup.serialize(lobby.getScores(), val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players));
+							break;
+						case 'playing':
+							lobby.assignPlayerTeam(player);
+							player.send(message.warmup.serialize(lobby.getScores(), val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players));
+							player.send(message.scores.serialize(lobby.getScores()));
+							break;
+						case 'displaying_scores':
+							lobby.send(message.displayScores.serialize(lobby.getScores()));
+							break;
+					}
 
 					break;
 				}
