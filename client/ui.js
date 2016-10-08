@@ -46,6 +46,7 @@ let chatInput = document.getElementById('gui-chat-input'),
 	musicVolumeElement = document.getElementById('music-volume'),
 	effectsVolumeElement = document.getElementById('effects-volume'),
 	keyResetElement = document.getElementById('key-reset'),
+	keyInfoElement = document.getElementById('key-info'),
 	primaryWeaponElement = document.getElementById('primary-weapon'),
 	secondaryWeaponElement = document.getElementById('secondary-weapon'),
 	particlesElement = document.getElementById('particle-option');
@@ -145,7 +146,7 @@ function initKeyTable() {
 }
 initKeyTable();
 
-let selectedCell = null;
+let selectedCell = null, warnTimeoutId;
 function deselectRow() {
 	selectedCell.classList.remove('selected');
 	selectedCell = null;
@@ -162,7 +163,14 @@ function handleChangeKey(e) {
 		settings.keymap = controls.keyMap.stringify();
 		keyResetElement.disabled = controls.keyMap.compare(settings.defaultKeymap);
 	} catch (err) {
-		alert(err);
+		console.log(err);
+		keyInfoElement.classList.remove('hidden');
+		keyInfoElement.textContent = err.message;
+
+		if (warnTimeoutId !== undefined) clearTimeout(warnTimeoutId);
+		warnTimeoutId = setTimeout(function() {
+			keyInfoElement.classList.add('hidden');
+		}, 5000);
 	}
 }
 document.getElementById('key-settings-body').addEventListener('click', function(e) {

@@ -594,6 +594,27 @@ label {
 #key-settings tbody td.selected {
 	outline-color: #ad3726;
 }
+#key-info {
+	background: #ad3726;
+	padding: 0.5em;
+	margin-top: 1em;
+	font-weight: bold;
+	border-radius: 4px;
+	color: white;
+	transform: scale(1);
+	opacity: 1;
+	transition: opacity .3s, transform .2s .1s;
+}
+#key-info.hidden {
+	opacity: 0;
+	transform: scale(2);
+}
+#key-info::before {
+	content: "\f071";
+	display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+	margin-right: 7px;
+}
 #gui-chat-first {
 	height: 1px;
 }

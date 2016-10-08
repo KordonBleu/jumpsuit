@@ -48,10 +48,10 @@ export function doPrediction(universe, players, enemies, shots) {
 				smoothingTime
 			);
 
-			player.box.angle = (2 * Math.PI + player.box.angle) % (2 * Math.PI);
-			player.aimAngle = (2 * Math.PI + player.aimAngle) % (2 * Math.PI);
-			player.box.center.x = (universe.width + player.box.center.x) % universe.width;
-			player.box.center.y = (universe.height + player.box.center.y) % universe.height;
+			player.box.angle = modulo(player.box.angle, 2 * Math.PI);
+			player.aimAngle = modulo(player.aimAngle, 2 * Math.PI);
+			player.box.center.x = modulo(player.box.center.x, universe.width);
+			player.box.center.y = modulo(player.box.center.y, universe.height);
 		}
 	});
 	shots.forEach(function(shot){
