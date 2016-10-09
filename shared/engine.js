@@ -57,7 +57,6 @@ export function doPrediction(universe, players, enemies, shots) {
 	shots.forEach(function(shot){
 		shot.box.center.x += shot.speed[shot.type] * Math.sin(shot.box.angle) * (60 / fps);
 		shot.box.center.y += shot.speed[shot.type] * -Math.cos(shot.box.angle) * (60 / fps);
-		console.log(shot.box.center.x);
 		shot.box.center.x = modulo(shot.box.center.x, universe.width);
 		shot.box.center.y = modulo(shot.box.center.y, universe.height);
 	});

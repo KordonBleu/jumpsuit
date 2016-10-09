@@ -154,18 +154,19 @@ function deselectRow() {
 	document.removeEventListener('keyup', handleChangeKey);
 }
 function handleChangeKey(e) {
-	try {
+	if (!controls.keyMap.keyTaken(e.code)) {
 		if (selectedCell.textContent !== '') controls.keyMap.deleteKey(selectedCell.textContent);
 		let action = selectedCell.parentElement.firstElementChild.textContent;
 		controls.keyMap.addMapping(action, e.code);
+
 		selectedCell.textContent = e.code;
 		deselectRow();
+
 		settings.keymap = controls.keyMap.stringify();
 		keyResetElement.disabled = controls.keyMap.compare(settings.defaultKeymap);
-	} catch (err) {
-		console.log(err);
+	} else {
 		keyInfoElement.classList.remove('hidden');
-		keyInfoElement.textContent = err.message;
+		keyInfoElement.textContent = 'Couldn\'t assign key "' + e.code + '" to key map due it\'s taken!';
 
 		if (warnTimeoutId !== undefined) clearTimeout(warnTimeoutId);
 		warnTimeoutId = setTimeout(function() {

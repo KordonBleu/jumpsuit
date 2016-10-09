@@ -61,9 +61,11 @@ export class KeyActionMap { // note: `key` here does not refer to a key as in 'k
 			this._keys = {};
 		}
 	}
+	keyTaken(key) {
+		if (this._keys[key] !== undefined) return true;
+		return false;
+	}
 	addMapping(action, key) {
-		if (this._keys[key] !== undefined) throw new Error('Key `' + key + '` is already assigned to the action `' + this._keys[key] + '`');
-
 		if (this._actions[action] === undefined) this._actions[action] = new Set();
 
 		this._actions[action].add(key);
@@ -93,8 +95,6 @@ export class KeyActionMap { // note: `key` here does not refer to a key as in 'k
 		}
 	}
 	compare(defaultKeymap) {
-		console.log(defaultKeymap);
-		console.log(this._keys);
 		for (let key in this._keys) {
 			if (this._keys[key] !== defaultKeymap[key]) return false;
 		}
