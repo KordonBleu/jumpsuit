@@ -13,7 +13,7 @@ config.init(process.argv[2] || './game_config.json', {
 	}
 	if(newConfig.monitor !== previousConfig.monitor) {
 		if (previousConfig.monitor) monitor.unsetMonitorMode();
-		else monitor.setMonitorMode(lobbies);
+		else monitor.setMonitorMode(lobby.lobbies);
 	}
 	if (newConfig.mod !== previousConfig.mod) {
 		logger(logger.INFO, 'Server set to another mod. Please restart the server to apply new config.');
@@ -24,8 +24,7 @@ config.init(process.argv[2] || './game_config.json', {
 import * as message from '../shared/message.js';
 import logger from './logger.js';
 import * as ips from './ips';
-import Lobby from './lobby.js';
-let lobbies = [];
+import * as lobby from './lobby.js';
 
 import * as onMessage from '<@onMessage@>';
 import Player from '<@Player@>';
@@ -40,7 +39,7 @@ const http = require('http'),
 import './proto_mut.js';
 
 import * as monitor from './monitor.js';
-if(config.config.monitor) monitor.setMonitorMode(lobbies);
+if(config.config.monitor) monitor.setMonitorMode(lobby.lobbies);
 
 
 let server = http.createServer(),//create an independent server so it is easy to
@@ -51,7 +50,7 @@ function connectToMaster(){
 	logger(logger.REGISTER, 'Attempting to connect to master server');
 	let masterWs = new WebSocket(config.config.master + '/game_servers'), nextAttemptID;
 	masterWs.on('open', function() {
-		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobbies), { binary: true, mask: false });
+		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobby.lobbies), { binary: true, mask: false });
 		masterWs.on('close', function() {
 			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
 			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
@@ -84,15 +83,15 @@ Player.prototype.send = function(data) {
 
 wss.on('connection', function(ws) {
 	function cleanup() {
-		lobbies.forEach(function(lobby, li) {
+		lobby.lobbies.forEach(function(lobby, li) {
 			lobby.players.some(function(player, pi) {
 				if (player.ws === ws) {
 					logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
 					delete lobby.players[pi];
 					lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
 					if (lobby.players.length === 0) {
-						lobbies[li].close();
-						delete lobbies[li];
+						lobby.lobbies[li].close();
+						delete lobby.lobbies[li];
 					}
 					return true;
 				}
@@ -125,48 +124,48 @@ wss.on('connection', function(ws) {
 				}
 				case message.connect: {
 					let val = message.connect.deserialize(msg);
-					let lobby;
+					let selectedLobby;
 					if (val.lobbyId !== undefined) {
-						lobby = lobbies[val.lobbyId];
+						selectedLobby = lobby.lobbies[val.lobbyId];
 						if (lobby === undefined) {
 							player.send(message.error.serialize(message.error.NO_LOBBY));
 							break;
-						} else if (lobby.players.length === lobby.maxPlayers) {
+						} else if (selectedLobby.players.length === selectedLobby.maxPlayers) {
 							player.send(message.error.serialize(message.error.NO_SLOT));
 							break;
 						}
 					} else {//public lobby
-						if (!lobbies.some(function(l, i) {//if no not-full lobby
+						if (!lobby.lobbies.some(function(l, i) {//if no not-full lobby
 							if (l.players.actualLength() < l.maxPlayers) {
 								val.lobbyId = i;
-								lobby = lobbies[i];
+								selectedLobby = lobby.lobbies[i];
 								return true;
 							} else return false;
 						})) {//create new lobby
-							lobby = new Lobby(1);
-							val.lobbyId = lobbies.append(lobby);
+							val.lobbyId = lobby.addLobby();
+							selectedLobby = lobby.lobbies[val.lobbyId];
 						}
 					}
-					player.pid = lobby.addPlayer(player);
+					player.pid = selectedLobby.addPlayer(player);
 					player.name = val.name;
 					player.armedWeapon = player.weapons[val.primary];
 					player.carriedWeapon = player.weapons[val.secondary];
-					player.homographId = lobby.getNextHomographId(player.name);
+					player.homographId = selectedLobby.getNextHomographId(player.name);
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					switch(lobby.lobbyState) {
+					switch(selectedLobby.lobbyState) {
 						case 'warmup':
-							lobby.assignPlayerTeam(player);
-							player.send(message.warmup.serialize(lobby.getScores(), val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players));
+							selectedLobby.assignPlayerTeam(player);
+							player.send(message.warmup.serialize(selectedLobby.getScores(), val.lobbyId, player.pid, selectedLobby.universe.width, selectedLobby.universe.height, selectedLobby.planets, selectedLobby.enemies, selectedLobby.shots, selectedLobby.players));
 							break;
 						case 'playing':
-							lobby.assignPlayerTeam(player);
-							player.send(message.warmup.serialize(lobby.getScores(), val.lobbyId, player.pid, lobby.universe.width, lobby.universe.height, lobby.planets, lobby.enemies, lobby.shots, lobby.players));
-							player.send(message.scores.serialize(lobby.getScores()));
+							selectedLobby.assignPlayerTeam(player);
+							player.send(message.warmup.serialize(selectedLobby.getScores(), val.lobbyId, player.pid, selectedLobby.universe.width, selectedLobby.universe.height, selectedLobby.planets, selectedLobby.enemies, selectedLobby.shots, selectedLobby.players));
+							player.send(message.scores.serialize(selectedLobby.getScores()));
 							break;
 						case 'displaying_scores':
-							player.send(message.displayScores.serialize(lobby.getScores()));
+							player.send(message.displayScores.serialize(selectedLobby.getScores()));
 							break;
 					}
 
@@ -177,7 +176,7 @@ wss.on('connection', function(ws) {
 					break;
 				case message.chat: {
 					let chatMsg = message.chat.deserialize(msg);
-					if (chatMsg !== '' && chatMsg.length <= 150) lobbies[player.lobbyId].broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
+					if (chatMsg !== '' && chatMsg.length <= 150) lobby.lobbies[player.lobbyId].broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
 					break;
 				}
 				case message.aimAngle:

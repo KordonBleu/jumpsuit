@@ -6,8 +6,7 @@ import * as controls from './controls.js';
 import * as entities from './entities.js';
 import * as message from '../shared/message.js';
 
-let enabledTeams = [],
-	masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
+let masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
 
 export let serverList;
 export var currentConnection;
@@ -183,6 +182,7 @@ class Connection {
 				break;
 			}
 			case message.warmup: {
+				console.log('warmup');
 				entities.planets.length = 0;
 				entities.enemies.length = 0;
 				entities.shots.length = 0;
@@ -199,6 +199,15 @@ class Connection {
 				);
 
 				game.setState('warmup');
+				console.log(val.scoresObj);
+				game.setScores(val.scoresObj);
+				let pointsElement = document.getElementById('gui-points');
+				while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild); // clear score count GUI
+				for (let team in val.scoresObj) {
+					let teamItem = document.createElement('div');
+					teamItem.id = 'gui-points-' + team;
+					pointsElement.appendChild(teamItem);
+				}
 
 				console.log('my ownIdx is:', val.playerId);
 				game.setOwnIdx(val.playerId);
@@ -208,6 +217,8 @@ class Connection {
 				let hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, '$1$2');
 				location.hash = '#srv=' + hashSocket + '&lobby=' + encodeLobbyNumber(val.lobbyId);
 
+				document.getElementById('menu-box').classList.add('hidden');
+				document.getElementById('gui-warmup').classList.remove('hidden');
 				document.getElementById('lobby-table').classList.add('hidden');
 				document.getElementById('player-table').classList.remove('hidden');
 
@@ -284,10 +295,14 @@ class Connection {
 				break;
 			}
 			case message.scores: {
-				let val = message.scores.deserialize(msg.data, enabledTeams);
+				console.log('scores');
+				let val = message.scores.deserialize(msg.data, game.scores);
 				game.setScores(val);
 
-				if (game.state === 'warmup') game.setState('playing');
+				if (game.state === 'warmup') {
+					game.setState('playing');
+					document.getElementById('gui-warmup').classList.add('hidden');
+				}
 
 				for (let team in val) {
 					let element = document.getElementById('gui-points-' + team);
@@ -295,44 +310,22 @@ class Connection {
 				}
 				break;
 			}
-			/*case message.lobbyState: {
-				let val = message.lobbyState.deserialize(msg.data);
-				if (val.enabledTeams !== undefined) {
-					enabledTeams = val.enabledTeams;
-					let pointsElement = document.getElementById('gui-points');
-					while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild);
-					for (let team of enabledTeams) {
-						let teamItem = document.createElement('div');
-						teamItem.id = 'gui-points-' + team;
-						pointsElement.appendChild(teamItem);
-					}
+			case message.displayScores: {
+				console.log('displayScores');
+				let victor = null,
+					a = -Infinity,
+					playerTableVictoryElement = document.getElementById('player-table');
+				playerTableVictoryElement.style.display = 'initial';
+				for (let team in game.scores) {
+					if (game.scores[team] > a) {
+						a = game.scores[team];
+						victor = team;
+					} else if (game.scores[team] === a) victor = null;
 				}
-				game.setState(val.state);
-
-				let playerTableVictoryElement = document.getElementById('lobby-victory');
-				playerTableVictoryElement.style.display = 'none';
-				document.getElementById('lobby-status').textContent = val.state;
-				if (val.state === 'warmup') {
-					document.getElementById('gui-warmup').classList.remove('hidden');
-					game.start();
-				} else if (val.state === 'playing') {
-					document.getElementById('gui-warmup').classList.add('hidden');
-					game.start();
-				} else if (val.state === 'displaying_scores') {
-					let victor = null,
-						a = -Infinity;
-					playerTableVictoryElement.style.display = 'initial';
-					for (let team in game.scores) {
-						if (game.scores[team] > a) {
-							a = game.scores[team];
-							victor = team;
-						} else if (game.scores[team] === a) victor = null;
-					}
-					playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
-					game.stop();
-				}
+				playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
+				game.stop();
 				break;
-			}*/
+			}
 		}
 	}
 }

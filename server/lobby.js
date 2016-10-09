@@ -4,7 +4,13 @@ import Enemy from '<@Enemy@>';
 import * as message from '../shared/message.js';
 const vinage = require('vinage');
 
-export default class {
+export let lobbies = [];
+
+export function addLobby() {
+	return lobbies.append(new Lobby(3));
+}
+
+class Lobby {
 	constructor(maxPlayers) {
 		this.players = [];
 		this.maxPlayers = maxPlayers;
@@ -26,7 +32,7 @@ export default class {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 12000000);
+		setTimeout(this.playingToDisplaying.bind(this), 12000);
 	}
 	playingToDisplaying() {
 		this.lobbyState = 'displaying_scores';
@@ -37,7 +43,7 @@ export default class {
 		this.broadcast(message.displayScores.serialize(this.getScores()));
 
 		setTimeout(() => {
-			this.displayingToWarmup.bind(this);
+			this.displayingToWarmup.bind(this)();
 			if (this.enoughPlayers()) this.warmupToPlaying.bind(this)();
 		}, 5000);
 	}
@@ -46,7 +52,12 @@ export default class {
 		console.log(this.lobbyState);
 
 		this.resetWorld();
-		//this.broadcast(message.warmup.serialize())
+		let thisLobbyId = lobbies.findIndex((lobby) => {
+			return this === lobby;
+		});
+		this.players.forEach(player => {
+			player.send(message.warmup.serialize(this.getScores(), thisLobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players));
+		});
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
 
