@@ -27,7 +27,7 @@ export function addEnemy(x, y, appearance) {
 	enemies.push(new Enemy(x, y, appearance));
 }
 export function updateEnemy(id, angle) {
-	enemies[id].angle = angle;
+	enemies[id].box.angle = angle;
 }
 
 export function addPlayer(pid, appearance, homographId, name) {

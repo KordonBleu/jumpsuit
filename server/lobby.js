@@ -26,7 +26,7 @@ export default class {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 120000);
+		setTimeout(this.playingToDisplaying.bind(this), 12000000);
 	}
 	playingToDisplaying() {
 		this.lobbyState = 'displaying_scores';
