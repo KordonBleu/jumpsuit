@@ -17,7 +17,6 @@ export function ban(ip) {
 	}
 	function unDistrust() {
 		attackers.delete(this);
-		console.log(attackers);
 	}
 
 	for (let [savIp, savObj] of attackers.entries()) {

@@ -1,5 +1,10 @@
+if (process.argv[2] === undefined) {
+	console.log("Please specify the location");
+	process.exit(1);
+}
+
 let WebSocket = require('ws');
-let ws = new WebSocket('ws://localhost:7483/');
+let ws = new WebSocket('ws://' + process.argv[2]);
 
 ws.on('open', function open() {
 	setInterval(function() {

@@ -119,7 +119,7 @@ gameServerSocket.on('connection', function(ws) {
 		lastPing = 0;
 
 	ws.on('message', function(msg) {
-		if (ips.banned(gameServer.ip)) return;
+		//if (ips.banned(gameServer.ip)) return;
 
 		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
 		try {

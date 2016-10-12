@@ -12,11 +12,12 @@ export function addLobby() {
 
 class Lobby {
 	constructor(maxPlayers) {
-		this.players = [];
 		this.maxPlayers = maxPlayers;
+		this.players = [];
 		this.planets = [];
 		this.enemies = [];
 		this.shots = [];
+
 		this.processTime = 2;
 		this.lobbyState = 'warmup';
 		let univSize = 10000; // (1 << 16) - 1 is the max size allowed by the protocol
@@ -32,7 +33,7 @@ class Lobby {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 12000);
+		setTimeout(this.playingToDisplaying.bind(this), 120000);
 	}
 	playingToDisplaying() {
 		this.lobbyState = 'displaying_scores';
@@ -147,6 +148,11 @@ class Lobby {
 	resetWorld() {//generate world
 		this.planets.length = 0;
 		this.enemies.length = 0;
+
+		for (let player of this.players) {
+			if (player === undefined) continue;
+			player.attachedPlanet = -1;
+		}
 
 		let planetDensity = Math.pow(6400, 2) / 26,
 			planetAmount = Math.round((this.universe.width*this.universe.height) / planetDensity),
