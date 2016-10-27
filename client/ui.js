@@ -46,7 +46,6 @@ let chatInput = document.getElementById('gui-chat-input'),
 	musicVolumeElement = document.getElementById('music-volume'),
 	effectsVolumeElement = document.getElementById('effects-volume'),
 	keyResetElement = document.getElementById('key-reset'),
-	keyInfoElement = document.getElementById('key-info'),
 	primaryWeaponElement = document.getElementById('primary-weapon'),
 	secondaryWeaponElement = document.getElementById('secondary-weapon'),
 	particlesElement = document.getElementById('particle-option');
@@ -165,8 +164,10 @@ function handleChangeKey(e) {
 		settings.keymap = controls.keyMap.stringify();
 		keyResetElement.disabled = controls.keyMap.compare(settings.defaultKeymap);
 	} else {
+		let keyInfoElement = document.getElementById('key-info');
+
 		keyInfoElement.classList.remove('hidden');
-		keyInfoElement.textContent = 'Couldn\'t assign key "' + e.code + '" to key map due it\'s taken!';
+		keyInfoElement.textContent = 'Couldn\'t assign key "' + e.code + '" to key map because it is taken!';
 
 		if (warnTimeoutId !== undefined) clearTimeout(warnTimeoutId);
 		warnTimeoutId = setTimeout(function() {

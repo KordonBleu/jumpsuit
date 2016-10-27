@@ -1,7 +1,7 @@
 import * as config from './config_loader.js';
 config.init(process.argv[2] || './game_config.json', {
 	dev: false,
-	master: 'ws://jumpsuit.space',
+	master: 'wss://jumpsuit.space',
 	monitor: false,
 	port: 7483,
 	secure: false,
@@ -46,9 +46,11 @@ let server = http.createServer(),//create an independent server so it is easy to
 	wss = new WebSocket.Server({server: server});//change port while running
 server.listen(config.config.port);
 
-function connectToMaster(){
+function connectToMaster() {
 	logger(logger.REGISTER, 'Attempting to connect to master server');
-	let masterWs = new WebSocket(config.config.master + '/game_servers'), nextAttemptID;
+	let masterWs = new WebSocket(config.config.master + '/game_servers'),
+		nextAttemptID;
+
 	masterWs.on('open', function() {
 		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobby.lobbies), { binary: true, mask: false });
 		masterWs.on('close', function() {
@@ -64,8 +66,9 @@ function connectToMaster(){
 		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
 		if (message.getSerializator(msg) === message.serverRegistered) logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
 	});
-	masterWs.on('error', function() {
-		logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s');
+	masterWs.on('error', function(err) {
+		logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s ');
+		console.log(err);
 		if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
 		nextAttemptID = setTimeout(connectToMaster, 5000);
 	});

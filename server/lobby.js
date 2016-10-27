@@ -7,11 +7,19 @@ const vinage = require('vinage');
 export let lobbies = [];
 
 export function addLobby() {
-	return lobbies.append(new Lobby(3));
+	return lobbies.append(new Lobby(8));
 }
 
 class Lobby {
 	constructor(maxPlayers) {
+		function univSize() {
+			// (1 << 16) - 1 is the max size allowed by the protocol
+			let max = 8000,
+				min = 6000;
+
+			return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
+
 		this.maxPlayers = maxPlayers;
 		this.players = [];
 		this.planets = [];
@@ -20,8 +28,7 @@ class Lobby {
 
 		this.processTime = 2;
 		this.lobbyState = 'warmup';
-		let univSize = 10000; // (1 << 16) - 1 is the max size allowed by the protocol
-		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize, univSize/2);
+		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize(), univSize());
 		this.resetWorld();
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}

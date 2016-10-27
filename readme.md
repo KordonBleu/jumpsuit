@@ -71,7 +71,7 @@ In this file you can set the following parameters:
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
 dev | Enable debug messages | `false` | boolean
-master | The master server your server registers to. If your host your own master server it should look like "ws://localhost:8080" | `"ws://jumpsuit.space"` | string
+master | The master server your server registers to. If your host your own master server it should look like "ws://localhost:8080" | `"wss://jumpsuit.space"` | string
 monitor | Displays a neat view of the lobbys in real-time | `false` | boolean
 port | Set the game server's port | `7483` | integer
 secure | Set this to true if your server is behind ssl. If you don't know, stick to the default value | `false` | boolean

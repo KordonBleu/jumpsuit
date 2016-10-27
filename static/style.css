@@ -492,22 +492,6 @@ label {
 	display: block;
 	color: #777;
 }
-/* #lobby-list button {
-	text-transform: none;
-}
-#lobby-list input {
-	font-size: 1.17em;
-}
-#lobby-list input[type=text] {
-	width: 100%;
-	text-align: center;
-	max-width: 100%;
-}
-#lobby-list input[type=number] {
-	padding-left: 3px;
-	width: 3.5ex;
-	font-weight: 600;
-} */
 
 
 #player-table {
@@ -608,6 +592,7 @@ label {
 #key-info.hidden {
 	opacity: 0;
 	transform: scale(2);
+	display: none;
 }
 #key-info::before {
 	content: "\f071";

@@ -77,7 +77,6 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 			if (typeof playersOnPlanets[player.attachedPlanet] === 'undefined') playersOnPlanets[player.attachedPlanet] = {'alienBeige': 0, 'alienBlue': 0, 'alienGreen': 0, 'alienPink': 0, 'alienYellow': 0};
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;
 			player.jetpack = false;
-			console.log('qwfqwfqwf', player.attachedPlanet, planets[player.attachedPlanet] === undefined, planets.length);
 			let stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius);
 			if (player.controls['moveLeft'] > 0) {
 				stepSize = stepSize * player.controls['moveLeft'];
