@@ -5,6 +5,8 @@ With your awesome suit, you can jump from planet to planet to conquer them!
 
 Try it [here](http://jumpsuit.space/)!
 
+![screenshot](http://kordonbl.eu/images/jumpsuit.png)
+
 ## Why the name?
 ```
 Getkey: What about "jumpsuit"

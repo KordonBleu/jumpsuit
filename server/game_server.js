@@ -130,7 +130,7 @@ wss.on('connection', function(ws) {
 					let selectedLobby;
 					if (val.lobbyId !== undefined) {
 						selectedLobby = lobby.lobbies[val.lobbyId];
-						if (lobby === undefined) {
+						if (selectedLobby === undefined) {
 							player.send(message.error.serialize(message.error.NO_LOBBY));
 							break;
 						} else if (selectedLobby.players.length === selectedLobby.maxPlayers) {
@@ -161,11 +161,13 @@ wss.on('connection', function(ws) {
 						case 'warmup':
 							selectedLobby.assignPlayerTeam(player);
 							player.send(message.warmup.serialize(selectedLobby.getScores(), val.lobbyId, player.pid, selectedLobby.universe.width, selectedLobby.universe.height, selectedLobby.planets, selectedLobby.enemies, selectedLobby.shots, selectedLobby.players));
+							selectedLobby.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
 							break;
 						case 'playing':
 							selectedLobby.assignPlayerTeam(player);
 							player.send(message.warmup.serialize(selectedLobby.getScores(), val.lobbyId, player.pid, selectedLobby.universe.width, selectedLobby.universe.height, selectedLobby.planets, selectedLobby.enemies, selectedLobby.shots, selectedLobby.players));
 							player.send(message.scores.serialize(selectedLobby.getScores()));
+							selectedLobby.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
 							break;
 						case 'displaying_scores':
 							player.send(message.displayScores.serialize(selectedLobby.getScores()));

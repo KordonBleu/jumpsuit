@@ -40,6 +40,9 @@
 		/* right attribute needs to be reset, otherwise div would be stretched all over the screen, eventhough this isn't
 		visible to the viewer, it prevents from shooting in case the mouse cursor is over the div's area */
 	}
+	#lobby-table, #sidebar {
+		width: 100%;
+	}
 	#lobby-table th:last-child {
 		width: 6em;
 	}

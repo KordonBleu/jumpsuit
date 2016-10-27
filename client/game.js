@@ -54,7 +54,6 @@ export function stop() {
 		entities.planets.length = 0;
 		entities.enemies.length = 0;
 		window.cancelAnimationFrame(animationFrameId);
-		ui.showMenu();
 	}
 }
 //stop();

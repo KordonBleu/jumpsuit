@@ -440,12 +440,8 @@ label {
 	opacity: 0;
 	display: block;
 }
-#menu-box div:first-child {
-	flex-grow: 1;
-	order: 1;
-}
 #lobby-table {
-	width: 100%;
+	width: 80%;
 	font-size: 1.25em;
 	border-collapse: collapse;
 	table-layout: fixed;
@@ -499,7 +495,10 @@ label {
 	box-sizing: border-box;
 	font-size: 1.25em;
 	padding: 1rem;
-	position: relative;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	background-color: white;
 }
 #player-table > button {
 	position: absolute;
@@ -529,6 +528,7 @@ label {
 #sidebar {
 	flex-grow: 0;
 	order: 2;
+	width: 20%;
 	min-width: 261px;
 }
 #sidebar-buttons {

@@ -497,3 +497,10 @@ export function closeMenu(universe) {
 export function showMenu() {
 	document.getElementById('menu-box').classList.remove('hidden');
 }
+
+export function showScores() {
+	document.getElementById('player-table').classList.remove('hidden');
+}
+export function hideScores() {
+	document.getElementById('player-table').classList.add('hidden');
+}

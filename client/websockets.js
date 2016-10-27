@@ -119,7 +119,7 @@ class Connection {
 		game.stop();
 		entities.players.length = 0;
 		document.getElementById('lobby-table').classList.remove('hidden');
-		document.getElementById('player-table').classList.add('hidden');
+		ui.hideScores();
 		history.pushState(HISTORY_MENU, '', '/');
 		let chatElement = document.getElementById('gui-chat');
 		while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
@@ -220,7 +220,7 @@ class Connection {
 				document.getElementById('menu-box').classList.add('hidden');
 				document.getElementById('gui-warmup').classList.remove('hidden');
 				document.getElementById('lobby-table').classList.add('hidden');
-				document.getElementById('player-table').classList.remove('hidden');
+				ui.hideScores();
 
 				game.start();
 
@@ -312,17 +312,20 @@ class Connection {
 			}
 			case message.displayScores: {
 				console.log('displayScores');
+				ui.showScores();
 				let victor = null,
 					a = -Infinity,
 					playerTableVictoryElement = document.getElementById('player-table');
-				playerTableVictoryElement.style.display = 'initial';
+
 				for (let team in game.scores) {
 					if (game.scores[team] > a) {
 						a = game.scores[team];
 						victor = team;
 					} else if (game.scores[team] === a) victor = null;
 				}
+
 				playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
+
 				game.stop();
 				break;
 			}
@@ -333,7 +336,6 @@ class Connection {
 export function makeNewCurrentConnection(url, id) {
 	new Connection(url, id).then((connection) => {
 		currentConnection = connection;
-		ui.closeMenu(entities.universe);
 	}).catch((err) => {
 		console.error(err);
 	});
