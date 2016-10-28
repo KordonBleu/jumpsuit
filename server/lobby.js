@@ -1,3 +1,5 @@
+import logger from './logger.js';
+
 import * as engine from '<@engine@>';
 import Planet from '<@Planet@>';
 import Enemy from '<@Enemy@>';
@@ -35,7 +37,7 @@ class Lobby {
 
 	warmupToPlaying() {
 		this.lobbyState = 'playing';
-		console.log(this.lobbyState);
+		this.logStateChange();
 
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
@@ -44,7 +46,7 @@ class Lobby {
 	}
 	playingToDisplaying() {
 		this.lobbyState = 'displaying_scores';
-		console.log(this.lobbyState);
+		this.logStateChange();
 
 		clearInterval(this.gameCycleId);
 		clearInterval(this.scoreCycleId);
@@ -57,7 +59,7 @@ class Lobby {
 	}
 	displayingToWarmup() {
 		this.lobbyState = 'warmup';
-		console.log(this.lobbyState);
+		this.logStateChange();
 
 		this.resetWorld();
 		let thisLobbyId = lobbies.findIndex((lobby) => {
@@ -69,16 +71,33 @@ class Lobby {
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
 
-	enoughPlayers() {
-		return this.players.actualLength() >= this.maxPlayers * 0.5;
+	enoughPlayers(amount) {
+		return amount === undefined ? this.players.actualLength() : amount >= this.maxPlayers * 0.5;
 	}
 	addPlayer(player) {
-		let retId =  this.players.append(player);
-		if (this.lobbyState === 'warmup' && this.enoughPlayers()) {
+		if (this.lobbyState === 'warmup' && this.enoughPlayers(this.players.actualLength() + 1)) {
 			this.warmupToPlaying();
 		}
 
-		return retId;
+		return this.players.append(player);
+	}
+	connectPlayer(player) {
+		switch(this.lobbyState) {
+			case 'warmup':
+				this.assignPlayerTeam(player);
+				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players));
+				this.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
+				break;
+			case 'playing':
+				this.assignPlayerTeam(player);
+				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players));
+				player.send(message.scores.serialize(this.getScores()));
+				this.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
+				break;
+			case 'displaying_scores':
+				player.send(message.displayScores.serialize(this.getScores()));
+				break;
+		}
 	}
 	broadcast(message, exclude) {
 		this.players.forEach(function(player) {
@@ -232,5 +251,8 @@ class Lobby {
 					excludedPlayer);
 			}
 		}
+	}
+	logStateChange() {
+		logger(logger.DEV, 'Lobby state change: ' + this.lobbyState.bold);
 	}
 }

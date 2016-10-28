@@ -157,22 +157,7 @@ wss.on('connection', function(ws) {
 					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
-					switch(selectedLobby.lobbyState) {
-						case 'warmup':
-							selectedLobby.assignPlayerTeam(player);
-							player.send(message.warmup.serialize(selectedLobby.getScores(), val.lobbyId, player.pid, selectedLobby.universe.width, selectedLobby.universe.height, selectedLobby.planets, selectedLobby.enemies, selectedLobby.shots, selectedLobby.players));
-							selectedLobby.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
-							break;
-						case 'playing':
-							selectedLobby.assignPlayerTeam(player);
-							player.send(message.warmup.serialize(selectedLobby.getScores(), val.lobbyId, player.pid, selectedLobby.universe.width, selectedLobby.universe.height, selectedLobby.planets, selectedLobby.enemies, selectedLobby.shots, selectedLobby.players));
-							player.send(message.scores.serialize(selectedLobby.getScores()));
-							selectedLobby.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
-							break;
-						case 'displaying_scores':
-							player.send(message.displayScores.serialize(selectedLobby.getScores()));
-							break;
-					}
+					selectedLobby.connectPlayer(player);
 
 					break;
 				}
