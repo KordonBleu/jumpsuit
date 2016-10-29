@@ -62,16 +62,14 @@ test('Server', t => {
 test('PlanetMut', t => {
 	let buf = new ArrayBuffer(2 + 37),
 		planet = {
-			progress: {
-				team: 'alienBlue',
-				value: 33
-			}
+			progress: 33,
+			team: 'alienBlue'
 		};
 	message.PlanetMut.serialize(buf, 35, planet);
 	message.PlanetMut.deserialize(buf, 35, 4, (id, ownedBy, progress) => {
 		t.is(id, 4);
-		t.is(ownedBy, planet.progress.team);
-		t.is(progress, planet.progress.value);
+		t.is(ownedBy, planet.team);
+		t.is(progress, planet.progress);
 	});
 });
 

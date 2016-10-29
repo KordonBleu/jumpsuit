@@ -65,7 +65,7 @@ export function doPrediction(universe, players, enemies, shots) {
 doPrediction.oldTimestamp = 0;
 doPrediction.newTimestamp = 0;
 
-export function doPhysics(universe, players, planets, enemies, shots, teamScores) {
+export function doPhysics(universe, players, planets, enemies, shots, teamScores, lobbyState) {
 	let playersOnPlanets = new Array(planets.length),
 		entitiesDelta = {
 			addedShots: [],
@@ -171,14 +171,14 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 				if (player.health <= 0) {
 					let suitablePlanets = [];
 					planets.forEach(function(planet, pi) {
-						if (planet.progress.team === player.appearance) suitablePlanets.push(pi);
+						if (planet.team === player.appearance) suitablePlanets.push(pi);
 					});
 					player.box.angle = 0;
 					if (suitablePlanets.length === 0) player.attachedPlanet = Math.floor(Math.random() * planets.length);
 					else player.attachedPlanet = suitablePlanets[Math.floor(Math.random() * suitablePlanets.length)];
 					player.health = 8;
 					player.fillStamina();
-					teamScores[player.appearance] -= 5;
+					if (lobbyState === 'playing') teamScores[player.appearance] -= 5;
 				}
 				player.hurt = true;
 				entitiesDelta.removedShots.push(shot);
@@ -230,10 +230,13 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 			}
 			if (b >= 2) return entitiesDelta;
 			team = teams[a];
-			if (team === planets[i].progress.team) planets[i].progress.value = (planets[i].progress.value + (max / 3) > 100) ? 100 : planets[i].progress.value + (max / 3);
+			if (team === planets[i].team) planets[i].progress = (planets[i].progress + (max / 3) > 100) ? 100 : planets[i].progress + (max / 3);
 			else {
-				planets[i].progress.value -= max / 3;
-				if (planets[i].progress.value <= 0) planets[i].progress = {value: 0, team: team};
+				planets[i].progress -= max / 3;
+				if (planets[i].progress <= 0) {
+					planets[i].progress = 0;
+					planets[i].team = team;
+				}
 			}
 		}
 	}

@@ -174,10 +174,10 @@ let planets = [
 		new Player('Lucette', 'alienPink', '_stand', -1, false, 27, 0, 'Lmg', 'Shotgun', 1.1*Math.PI)
 	];
 
-planets[0].progress.team = 'alienBlue';
-planets[0].progress.value = 0;
-planets[1].progress.team = 'alienPink';
-planets[1].progress.value = 33;
+planets[0].team = 'alienBlue';
+planets[0].progress = 0;
+planets[1].team = 'alienPink';
+planets[1].progress = 33;
 
 players[0].pid = 0;
 players[1].pid = 1;
@@ -214,8 +214,8 @@ test('addEntity message', t => {
 
 		++planetI;
 	}, (id, ownedBy, progress) => {
-		t.is(planets[id].progress.team, ownedBy);
-		t.is(planets[id].progress.value, progress);
+		t.is(planets[id].team, ownedBy);
+		t.is(planets[id].progress, progress);
 	}, (x, y, appearance) => {
 		t.is(enemies[enemyI].box.center.x, x);
 		t.is(enemies[enemyI].box.center.y, y);
@@ -277,8 +277,8 @@ test('warmup message', t => {
 
 		++planetI;
 	}, (id, ownedBy, progress) => {
-		t.is(planets[id].progress.team, ownedBy);
-		t.is(planets[id].progress.value, progress);
+		t.is(planets[id].team, ownedBy);
+		t.is(planets[id].progress, progress);
 	}, (x, y, appearance) => {
 		t.is(enemies[enemyI].box.center.x, x);
 		t.is(enemies[enemyI].box.center.y, y);
@@ -336,8 +336,8 @@ test('gameState message', t => {
 
 	let res = message.gameState.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
 		t.is(id, planetI);
-		t.is(planets[planetI].progress.team, ownedBy);
-		t.is(planets[planetI].progress.value, progress);
+		t.is(planets[planetI].team, ownedBy);
+		t.is(planets[planetI].progress, progress);
 
 		++planetI;
 	}, (id, angle) => {
@@ -369,22 +369,16 @@ test('gameState message', t => {
 test('gameState message bis', t => {
 	let planets = [
 			{
-				progress: {
-					team: 'neutral',
-					value: 0,
-				}
+				team: 'neutral',
+				progress: 0
 			},
 			{
-				progress: {
-					team: 'neutral',
-					value: 0,
-				}
+				team: 'neutral',
+				progress: 0,
 			},
 			{
-				progress: {
-					team: 'neutral',
-					value: 0,
-				}
+				team: 'neutral',
+				progress: 0,
 			},
 		],
 		enemies = [
@@ -441,8 +435,8 @@ test('gameState message bis', t => {
 
 	let res = message.gameState.deserialize(buf, planets.length, enemies.length, (id, ownedBy, progress) => {
 		t.is(id, planetI);
-		t.is(planets[planetI].progress.team, ownedBy);
-		t.is(planets[planetI].progress.value, progress);
+		t.is(planets[planetI].team, ownedBy);
+		t.is(planets[planetI].progress, progress);
 
 		++planetI;
 	}, (id, angle) => {

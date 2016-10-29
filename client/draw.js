@@ -135,7 +135,7 @@ export function loop() {
 		(planet.box.center.y*minimapCanvas.height/entities.universe.height - entities.players[game.ownIdx].box.center.y*minimapCanvas.height/entities.universe.height + minimapCanvas.height*1.5) % minimapCanvas.height,
 			(planet.box.radius/entities.universe.width)*150, 0, 2*Math.PI);
 		minimapContext.closePath();
-		minimapContext.fillStyle = planet.progress.color;
+		minimapContext.fillStyle = planet.color;
 		minimapContext.fill();
 	});
 

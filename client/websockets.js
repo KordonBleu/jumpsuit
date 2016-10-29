@@ -110,13 +110,14 @@ class Connection {
 			//or is that redudant with the event listener on 'error'?
 		}
 	}
-	close() {
+	close() { // stop the game and displays menu
 		clearInterval(this.latencyHandlerId);
 		clearInterval(this.mouseAngleUpdateHandlerId);
 		this.socket.close();
 		this.socket.removeEventListener('error', this.constructor.errorHandler);
 		this.socket.removeEventListener('message', this.constructor.messageHandler);
 		game.stop();
+		ui.showMenu();
 		entities.players.length = 0;
 		document.getElementById('lobby-table').classList.remove('hidden');
 		ui.hideScores();
@@ -158,7 +159,6 @@ class Connection {
 
 		if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
 			currentConnection.close();
-			game.stop();
 		}
 	}
 	static mouseAngleUpdateHandler() {
@@ -376,7 +376,6 @@ export function handleHistoryState() {
 	if (history.state === HISTORY_MENU) {
 		//if navigated to / stop the game + display menu
 		if (currentConnection !== undefined) currentConnection.close();
-		game.stop();
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
 window.addEventListener('popstate', handleHistoryState);

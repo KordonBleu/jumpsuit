@@ -1,4 +1,3 @@
-import * as game from './game.js';
 import * as audio from './audio.js';
 import Planet from './planet.js';
 import Player from './player.js';
@@ -83,7 +82,6 @@ addShowBoxListener(menuBoxInfoButton, infoBox);
 ['leave-button', 'menu-box-leave-button'].forEach(function(button) {
 	document.getElementById(button).addEventListener('click', function() {
 		wsClt.currentConnection.close();
-		game.stop();
 	});
 });
 

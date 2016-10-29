@@ -120,8 +120,8 @@ export class Server {
 export class PlanetMut {
 	static serialize(buffer, offset, planet) {
 		let view = new Uint8Array(buffer, offset);
-		view[0] = teamMap.getNbr(planet.progress.team);
-		view[1] = planet.progress.value;
+		view[0] = teamMap.getNbr(planet.team);
+		view[1] = planet.progress;
 
 		return 2;
 	}

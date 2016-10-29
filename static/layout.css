@@ -81,8 +81,10 @@
 		min-width: 74px;
 		padding: 3px;
 	}
-	#gui-warmup { /* Gosh that's awful */
-		transform: translate(-50%, -50%) scale(0.6);
+	#gui-warmup {
+		font-size: 1.8em;
+		padding-left: 5%;
+		padding-right: 5%;
 	}
 	#gui-points {
 		font-size: 1.25em;

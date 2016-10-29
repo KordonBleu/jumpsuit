@@ -18,8 +18,8 @@ export function addPlanet(x, y, radius, type) {
 	planets.push(new Planet(x, y, radius, type));
 }
 export function updatePlanet(id, ownedBy, progress) {
-	planets[id].progress.team = ownedBy;
-	planets[id].progress.value = progress;
+	planets[id].team = ownedBy;
+	planets[id].progress = progress;
 	planets[id].updateColor();
 }
 

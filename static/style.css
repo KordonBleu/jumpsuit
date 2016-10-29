@@ -679,12 +679,12 @@ label {
 #gui-health div.heartNotFilled { background-image: url("https://jumpsuit.space/assets/images/heartNotFilled.svg"); }
 
 #gui-bad-connection, #gui-warmup {
-	font-size: 2.75em;
+	font-size: 2.5em;
 	position: fixed;
-	top: 20%;
-	left: 50%;
-	max-width: 70vw;
-	transform: translate(-50%, -50%);
+	top: 15%;
+	left: 0;
+	right: 0;
+	padding: 0 10%;
 	color: #eee;
 }
 #gui-bad-connection i {

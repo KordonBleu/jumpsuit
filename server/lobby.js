@@ -41,6 +41,9 @@ class Lobby {
 	}
 	warmupToPlaying() {
 		this.changeState('playing');
+		for (let planet of this.planets) {
+			planet.resetProgress();
+		}
 
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
@@ -112,7 +115,7 @@ class Lobby {
 
 	updateGame() {
 		let oldDate = Date.now(),
-			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores);
+			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores, this.lobbyState);
 
 		//if a shot is added and removed at the same moment, don't send it to clients
 		entitiesDelta.addedShots.forEach(function(shot, iAdd) { // dat apple fanboy tho
@@ -140,7 +143,7 @@ class Lobby {
 	}
 	updateScores() {
 		this.planets.forEach((function(planet) {
-			if (planet.progress.value >= 80) this.teamScores[planet.progress.team]++;
+			if (planet.progress >= 80) this.teamScores[planet.team]++;
 		}), this);
 		this.broadcast(message.scores.serialize(this.teamScores));
 	}
@@ -238,7 +241,7 @@ class Lobby {
 		player.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 		player.box.angle = Math.random() * Math.PI;
 		player.attachedPlanet = this.planets.findIndex(function(planet) {
-			return planet.progress.team === player.appearance && planet.progress.value > 80;
+			return planet.team === player.appearance && planet.progress > 80;
 		});
 	}
 	sendEntityDelta(delta, excludedPlayer) {
