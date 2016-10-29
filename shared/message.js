@@ -553,7 +553,7 @@ class AddEntity extends Serializator {
 			playerNameBufs = [];
 		if (players !== undefined) {
 			players.forEach((player, i) => {
-				playerNameBufs.push(convert.stringToBuffer(player.name));
+				playerNameBufs[i] = convert.stringToBuffer(player.name);
 				totalNameSize += playerNameBufs[i].byteLength;
 			});
 		}

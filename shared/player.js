@@ -6,7 +6,7 @@ import Lmg from '<@Lmg@>';
 import Shotgun from '<@Shotgun@>';
 import Knife from '<@Knife@>';
 
-export default class {
+export default class Player {
 	constructor() {
 		this.box = new vinage.Rectangle(new vinage.Point(0, 0), 0, 0);
 		this.controls = {
@@ -24,7 +24,6 @@ export default class {
 
 		this.jetpack = false;
 		this.health =  8;
-		this.maxStamina = 300;
 		this.fillStamina();
 		this.attachedPlanet = -1;
 		this.lastlyAimedAt = Date.now();
@@ -58,8 +57,11 @@ export default class {
 	increaseStamina(by) { // returns whether the stamina has been succesfully increased
 		let predicStamina = this.stamina + by;
 
-		if (predicStamina > this.maxStamina) return false;
-		else {
+		if (this.stamina === this.maxStamina) return false;
+		else if (predicStamina > this.maxStamina) {
+			this.stamina = this.maxStamina;
+			return true;
+		} else {
 			this.stamina = predicStamina;
 			return true;
 		}
@@ -67,8 +69,11 @@ export default class {
 	decreaseStamina(by) { // returns whether the stamina has been succesfully decerased
 		let predicStamina = this.stamina - by;
 
-		if (predicStamina < 0) return false;
-		else {
+		if (this.stamina === 0) return false;
+		else if (predicStamina < 0) {
+			this.stamina = 0;
+			return true;
+		} else {
 			this.stamina = predicStamina;
 			return true;
 		}
@@ -82,3 +87,4 @@ export default class {
 		this.box.height = resources[this.appearance + '_' + this.walkFrame].height;
 	}
 }
+Player.prototype.maxStamina = 300;

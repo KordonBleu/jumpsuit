@@ -1,6 +1,7 @@
 import * as game from './game.js';
 import * as audio from './audio.js';
 import Planet from './planet.js';
+import Player from './player.js';
 import * as wsClt from './websockets.js';
 import * as controls from './controls.js';
 
@@ -47,8 +48,7 @@ let chatInput = document.getElementById('gui-chat-input'),
 	effectsVolumeElement = document.getElementById('effects-volume'),
 	keyResetElement = document.getElementById('key-reset'),
 	primaryWeaponElement = document.getElementById('primary-weapon'),
-	secondaryWeaponElement = document.getElementById('secondary-weapon'),
-	particlesElement = document.getElementById('particle-option');
+	secondaryWeaponElement = document.getElementById('secondary-weapon');
 
 
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Firefox
@@ -58,6 +58,9 @@ if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) {//not Chrome nor Fir
 	document.getElementById('device-untested').classList.remove('hidden');
 	document.getElementById('shade-box').classList.remove('hidden');
 }
+
+let staminaMeter = document.getElementById('gui-stamina');
+staminaMeter.max = Player.prototype.maxStamina;
 
 /* Buttons */
 function addShowBoxListener(button, dialogBox) {
@@ -244,7 +247,7 @@ meteorsElement.addEventListener('change', (e) => {
 export function spawnMeteorsEnabled() {
 	return meteorsElement.checked;
 }
-particlesElement.checked = settings.particles === 'true';
+document.getElementById('particle-option').checked = settings.particles === 'true';
 
 /* Chat */
 chatInput.addEventListener('keydown', function(e) {

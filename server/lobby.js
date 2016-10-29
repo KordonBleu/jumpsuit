@@ -9,7 +9,7 @@ const vinage = require('vinage');
 export let lobbies = [];
 
 export function addLobby() {
-	return lobbies.append(new Lobby(3));
+	return lobbies.append(new Lobby(8));
 }
 
 class Lobby {
@@ -45,7 +45,7 @@ class Lobby {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 12000);
+		setTimeout(this.playingToDisplaying.bind(this), 120000);
 	}
 	playingToDisplaying() {
 		this.changeState('displaying_scores');
