@@ -73,30 +73,36 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 		};
 
 	players.forEach(function(player) {
+		function move(left, run) {
+			let stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius),
+				directionFactor = left ? -1 : 1;
+			if (run) stepSize *= 1.7;
+			player.looksLeft = left;
+			player.box.angle += directionFactor * stepSize;
+		}
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === 'undefined') playersOnPlanets[player.attachedPlanet] = {'alienBeige': 0, 'alienBlue': 0, 'alienGreen': 0, 'alienPink': 0, 'alienYellow': 0};
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;
 			player.jetpack = false;
-			let stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius);
-			if (player.controls['moveLeft'] > 0) {
-				stepSize = stepSize * player.controls['moveLeft'];
-				player.box.angle -= (player.controls['run']) ? 1.7 * stepSize : 1 * stepSize;
-				player.looksLeft = true;
+			if (player.controls['run']) {
+				if(player.decreaseStamina(3)) { //stamina consumed! -> run
+					if (player.controls['moveLeft'] > 0) move(true, true);
+					if (player.controls['moveRight'] > 0) move(false, true);
+				} else { // walk
+					if (player.controls['moveLeft'] > 0) move(true, false);
+					if (player.controls['moveRight'] > 0) move(false, false);
+				}
+			} else {
+				player.increaseStamina(5);
+				if (player.controls['moveLeft'] > 0) move(true, false);
+				if (player.controls['moveRight'] > 0) move(false, false);
 			}
-			if (player.controls['moveRight'] > 0) {
-				stepSize = stepSize * player.controls['moveRight'];
-				player.box.angle += (player.controls['run']) ? 1.7 * stepSize : 1 * stepSize;
-				player.looksLeft = false;
-			}
-			if (player.controls['moveLeft'] === 0 && player.controls['moveRight'] === 0) {
-				player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
-			}
+			player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 
 			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.velocity.x = 0;
 			player.velocity.y = 0;
-			player.fuel = 400;
 			if (player.controls['jump'] > 0) {
 				player.attachedPlanet = -1;
 				player.velocity.x = Math.sin(player.box.angle) * 6;
@@ -119,8 +125,8 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 					player.box.angle = Math.PI + Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 - Math.atan2(deltaX, deltaY) - Math.PI;
 				}
 			}
-			if (player.controls['jetpack'] > 0 && player.fuel > 0 && player.controls['crouch'] < 1){
-				player.fuel -= player.controls['jetpack'];
+			if (player.controls['jetpack'] > 0 && player.stamina > 0 && player.controls['crouch'] < 1){
+				player.decreaseStamina(1);
 				player.jetpack = (player.controls['jetpack'] > 0);
 				player.velocity.x += (Math.sin(player.box.angle) / 6) * player.controls['jetpack'];
 				player.velocity.y += (-Math.cos(player.box.angle) / 6) * player.controls['jetpack'];
@@ -171,7 +177,7 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 					if (suitablePlanets.length === 0) player.attachedPlanet = Math.floor(Math.random() * planets.length);
 					else player.attachedPlanet = suitablePlanets[Math.floor(Math.random() * suitablePlanets.length)];
 					player.health = 8;
-					player.fuel = 300;
+					player.fillStamina();
 					teamScores[player.appearance] -= 5;
 				}
 				player.hurt = true;

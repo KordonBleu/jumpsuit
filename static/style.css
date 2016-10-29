@@ -30,7 +30,7 @@ html, body, button, label, #gui-chat-player-list, table thead, #key-settings, .w
 	-ms-user-select: text;
 	user-select: text;
 }
-#gui-fuel, #gui-health, #gui-chat, #gui-points, #gui-controls, #gui-warmup {
+#gui-stamina, #gui-health, #gui-chat, #gui-points, #gui-controls, #gui-warmup {
 	pointer-events: none;
 }
 #gui-controls li img {
@@ -625,7 +625,7 @@ label {
 #gui-chat p b.alienGreen{ color: #8aceb9; }
 #gui-chat p b.alienPink{ color: #f19cb7; }
 #gui-chat p b.alienYellow{ color: #fed532; }
-#gui-fuel {
+#gui-stamina {
 	position: fixed;
 	top: 50px;
 	left: 8px;
@@ -633,7 +633,7 @@ label {
 	width: 200px;
 	background: transparent;
 }
-#gui-fuel::-webkit-meter-bar {
+#gui-stamina::-webkit-meter-bar {
 	background: transparent;
 	-webkit-appearance: none;
 	display: inline-block;
@@ -641,13 +641,13 @@ label {
 	bottom: 20px;
 	left: 77px;
 }
-#gui-fuel::-moz-meter-bar {
+#gui-stamina::-moz-meter-bar {
 	background: #5493ce;
 }
-#gui-fuel::-webkit-meter-optimum-value, #gui-fuel::-webkit-meter-suboptimum-value, #gui-fuel::-webkit-meter-even-less-good-value {
+#gui-stamina::-webkit-meter-optimum-value, #gui-stamina::-webkit-meter-suboptimum-value, #gui-stamina::-webkit-meter-even-less-good-value {
 	background: #5493ce;
 }
-#gui-fuel::before {
+#gui-stamina::before {
 	content: "Fuel:";
 	color: white;
 	width: 77px;

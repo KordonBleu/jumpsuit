@@ -9,7 +9,7 @@ const vinage = require('vinage');
 export let lobbies = [];
 
 export function addLobby() {
-	return lobbies.append(new Lobby(8));
+	return lobbies.append(new Lobby(3));
 }
 
 class Lobby {
@@ -35,18 +35,20 @@ class Lobby {
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
 
+	changeState(newState) {
+		this.lobbyState = newState;
+		logger(logger.DEV, 'Lobby state change: ' + newState.bold);
+	}
 	warmupToPlaying() {
-		this.lobbyState = 'playing';
-		this.logStateChange();
+		this.changeState('playing');
 
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 120000);
+		setTimeout(this.playingToDisplaying.bind(this), 12000);
 	}
 	playingToDisplaying() {
-		this.lobbyState = 'displaying_scores';
-		this.logStateChange();
+		this.changeState('displaying_scores');
 
 		clearInterval(this.gameCycleId);
 		clearInterval(this.scoreCycleId);
@@ -58,8 +60,7 @@ class Lobby {
 		}, 5000);
 	}
 	displayingToWarmup() {
-		this.lobbyState = 'warmup';
-		this.logStateChange();
+		this.changeState('warmup');
 
 		this.resetWorld();
 		let thisLobbyId = lobbies.findIndex((lobby) => {
@@ -127,7 +128,7 @@ class Lobby {
 
 		this.players.forEach(function(player) {
 			function updPlayer() {
-				player.send(message.gameState.serialize(player.health, player.fuel, this.planets, this.enemies, this.players));
+				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players));
 				player.needsUpdate = true;
 			}
 			if (player.needsUpdate || player.needsUpdate === undefined) {
@@ -225,7 +226,7 @@ class Lobby {
 		this.players.forEach(function(player) {
 			player.controls = {};
 			player.health = 8;
-			player.fuel = 300;
+			player.fillStamina();
 			player.velocity = new vinage.Vector(0, 0);
 		});
 	}
@@ -251,8 +252,5 @@ class Lobby {
 					excludedPlayer);
 			}
 		}
-	}
-	logStateChange() {
-		logger(logger.DEV, 'Lobby state change: ' + this.lobbyState.bold);
 	}
 }

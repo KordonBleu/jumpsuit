@@ -364,10 +364,10 @@ The `lobby id` must be set only if the player wishes to connect to a specific lo
 
 #### GAME_STATE (game server → client)
 ```
-      1B           2B
-+-------------+-----------+============+===========+============+
-| your health | your fuel | PLANET_MUT | ENEMY_MUT | PLAYER_MUT |
-+-------------+-----------+============+===========+============+
+      1B             2B
++-------------+--------------+============+===========+============+
+| your health | your stamina | PLANET_MUT | ENEMY_MUT | PLAYER_MUT |
++-------------+--------------+============+===========+============+
                                 0-255       0-255      0-255
 ```
 

@@ -276,8 +276,8 @@ class Connection {
 					else state = 'heartNotFilled';
 					element.className = state;
 				});
-				let fuelElement = document.getElementById('gui-fuel');
-				if (fuelElement.value !== val.yourFuel) fuelElement.value = val.yourFuel;
+				let staminaElem = document.getElementById('gui-stamina');
+				if (staminaElem.value !== val.yourFuel) staminaElem.value = val.yourFuel;
 				break;
 			}
 			case message.chatBroadcast: {

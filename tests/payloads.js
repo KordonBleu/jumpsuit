@@ -420,7 +420,7 @@ test('gameState message bis', t => {
 				looksLeft: true,
 				hurt: true,
 				health: 8,
-				fuel: 300,
+				stamina: 300,
 				attachedPlanet: -1,
 				armedWeapon: {
 					type: "Lmg"
