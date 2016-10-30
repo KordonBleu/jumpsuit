@@ -33,8 +33,7 @@ const modName = '<@modName@>';
 
 require('colors');
 const http = require('http'),
-	WebSocket = require('ws'),
-	ipaddr = require('ipaddr.js');
+	WebSocket = require('ws');
 
 import './proto_mut.js';
 
@@ -101,9 +100,7 @@ wss.on('connection', function(ws) {
 			});
 		});
 	}
-	let player = new Player();
-	player.ws = ws;
-	player.ip = ipaddr.parse(ws._socket.remoteAddress);
+	let player = new Player(ws);
 
 	ws.on('message', function(msg) {
 		if (ips.banned(player.ip)) return;
@@ -154,7 +151,6 @@ wss.on('connection', function(ws) {
 					player.armedWeapon = player.weapons[val.primary];
 					player.carriedWeapon = player.weapons[val.secondary];
 					player.homographId = selectedLobby.getNextHomographId(player.name);
-					player.lastRefresh = Date.now();
 					player.lobbyId = val.lobbyId;
 
 					selectedLobby.connectPlayer(player);
@@ -181,9 +177,6 @@ wss.on('connection', function(ws) {
 			console.log(err);
 			ips.ban(player.ip);
 		}
-	});
-	ws.on('pong', function() {
-		if (player !== undefined) player.latency = (Date.now() - player.lastPing) / 2;
 	});
 	ws.on('close', cleanup);
 });

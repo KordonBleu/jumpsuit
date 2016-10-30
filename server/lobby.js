@@ -9,7 +9,7 @@ const vinage = require('vinage');
 export let lobbies = [];
 
 export function addLobby() {
-	return lobbies.append(new Lobby(8));
+	return lobbies.append(new Lobby(3));
 }
 
 class Lobby {
@@ -48,7 +48,7 @@ class Lobby {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 120000);
+		setTimeout(this.playingToDisplaying.bind(this), 12000);
 	}
 	playingToDisplaying() {
 		this.changeState('displaying_scores');
@@ -131,13 +131,15 @@ class Lobby {
 
 		this.players.forEach(function(player) {
 			function updPlayer() {
+				if (this.lobbyState === 'displaying_scores') return;
+
 				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players));
-				player.needsUpdate = true;
+				player.nextUpdate = player.updateRate;
 			}
-			if (player.needsUpdate || player.needsUpdate === undefined) {
-				player.needsUpdate = false;
-				setTimeout(updPlayer.bind(this), 50);
-			}
+
+			player.nextUpdate -= 16;
+			if (player.nextUpdate <= 0) updPlayer.bind(this)();
+			else if (player.nextUpdate < 16) setTimeout(updPlayer.bind(this), player.nextUpdate);
 		}, this);
 		this.processTime = Date.now() - oldDate;
 	}
@@ -146,12 +148,6 @@ class Lobby {
 			if (planet.progress >= 80) this.teamScores[planet.team]++;
 		}), this);
 		this.broadcast(message.scores.serialize(this.teamScores));
-	}
-	pingPlayers() {
-		this.players.forEach(function(player) {
-			player.lastPing = Date.now();
-			player.ws.ping(undefined, undefined, true);
-		});
 	}
 	getPlayerId(player) {
 		let id;
