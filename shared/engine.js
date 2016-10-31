@@ -2,7 +2,7 @@ import modulo from './modulo.js';
 import Shot from '<@Shot@>';
 import Player from '<@Player@>';
 
-export function doPrediction(universe, players, enemies, shots) {
+export function doPrediction(universe, players, enemies, shots, updateRate) {
 	doPrediction.newTimestamp = Date.now();
 	doPrediction.oldTimestamp = doPrediction.oldTimestamp || Date.now();
 
@@ -19,8 +19,8 @@ export function doPrediction(universe, players, enemies, shots) {
 	let fps = 1000 / (doPrediction.newTimestamp - doPrediction.oldTimestamp);
 	players.forEach(function(player) {
 		if ('timestamp' in player.predictionTarget) {
-			let now = Date.now(), serverTicks = 50,
-				smoothingTime = (now - player.predictionTarget.timestamp) / serverTicks;
+			let now = Date.now(),
+				smoothingTime = (now - player.predictionTarget.timestamp) / updateRate;
 
 			let angleOffset = wrapOffset(player.predictionTarget.box.angle, player.predictionBase.box.angle, 2*Math.PI),
 				xOffset = wrapOffset(player.predictionTarget.box.center.x, player.predictionBase.box.center.x, universe.width),

@@ -24,7 +24,7 @@ export default class SrvPlayer extends Player {
 				seqNbr = dView.getUint32(0),
 
 				newLatency = Date.now() - this.sentSeqNbr[seqNbr],
-				pingIncreasefactor = this.latency === 0 ? 0 : Math.pow(newLatency / this.latency, 2);
+				pingIncreasefactor = this.latency === 0 ? 0 : Math.sqrt(newLatency / this.latency); // the sqrt is totally arbitrary, but it works well in practice. It doesn't increase the updateRate to much if it's just a sudden peak
 
 			this.updateRate *= pingIncreasefactor; // if the latency gets worse, the updateRate gets slower, or viceversa
 			if(this.updateRate < 1) this.updateRate = 1;

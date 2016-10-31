@@ -64,7 +64,7 @@ export function loop() {
 
 
 	//layer 1: the game
-	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
+	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots, game.getUpdateRate());
 
 	controls.updateDragSmooth(windowBox);
 	windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;

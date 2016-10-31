@@ -3,7 +3,9 @@ import * as ui from './ui.js';
 import * as controls from './controls.js';
 import * as draw from './draw.js';
 
-let started = false;
+let started = false,
+	lastUpdate = null,
+	updateRates = (new Array(40)).fill(50); // used to smooth the current update rate
 
 export let animationFrameId = null,
 	ownIdx = null,
@@ -11,6 +13,27 @@ export let animationFrameId = null,
 	scores = null,
 	ownHealth = null,
 	ownFuel = null;
+
+export function registerUpdate() {
+	if (lastUpdate === null) {
+		lastUpdate = Date.now();
+	} else {
+		let now = Date.now(),
+			updateRate = now - lastUpdate;
+
+		updateRates.shift();
+		updateRates.push(updateRate);
+
+		lastUpdate = now;
+	}
+}
+export function getUpdateRate() { // get the average of a few past updateRate
+	let sum = updateRates.reduce(function(a, b) {
+		return a + b;
+	}, 0);
+
+	return sum / updateRates.length;
+}
 
 export function setState(newState) {
 	state = newState;
@@ -43,6 +66,8 @@ export function start() {
 export function stop() {
 	if (started) {
 		started = false;
+		lastUpdate = null;
+		updateRates.fill(50);
 		controls.removeInputListeners();
 		[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
 			element.removeAttribute('style');

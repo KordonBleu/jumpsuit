@@ -266,6 +266,7 @@ class Connection {
 					entities.updatePlayer
 				);
 
+				game.registerUpdate();
 				game.setOwnHealth(val.yourHealth);
 				game.setOwnFuel(val.yourFuel);
 
