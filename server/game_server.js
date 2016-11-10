@@ -52,7 +52,7 @@ function connectToMaster() {
 		nextAttemptID;
 
 	masterWs.on('open', function() {
-		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobby.lobbies), { binary: true, mask: false });
+		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobby.lobbies));
 		masterWs.on('close', function() {
 			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
 			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
@@ -74,15 +74,6 @@ function connectToMaster() {
 	});
 }
 connectToMaster();
-
-Player.prototype.send = function(data) {
-	try {
-		this.ws.send(data, { binary: true, mask: false });
-		if (config.config.monitor) {
-			monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
-		}
-	} catch (err) { /* Maybe log this error somewhere? */ }
-};
 
 wss.on('connection', function(ws) {
 	function cleanup() {

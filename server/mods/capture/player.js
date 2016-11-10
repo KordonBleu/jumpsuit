@@ -1,5 +1,8 @@
 import Player from '../../../shared/player.js';
 
+import { config } from '../../config_loader.js';
+import * as monitor from '../..//monitor.js';
+
 export default class SrvPlayer extends Player {
 	constructor() {
 		super();
@@ -27,6 +30,14 @@ export default class SrvPlayer extends Player {
 			}
 			this.setBoxSize();
 		}
+	}
+	send(data) {
+		try {
+			this.ws.send(data);
+			if (config.monitor) {
+				monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
+			}
+		} catch (err) { /* Maybe log this error somewhere? */ }
 	}
 
 }

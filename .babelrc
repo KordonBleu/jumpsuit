@@ -7,6 +7,9 @@
 		["transform-rename-import", { original: '<@Lmg@>', replacement: './lmg.js' }],
 		["transform-rename-import", { original: '<@Shotgun@>', replacement: './shotgun.js' }],
 		["transform-rename-import", { original: '<@Knife@>', replacement: './knife.js' }],
-		["transform-rename-import", { original: '<@convert@>', replacement: '../server/convert.js' }]
+		["transform-rename-import", { original: '<@convert@>', replacement: '../server/convert.js' }],
+
+		["transform-rename-import", { original: './config_loader.js', replacement: '../tests/config.js' }],
+		["transform-rename-import", { original: 'os', replacement: '../tests/os.js' }]
 	]
 }

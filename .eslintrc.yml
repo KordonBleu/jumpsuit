@@ -20,6 +20,7 @@ rules:
     - always
   no-trailing-spaces: "error"
   no-console: 0
+  eqeqeq: "error"
 parserOptions:
   sourceType: "module"
 globals:

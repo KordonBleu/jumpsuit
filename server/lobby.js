@@ -125,8 +125,8 @@ class Lobby {
 				entitiesDelta.removedShots.splice(iRm, 1);
 			}
 		});
-		if (entitiesDelta.addedShots.length != 0) this.broadcast(message.addEntity.serialize([], [], entitiesDelta.addedShots, []));
-		//if (entitiesDelta.removedShots.length != 0) this.broadcast(message.removeEntity.serialize([], [], entitiesDelta.removedShots, [])); // Why is this disabled?
+		if (entitiesDelta.addedShots.length !== 0) this.broadcast(message.addEntity.serialize([], [], entitiesDelta.addedShots, []));
+		//if (entitiesDelta.removedShots.length !== 0) this.broadcast(message.removeEntity.serialize([], [], entitiesDelta.removedShots, [])); // Why is this disabled?
 
 
 		this.players.forEach(function(player) {
