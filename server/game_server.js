@@ -41,7 +41,15 @@ import * as monitor from './monitor.js';
 if(config.config.monitor) monitor.setMonitorMode(lobby.lobbies);
 
 
-let server = http.createServer(),//create an independent server so it is easy to
+const Slave = require('enslavism').Slave;
+
+console.log(config.config.master);
+let slave = new Slave(config.config.master, {
+	serverName: config.config.server_name,
+	modName: modName
+});
+
+/*let server = http.createServer(),//create an independent server so it is easy to
 	wss = new WebSocket.Server({server: server});//change port while running
 server.listen(config.config.port);
 
@@ -79,9 +87,9 @@ Player.prototype.send = function(data) {
 		this.ws.send(data, { binary: true, mask: false });
 		if (config.config.monitor) {
 			monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
-		}
-	} catch (err) { /* Maybe log this error somewhere? */ }
-};
+		}*/
+		//} catch (err) { /* Maybe log this error somewhere? */ }
+/*};
 
 wss.on('connection', function(ws) {
 	function cleanup() {
@@ -179,4 +187,4 @@ wss.on('connection', function(ws) {
 		}
 	});
 	ws.on('close', cleanup);
-});
+});*/

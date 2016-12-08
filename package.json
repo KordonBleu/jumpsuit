@@ -7,6 +7,7 @@
     "image-size": "0.x",
     "ipaddr.js": "1.x",
     "vinage": "0.x",
+    "enslavism": "0.x",
     "ws": "1.x",
     "rollup": "0.x",
     "rollup-plugin-node-resolve": "2.x",

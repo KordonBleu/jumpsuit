@@ -189,11 +189,11 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
-			Array.prototype.forEach.call(gamepads, (gp) => { // Chrome workaround
+			/*Array.prototype.forEach.call(gamepads, (gp) => { // Chrome workaround
 				usingGamepad = gp.index;
 				ui.notif.showMessage('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);
-			});
+			});*/
 		}
 	}, 500);
 }

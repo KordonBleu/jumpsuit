@@ -340,18 +340,18 @@ export function printPlayerList(filter) {
 }
 
 /* Lobby list */
-export function addServerRow(server) {
+export function addServerRow(slaveCo) {
 	let row = document.createElement('tr'),
 		serverNameTd = document.createElement('td'),
 		modNameTd = document.createElement('td'),
 		buttonTd = document.createElement('td'),
 		button = document.createElement('button');
 
-	serverNameTd.textContent = server.serverName;
-	modNameTd.textContent = server.modName;
+	serverNameTd.textContent = slaveCo.userData.serverName;
+	modNameTd.textContent = slaveCo.userData.modName;
 
 	button.textContent = 'Play!';
-	button.dataset.url = server.url;
+	button.slaveCo = slaveCo;
 
 	buttonTd.appendChild(button);
 	row.appendChild(serverNameTd);
@@ -359,16 +359,15 @@ export function addServerRow(server) {
 	row.appendChild(buttonTd);
 
 	lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
-	server.tr = row;
 }
 export function removeServer(id) {
 	wsClt.serverList[id].tr.remove();
 	wsClt.serverList.splice(id, 1);
 }
 lobbyListElement.addEventListener('click', function(e) {
-	if (e.target.tagName === 'BUTTON' && e.target.dataset.url !== undefined) {
+	if (e.target.tagName === 'BUTTON') {
 		if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
-		wsClt.makeNewCurrentConnection(e.target.dataset.url);
+		wsClt.makeNewCurrentConnection(e.target.slaveCo);
 	}
 });
 

@@ -1,8 +1,6 @@
 import * as config from './config_loader.js';
 config.init(process.argv[2] || './master_config.json', {
 	dev: true,
-	ipv4_provider: 'https://ipv4.icanhazip.com/',
-	ipv6_provider: 'https://ipv6.icanhazip.com/',
 	monitor: false,
 	port: 80
 },
@@ -110,7 +108,12 @@ let server = http.createServer(function (req, res) {
 });
 server.listen(config.config.port);
 
-let gameServerSocket = new WebSocket.Server({server: server, path: '/game_servers'}),
+
+const Master = require('enslavism').Master;
+
+let master = new Master(server);
+
+/*let gameServerSocket = new WebSocket.Server({server: server, path: '/game_servers'}),
 	clientsSocket = new WebSocket.Server({server: server, path: '/clients'}),
 	wsOptions = { binary: true, mask: false };
 
@@ -200,4 +203,4 @@ clientsSocket.on('connection', function(ws) {
 		console.error(err);
 	});
 });
-
+*/

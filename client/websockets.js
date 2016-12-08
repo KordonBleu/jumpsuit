@@ -6,11 +6,17 @@ import * as controls from './controls.js';
 import * as entities from './entities.js';
 import * as message from '../shared/message.js';
 
-let masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
+let masterSocket = new MasterConnection('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port));
+masterSocket.addEventListener('slave', slaveCo => {
+	ui.addServerRow(slaveCo);
+});
+console.log(masterSocket);
+
+//let masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
 
 export let serverList;
 export var currentConnection;
-
+/*
 const HISTORY_MENU = 0,
 	HISTORY_GAME = 1;
 
@@ -333,13 +339,18 @@ class Connection {
 	}
 }
 
-export function makeNewCurrentConnection(url, id) {
-	new Connection(url, id).then((connection) => {
-		currentConnection = connection;
-	}).catch((err) => {
-		console.error(err);
-	});
+*/
+export function makeNewCurrentConnection(slaveCo) {
+	slaveCo.createDataChannel('test').then(dc => {
+		console.log(dc);
+		currentConnection = dc;
+		dc.addEventListener('message', msg => {
+			console.log(msg);
+		});
+		dc.send('What have I wrought!');
+	}).catch(console.error);
 }
+/*
 
 function connectByHash() {
 	if (location.hash === '') return;
@@ -379,4 +390,4 @@ export function handleHistoryState() {
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
 window.addEventListener('popstate', handleHistoryState);
-
+*/
