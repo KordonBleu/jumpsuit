@@ -76,14 +76,34 @@ masterSocket.addEventListener('message', msg => {
 			break;
 	}
 });
+*/
 
 class Connection {
-	constructor(url, lobbyId) {// a connection to a game server
+	constructor(slaveCo, lobbyId) {// a connection to a game server
 		this.lastControls = {};
 		this.lastMessage;
 		this.lastAngle = 0;
 
 		return new Promise((resolve, reject) => {
+			slaveCo.createDataChannel('test').then(dc => {
+				console.log(dc);
+
+				dc.addEventListener('message', this.constructor.messageHandler.bind(this));
+				dc.addEventListener('error', this.constructor.errorHandler);
+
+				this.sendMessage.call(this, message.connect, lobbyId, settings);
+
+				this.latencyHandlerId = setInterval(this.constructor.latencyHandler, 100);
+				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
+
+				currentConnection = this;
+				this.socket = dc;
+
+				resolve(this);
+			}).catch(reject);
+		});
+
+		/*return new Promise((resolve, reject) => {
 			try {
 				this.socket = new WebSocket(url);
 			} catch (err) {
@@ -102,12 +122,13 @@ class Connection {
 
 				resolve(this);
 			});
-		});
+		});*/
 	}
 	alive() {
 		return this.socket.readyState === 1;
 	}
 	sendMessage(messageType, ...args) {
+		console.log(messageType, args);
 		try {
 			this.socket.send(messageType.serialize.apply(messageType, args));
 		} catch(err) {
@@ -171,6 +192,7 @@ class Connection {
 		this.sendMousePos(controls.mouseAngle);
 	}
 	static messageHandler(msg) {
+		console.log(msg);
 		this.lastMessage = Date.now();
 		switch (message.getSerializator(msg.data)) {
 			case message.error: {
@@ -339,16 +361,12 @@ class Connection {
 	}
 }
 
-*/
-export function makeNewCurrentConnection(slaveCo) {
-	slaveCo.createDataChannel('test').then(dc => {
-		console.log(dc);
-		currentConnection = dc;
-		dc.addEventListener('message', msg => {
-			console.log(msg);
-		});
-		dc.send('What have I wrought!');
-	}).catch(console.error);
+export function makeNewCurrentConnection(slaveCo, id) {
+	new Connection(slaveCo, id).then((connection) => {
+		currentConnection = connection;
+	}).catch((err) => {
+		console.error(err);
+	});
 }
 /*
 
@@ -378,7 +396,7 @@ function connectByHash() {
 		if (currentConnection !== undefined) currentConnection.close();
 		console.log(ex, ex.stack);
 	}
-}
+}*/
 
 export function handleHistoryState() {
 	//modifies default history entries due hash changes
@@ -390,4 +408,3 @@ export function handleHistoryState() {
 	} else if (history.state === HISTORY_GAME) connectByHash();
 }
 window.addEventListener('popstate', handleHistoryState);
-*/

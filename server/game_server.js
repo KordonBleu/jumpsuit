@@ -89,102 +89,105 @@ Player.prototype.send = function(data) {
 			monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
 		}*/
 		//} catch (err) { /* Maybe log this error somewhere? */ }
-/*};
+//};
 
-wss.on('connection', function(ws) {
-	function cleanup() {
-		lobby.lobbies.forEach(function(lobby, li) {
-			lobby.players.some(function(player, pi) {
-				if (player.ws === ws) {
-					logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
-					delete lobby.players[pi];
-					lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
-					if (lobby.players.length === 0) {
-						lobby.lobbies[li].close();
-						delete lobby.lobbies[li];
+slave.on('connection', clientCo => {
+	console.log('connectionetrsntneir');
+	clientCo.on('datachannel', dc => {
+		function cleanup() {
+			lobby.lobbies.forEach(function(lobby, li) {
+				lobby.players.some(function(player, pi) {
+					if (player.dc === dc) {
+						logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
+						delete lobby.players[pi];
+						lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
+						if (lobby.players.length === 0) {
+							lobby.lobbies[li].close();
+							delete lobby.lobbies[li];
+						}
+						return true;
 					}
-					return true;
-				}
+				});
 			});
-		});
-	}
-	let player = new Player(ws);
-
-	ws.on('message', function(msg) {
-		if (ips.banned(player.ip)) return;
-
-		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
-
-		try {
-			let serializator = message.getSerializator(msg);
-			if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
-			switch (serializator) {
-				case message.setPreferences: {
-					let val = message.setPreferences.deserialize(msg);
-					if (player.lobby !== undefined) {
-						player.homographId = player.lobby.getNextHomographId(val.name);
-						player.lobby.broadcast(message.setNameBroadcast.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
-					}
-					player.name = val.name;
-					player.armedWeapon = player.weapons[val.primary];
-					player.carriedWeapon = player.weapons[val.secondary];
-					break;
-				}
-				case message.connect: {
-					let val = message.connect.deserialize(msg);
-					let selectedLobby;
-					if (val.lobbyId !== undefined) {
-						selectedLobby = lobby.lobbies[val.lobbyId];
-						if (selectedLobby === undefined) {
-							player.send(message.error.serialize(message.error.NO_LOBBY));
-							break;
-						} else if (selectedLobby.players.length === selectedLobby.maxPlayers) {
-							player.send(message.error.serialize(message.error.NO_SLOT));
-							break;
-						}
-					} else {//public lobby
-						if (!lobby.lobbies.some(function(l, i) {//if no not-full lobby
-							if (l.players.actualLength() < l.maxPlayers) {
-								val.lobbyId = i;
-								selectedLobby = lobby.lobbies[i];
-								return true;
-							} else return false;
-						})) {//create new lobby
-							val.lobbyId = lobby.addLobby();
-							selectedLobby = lobby.lobbies[val.lobbyId];
-						}
-					}
-					player.pid = selectedLobby.addPlayer(player);
-					player.name = val.name;
-					player.armedWeapon = player.weapons[val.primary];
-					player.carriedWeapon = player.weapons[val.secondary];
-					player.homographId = selectedLobby.getNextHomographId(player.name);
-					player.lobbyId = val.lobbyId;
-
-					selectedLobby.connectPlayer(player);
-
-					break;
-				}
-				case message.playerControls:
-					onMessage.onControls(player, message.playerControls.deserialize(msg));
-					break;
-				case message.chat: {
-					let chatMsg = message.chat.deserialize(msg);
-					if (chatMsg !== '' && chatMsg.length <= 150) lobby.lobbies[player.lobbyId].broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
-					break;
-				}
-				case message.aimAngle:
-					player.aimAngle = message.aimAngle.deserialize(msg);
-					break;
-				default:
-					ips.ban(player.ip);
-					return;//prevent logging
-			}
-			logger(logger.DEV, serializator.toString());
-		} catch (err) {
-			console.log(err);
-			ips.ban(player.ip);
 		}
+		let player = new Player(dc);
+
+		dc.on('message', function(msg) {
+			if (ips.banned(player.ip)) return;
+
+			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
+
+			try {
+				let serializator = message.getSerializator(msg);
+				if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
+				switch (serializator) {
+					case message.setPreferences: {
+						let val = message.setPreferences.deserialize(msg);
+						if (player.lobby !== undefined) {
+							player.homographId = player.lobby.getNextHomographId(val.name);
+							player.lobby.broadcast(message.setNameBroadcast.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
+						}
+						player.name = val.name;
+						player.armedWeapon = player.weapons[val.primary];
+						player.carriedWeapon = player.weapons[val.secondary];
+						break;
+					}
+					case message.connect: {
+						let val = message.connect.deserialize(msg);
+						let selectedLobby;
+						if (val.lobbyId !== undefined) {
+							selectedLobby = lobby.lobbies[val.lobbyId];
+							if (selectedLobby === undefined) {
+								player.send(message.error.serialize(message.error.NO_LOBBY));
+								break;
+							} else if (selectedLobby.players.length === selectedLobby.maxPlayers) {
+								player.send(message.error.serialize(message.error.NO_SLOT));
+								break;
+							}
+						} else {//public lobby
+							if (!lobby.lobbies.some(function(l, i) {//if no not-full lobby
+								if (l.players.actualLength() < l.maxPlayers) {
+									val.lobbyId = i;
+									selectedLobby = lobby.lobbies[i];
+									return true;
+								} else return false;
+							})) {//create new lobby
+								val.lobbyId = lobby.addLobby();
+								selectedLobby = lobby.lobbies[val.lobbyId];
+							}
+						}
+						player.pid = selectedLobby.addPlayer(player);
+						player.name = val.name;
+						player.armedWeapon = player.weapons[val.primary];
+						player.carriedWeapon = player.weapons[val.secondary];
+						player.homographId = selectedLobby.getNextHomographId(player.name);
+						player.lobbyId = val.lobbyId;
+
+						selectedLobby.connectPlayer(player);
+
+						break;
+					}
+					case message.playerControls:
+						onMessage.onControls(player, message.playerControls.deserialize(msg));
+						break;
+					case message.chat: {
+						let chatMsg = message.chat.deserialize(msg);
+						if (chatMsg !== '' && chatMsg.length <= 150) lobby.lobbies[player.lobbyId].broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
+						break;
+					}
+					case message.aimAngle:
+						player.aimAngle = message.aimAngle.deserialize(msg);
+						break;
+					default:
+						ips.ban(player.ip);
+						return;//prevent logging
+				}
+				logger(logger.DEV, serializator.toString());
+			} catch (err) {
+				console.log(err);
+				ips.ban(player.ip);
+			}
+		});
+		dc.on('close', cleanup);
 	});
-	ws.on('close', cleanup);
-});*/
+});
