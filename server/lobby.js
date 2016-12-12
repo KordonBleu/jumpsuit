@@ -131,15 +131,13 @@ class Lobby {
 
 		this.players.forEach(function(player) {
 			function updPlayer() {
-				if (this.lobbyState === 'displaying_scores') return;
-
 				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players));
-				player.nextUpdate = player.updateRate;
+				player.needsUpdate = true;
 			}
-
-			player.nextUpdate -= 16;
-			if (player.nextUpdate <= 0) updPlayer.bind(this)();
-			else if (player.nextUpdate < 16) setTimeout(updPlayer.bind(this), player.nextUpdate);
+			if (player.needsUpdate || player.needsUpdate === undefined) {
+				player.needsUpdate = false;
+				setTimeout(updPlayer.bind(this), 50);
+			}
 		}, this);
 		this.processTime = Date.now() - oldDate;
 	}

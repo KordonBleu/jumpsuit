@@ -128,7 +128,7 @@ class Connection {
 		return this.socket.readyState === 1;
 	}
 	sendMessage(messageType, ...args) {
-		console.log(messageType, args);
+		//console.log(messageType, args);
 		try {
 			this.socket.send(messageType.serialize.apply(messageType, args));
 		} catch(err) {
@@ -192,7 +192,7 @@ class Connection {
 		this.sendMousePos(controls.mouseAngle);
 	}
 	static messageHandler(msg) {
-		console.log(msg);
+		console.log(message.getSerializator(msg.data));
 		this.lastMessage = Date.now();
 		switch (message.getSerializator(msg.data)) {
 			case message.error: {
