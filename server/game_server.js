@@ -80,42 +80,15 @@ function connectToMaster() {
 		nextAttemptID = setTimeout(connectToMaster, 5000);
 	});
 }
-connectToMaster();
-
-Player.prototype.send = function(data) {
-	try {
-		this.ws.send(data, { binary: true, mask: false });
-		if (config.config.monitor) {
-			monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
-		}*/
-		//} catch (err) { /* Maybe log this error somewhere? */ }
-//};
+connectToMaster();*/
 
 slave.on('connection', clientCo => {
 	console.log('connectionetrsntneir');
 	clientCo.on('datachannel', dc => {
-		function cleanup() {
-			lobby.lobbies.forEach(function(lobby, li) {
-				lobby.players.some(function(player, pi) {
-					if (player.dc === dc) {
-						logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
-						delete lobby.players[pi];
-						lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
-						if (lobby.players.length === 0) {
-							lobby.lobbies[li].close();
-							delete lobby.lobbies[li];
-						}
-						return true;
-					}
-				});
-			});
-		}
 		let player = new Player(dc);
 
-		dc.on('message', function(msg) {
-			if (ips.banned(player.ip)) return;
-
-			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
+		dc.addEventListener('message', function(msg) {
+			msg = msg.data;
 
 			try {
 				let serializator = message.getSerializator(msg);
@@ -179,15 +152,30 @@ slave.on('connection', clientCo => {
 						player.aimAngle = message.aimAngle.deserialize(msg);
 						break;
 					default:
-						ips.ban(player.ip);
+						console.log('user should be banned temporarly');
 						return;//prevent logging
 				}
 				logger(logger.DEV, serializator.toString());
 			} catch (err) {
-				console.log(err);
-				ips.ban(player.ip);
+				console.error(err);
+				console.log('user should be banned temporarly');
 			}
 		});
-		dc.on('close', cleanup);
+		dc.addEventListener('close', () => {
+			lobby.lobbies.forEach((lobby, li) => {
+				lobby.players.some((player, pi) => {
+					if (player.dc === dc) {
+						logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
+						delete lobby.players[pi];
+						lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
+						if (lobby.players.length === 0) {
+							lobby.lobbies[li].close();
+							delete lobby.lobbies[li];
+						}
+						return true;
+					}
+				});
+			});
+		});
 	});
 });

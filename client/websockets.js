@@ -91,13 +91,13 @@ class Connection {
 				dc.addEventListener('message', this.constructor.messageHandler.bind(this));
 				dc.addEventListener('error', this.constructor.errorHandler);
 
+				currentConnection = this;
+				this.socket = dc;
+
 				this.sendMessage.call(this, message.connect, lobbyId, settings);
 
 				this.latencyHandlerId = setInterval(this.constructor.latencyHandler, 100);
 				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
-
-				currentConnection = this;
-				this.socket = dc;
 
 				resolve(this);
 			}).catch(reject);
@@ -242,8 +242,8 @@ class Connection {
 				entities.universe.width = val.univWidth;
 				entities.universe.height = val.univHeight;
 
-				let hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, '$1$2');
-				location.hash = '#srv=' + hashSocket + '&lobby=' + encodeLobbyNumber(val.lobbyId);
+				//let hashSocket = this.socket.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, '$1$2');
+				//location.hash = '#srv=' + hashSocket + '&lobby=' + encodeLobbyNumber(val.lobbyId);
 
 				document.getElementById('menu-box').classList.add('hidden');
 				document.getElementById('gui-warmup').classList.remove('hidden');
