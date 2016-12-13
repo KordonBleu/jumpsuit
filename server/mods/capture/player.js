@@ -12,7 +12,6 @@ export default class SrvPlayer extends Player {
 	}
 
 	send(data) {
-		console.log('sentsrstsr');
 		try {
 			this.dc.send(data);
 			if (config.monitor) {

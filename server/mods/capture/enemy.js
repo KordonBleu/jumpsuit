@@ -1,1 +1,2 @@
-export * from '../../../shared/enemy.js';
+import def from '../../../shared/enemy.js';
+export default def;

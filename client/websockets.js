@@ -7,7 +7,7 @@ import * as entities from './entities.js';
 import * as message from '../shared/message.js';
 
 let masterSocket = new MasterConnection('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port));
-masterSocket.addEventListener('slave', slaveCo => {
+masterSocket.addEventListener('slaveadded', slaveCo => {
 	ui.addServerRow(slaveCo);
 });
 console.log(masterSocket);
@@ -85,7 +85,9 @@ class Connection {
 		this.lastAngle = 0;
 
 		return new Promise((resolve, reject) => {
-			slaveCo.createDataChannel('test').then(dc => {
+			slaveCo.createDataChannel('test', {
+				ordered: false
+			}).then(dc => {
 				console.log(dc);
 
 				dc.addEventListener('message', this.constructor.messageHandler.bind(this));

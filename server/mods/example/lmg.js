@@ -1,1 +1,2 @@
-export * from '../capture/lmg.js';
+import def from '../capture/lmg.js';
+export default def;
