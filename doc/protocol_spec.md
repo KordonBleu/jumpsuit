@@ -211,24 +211,6 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 `origin` is 255 when emmitted by an enemy. However, since it is possible to have a player whose `id` is 255, this could lead to conflicts. **THIS PROBLEM MUST BE FIXED**, for example by using the `unused bits`.
 
 
-#### SERVER
-```
-  16B
-+------+----------------+
-| ipv6 | PARTIAL_SERVER |
-+------+----------------+
-```
-
-
-#### PARTIAL_SERVER
-```
-    1B      2B            1B               0-255B            1B            0-255B
-+--------+------+--------------------+---------------+-----------------+------------+
-| secure | port | server name length | "server name" | mod name length | "mod name" |
-+--------+------+--------------------+---------------+-----------------+------------+
-```
-
-
 #### ENABLED_TEAMS
 ```
       3b                   5b
@@ -248,43 +230,6 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 
 
 ## Payloads
-
-### Master server ↔ Game server
-
-Game servers will attempt to connect to the master server's websocket at "/game_servers".
-
-#### REGISTER_SERVER (game server → master server)
-```
-+----------------+
-| PARTIAL_SERVER |
-+----------------+
-```
-
-#### SERVER_REGISTERED
-
-
-### Client ↔ Master server
-
-Clients will attempt to connect to the master server's websocket at "/clients".
-
-#### ADD_SERVERS (master server → client)
-```
-+========+
-| SERVER |
-+========+
-    1-∞
-```
-
-
-#### REMOVE_SERVERS (master server → client)
-```
-     2B
-+===========+
-| server id |
-+===========+
-     1-∞
-```
-
 
 ### Client ↔ Game server
 

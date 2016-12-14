@@ -86,7 +86,8 @@ class Connection {
 
 		return new Promise((resolve, reject) => {
 			slaveCo.createDataChannel('test', {
-				ordered: false
+				ordered: false,
+				protocol: 'JumpSuit'
 			}).then(dc => {
 				console.log(dc);
 

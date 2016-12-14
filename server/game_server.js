@@ -3,27 +3,17 @@ config.init(process.argv[2] || './game_config.json', {
 	dev: false,
 	master: 'wss://jumpsuit.space',
 	monitor: false,
-	port: 7483,
-	secure: false,
 	server_name: 'JumpSuit server'
 }, (newConfig, previousConfig) => {
-	if (newConfig.port !== previousConfig.port) {
-		server.close();
-		server.listen(newConfig.port);
-	}
 	if(newConfig.monitor !== previousConfig.monitor) {
 		if (previousConfig.monitor) monitor.unsetMonitorMode();
 		else monitor.setMonitorMode(lobby.lobbies);
-	}
-	if (newConfig.mod !== previousConfig.mod) {
-		logger(logger.INFO, 'Server set to another mod. Please restart the server to apply new config.');
 	}
 });
 
 
 import * as message from '../shared/message.js';
 import logger from './logger.js';
-import * as ips from './ips';
 import * as lobby from './lobby.js';
 
 import * as onMessage from '<@onMessage@>';
@@ -32,8 +22,6 @@ import Player from '<@Player@>';
 const modName = '<@modName@>';
 
 require('colors');
-const http = require('http'),
-	WebSocket = require('ws');
 
 import './proto_mut.js';
 
@@ -49,41 +37,15 @@ let slave = new Slave(config.config.master, {
 	modName: modName
 });
 
-/*let server = http.createServer(),//create an independent server so it is easy to
-	wss = new WebSocket.Server({server: server});//change port while running
-server.listen(config.config.port);
-
-function connectToMaster() {
-	logger(logger.REGISTER, 'Attempting to connect to master server');
-	let masterWs = new WebSocket(config.config.master + '/game_servers'),
-		nextAttemptID;
-
-	masterWs.on('open', function() {
-		masterWs.send(message.registerServer.serialize(config.config.secure, config.config.port, config.config.server_name, modName, lobby.lobbies), { binary: true, mask: false });
-		masterWs.on('close', function() {
-			logger(logger.ERROR, 'Connection to master server lost! Trying to reconnect in 5s');
-			if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
-			nextAttemptID = setTimeout(connectToMaster, 5000);
-		});
-	});
-	masterWs.on('ping', function() {
-		masterWs.pong();
-	});
-	masterWs.on('message', function(msg) {
-		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
-		if (message.getSerializator(msg) === message.serverRegistered) logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
-	});
-	masterWs.on('error', function(err) {
-		logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s ');
-		console.log(err);
-		if (nextAttemptID !== undefined) clearTimeout(nextAttemptID);
-		nextAttemptID = setTimeout(connectToMaster, 5000);
-	});
-}
-connectToMaster();*/
+// when connected to the master do
+// logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
+// otherwise
+// logger(logger.ERROR, 'Attempt failed, master server is not reachable! Trying to reconnect in 5s ');
 
 slave.on('connection', clientCo => {
-	console.log('connectionetrsntneir');
+	logger(logger.INFO, 'Client #' + clientCo.id + ' connected');
+	// TODO: get the IP to feed it to the IPS to prevent spamming
+	// see https://github.com/beefproject/beef/wiki/Module:-Get-Internal-IP-WebRTC
 	clientCo.on('datachannel', dc => {
 		let player = new Player(dc);
 

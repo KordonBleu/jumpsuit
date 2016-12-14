@@ -22,6 +22,3 @@ rules:
   no-console: 0
 parserOptions:
   sourceType: "module"
-globals:
-  vinage: false
-  ipaddr: false

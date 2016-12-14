@@ -19,34 +19,12 @@ config.init(process.argv[2] || './master_config.json', {
 });
 
 
-import * as message from '../shared/message.js';
 import logger from './logger.js';
-import ipPicker from './ip_picker.js';
 import * as monitor from './monitor.js';
-import * as ips from './ips';
 
 require('colors');
 const http = require('http'),
-	fs = require('fs'),
-	WebSocket = require('ws'),
-	ipaddr = require('ipaddr.js');
-
-class GameServer {
-	constructor(serverName, modName, secure, port, ip) {
-		this.serverName = serverName;
-		this.modName = modName;
-		this.secure = secure;
-		this.port = port;
-		this.ip = ip;
-	}
-	getUrl() {
-		return (this.secure ? 'wss://[' : 'ws://[') + this.ip + ']:' + this.port;
-	}
-	effectiveIp(clientIp) {
-		return ipPicker(this.ip, clientIp);
-	}
-}
-let gameServers = [];
+	fs = require('fs');
 
 
 if(config.config.monitor) monitor.setMonitorMode();
@@ -77,7 +55,7 @@ files.construct = function(path, oName) {
 };
 files.construct('./static', '/'); // load everything under `./static` in RAM for fast access
 
-let server = http.createServer(function (req, res) {
+let server = http.createServer((req, res) => {
 	if (req.url === '/index.html') {
 		res.writeHead(301, {'Location': '/'});
 		res.end();
@@ -113,94 +91,17 @@ const Master = require('enslavism').Master;
 
 let master = new Master(server);
 
-/*let gameServerSocket = new WebSocket.Server({server: server, path: '/game_servers'}),
-	clientsSocket = new WebSocket.Server({server: server, path: '/clients'}),
-	wsOptions = { binary: true, mask: false };
-
-gameServerSocket.on('connection', function(ws) {
-	let gameServer = new GameServer(undefined, undefined, undefined, undefined, ipaddr.parse(ws._socket.remoteAddress)),
-		lastPing = 0;
-
-	ws.on('message', function(msg) {
-		//if (ips.banned(gameServer.ip)) return;
-
-		msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
-		try {
-			let serializator = message.getSerializator(msg);
-
-			if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
-
-			if (serializator === message.registerServer) {
-				let data = message.registerServer.deserialize(msg);
-				gameServer.serverName = data.serverName;
-				gameServer.modName = data.modName;
-				gameServer.secure = data.secure;
-				gameServer.port = data.port;
-				gameServer.pingIntervalId = setInterval(function() {
-					try {
-						ws.ping();
-						lastPing = Date.now();
-					} catch (err) {
-						console.error(err);
-					}
-				}, 5000);
-				gameServers.push(gameServer);
-
-				logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.modName, gameServer.serverName);
-				ws.send(message.serverRegistered.serialize());
-				clientsSocket.clients.forEach(function(client) {//broadcast
-					gameServer.effectiveIp(client.ipAddr).then(effectiveIp => {
-						try {
-							client.send(message.addServers.serialize([gameServer], [effectiveIp]), wsOptions);
-						} catch (err) {
-							console.error(err);
-						}
-					});
-				});
-			} else {
-				ips.ban(gameServer.ip);
-				return;//prevent logging
-			}
-			logger(logger.DEV, (serializator.toString()).italic);
-		} catch (err) {
-			ips.ban(gameServer.ip);
-		}
-	});
-	ws.on('pong', function() {
-		gameServer.latency = Date.now() - lastPing;
-	});
-	ws.on('close', function() {
-		gameServers.forEach(function(gS, i) {
-			if (gameServer === gS) {
-				clearInterval(gameServer.pingIntervalId);
-				gameServers.splice(i, 1);
-				logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.modName, gS.serverName);
-				clientsSocket.clients.forEach(function(client) {//broadcast
-					try {
-						client.send(message.removeServers.serialize([i]), wsOptions);
-					} catch (err) {
-						console.error(err);
-					}
-				});
-			}
-		});
-	});
+master.on('slaveauth', authData => {
+	logger(logger.DEV, 'Slave is attempting to connect with data: ' + JSON.stringify(authData));
+});
+master.on('clientauth', authData => {
+	logger(logger.DEV, 'Client is attempting to connect with data: ' + JSON.stringify(authData));
 });
 
-clientsSocket.on('connection', function(ws) {
-	ws.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
-	if (ws.ipAddr.kind() === 'ipv4') ws.ipAddr = ws.ipAddr.toIPv4MappedAddress();
-
-	let ipPromises = [];
-	for (let gameServer of gameServers) ipPromises.push(gameServer.effectiveIp(ws.ipAddr));
-	Promise.all(ipPromises).then(effectiveIps => {
-		try {
-			ws.send(message.addServers.serialize(gameServers, effectiveIps), wsOptions);
-		} catch (err) {
-			console.log(err);
-		}
-	}).catch(err => {
-		console.error(err);
-	});
-});
-*/
+// there should be a
+// logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.modName, gameServer.serverName);
+// of some kind once the connection is established with a server
+// and a
+// logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.modName, gS.serverName);
+// when the server disconnects
+// this capability needs to be added to Enslavism
