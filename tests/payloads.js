@@ -2,104 +2,163 @@ import test from 'ava';
 
 import '../server/proto_mut.js';
 
-import Planet from '../shared/planet.js';
-import Enemy from '../shared/enemy.js';
-import Shot from '../shared/shot.js';
-import Player from '../shared/player.js';
-
 import * as message from '../shared/message.js';
 
 import * as vinage from 'vinage';
-import ipaddr from 'ipaddr.js';
 
 function approxAngle(angle) {
-	return Math.floor(angle*10);
+	return Math.floor(angle*5);
 }
 
 
-test('registerServer message', t => {
-	let a = {
-			secure: true,
-			port: 7483,
-			serverName: 'server name',
-			modName: 'mod name'
+let planets = [
+		{
+			box: {
+				center: {
+					x: 12,
+					y: 434
+				},
+				radius: 23
+			},
+			type: 1,
+			team: 'alienBlue',
+			progress: 0
 		},
-		b = {
-			secure: false,
-			port: 328,
-			serverName: 'The Circlejerk',
-			modName: 'biscuit'
-		};
-	let buf1 = message.registerServer.serialize(a.secure, a.port, a.serverName, a.modName);
-	let res1 = message.registerServer.deserialize(buf1);
-	t.deepEqual(a, res1);
-	t.is(message.getSerializator(buf1), message.registerServer);
-
-	let buf2 = message.registerServer.serialize(b.secure, b.port, b.serverName, b.modName);
-	let res2 = message.registerServer.deserialize(buf2);
-	t.deepEqual(b, res2);
-	t.is(message.getSerializator(buf2), message.registerServer);
-});
-
-test('addServers message', t => {
-	let serverList = [
-			{
-				serverName: 'server name',
-				modName: 'mod name',
-				port: 7483,
-				secure: true
+		{
+			box: {
+				center: {
+					x: 654,
+					y: 12
+				},
+				radius: 38
 			},
-			{
-				serverName: 'The Circlejerk',
-				modName: 'biscuit',
-				port: 31415,
-				secure: false
+			type: 0,
+			team: 'alienPink',
+			progress: 33
+		},
+		{
+			box: {
+				center: {
+					x: 43,
+					y: 487
+				},
+				radius: 76
 			},
-			{
-				serverName: 'Deutsche Qualität',
-				modName: 'caractères accentués',
-				port: 7483,
-				secure: true
-			}
-		],
-		ipList = [
-			ipaddr.parse('2001:0db8:0000:85a3:0000:0000:ac1f:8001'),
-			ipaddr.parse('2001:610:240:22::c100:68b'),
-			ipaddr.parse('2001:0db8:0000:0000:0000:ff00:0042:8329')
-		];
+			type: 1,
+			team: 'alienYellow',
+			progress: 100
+		}
+	],
+	enemies = [
+		{
+			box: {
+				center: {
+					x: 38,
+					y: 98
+				},
+				angle: 0.321
+			},
+			appearance: 'enemyBlack1'
+		},
+		{
+			box: {
+				center: {
+					x: 555,
+					y: 543
+				},
+				angle: Math.PI
+			},
+			appearance: 'enemyBlue3'
+		},
+		{
+			box: {
+				center: {
+					x: 42,
+					y: 243
+				},
+				angle: 1.432*Math.PI
+			},
+			appearance: 'enemyRed2'
+		}
+	],
+	shots = [
+		{
+			box: {
+				center: {
+					x: 44,
+					y: 87
+				},
+				angle: 0.5*Math.PI,
+			},
+			origin: -1,
+			type: 3
+		},
+		{
+			box: {
+				center: {
+					x: 44,
+					y: 87
+				},
+				angle: 0.75*Math.PI,
+			},
+			origin: 0,
+			type: 1
+		}
+	],
+	players = [
+		{
+			box: {
+				center: {
+					x: 454,
+					y: 80
+				},
+				angle: Math.PI*1.2
+			},
+			armedWeapon: {
+				type: 'Lmg'
+			},
+			carriedWeapon: {
+				type: 'Smg'
+			},
+			attachedPlanet: 39,
+			pid: 0,
+			looksLeft: true,
+			jetpack: false,
+			name: 'Charles',
+			walkFrame: 'duck',
+			appearance: 'alienBlue',
+			homographId: 1,
+			hurt: true,
+			aimAngle: Math.PI*1.758
+		},
+		{
+			box: {
+				center: {
+					x: 9890,
+					y: 2890
+				},
+				angle: 0.01
+			},
+			armedWeapon: {
+				type: 'Knife'
+			},
+			carriedWeapon: {
+				type: 'Shotgun'
+			},
+			attachedPlanet: -1,
+			pid: 1,
+			looksLeft: false,
+			jetpack: true,
+			name: 'Lucette',
+			walkFrame: 'stand',
+			appearance: 'alienPink',
+			homographId: 0,
+			hurt: false,
+			aimAngle: Math.PI*0.983
+		}
+	];
 
-	let buf1 = message.addServers.serialize(serverList, ipList);
-	let res1 = message.addServers.deserialize(buf1);
-	t.is(message.getSerializator(buf1), message.addServers);
 
-	serverList.forEach((srv, i) => {
-		t.is(srv.serverName, res1[i].serverName);
-		t.is(srv.modName, res1[i].modName);
-		t.is(srv.port, res1[i].port);
-		t.is(srv.secure, res1[i].secure);
-		t.is(ipList[i].toString(), res1[i].ipv6.toString());
-	});
-});
-
-test('removeServers message', t => {
-	let ids1 = [1, 45, 65535, 5, 899],
-		buf1 = message.removeServers.serialize(ids1),
-		res1 = message.removeServers.deserialize(buf1);
-	t.deepEqual(ids1, res1);
-	t.is(message.getSerializator(buf1), message.removeServers);
-
-	let ids2 = [],
-		buf2 = message.removeServers.serialize(ids2),
-		res2 = message.removeServers.deserialize(buf2);
-	t.deepEqual(ids2, res2);
-	t.is(message.getSerializator(buf2), message.removeServers);
-
-	let ids3 = [99],
-		buf3 = message.removeServers.serialize(ids3),
-		res3 = message.removeServers.deserialize(buf3);
-	t.deepEqual(ids3, res3);
-	t.is(message.getSerializator(buf3), message.removeServers);
-});
 
 test('setPreferences message', t => {
 	let settings = {
@@ -153,51 +212,6 @@ test('error message', t => {
 	t.is(res2, message.error.NO_SLOT);
 	t.is(message.getSerializator(buf2), message.error);
 });
-
-
-let planets = [
-		new Planet(12, 434, 23),
-		new Planet(654, 12, 38),
-		new Planet(43, 487, 76)
-	],
-	enemies = [
-		new Enemy(38, 98),
-		new Enemy(555, 543),
-		new Enemy(42, 243)
-	],
-	shots = [
-		new Shot(44, 87, 0.5*Math.PI, -1, 3),
-		new Shot(44, 87, 0.75*Math.PI, 0, 1)
-	],
-	players = [
-		new Player('Charles', 'alienBlue', '_hurt', -1, true, 358, 45, 'Knife', 'Smg', 0.3*Math.PI),
-		new Player('Lucette', 'alienPink', '_stand', -1, false, 27, 0, 'Lmg', 'Shotgun', 1.1*Math.PI)
-	];
-
-planets[0].team = 'alienBlue';
-planets[0].progress = 0;
-planets[1].team = 'alienPink';
-planets[1].progress = 33;
-
-players[0].pid = 0;
-players[1].pid = 1;
-players[0].box.center.x = 454;
-players[1].box.center.x = 9890;
-players[0].box.center.y = 80;
-players[1].box.center.y = 2890;
-players[0].looksLeft = true;
-players[1].looksLeft = false;;
-players[0].name = 'Charles';
-players[1].name = 'Lucette';
-players[0].appearance = 'alienBlue';
-players[1].appearance = 'alienPink';
-players[0].homographId = 0;
-players[1].homographId = 0;
-players[0].hurt = true;
-players[1].hurt = false;
-
-enemies[0].box.angle = 0.321;
-enemies[2].box.angle = Math.PI;
 
 
 test('addEntity message', t => {
@@ -549,11 +563,6 @@ test('scores message', t => {
 
 	t.deepEqual(res, scoresObj);
 	t.is(message.getSerializator(buf), message.scores);
-});
-
-test('serverRegistered message', t => {
-	let buf = message.serverRegistered.serialize();
-	t.is(message.getSerializator(buf), message.serverRegistered);
 });
 
 test('displayScores message', t => {
