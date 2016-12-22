@@ -22,8 +22,9 @@
   },
   "devDependencies": {
     "ava": "0.x",
-    "babel-plugin-transform-rename-import": "2.x",
+    "babel-register": "6.x",
     "babel-polyfill": "6.x",
+    "babel-plugin-module-resolver": "2.x",
     "source-map-support": "0.x",
     "stylelint": "7.x"
   },
