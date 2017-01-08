@@ -41,8 +41,6 @@ function loadFile(name, path) {
 	};
 	if (config.config.dev && (extension === 'html' || extension === 'css' || extension === 'js')) files[name].content = files[name].content.toString('utf8').replace(/https:\/\/jumpsuit\.space/g, '');
 }
-loadFile('/ipaddr.min.js', './node_modules/ipaddr.js/ipaddr.min.js');
-loadFile('/vinage.js', './node_modules/vinage/vinage.js');
 
 files.construct = function(path, oName) {
 	fs.readdirSync(path).forEach(function(pPath) {

@@ -1,3 +1,4 @@
+import vinage from 'vinage';
 import * as audio from './audio.js';
 import * as game from './game.js';
 import * as ui from './ui.js';

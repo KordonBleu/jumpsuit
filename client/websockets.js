@@ -6,7 +6,7 @@ import * as controls from './controls.js';
 import * as entities from './entities.js';
 import * as message from '../shared/message.js';
 
-let masterSocket = new MasterConnection('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port));
+let masterSocket = new MasterConnection((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.hostname + (location.port === '' ? '' : ':' + location.port));
 masterSocket.addEventListener('slaveadded', slaveCo => {
 	ui.addServerRow(slaveCo);
 });

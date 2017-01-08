@@ -1,3 +1,4 @@
+import vinage from 'vinage';
 import settings from './settings.js';
 import * as bimap from '../shared/bimap.js';
 
