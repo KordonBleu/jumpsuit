@@ -9,7 +9,7 @@ function exportSvg(svgName, variants) {
 		// get svg as a svg element from xhr
 		let xhr = new XMLHttpRequest();
 		xhr.responseType = 'document';
-		xhr.open('GET', 'https://jumpsuit.space/assets/images/' + svgName + '.svg', true);
+		xhr.open('GET', '/assets/images/' + svgName + '.svg', true);
 
 		let promiseList = [];
 		xhr.addEventListener('load', ev => {

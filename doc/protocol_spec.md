@@ -208,7 +208,7 @@ If `attached planet`'s value is 255, the player is not attached to a planet. Thi
 +--------------+--------------+-------+----------------------+------+
 ```
 
-`origin` is 255 when emmitted by an enemy. However, since it is possible to have a player whose `id` is 255, this could lead to conflicts. **THIS PROBLEM MUST BE FIXED**, for example by using the `unused bits`.
+`origin` is 255 when emitted by an enemy. However, since it is possible to have a player whose `id` is 255, this could lead to conflicts. **THIS PROBLEM MUST BE FIXED**, for example by using the `unused bits`.
 
 
 #### ENABLED_TEAMS

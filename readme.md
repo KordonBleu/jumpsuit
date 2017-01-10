@@ -1,7 +1,7 @@
 # JumpSuit
 
 A sweet 2D canvas game.
-With your awesome suit, you can jump from planet to planet to conquer them!
+With your awesome suit, jump from planet to planet to conquer them!
 
 Try it [here](http://jumpsuit.space/)!
 
@@ -25,7 +25,7 @@ Getkey: #OMG
 Flowi: #epic
 ```
 
-## Supported environnements
+## Supported environments
 
 Currently, we only support Firefox and Chrome, because we use many recent additions to JavaScript.
 The server requires Node.js 6.0.0 or above.
@@ -73,10 +73,8 @@ In this file you can set the following parameters:
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
 dev | Enable debug messages | `false` | boolean
-master | The master server your server registers to. If your host your own master server it should look like "ws://localhost:8080" | `"wss://jumpsuit.space"` | string
-monitor | Displays a neat view of the lobbys in real-time | `false` | boolean
-port | Set the game server's port | `7483` | integer
-secure | Set this to true if your server is behind ssl. If you don't know, stick to the default value | `false` | boolean
+master | The master server your server registers to. If your host your own master server it should look like `"ws://localhost:8080"` | `"wss://jumpsuit.space"` | string
+monitor | Displays a neat view of the lobbies in real-time | `false` | boolean
 server_name | The name the master associates your server with | `"JumpSuit server"` | string
 
 
@@ -91,9 +89,7 @@ In this file you can set the following parameters:
 
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
-dev | Enable debug messages. Enable automatic reload of modified files (if you add a new file, you'll have to restart the server). Get resources from local files instead of jumpsuit.space<sup>[1](#http2)</sup> | `true` | boolean
-ipv4_provider | The URL of a web service which should return an IPv4 as plain text. You can also set your IP directly | `"https://ipv4.icanhazip.com/"` | string
-ipv6_provider | The URL of a web service which should return an IPv6 as plain text. You can also set your IP directly | `"https://ipv6.icanhazip.com/"` | string
+dev | Enable debug messages. Enable automatic reload of modified files (if you add a new file, you'll have to restart the server) | `true` | boolean
 monitor | Displays a neat view of the connected game servers in real-time | `false` | boolean
 port | Set the game server's port | `80` | integer
 
@@ -101,12 +97,5 @@ port | Set the game server's port | `80` | integer
 ## Build configuration
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
-dev | Get resources from local files instead of jumpsuit.space<sup>[1](#http2)</sup>. Append a source map to the bundle | `true` | boolean
+dev | Append a source map to the bundle | `true` | boolean
 mod | Choose the server's gamemode | `"capture"` | string
-
-
-## Footnotes
-
-<a name="http2">1</a>: Since a lot of tiny assets must be served, (which is inefficent with HTTP/1.0 and HTTP/1.1), on [jumpsuit.space](http://jumpsuit.space/), http2 is used.
-However, browsers do not accept HTTP/2 without SSL. We cannot make [jumpsuit.space](http://jumpsuit.space/) SSL-only, because it brings more latency (which is not okay for game websockets) and because that would mean third-party developpers wanting to register a game server on the master server at [jumpsuit.space](http://jumpsuit.space/) would have to get a SSL certificate. So; everything but game server sockets and the index.html is encrypted, and thus, we cannot use protocol relative URLs to access ressources.
-The problem is that a developper on localhost would get assets and scripts from jumpsuit.space. To prevent this, the dev option rewrites files to replace URLs pointing to jumpsuit.space with protocol relative URLs.
