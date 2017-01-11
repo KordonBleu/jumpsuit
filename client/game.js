@@ -51,6 +51,7 @@ export function stop() {
 			if (player.jetpack) player.jetpackSound.stop();
 		});
 		ui.clearChat();
+		draw.stopMeteorSpawning();
 		entities.planets.length = 0;
 		entities.enemies.length = 0;
 		window.cancelAnimationFrame(animationFrameId);

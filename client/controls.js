@@ -165,15 +165,15 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 		controllingGamepad = null;
 	window.addEventListener('gamepadconnected', e => {
 		if (controllingGamepad !== null) {
-			ui.notif.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
+			ui.showNotif('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
 		} else {
 			controllingGamepad = e.gamepad.index;
-			ui.notif.showMessage('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
+			ui.showNotif('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
 			intervalId = setInterval(updateControlsViaGamepad, 50, e.gamepad.index);
 		}
 	});
 	window.addEventListener('gamepaddisconnected', e => {
-		ui.notif.showMessage('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
+		ui.showNotif('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
 		if (controllingGamepad === e.gamepad.index) {
 			clearInterval(intervalId);
 			controllingGamepad = null;
@@ -185,14 +185,14 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 	setInterval(function() { // chrome
 		let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 		if (typeof gamepads[usingGamepad] === 'undefined' && usingGamepad !== -1) {
-			ui.notif.showMessage('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
+			ui.showNotif('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
 			usingGamepad = -1;
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
 			/*Array.prototype.forEach.call(gamepads, (gp) => { // Chrome workaround
 				usingGamepad = gp.index;
-				ui.notif.showMessage('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
+				ui.showNotif('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);
 			});*/
 		}
