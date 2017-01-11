@@ -38,9 +38,6 @@ let chatInput = document.getElementById('gui-chat-input'),
 	menuBoxSettingsButton = document.getElementById('menu-box-settings-button'),
 	menuBoxInfoButton = document.getElementById('menu-box-info-button'),
 
-	/* search options */
-	searchInput = document.getElementById('search-input'),
-
 	/* inside settings-box */
 	nameElement = document.getElementById('name'),
 	musicVolumeElement = document.getElementById('music-volume'),
@@ -340,6 +337,7 @@ export function printPlayerList(filter) {
 }
 
 /* Lobby list */
+let slaveRows = new Map();
 export function addServerRow(slaveCo) {
 	let row = document.createElement('tr'),
 		serverNameTd = document.createElement('td'),
@@ -359,10 +357,12 @@ export function addServerRow(slaveCo) {
 	row.appendChild(buttonTd);
 
 	lobbyListElement.insertBefore(row, lobbyListElement.firstChild);
+
+	slaveRows.set(slaveCo, row);
 }
-export function removeServer(id) {
-	wsClt.serverList[id].tr.remove();
-	wsClt.serverList.splice(id, 1);
+export function removeServer(slaveCo) {
+	slaveRows.get(slaveCo).remove();
+	slaveRows.delete(slaveCo);
 }
 lobbyListElement.addEventListener('click', function(e) {
 	if (e.target.tagName === 'BUTTON') {
@@ -383,7 +383,7 @@ export function updatePlayerList() {
 }
 
 /* Sorting */
-let lobbyTableHeaderRowElement = document.getElementById('lobby-table').firstElementChild.firstElementChild;
+/*let lobbyTableHeaderRowElement = document.getElementById('lobby-table').firstElementChild.firstElementChild;
 lobbyTableHeaderRowElement.addEventListener('click', function(e) {
 	if (e.target.tagName === 'IMG') {
 		switch (e.target.getAttribute('src')) {
@@ -420,9 +420,10 @@ lobbyTableHeaderRowElement.addEventListener('click', function(e) {
 		}
 		addServerRow();
 	}
-});
+});*/
 
 /* Search filters */
+/*let searchInput = document.getElementById('search-input'),
 export function applyLobbySearch() {
 	wsClt.serverList.forEach(function(lobby, index) {
 		//lobbyListElement.children are reversed compared to wsClt.serverList
@@ -444,7 +445,7 @@ export function applyLobbySearch() {
 		currentElem.firstChild.innerHTML = newValue; //always set the innerHTML in order to clear highlights or re-highlight
 	});
 }
-searchInput.addEventListener('input', applyLobbySearch);
+searchInput.addEventListener('input', applyLobbySearch);*/
 
 export const notif = {
 	previousTimeoutId: -1,

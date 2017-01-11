@@ -4,85 +4,31 @@ import * as ui from './ui.js';
 
 import * as controls from './controls.js';
 import * as entities from './entities.js';
+import * as url from './url.js';
 import * as message from '../shared/message.js';
 
 let masterSocket = new MasterConnection((location.protocol === 'http:' ? 'ws://' : 'wss://') + location.hostname + (location.port === '' ? '' : ':' + location.port));
 masterSocket.addEventListener('slaveadded', slaveCo => {
 	ui.addServerRow(slaveCo);
+	//TODO: ui.applyLobbySearch();//in case the page was refreshed
 });
-console.log(masterSocket);
+masterSocket.addEventListener('slaveremoved', slaveCo => {
+	ui.removeServer(slaveCo);
+});
 
-//let masterSocket = new WebSocket('wss://' + location.hostname + (location.port === '' ? '' : ':' + location.port) + '/clients');
-
-export let serverList;
 export var currentConnection;
-/*
+
 const HISTORY_MENU = 0,
 	HISTORY_GAME = 1;
-
-let {encodeLobbyNumber, decodeLobbyNumber} = (() => {
-	const pChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&\'()*+,;=:@'; // https://tools.ietf.org/html/rfc3986#section-3.3
-	function encodeLobbyNumber(lobbyNb) {
-		let upperDigit = Math.trunc(lobbyNb/pChars.length),
-			lobbyCode = pChars.charAt(lobbyNb%pChars.length);
-
-		if (upperDigit === 0) return lobbyCode;
-		else return encodeLobbyNumber(upperDigit) + lobbyCode;
-	}
-	function decodeLobbyNumber(lobbyCode) {
-		let lobbyNb = 0;
-
-		for (let i = 0; i !== lobbyCode.length; ++i) lobbyNb += Math.pow(pChars.length, lobbyCode.length - i -1) * pChars.indexOf(lobbyCode.charAt(i));
-
-		return lobbyNb;
-	}
-
-	return {encodeLobbyNumber, decodeLobbyNumber};
-})();
-
-masterSocket.binaryType = 'arraybuffer';
-masterSocket.addEventListener('message', msg => {
-	function determineUrl(server) {
-		let ip;
-		if (server.ipv6.isIPv4MappedAddress()) ip = server.ipv6.toIPv4Address().toString();
-		else ip = '[' + server.ipv6.toString() + ']';
-
-		return (server.secure ? 'wss://' : 'ws://') + ip + ':' + server.port;
-	}
-	switch (message.getSerializator(msg.data)) {
-		case message.addServers:
-			console.log('Got some new servers to add ! :D');
-			if (serverList === undefined) {//first time data is inserted
-				serverList = message.addServers.deserialize(msg.data);
-				serverList.forEach(server => {
-					server.url = determineUrl(server);
-					ui.addServerRow(server);
-				});
-				ui.applyLobbySearch();//in case the page was refreshed and the
-			} else {
-				let newServers = message.addServers.deserialize(msg.data);
-				serverList = serverList.concat(newServers);
-				newServers.forEach(server => {
-					server.url = determineUrl(server);
-					ui.addServerRow(server);
-				});
-			}
-			break;
-		case message.removeServers:
-			console.log('I hafta remove servers :c');
-			for (let id of message.removeServers.deserialize(msg.data)) {
-				ui.removeServer(id);
-			}
-			break;
-	}
-});
-*/
 
 class Connection {
 	constructor(slaveCo, lobbyId) {// a connection to a game server
 		this.lastControls = {};
 		this.lastMessage;
 		this.lastAngle = 0;
+
+		this.slaveCo = slaveCo;
+		this.lobbyId = lobbyId;
 
 		return new Promise((resolve, reject) => {
 			slaveCo.createDataChannel('test', {
@@ -371,35 +317,25 @@ export function makeNewCurrentConnection(slaveCo, id) {
 		console.error(err);
 	});
 }
-/*
+
 
 function connectByHash() {
 	if (location.hash === '') return;
 	try {
-		let [, ip, lobbyId] = location.hash.match(/^#srv=(s?[\d\.:a-f]*)&lobby=([ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-\._~!$&'()\*\+,;=:@]+)/),
-			protocol;
-		lobbyId = decodeLobbyNumber(lobbyId);
+		let [, serverId, lobbyId] = location.hash.match(new RegExp('^#srv=([' + url.urlSafeChars + ']+)&lobby=([' + url.urlSafeChars + ']+)'));
+		serverId = url.decodeUint(serverId);
+		lobbyId = url.decodeUint(lobbyId);
 
-		if (ip.startsWith('s')) {
-			protocol = 'wss://';
-			ip = ip.slice(1);
-		} else protocol = 'ws://';
-
-		let url = protocol + ip + '/';
-
+		if (currentConnection.slaveCo == masterSocket.servers[serverId].slaveCo && currentConnection.lobbyId == masterSocket.servers[serverId].lobbyId) return;
 		if (currentConnection !== undefined) {
-			if (currentConnection.socket.url !== url) {
-				currentConnection.close();
-				currentConnection = makeNewCurrentConnection(url, lobbyId);
-			} else if (!currentConnection.alive()) {
-				currentConnection = makeNewCurrentConnection(url, lobbyId);
-			}
-		} else currentConnection = makeNewCurrentConnection(url, lobbyId);
+			currentConnection.close();
+		}
+		currentConnection = makeNewCurrentConnection(masterSocket.servers[serverId], lobbyId);
 	} catch (ex) {
 		if (currentConnection !== undefined) currentConnection.close();
 		console.log(ex, ex.stack);
 	}
-}*/
+}
 
 export function handleHistoryState() {
 	//modifies default history entries due hash changes
