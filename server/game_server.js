@@ -31,7 +31,6 @@ if(config.config.monitor) monitor.setMonitorMode(lobby.lobbies);
 
 const Slave = require('enslavism').Slave;
 
-console.log(config.config.master);
 new Slave(config.config.master, {
 	serverName: config.config.server_name,
 	modName: modName
@@ -45,7 +44,7 @@ new Slave(config.config.master, {
 		clientCo.on('datachannel', dc => {
 			let player = new Player(dc);
 
-			dc.addEventListener('message', function(msg) {
+			dc.on('message', function(msg) {
 				msg = msg.data;
 
 				try {
@@ -119,7 +118,7 @@ new Slave(config.config.master, {
 					console.log('user should be banned temporarly');
 				}
 			});
-			dc.addEventListener('close', () => {
+			dc.on('close', () => {
 				lobby.lobbies.forEach((lobby, li) => {
 					lobby.players.some((player, pi) => {
 						if (player.dc === dc) {

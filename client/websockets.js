@@ -33,9 +33,12 @@ class Connection {
 		return new Promise((resolve, reject) => {
 			slaveCo.createDataChannel('test', {
 				ordered: false,
+				maxRetransmits: 0, // unreliable
 				protocol: 'JumpSuit'
 			}).then(dc => {
-				console.log(dc);
+				dc.binaryType = 'arraybuffer';
+
+				console.log(slaveCo);
 
 				dc.addEventListener('message', this.constructor.messageHandler.bind(this));
 				dc.addEventListener('error', this.constructor.errorHandler);
@@ -51,33 +54,11 @@ class Connection {
 				resolve(this);
 			}).catch(reject);
 		});
-
-		/*return new Promise((resolve, reject) => {
-			try {
-				this.socket = new WebSocket(url);
-			} catch (err) {
-				reject(err);
-				ui.showBlockedPortDialog(url.match(/:(\d+)/)[1]);
-			}
-			this.socket.binaryType = 'arraybuffer';
-			this.socket.addEventListener('error', this.constructor.errorHandler);
-			this.socket.addEventListener('message', this.constructor.messageHandler.bind(this));
-
-			this.socket.addEventListener('open', () => {
-				this.sendMessage.call(this, message.connect, lobbyId, settings);
-
-				this.latencyHandlerId = setInterval(this.constructor.latencyHandler, 100);
-				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
-
-				resolve(this);
-			});
-		});*/
 	}
 	alive() {
-		return this.socket.readyState === 1;
+		return this.socket.readyState === 'open';
 	}
 	sendMessage(messageType, ...args) {
-		//console.log(messageType, args);
 		try {
 			this.socket.send(messageType.serialize.apply(messageType, args));
 		} catch(err) {
@@ -141,7 +122,6 @@ class Connection {
 		this.sendMousePos(controls.mouseAngle);
 	}
 	static messageHandler(msg) {
-		console.log(message.getSerializator(msg.data));
 		this.lastMessage = Date.now();
 		switch (message.getSerializator(msg.data)) {
 			case message.error: {
@@ -314,6 +294,7 @@ export function makeNewCurrentConnection(slaveCo, id) {
 	new Connection(slaveCo, id).then((connection) => {
 		currentConnection = connection;
 	}).catch((err) => {
+		ui.showBlockedPortDialog('???'); // TODO: find out the port
 		console.error(err);
 	});
 }
