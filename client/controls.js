@@ -4,7 +4,7 @@ import * as bimap from '../shared/bimap.js';
 
 import windowBox from './windowbox.js';
 
-import * as ui from './ui.js';
+import * as view from './view/index.js';
 import * as wsClt from './websockets.js';
 
 const canvas = document.getElementById('canvas');
@@ -70,7 +70,7 @@ export function handleInputMobile(e) {
 function handleInput(e) {
 	let s = (e.type === 'keydown') * 1;
 
-	if (!ui.chatInUse() && ui.noModalOpen()) {
+	if (!view.chatInUse() && view.noModalOpen()) {
 		let triggered = keyMap.getAction(e.code);
 
 		if (selfControls[triggered] !== undefined) {
@@ -82,7 +82,7 @@ function handleInput(e) {
 		} else if (triggered === 'chat' && s === 1) {
 			e.preventDefault();
 			window.setTimeout(function() { // prevent the letter corresponding to
-				ui.focusChat(); // the 'chat' control (most likelly 't')
+				view.focusChat(); // the 'chat' control (most likelly 't')
 			}, 0); // from being written in the chat
 		}
 	}
@@ -165,15 +165,15 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 		controllingGamepad = null;
 	window.addEventListener('gamepadconnected', e => {
 		if (controllingGamepad !== null) {
-			ui.showNotif('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
+			view.showNotif('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' has been ignored because there is already a gamepad connected');
 		} else {
 			controllingGamepad = e.gamepad.index;
-			ui.showNotif('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
+			view.showNotif('Gamepad connected', 'Gamepad #' + e.gamepad.index + ' is set as controlling device');
 			intervalId = setInterval(updateControlsViaGamepad, 50, e.gamepad.index);
 		}
 	});
 	window.addEventListener('gamepaddisconnected', e => {
-		ui.showNotif('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
+		view.showNotif('Gamepad disconnected', 'Gamepad #' + e.gamepad.index + ' was disconnected');
 		if (controllingGamepad === e.gamepad.index) {
 			clearInterval(intervalId);
 			controllingGamepad = null;
@@ -185,14 +185,14 @@ if ('ongamepadconnected' in window || 'ongamepaddisconnected' in window) { // ot
 	setInterval(function() { // chrome
 		let gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
 		if (typeof gamepads[usingGamepad] === 'undefined' && usingGamepad !== -1) {
-			ui.showNotif('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
+			view.showNotif('Gamepad disconnected', 'Gamepad #' + usingGamepad + ' was disconnected');
 			usingGamepad = -1;
 			clearInterval(intervalId);
 		}
 		if (usingGamepad === -1) {
 			/*Array.prototype.forEach.call(gamepads, (gp) => { // Chrome workaround
 				usingGamepad = gp.index;
-				ui.showNotif('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
+				view.showNotif('Gamepad connected', 'Gamepad #' + usingGamepad + ' is set as controlling device');
 				intervalId = setInterval(updateControlsViaGamepad, 50, usingGamepad);
 			});*/
 		}
@@ -221,10 +221,10 @@ function updateControlsViaGamepad(usingGamepad) {
 
 /* Zoom */
 document.addEventListener('wheel', function(e) {
-	if (!ui.chatInUse() && ui.noModalOpen()) {
+	if (!view.chatInUse() && view.noModalOpen()) {
 		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
 		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
-		ui.resizeCanvas();
+		view.resizeCanvas();
 	}
 });
 

@@ -1,7 +1,7 @@
 import vinage from 'vinage';
 import * as audio from './audio.js';
 import * as game from './game.js';
-import * as ui from './ui.js';
+import * as view from './view/index.js';
 
 import Planet from './planet.js';
 import Enemy from './enemy.js';
@@ -34,7 +34,7 @@ export function updateEnemy(id, angle) {
 export function addPlayer(pid, appearance, homographId, name) {
 	let newPlayer = new Player(pid, appearance, homographId, name);
 	players[pid] = newPlayer;
-	if (!(pid in players)) ui.printChatMessage(undefined, undefined, newPlayer.getFinalName() + ' joined the game');
+	if (!(pid in players)) view.printChatMessage(undefined, undefined, newPlayer.getFinalName() + ' joined the game');
 }
 export function updatePlayer(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
 	if (players[pid] === undefined) console.log(pid, players);

@@ -1,5 +1,5 @@
 import * as entities from './entities.js';
-import * as ui from './ui.js';
+import * as view from './view/index.js';
 import * as controls from './controls.js';
 import * as draw from './draw.js';
 
@@ -34,9 +34,9 @@ export function setAnimationFrameId(newAnimationFrameId) {
 export function start() {
 	if (!started) {
 		started = true;
-		ui.closeMenu(entities.universe);
+		view.closeMenu(entities.universe);
 		controls.addInputListeners();
-		if (ui.spawnMeteorsEnabled) draw.startMeteorSpawning();
+		if (view.spawnMeteorsEnabled) draw.startMeteorSpawning();
 		draw.loop();
 	}
 }
@@ -50,7 +50,7 @@ export function stop() {
 		entities.players.forEach(function(player) {
 			if (player.jetpack) player.jetpackSound.stop();
 		});
-		ui.clearChat();
+		view.clearChat();
 		draw.stopMeteorSpawning();
 		entities.planets.length = 0;
 		entities.enemies.length = 0;

@@ -66,7 +66,7 @@ export function updateChatOffset(){
 }
 export function clearChat() {
 	let chatElement = document.getElementById('gui-chat');
-	while (chatElement.childNodes.length > 40) chatElement.removeChild(chatElement.childNodes[1]);
+	while (chatElement.childNodes.length > 1) chatElement.removeChild(chatElement.childNodes[1]);
 }
 
 /* Player list */
