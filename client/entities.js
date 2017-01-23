@@ -1,5 +1,5 @@
 import vinage from 'vinage';
-import * as audio from './audio.js';
+import * as audio from './view/audio.js';
 import * as game from './game.js';
 import * as view from './view/index.js';
 

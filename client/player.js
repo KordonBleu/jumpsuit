@@ -1,6 +1,6 @@
 import Player from '../shared/player.js';
 import vinage from 'vinage';
-import * as audio from './audio.js';
+import * as audio from './view/audio.js';
 import * as entities from './entities.js';
 import windowBox from './windowbox.js';
 

@@ -2,7 +2,7 @@ import * as game from './game.js';
 import * as entities from './entities.js';
 import windowBox from './windowbox.js';
 import * as controls from './controls.js';
-import * as audio from './audio.js';
+import * as audio from './view/audio.js';
 import * as engine from './engine.js';
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
