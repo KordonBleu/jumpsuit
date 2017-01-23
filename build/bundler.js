@@ -116,7 +116,7 @@ rollup.rollup({
 			'<@Shot@>': 'client/shot.js',
 
 			'<@Weapon@>': 'client/weapon.js',
-			'<@RapidFireWeapon@>': 'client/rapid_fire_weapon.js',
+			'<@RapidFireWeapon@>': 'shared/rapid_fire_weapon.js',
 
 			'<@Lmg@>': 'client/lmg.js',
 			'<@Smg@>': 'client/smg.js',

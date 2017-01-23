@@ -1,6 +1,7 @@
 import Weapon from '<@Weapon@>';
+import Shot from './shot.js';
 
-export default class extends Weapon {
+export default class RapidFireWeapon extends Weapon {
 	constructor(owner) {
 		super(owner);
 		this.cycle = 0;
@@ -10,3 +11,4 @@ export default class extends Weapon {
 		return this.cycle === 0;
 	}
 }
+RapidFireWeapon.prototype.shotType = Shot.prototype.TYPES.BULLET;
