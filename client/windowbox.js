@@ -1,6 +1,6 @@
 import vinage from 'vinage';
 import modulo from '../shared/modulo.js';
-import * as entities from './entities.js';
+import * as entities from './model/entities.js';
 
 let canvas = document.getElementById('canvas'),
 	windowBox = new vinage.Rectangle(new vinage.Point(null, null), canvas.clientWidth, canvas.clientHeight);

@@ -1,7 +1,7 @@
 import Player from '../shared/player.js';
 import vinage from 'vinage';
 import * as audio from './view/audio.js';
-import * as entities from './entities.js';
+import * as entities from './model/entities.js';
 import windowBox from './windowbox.js';
 
 class Particle {

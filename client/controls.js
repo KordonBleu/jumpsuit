@@ -1,5 +1,5 @@
 import vinage from 'vinage';
-import settings from './settings.js';
+import settings from './model/settings.js';
 import * as bimap from '../shared/bimap.js';
 
 import windowBox from './windowbox.js';

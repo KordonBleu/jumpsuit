@@ -1,4 +1,4 @@
-import * as entities from './entities.js';
+import * as entities from './model/entities.js';
 import * as view from './view/index.js';
 import * as controls from './controls.js';
 import * as draw from './draw.js';

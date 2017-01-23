@@ -1,9 +1,9 @@
-import settings from './settings.js';
+import settings from './model/settings.js';
 import * as game from './game.js';
 import * as view from './view/index.js';
 
 import * as controls from './controls.js';
-import * as entities from './entities.js';
+import * as entities from './model/entities.js';
 import * as message from '../shared/message.js';
 
 export default class Connection {

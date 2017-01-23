@@ -1,8 +1,8 @@
 import Player from '../player.js';
-import * as entities from '../entities.js';
+import * as entities from '../model/entities.js';
 import windowBox from '../windowbox.js';
 import * as chat from './chat.js';
-import { resourceAmount } from '../resource_loader.js';
+import { resourceAmount } from '../model/resource_loader.js';
 
 /* Resource loading view */
 let loadingProgressElem = document.getElementById('loading-progress');

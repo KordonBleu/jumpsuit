@@ -1,4 +1,4 @@
-import settings from '../settings.js';
+import settings from '../model/settings.js';
 import * as view from '../view/audio.js';
 
 // callbacks called by the view

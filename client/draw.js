@@ -1,5 +1,5 @@
 import * as game from './game.js';
-import * as entities from './entities.js';
+import * as entities from './model/entities.js';
 import windowBox from './windowbox.js';
 import * as controls from './controls.js';
 import * as audio from './view/audio.js';

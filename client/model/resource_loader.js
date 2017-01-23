@@ -1,5 +1,5 @@
-import { getFinalResNames } from '../shared/resource_list.js';
-export { resourceAmount } from '../shared/resource_list.js';
+import { getFinalResNames } from '../../shared/resource_list.js';
+export { resourceAmount } from '../../shared/resource_list.js';
 
 let resources = {};
 

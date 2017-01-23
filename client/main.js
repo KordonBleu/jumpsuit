@@ -1,5 +1,5 @@
 import * as controller from './controller/index.js';
-import resPromise from './resource_loader.js';
+import resPromise from './model/resource_loader.js';
 
 import * as view from './view/index.js';
 

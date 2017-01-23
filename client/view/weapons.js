@@ -1,4 +1,4 @@
-import settings from '../settings.js';
+import settings from '../model/settings.js';
 import * as wsClt from '../websockets.js';
 
 const primaryWeaponElement = document.getElementById('primary-weapon'),

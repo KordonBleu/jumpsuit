@@ -48,7 +48,7 @@ class Lobby {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 12000);
+		setTimeout(this.playingToDisplaying.bind(this), 120000);
 	}
 	playingToDisplaying() {
 		this.changeState('displaying_scores');

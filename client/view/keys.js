@@ -1,4 +1,4 @@
-import settings from '../settings.js';
+import settings from '../model/settings.js';
 import * as controls from '../controls.js';
 
 const keyResetElement = document.getElementById('key-reset');
