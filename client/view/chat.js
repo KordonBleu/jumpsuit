@@ -1,46 +1,30 @@
 import Planet from '../planet.js';
-import * as wsClt from '../websockets.js';
 import * as entities from '../model/entities.js';
-import * as controls from '../controls.js';
+import isMobile from '../model/platform.js';
+import * as model from '../model/chat.js';
 
 const chatInput = document.getElementById('gui-chat-input'),
 	chatPlayerListElement = document.getElementById('gui-chat-player-list');
 
-chatInput.addEventListener('keydown', function(e) {
-	if (e.key === 'Enter') {
-		if (!wsClt.currentConnection.alive()) return;
-		wsClt.currentConnection.sendChat(this.value);
-		this.value = '';
-		this.blur();
-	} else if (e.key === 'Tab') {
-		e.preventDefault();
-		if (!this.playerSelection) {
-			this.playerSelection = true;
-			let text = (this.selectionStart === 0) ? '' : this.value.substr(0, this.selectionStart);
-			this.search = text.substr((text.lastIndexOf(' ') === -1) ? 0 : text.lastIndexOf(' ') + 1);
+export function bindChatKeyDown(handler) { // used by the controller
+	chatInput.addEventListener('keydown', (e) => {
+		if (e.key === 'Tab') e.preventDefault();
+		handler(e.key, chatInput.value, chatInput.selectionStart, chatInput.selectionEnd);
+	});
+}
+export function clearChatInput() {
+	chatInput.value = '';
+	chatInput.blur();
+}
+export function autoComplete() {
+	let filteredPlayerList = model.getFilteredPlayerList();
 
-			this.searchIndex = 0;
-			this.textParts = [this.value.substr(0, this.selectionStart - this.search.length), this.value.substr(this.selectionEnd)];
-		}
-
-		printPlayerList(this.search);
-
-		let filteredPlayerList = [];
-		for (let pid in entities.players) {
-			if (entities.players[pid].name.indexOf(this.search) !== -1) filteredPlayerList.push(entities.players[pid].name);
-		}
-		if (filteredPlayerList.length !== 0) {
-			let cursorPos = this.textParts[0].length + filteredPlayerList[this.searchIndex].length;
-			this.value = this.textParts[0] + filteredPlayerList[this.searchIndex] + this.textParts[1];
-			chatInput.setSelectionRange(cursorPos, cursorPos);
-			this.searchIndex++;
-			if (this.searchIndex === filteredPlayerList.length) this.searchIndex = 0;
-		}
-	} else {
-		this.playerSelection = false;
-		printPlayerList('');
+	if (filteredPlayerList.length !== 0) {
+		let cursorPos = model.textParts[0].length + filteredPlayerList[model.searchIndex].length;
+		chatInput.value = model.textParts[0] + filteredPlayerList[model.searchIndex] + model.textParts[1];
+		chatInput.setSelectionRange(cursorPos, cursorPos);
 	}
-});
+}
 export function printChatMessage(name, appearance, content) {
 	let element = document.createElement('p'),
 		nameElement = document.createElement('b'),
@@ -84,7 +68,7 @@ export function focusChat() {
 	chatInput.focus();
 }
 export function printPlayerList(filter) {
-	if (controls.isMobile) chatPlayerListElement.dataset.desc = 'player list';
+	if (isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
 	entities.players.forEach(function(player) {

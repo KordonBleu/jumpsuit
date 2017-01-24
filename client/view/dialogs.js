@@ -1,5 +1,5 @@
 import * as wsClt from '../websockets.js';
-import * as controls from '../controls.js';
+import isMobile from '../model/platform.js';
 
 const settingsBox = document.getElementById('settings-box'),
 	menuBoxSettingsButton = document.getElementById('menu-box-settings-button'),
@@ -62,7 +62,7 @@ export function showBlockedPortDialog(portNumber) {
 if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) { // neither Chrome nor Firefox
 	document.getElementById('device-not-supported').classList.remove('hidden');
 	document.getElementById('shade-box').classList.remove('hidden');
-} else if (controls.isMobile) { // Chrome or Firefox mobile
+} else if (isMobile) { // Chrome or Firefox mobile
 	document.getElementById('device-untested').classList.remove('hidden');
 	document.getElementById('shade-box').classList.remove('hidden');
 }
