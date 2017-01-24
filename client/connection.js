@@ -58,19 +58,19 @@ export default class Connection {
 		this.fastDc.removeEventListener('error', this.constructor.errorHandler);
 		this.fastDc.removeEventListener('message', this.constructor.messageHandler);
 		game.stop();
-		view.showMenu();
+		view.views.showMenu();
 		entities.players.length = 0;
 		document.getElementById('lobby-table').classList.remove('hidden');
-		view.hideScores();
-		view.clearChat();
-		view.goToMenu();
+		view.views.hideScores();
+		view.chat.clearChat();
+		view.history.goToMenu();
 	}
 	setPreferences() {
 		this.sendMessage(message.setPreferences, settings);
 	}
 	sendChat(content) {
 		this.sendMessage(message.chat, content);
-		view.printChatMessage(entities.players[game.ownIdx].getFinalName(), entities.players[game.ownIdx].appearance, content);
+		view.chat.printChatMessage(entities.players[game.ownIdx].getFinalName(), entities.players[game.ownIdx].appearance, content);
 	}
 	refreshControls(selfControls) {
 		let accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
@@ -160,7 +160,7 @@ export default class Connection {
 				document.getElementById('menu-box').classList.add('hidden');
 				document.getElementById('gui-warmup').classList.remove('hidden');
 				document.getElementById('lobby-table').classList.add('hidden');
-				view.hideScores();
+				view.views.hideScores();
 
 				game.start();
 
@@ -176,7 +176,7 @@ export default class Connection {
 					entities.addPlayer,
 					entities.updatePlayer
 				);
-				view.updatePlayerList();
+				view.views.updatePlayerList();
 				break;
 			case message.removeEntity:
 				message.removeEntity.deserialize(msg.data,
@@ -192,12 +192,12 @@ export default class Connection {
 						entities.shots.splice(id, 1);
 					},
 					id => {//remove players
-						view.printChatMessage(undefined, undefined, entities.players[id].getFinalName() + ' has left the game');
+						view.chat.printChatMessage(undefined, undefined, entities.players[id].getFinalName() + ' has left the game');
 						console.log('We\'re gonna remove a player');
 						delete entities.players[id];
 					}
 				);
-				view.updatePlayerList();
+				view.views.updatePlayerList();
 				break;
 			case message.gameState: {
 				let val = message.gameState.deserialize(msg.data, entities.planets.length, entities.enemies.length,
@@ -222,7 +222,7 @@ export default class Connection {
 			}
 			case message.chatBroadcast: {
 				let val = message.chatBroadcast.deserialize(msg.data);
-				view.printChatMessage(entities.players[val.id].getFinalName(), entities.players[val.id].appearance, val.message);
+				view.chat.printChatMessage(entities.players[val.id].getFinalName(), entities.players[val.id].appearance, val.message);
 				break;
 			}
 			case message.setNameBroadcast: {
@@ -230,8 +230,8 @@ export default class Connection {
 					oldName = entities.players[val.id].getFinalName();
 				entities.players[val.id].name = val.name;
 				entities.players[val.id].homographId = val.homographId;
-				view.printChatMessage(undefined, undefined, '"' + oldName + '" is now known as "' + entities.players[val.id].getFinalName() + '"');
-				view.printPlayerList();
+				view.chat.printChatMessage(undefined, undefined, '"' + oldName + '" is now known as "' + entities.players[val.id].getFinalName() + '"');
+				view.chat.printPlayerList();
 				break;
 			}
 			case message.scores: {
@@ -252,7 +252,7 @@ export default class Connection {
 			}
 			case message.displayScores: {
 				console.log('displayScores');
-				view.showScores();
+				view.views.showScores();
 				let victor = null,
 					a = -Infinity,
 					playerTableVictoryElement = document.getElementById('player-table');

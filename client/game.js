@@ -34,9 +34,9 @@ export function setAnimationFrameId(newAnimationFrameId) {
 export function start() {
 	if (!started) {
 		started = true;
-		view.closeMenu(entities.universe);
+		view.views.closeMenu(entities.universe);
 		controls.addInputListeners();
-		if (view.spawnMeteorsEnabled) draw.startMeteorSpawning();
+		if (view.settings.spawnMeteorsEnabled) draw.startMeteorSpawning();
 		draw.loop();
 	}
 }
@@ -50,7 +50,7 @@ export function stop() {
 		entities.players.forEach(function(player) {
 			if (player.jetpack) player.jetpackSound.stop();
 		});
-		view.clearChat();
+		view.chat.clearChat();
 		draw.stopMeteorSpawning();
 		entities.planets.length = 0;
 		entities.enemies.length = 0;

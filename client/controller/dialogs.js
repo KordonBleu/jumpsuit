@@ -1,54 +1,53 @@
-import * as view from '../view/dialogs.js';
+import * as view from '../view/index.js';
 import * as model from '../model/dialogs.js';
 import * as wsClt from '../websockets.js';
 import * as platform from '../model/platform.js';
 
-view.bindSettingsButtons(() => {
+view.dialogs.bindSettingsButtons(() => {
 	model.setIsModalOpen(true);
-	view.openSettingsBox();
+	view.dialogs.openSettingsBox();
 });
 
-view.bindCloseSettingsButton(() => {
+view.dialogs.bindCloseSettingsButton(() => {
 	model.setIsModalOpen(false);
-	view.closeSettingsBox();
+	view.dialogs.closeSettingsBox();
 });
 
 
-view.bindInfoButton(() => {
+view.dialogs.bindInfoButton(() => {
 	model.setIsModalOpen(true);
-	view.openInfoBox();
+	view.dialogs.openInfoBox();
 });
-view.bindCloseInfoButton(() => {
-	console.log('fwquy');
+view.dialogs.bindCloseInfoButton(() => {
 	model.setIsModalOpen(false);
-	view.closeInfoBox();
+	view.dialogs.closeInfoBox();
 });
 
 
-view.bindLeaveButtons(() => {
+view.dialogs.bindLeaveButtons(() => {
 	wsClt.currentConnection.close();
 });
 
 
-view.bindCloseUntestedBox(() => {
+view.dialogs.bindCloseUntestedBox(() => {
 	model.setIsModalOpen(false);
-	view.closeUntestedBox();
+	view.dialogs.closeUntestedBox();
 });
 
-view.bindCloseUnsupportedBox(() => {
+view.dialogs.bindCloseUnsupportedBox(() => {
 	model.setIsModalOpen(false);
-	view.closeUnsupportedBox();
+	view.dialogs.closeUnsupportedBox();
 });
 
 if (platform.isUnsupported) { // neither Chrome nor Firefox
 	model.setIsModalOpen(true);
-	view.openUnsupportedBox();
+	view.dialogs.openUnsupportedBox();
 } else if (platform.isMobile) { // Chrome or Firefox mobile
 	model.setIsModalOpen(true);
-	view.openUntestedBox();
+	view.dialogs.openUntestedBox();
 }
 
-view.bindCloseBlockedPortBox(() => {
+view.dialogs.bindCloseBlockedPortBox(() => {
 	model.setIsModalOpen(false);
-	view.closeBlockedPortBox();
+	view.dialogs.closeBlockedPortBox();
 });
