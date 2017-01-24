@@ -1,6 +1,6 @@
 import Planet from '../planet.js';
 import * as entities from '../model/entities.js';
-import isMobile from '../model/platform.js';
+import * as platform from '../model/platform.js';
 import * as model from '../model/chat.js';
 
 const chatInput = document.getElementById('gui-chat-input'),
@@ -68,7 +68,7 @@ export function focusChat() {
 	chatInput.focus();
 }
 export function printPlayerList(filter) {
-	if (isMobile) chatPlayerListElement.dataset.desc = 'player list';
+	if (platform.isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
 	entities.players.forEach(function(player) {

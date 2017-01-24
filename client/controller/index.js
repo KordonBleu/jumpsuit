@@ -1,5 +1,6 @@
 import './audio.js';
 import './chat.js';
+import './dialogs.js';
 
 
 import resPromise from '../model/resource_loader.js';

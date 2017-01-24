@@ -1,68 +1,102 @@
-import * as wsClt from '../websockets.js';
-import isMobile from '../model/platform.js';
-
-const settingsBox = document.getElementById('settings-box'),
-	menuBoxSettingsButton = document.getElementById('menu-box-settings-button'),
-	infoBox = document.getElementById('info-box'),
-	menuBoxInfoButton = document.getElementById('menu-box-info-button');
-
-/* Position fix: settings-box and info-box become blurry due decimal number in CSS's transform */
-window.addEventListener('resize', resizeHandler);
-function resizeHandler() {
+function resizeHandler() { // Position fix: settings-box and info-box become blurry due decimal number in CSS's transform
 	for (let element of document.querySelectorAll('#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested')) {
 		element.style['margin-top'] = Math.round(element.clientHeight * -0.5) + 'px';
 		element.style['margin-left'] = Math.round(element.clientWidth * -0.5) + 'px';
 	}
 }
-
+window.addEventListener('resize', resizeHandler);
 resizeHandler();
-/* Buttons */
-function addShowBoxListener(button, dialogBox) {
-	button.addEventListener('click', function() {
-		dialogBox.classList.remove('hidden');
-		document.getElementById('shade-box').classList.remove('hidden');
-	});
-}
-// every HTML element with a 'close-parent' class (generally a 'Close' button) will, when clicked, close the dialog it is part of
-for (let button of document.getElementsByClassName('close-parent')) {
-	button.addEventListener('click', function(e) {
-		e.target.parentElement.classList.add('hidden');
-		document.getElementById('shade-box').classList.add('hidden');
-	});
-}
-addShowBoxListener(document.getElementById('settings-button'), settingsBox);
-addShowBoxListener(menuBoxSettingsButton, settingsBox);
-addShowBoxListener(document.getElementById('info-button'), infoBox);
-addShowBoxListener(menuBoxInfoButton, infoBox);
-['leave-button', 'menu-box-leave-button'].forEach(function(button) {
-	document.getElementById(button).addEventListener('click', function() {
-		wsClt.currentConnection.close();
-	});
-});
 
-export function noModalOpen() {
-	function objsInvisible(elArr) {
-		return elArr.every(function(element) {
-			return element.classList.contains('hidden');
-		});
+
+function showShadow() {
+	document.getElementById('shade-box').classList.remove('hidden');
+}
+function hideShadow() {
+	document.getElementById('shade-box').classList.add('hidden');
+}
+
+
+// settings
+export function bindSettingsButtons(handler) {
+	for (let button of document.querySelectorAll('#settings-button, #menu-box-settings-button')) {
+		button.addEventListener('click', handler);
 	}
+}
+export function bindCloseSettingsButton(handler) {
+	document.getElementById('close-settings-button').addEventListener('click', handler);
+}
+export function openSettingsBox() {
+	document.getElementById('settings-box').classList.remove('hidden');
+	showShadow();
+}
+export function closeSettingsBox() {
+	document.getElementById('settings-box').classList.add('hidden');
+	hideShadow();
+}
 
-	return objsInvisible([infoBox, settingsBox]);
+// info
+export function bindInfoButton(handler) {
+	for (let button of document.querySelectorAll('#info-button, #menu-box-info-button')) {
+		button.addEventListener('click', handler);
+	}
+}
+export function bindCloseInfoButton(handler) {
+	document.getElementById('close-info-button').addEventListener('click', handler);
+}
+
+export function openInfoBox() {
+	document.getElementById('info-box').classList.remove('hidden');
+	showShadow();
+}
+export function closeInfoBox() {
+	document.getElementById('info-box').classList.add('hidden');
+	hideShadow();
+}
+
+// leave
+export function bindLeaveButtons(handler) {
+	for (let button of document.querySelectorAll('#leave-button, #menu-box-leave-button')) {
+		button.addEventListener('click', handler);
+	}
 }
 
 /* Port blocked dialog box */
-export function showBlockedPortDialog(portNumber) {
+export function showBlockedPortDialog(portNumber) { // TODO: adapt this code to WebRTC (since we don't get to choose manually the port)
 	document.getElementById('blocked-port-box').classList.remove('hidden');
-	document.getElementById('shade-box').classList.remove('hidden');
 	document.getElementById('port-number').textContent = portNumber;
+	showShadow();
+}
+export function closeBlockedPortBox() {
+	document.getElementById('blocked-port-box').classList.add('hidden');
+	hideShadow();
+}
+export function bindCloseBlockedPortBox(handler) {
+	document.getElementById('close-blocked-port-box').addEventListener('click', handler);
 }
 
 
-/* Unsupported/untested dialog box */
-if (!navigator.userAgent.match(/(?:Firefox)|(?:Chrome)/i)) { // neither Chrome nor Firefox
+// unsupported box
+export function openUnsupportedBox() {
 	document.getElementById('device-not-supported').classList.remove('hidden');
-	document.getElementById('shade-box').classList.remove('hidden');
-} else if (isMobile) { // Chrome or Firefox mobile
+	showShadow();
+}
+export function closeUnsupportedBox() {
+	document.getElementById('device-not-supported').classList.add('hidden');
+	hideShadow();
+}
+export function bindCloseUnsupportedBox(handler) {
+	document.getElementById('device-not-supported').addEventListener('click', handler);
+}
+
+// untested box
+export function openUntestedBox() {
 	document.getElementById('device-untested').classList.remove('hidden');
-	document.getElementById('shade-box').classList.remove('hidden');
+	showShadow();
+}
+export function closeUntestedBox() {
+	document.getElementById('device-untested').classList.add('hidden');
+	hideShadow();
+}
+export function bindCloseUntestedBox(handler) {
+	document.getElementById('close-untested-box').addEventListener('click', handler);
 }
