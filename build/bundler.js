@@ -103,7 +103,7 @@ rollup.rollup({
 
 
 rollup.rollup({
-	entry: './client/main.js',
+	entry: './client/controller/index.js',
 	plugins: [
 		replace({
 			include: 'shared/**',
