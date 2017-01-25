@@ -1,37 +1,47 @@
 import * as url from './url.js';
-import * as wsClt from '../websockets.js';
+//import * as wsClt from '../websockets.js';
 
 export const HISTORY_MENU = 0,
 	HISTORY_GAME = 1;
 
-function connectByHash() {
-	if (location.hash === '') return;
-	try {
-		let [, serverId, lobbyId] = location.hash.match(new RegExp('^#srv=([' + url.urlSafeChars + ']+)&lobby=([' + url.urlSafeChars + ']+)'));
-		serverId = url.decodeUint(serverId);
-		lobbyId = url.decodeUint(lobbyId);
+export function getConnectionIds() {
+	let res = location.hash.match(new RegExp('^#srv=([' + url.escapedUrlSafeChars + ']+)(?:&lobby=([' + url.escapedUrlSafeChars + ']+))?'));
+	if (res === null) {
+		return {
+			serverId: null,
+			lobbyId: null
+		};
+	} else {
+		let [, serverId, lobbyId] = res;
+		serverId = serverId === undefined ? null : url.decodeUint(serverId);
+		lobbyId = lobbyId === undefined ? null : url.decodeUint(lobbyId);
 
-		if (wsClt.currentConnection.slaveCo == wsClt.masterSocket.servers[serverId].slaveCo && wsClt.currentConnection.lobbyId == wsClt.masterSocket.servers[serverId].lobbyId) return;
-		if (wsClt.currentConnection !== undefined) {
-			wsClt.currentConnection.close();
-		}
-		wsClt.makeNewCurrentConnection(wsClt.masterSocket.servers[serverId], lobbyId);
-	} catch (ex) {
-		if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
-		console.log(ex, ex.stack);
+		return {
+			serverId,
+			lobbyId
+		};
 	}
 }
-export function goToMenu() {
-	history.pushState(history.HISTORY_MENU, '', '/');
+export function push(serverId, lobbyId) {
+	if (serverId === undefined && lobbyId === undefined) {
+		history.pushState(HISTORY_MENU, '', location.pathname);
+	} else if (lobbyId) { // assumes serverId is defined too
+		history.pushState(HISTORY_GAME, '', location.pathname + '#srv=' + url.encodeUint(serverId) + '&lobby=' + url.encodeUint(lobbyId));
+	} else {
+		history.pushState(HISTORY_GAME, '', location.pathname + '#srv=' + url.encodeUint(serverId));
+	}
 }
 
-export function handleHistoryState() {
-	//modifies default history entries due hash changes
-	if (location.hash !== '') history.replaceState(HISTORY_GAME, '', '/' + location.hash);
-	else history.replaceState(HISTORY_MENU, '', '/');
-	if (history.state === HISTORY_MENU) {
-		//if navigated to / stop the game + display menu
-		if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
-	} else if (history.state === HISTORY_GAME) connectByHash();
+export function bindHistoryNavigation(menuHandler, gameHandler) {
+	window.addEventListener('popstate', e => {
+		console.log(e);
+		switch (history.state) {
+			case HISTORY_GAME:
+				gameHandler();
+				break;
+			case HISTORY_MENU:
+			default: // the first entry in the list did not get to change the state
+				menuHandler();
+		}
+	});
 }
-window.addEventListener('popstate', handleHistoryState);

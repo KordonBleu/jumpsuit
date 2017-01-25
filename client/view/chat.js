@@ -1,7 +1,5 @@
 import Planet from '../planet.js';
-import * as entities from '../model/entities.js';
-import * as platform from '../model/platform.js';
-import * as model from '../model/chat.js';
+import * as model from '../model/index.js';
 
 const chatInput = document.getElementById('gui-chat-input'),
 	chatPlayerListElement = document.getElementById('gui-chat-player-list');
@@ -17,11 +15,11 @@ export function clearChatInput() {
 	chatInput.blur();
 }
 export function autoComplete() {
-	let filteredPlayerList = model.getFilteredPlayerList();
+	let filteredPlayerList = model.chat.getFilteredPlayerList();
 
 	if (filteredPlayerList.length !== 0) {
-		let cursorPos = model.textParts[0].length + filteredPlayerList[model.searchIndex].length;
-		chatInput.value = model.textParts[0] + filteredPlayerList[model.searchIndex] + model.textParts[1];
+		let cursorPos = model.chat.textParts[0].length + filteredPlayerList[model.chat.searchIndex].length;
+		chatInput.value = model.chat.textParts[0] + filteredPlayerList[model.chat.searchIndex] + model.chat.textParts[1];
 		chatInput.setSelectionRange(cursorPos, cursorPos);
 	}
 }
@@ -68,10 +66,10 @@ export function focusChat() {
 	chatInput.focus();
 }
 export function printPlayerList(filter) {
-	if (platform.isMobile) chatPlayerListElement.dataset.desc = 'player list';
+	if (model.platform.isMobile) chatPlayerListElement.dataset.desc = 'player list';
 	else chatPlayerListElement.dataset.desc = 'press tab to complete a player\'s name';
 	while (chatPlayerListElement.firstChild) chatPlayerListElement.removeChild(chatPlayerListElement.firstChild);
-	entities.players.forEach(function(player) {
+	model.entities.players.forEach(function(player) {
 		if (filter !== '' && player.getFinalName().indexOf(filter) === -1) return;
 		let li = document.createElement('li');
 		li.textContent = player.getFinalName();

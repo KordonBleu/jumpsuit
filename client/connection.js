@@ -46,7 +46,7 @@ export default class Connection {
 		try {
 			this.fastDc.send(messageType.serialize.apply(messageType, args));
 		} catch(err) {
-			console.log(err);
+			console.error(err);
 			//TODO: display 'connection lost' and get back to the main menu
 			//or is that redudant with the event listener on 'error'?
 		}
@@ -63,7 +63,7 @@ export default class Connection {
 		document.getElementById('lobby-table').classList.remove('hidden');
 		view.views.hideScores();
 		view.chat.clearChat();
-		view.history.goToMenu();
+		view.history.push(); // go to the menu
 	}
 	setPreferences() {
 		this.sendMessage(message.setPreferences, settings);
@@ -154,8 +154,7 @@ export default class Connection {
 				entities.universe.width = val.univWidth;
 				entities.universe.height = val.univHeight;
 
-				//let hashSocket = this.fastDc.url.replace(/^ws(s)?\:\/\/(.+)(:?\/)$/, '$1$2');
-				//location.hash = '#srv=' + hashSocket + '&lobby=' + encodeLobbyNumber(val.lobbyId);
+				view.history.push(this.slaveCo.id, val.lobbyId);
 
 				document.getElementById('menu-box').classList.add('hidden');
 				document.getElementById('gui-warmup').classList.remove('hidden');
