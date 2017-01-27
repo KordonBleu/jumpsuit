@@ -1,6 +1,4 @@
 import vinage from 'vinage';
-import settings from './model/settings.js';
-import * as bimap from '../shared/bimap.js';
 
 import windowBox from './windowbox.js';
 
@@ -8,29 +6,14 @@ import * as view from './view/index.js';
 import * as dialogs from './model/dialogs.js';
 import * as wsClt from './websockets.js';
 
+import { selfControls } from './model/controls.js';
+
 const canvas = document.getElementById('canvas');
 
 String.prototype.ucFirst = function () {
 	//uppercasing the first letter
 	return this.charAt(0).toUpperCase() + this.slice(1);
 };
-
-export let selfControls = {
-		changeWeapon: 0,
-		crouch: 0,
-		jetpack: 0,
-		jump: 0,
-		moveLeft: 0,
-		moveRight: 0,
-		run: 0,
-		shoot: 0
-	},
-	keyMap = new bimap.KeyActionMap(settings.keymap);
-
-export function resetKeyMap() {
-	delete settings.keymap;
-	keyMap.parse(settings.keymap);
-}
 
 export function handleInputMobile(e) {
 	function transform(touch, type) {
@@ -64,27 +47,6 @@ export function handleInputMobile(e) {
 }
 
 
-/* Keyboard */
-function handleInput(e) {
-	let s = (e.type === 'keydown') * 1;
-
-	if (!view.chat.chatInUse() && !dialogs.modalOpen) {
-		let triggered = keyMap.getAction(e.code);
-
-		if (selfControls[triggered] !== undefined) {
-			e.preventDefault();
-			let controlElement = document.getElementById(triggered);
-			if (controlElement !== null) controlElement.style['opacity'] = s * 0.7 + 0.3;
-			selfControls[triggered] = s;
-			wsClt.currentConnection.refreshControls(selfControls);
-		} else if (triggered === 'chat' && s === 1) {
-			e.preventDefault();
-			window.setTimeout(function() { // prevent the letter corresponding to
-				view.chat.focusChat(); // the 'chat' control (most likelly 't')
-			}, 0); // from being written in the chat
-		}
-	}
-}
 
 /* Drag & Mouse */
 let dragStart = new vinage.Vector(0, 0),
@@ -227,15 +189,13 @@ document.addEventListener('wheel', function(e) {
 });
 
 export function addInputListeners() {
-	window.addEventListener('keydown', handleInput);
-	window.addEventListener('keyup', handleInput);
+	view.controls.enable();
 	window.addEventListener('touchstart', handleInputMobile);
 	window.addEventListener('touchmove', handleInputMobile);
 	window.addEventListener('touchend', handleInputMobile);
 }
 export function removeInputListeners() {
-	window.removeEventListener('keydown', handleInput);
-	window.removeEventListener('keyup', handleInput);
+	view.controls.disable();
 	window.removeEventListener('touchstart', handleInputMobile);
 	window.removeEventListener('touchmove', handleInputMobile);
 	window.removeEventListener('touchend', handleInputMobile);

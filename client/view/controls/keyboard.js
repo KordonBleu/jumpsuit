@@ -1,4 +1,4 @@
-import * as controls from '../../controls.js';
+import * as model from '../../model/index.js';
 
 const keyResetElement = document.getElementById('key-reset');
 
@@ -8,7 +8,7 @@ export function initKeyTable() {
 	while (keySettingsTbody.firstChild) {
 		keySettingsTbody.removeChild(keySettingsTbody.firstChild);
 	}
-	for (let {action, associatedKeys} of controls.keyMap) {
+	for (let {action, associatedKeys} of model.controls.keyMap) {
 		let rowEl = document.createElement('tr'),
 			actionEl = document.createElement('th');
 		actionEl.textContent = action;
@@ -78,4 +78,14 @@ export function showKeyAssignError(key) {
 	warnTimeoutId = setTimeout(function() {
 		keyInfoElement.classList.add('hidden');
 	}, 5000);
+}
+
+export let keyboardHandler = null;
+export function setKeyboardHandler(newKeyboardHandler) {
+	keyboardHandler = newKeyboardHandler;
+}
+
+export function setOnscreenControlOpacity(opacity, action) {
+	let controlElement = document.getElementById(action);
+	if (controlElement !== null) controlElement.style['opacity'] = opacity;
 }
