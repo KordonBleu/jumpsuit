@@ -18,3 +18,13 @@ export let selfControls = {
 	run: 0,
 	shoot: 0
 };
+
+export let mouseAngle = 0;
+export function setMouseAngle(newAngle) {
+	mouseAngle = newAngle;
+}
+
+export let gamepadId = null;
+export function setGamepadId(newGamepadId) {
+	gamepadId = newGamepadId;
+}

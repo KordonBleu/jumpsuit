@@ -1,6 +1,8 @@
 import * as keyboard from './keyboard.js';
+import * as gamepad from './gamepad.js';
+import * as mouse from './mouse.js';
 
-export { keyboard };
+export { keyboard, gamepad, mouse };
 
 export function enable() {
 	window.addEventListener('keydown', keyboard.keyboardHandler);

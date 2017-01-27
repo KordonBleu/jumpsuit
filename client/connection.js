@@ -2,9 +2,10 @@ import settings from './model/settings.js';
 import * as game from './game.js';
 import * as view from './view/index.js';
 
-import * as controls from './controls.js';
 import * as entities from './model/entities.js';
 import * as message from '../shared/message.js';
+
+import * as model from './model/index.js';
 
 export default class Connection {
 	constructor(slaveCo, lobbyId) {// a connection to a game server
@@ -102,7 +103,7 @@ export default class Connection {
 		}
 	}
 	static mouseAngleUpdateHandler() {
-		this.sendMousePos(controls.mouseAngle);
+		this.sendMousePos(model.controls.mouseAngle);
 	}
 	static messageHandler(msg) {
 		this.lastMessage = Date.now();
