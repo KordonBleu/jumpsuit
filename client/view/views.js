@@ -1,6 +1,5 @@
-import Player from '../player.js';
-import * as entities from '../model/entities.js';
-import windowBox from '../windowbox.js';
+import Player from '../game/player.js';
+import windowBox from './windowbox.js';
 import * as chat from './chat.js';
 import { resourceAmount } from '../model/resource_loader.js';
 import * as model from '../model/index.js';
@@ -46,7 +45,7 @@ export function updatePlayerList() {
 	const playerListElement = document.getElementById('player-list');
 
 	while (playerListElement.firstChild) playerListElement.removeChild(playerListElement.firstChild);
-	for (let player of entities.players) {
+	for (let player of model.entities.players) {
 		if (player === undefined) continue;
 		let newElement = document.createElement('li');
 		newElement.textContent = player.getFinalName();

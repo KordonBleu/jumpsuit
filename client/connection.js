@@ -1,5 +1,5 @@
 import settings from './model/settings.js';
-import * as game from './game.js';
+import * as loop from './controller/loop.js';
 import * as view from './view/index.js';
 
 import * as entities from './model/entities.js';
@@ -58,7 +58,7 @@ export default class Connection {
 		this.fastDc.close();
 		this.fastDc.removeEventListener('error', this.constructor.errorHandler);
 		this.fastDc.removeEventListener('message', this.constructor.messageHandler);
-		game.stop();
+		loop.stop();
 		view.views.showMenu();
 		entities.players.length = 0;
 		document.getElementById('lobby-table').classList.remove('hidden');
@@ -71,7 +71,7 @@ export default class Connection {
 	}
 	sendChat(content) {
 		this.sendMessage(message.chat, content);
-		view.chat.printChatMessage(entities.players[game.ownIdx].getFinalName(), entities.players[game.ownIdx].appearance, content);
+		view.chat.printChatMessage(entities.players[model.game.ownIdx].getFinalName(), entities.players[model.game.ownIdx].appearance, content);
 	}
 	refreshControls(selfControls) {
 		let accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
@@ -93,7 +93,7 @@ export default class Connection {
 		this.close();
 	}
 	static latencyHandler() {
-		if (game.state !== 'playing') return;
+		if (model.game.state !== 'playing') return;
 		let param1 = document.getElementById('gui-bad-connection');
 		if (Date.now() - this.lastMessage > 2000) param1.classList.remove('hidden');
 		else param1.classList.add('hidden');
@@ -139,9 +139,9 @@ export default class Connection {
 					entities.updatePlayer
 				);
 
-				game.setState('warmup');
+				model.game.setState('warmup');
 				console.log(val.scoresObj);
-				game.setScores(val.scoresObj);
+				model.game.setScores(val.scoresObj);
 				let pointsElement = document.getElementById('gui-points');
 				while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild); // clear score count GUI
 				for (let team in val.scoresObj) {
@@ -151,7 +151,7 @@ export default class Connection {
 				}
 
 				console.log('my ownIdx is:', val.playerId);
-				game.setOwnIdx(val.playerId);
+				model.game.setOwnIdx(val.playerId);
 				entities.universe.width = val.univWidth;
 				entities.universe.height = val.univHeight;
 
@@ -162,7 +162,7 @@ export default class Connection {
 				document.getElementById('lobby-table').classList.add('hidden');
 				view.views.hideScores();
 
-				game.start();
+				loop.start();
 
 				break;
 			}
@@ -206,13 +206,13 @@ export default class Connection {
 					entities.updatePlayer
 				);
 
-				game.setOwnHealth(val.yourHealth);
-				game.setOwnFuel(val.yourFuel);
+				model.game.setOwnHealth(val.yourHealth);
+				model.game.setOwnFuel(val.yourFuel);
 
 				Array.prototype.forEach.call(document.querySelectorAll('#gui-health div'), (element, index) => {
 					let state = 'heartFilled';
-					if (index * 2 + 2 <= game.ownHealth) state = 'heartFilled';
-					else if (index * 2 + 1 === game.ownHealth) state = 'heartHalfFilled';
+					if (index * 2 + 2 <= model.game.ownHealth) state = 'heartFilled';
+					else if (index * 2 + 1 === model.game.ownHealth) state = 'heartHalfFilled';
 					else state = 'heartNotFilled';
 					element.className = state;
 				});
@@ -236,11 +236,11 @@ export default class Connection {
 			}
 			case message.scores: {
 				console.log('scores');
-				let val = message.scores.deserialize(msg.data, game.scores);
-				game.setScores(val);
+				let val = message.scores.deserialize(msg.data, model.game.scores);
+				model.game.setScores(val);
 
-				if (game.state === 'warmup') {
-					game.setState('playing');
+				if (model.game.state === 'warmup') {
+					model.game.setState('playing');
 					document.getElementById('gui-warmup').classList.add('hidden');
 				}
 
@@ -257,16 +257,16 @@ export default class Connection {
 					a = -Infinity,
 					playerTableVictoryElement = document.getElementById('player-table');
 
-				for (let team in game.scores) {
-					if (game.scores[team] > a) {
-						a = game.scores[team];
+				for (let team in model.game.scores) {
+					if (model.game.scores[team] > a) {
+						a = model.game.scores[team];
 						victor = team;
-					} else if (game.scores[team] === a) victor = null;
+					} else if (model.game.scores[team] === a) victor = null;
 				}
 
 				playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
 
-				game.stop();
+				loop.stop();
 				break;
 			}
 		}

@@ -1,4 +1,4 @@
-import Lmg from '../shared/lmg.js';
+import Lmg from '../../shared/lmg.js';
 
 Lmg.prototype.offsetX = 13;
 Lmg.prototype.offsetY = -15;

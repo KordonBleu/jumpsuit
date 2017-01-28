@@ -1,5 +1,5 @@
-import Weapon from '../shared/weapon.js';
-import * as model from './model/index.js';
+import Weapon from '../../shared/weapon.js';
+import * as model from '../model/index.js';
 
 export default class extends Weapon {
 	constructor(owner) {

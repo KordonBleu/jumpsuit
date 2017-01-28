@@ -1,3 +1,5 @@
+import * as entities from '../model/entities.js';
+
 const musicVolumeElement = document.getElementById('music-volume'),
 	sfxVolumeElement = document.getElementById('effects-volume');
 
@@ -100,4 +102,10 @@ export const laserModel = new SoundModel('/assets/audio/laser.opus'),
 for (let i = 0; i !== 5; ++i) {
 	stepModels[0].push(new SoundModel('/assets/audio/step/concrete_' + i + '.opus'));
 	stepModels[1].push(new SoundModel('/assets/audio/step/grass_' + i + '.opus'));
+}
+
+export function stopAllJetpacks() {
+	entities.players.forEach(function(player) {
+		if (player.jetpack) player.jetpackSound.stop();
+	});
 }

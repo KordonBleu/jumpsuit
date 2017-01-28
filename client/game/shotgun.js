@@ -1,4 +1,4 @@
-import Shotgun from '../shared/shotgun.js';
+import Shotgun from '../../shared/shotgun.js';
 
 export default class CltShotgun extends Shotgun {
 	draw() {

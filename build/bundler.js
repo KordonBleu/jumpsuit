@@ -112,16 +112,16 @@ rollup.rollup({
 			}
 		}),
 		alias({
-			'<@Player@>': 'client/player.js',
-			'<@Shot@>': 'client/shot.js',
+			'<@Player@>': 'client/game/player.js',
+			'<@Shot@>': 'client/game/shot.js',
 
-			'<@Weapon@>': 'client/weapon.js',
+			'<@Weapon@>': 'client/game/weapon.js',
 			'<@RapidFireWeapon@>': 'shared/rapid_fire_weapon.js',
 
-			'<@Lmg@>': 'client/lmg.js',
-			'<@Smg@>': 'client/smg.js',
-			'<@Shotgun@>': 'client/shotgun.js',
-			'<@Knife@>': 'client/knife.js',
+			'<@Lmg@>': 'client/game/lmg.js',
+			'<@Smg@>': 'client/game/smg.js',
+			'<@Shotgun@>': 'client/game/shotgun.js',
+			'<@Knife@>': 'client/game/knife.js',
 
 			'<@convert@>': 'client/convert.js'
 		}),

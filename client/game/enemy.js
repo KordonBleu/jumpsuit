@@ -1,4 +1,4 @@
-import Enemy from '../shared/enemy.js';
+import Enemy from '../../shared/enemy.js';
 
 export default class extends Enemy {
 	constructor(x, y, appearance) {

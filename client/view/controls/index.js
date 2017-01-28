@@ -1,8 +1,9 @@
 import * as keyboard from './keyboard.js';
 import * as gamepad from './gamepad.js';
 import * as pointer from './pointer.js';
+import * as onscreen from './onscreen.js';
 
-export { keyboard, gamepad, pointer };
+export { keyboard, gamepad, pointer, onscreen };
 
 export function enable() {
 	window.addEventListener('keydown', keyboard.keyboardHandler);

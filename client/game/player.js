@@ -1,9 +1,8 @@
-import Player from '../shared/player.js';
+import Player from '../../shared/player.js';
 import vinage from 'vinage';
-import * as audio from './view/audio.js';
-import * as entities from './model/entities.js';
-import windowBox from './windowbox.js';
-import * as model from './model/index.js';
+import * as audio from '../view/audio.js';
+import windowBox from '../view/windowbox.js';
+import * as model from '../model/index.js';
 
 class Particle {
 	constructor(size, startX, startY, velocityX, velocityY, lifetime) {
@@ -64,7 +63,7 @@ export default class extends Player {
 	}
 	playSteps(ownPlayer, walkFrame, x, y) {
 		if ((this.walkFrame === 'walk1' && walkFrame === 'walk2') || (this.walkFrame === 'walk2' && walkFrame === 'walk1')) {
-			let type = entities.planets[this.attachedPlanet].type,
+			let type = model.entities.planets[this.attachedPlanet].type,
 				stepSound = audio.stepModels[type][this.lastSound].makeSound(audio.makePanner(x - ownPlayer.box.center.x, y - ownPlayer.box.center.y));
 			stepSound.playbackRate.value = Math.random() + 0.5;//pitch is modified from 50% to 150%
 			stepSound.start(0);

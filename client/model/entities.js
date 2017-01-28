@@ -1,11 +1,11 @@
 import vinage from 'vinage';
-import * as game from '../game.js';
+import * as game from './game.js';
 import * as view from '../view/index.js';
 
-import Planet from '../planet.js';
-import Enemy from '../enemy.js';
-import Player from '../player.js';
-import Shot from '../shot.js';
+import Planet from '../game/planet.js';
+import Enemy from '../game/enemy.js';
+import Player from '../game/player.js';
+import Shot from '../game/shot.js';
 
 export let universe = new vinage.Rectangle(new vinage.Point(0, 0), null, null), // these parameters will be overwritten later
 	players = [],

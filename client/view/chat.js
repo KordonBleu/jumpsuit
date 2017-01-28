@@ -1,4 +1,4 @@
-import Planet from '../planet.js';
+import Planet from '../game/planet.js';
 import * as model from '../model/index.js';
 
 const chatInput = document.getElementById('gui-chat-input'),

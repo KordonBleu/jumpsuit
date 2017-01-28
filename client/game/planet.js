@@ -1,5 +1,5 @@
-import Planet from '../shared/planet.js';
-import * as model from './model/index.js';
+import Planet from '../../shared/planet.js';
+import * as model from '../model/index.js';
 
 export default class CltPlanet extends Planet {
 	constructor(x, y, radius, type) {

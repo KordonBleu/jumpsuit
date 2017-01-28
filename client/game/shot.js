@@ -1,5 +1,5 @@
-import Shot from '../shared/shot.js';
-import windowBox from './windowbox.js';
+import Shot from '../../shared/shot.js';
+import windowBox from '../view/windowbox.js';
 
 export default class extends Shot {
 	constructor(x, y, angle, origin, type) {
