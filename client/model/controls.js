@@ -28,3 +28,8 @@ export let gamepadId = null;
 export function setGamepadId(newGamepadId) {
 	gamepadId = newGamepadId;
 }
+
+export let zoomFactor = 1;
+export function setZoomFactor(newZoomFactor) {
+	zoomFactor = Math.max(0.25, Math.min(4, newZoomFactor));
+}

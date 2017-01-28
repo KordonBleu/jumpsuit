@@ -3,6 +3,7 @@ import * as entities from './model/entities.js';
 import windowBox from './windowbox.js';
 import * as view from './view/index.js';
 import * as engine from './engine.js';
+import * as model from './model/index.js';
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -54,8 +55,8 @@ export function loop() {
 				Math.floor(m.x),
 				Math.floor(m.y),
 				m.rotAng,
-				window.resources[m.res].width / windowBox.zoomFactor,
-				window.resources[m.res].height / windowBox.zoomFactor
+				window.resources[m.res].width / model.controls.zoomFactor,
+				window.resources[m.res].height / model.controls.zoomFactor
 			);
 		});
 	}
@@ -65,7 +66,7 @@ export function loop() {
 	//layer 1: the game
 	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
 
-	view.controls.pointer.updateDragSmooth(windowBox);
+	view.controls.pointer.updateDragSmooth();
 	windowBox.center.x = entities.players[game.ownIdx].box.center.x + view.controls.pointer.dragSmoothed.x;
 	windowBox.center.y = entities.players[game.ownIdx].box.center.y + view.controls.pointer.dragSmoothed.y;
 

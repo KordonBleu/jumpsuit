@@ -1,4 +1,5 @@
 import Planet from '../shared/planet.js';
+import * as model from './model/index.js';
 
 export default class CltPlanet extends Planet {
 	constructor(x, y, radius, type) {
@@ -20,17 +21,17 @@ export default class CltPlanet extends Planet {
 
 		//draw planet
 		context.beginPath();
-		context.arc(cx, cy, this.box.radius*windowBox.zoomFactor, 0, 2 * Math.PI, false);
+		context.arc(cx, cy, this.box.radius*model.controls.zoomFactor, 0, 2 * Math.PI, false);
 		context.closePath();
 		context.fill();
 
 		//apply texture
-		windowBox.drawRotatedImage(context, window.resources['planet'], cx, cy, this.box.radius*windowBox.zoomFactor / 200 * Math.PI, 2*this.box.radius, 2*this.box.radius);
+		windowBox.drawRotatedImage(context, window.resources['planet'], cx, cy, this.box.radius*model.controls.zoomFactor / 200 * Math.PI, 2*this.box.radius, 2*this.box.radius);
 
 		//draw progress indicator
 		context.beginPath();
-		context.arc(cx, cy, 50*windowBox.zoomFactor, -Math.PI * 0.5, (this.progress / 100) * Math.PI * 2 - Math.PI * 0.5, false);
-		context.lineWidth = 10*windowBox.zoomFactor;
+		context.arc(cx, cy, 50*model.controls.zoomFactor, -Math.PI * 0.5, (this.progress / 100) * Math.PI * 2 - Math.PI * 0.5, false);
+		context.lineWidth = 10*model.controls.zoomFactor;
 		context.strokeStyle = 'rgba(0, 0, 0, 0.2)';
 		context.stroke();
 		context.closePath();

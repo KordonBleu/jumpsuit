@@ -3,6 +3,7 @@ import vinage from 'vinage';
 import * as audio from './view/audio.js';
 import * as entities from './model/entities.js';
 import windowBox from './windowbox.js';
+import * as model from './model/index.js';
 
 class Particle {
 	constructor(size, startX, startY, velocityX, velocityY, lifetime) {
@@ -101,11 +102,11 @@ export default class extends Player {
 		//name
 		if (!isMe) {
 			let distance = Math.sqrt(Math.pow(res.width, 2) + Math.pow(res.height, 2)) * 0.5 + 8;
-			context.fillText(this.name, this, this - distance*windowBox.zoomFactor);
+			context.fillText(this.name, this, this - distance*model.controls.zoomFactor);
 		}
 
-		let wdt = res.width * windowBox.zoomFactor,
-			hgt = res.height * windowBox.zoomFactor,
+		let wdt = res.width * model.controls.zoomFactor,
+			hgt = res.height * model.controls.zoomFactor,
 			centerX = -(wdt / 2),
 			centerY = -(hgt / 2);
 
@@ -114,12 +115,12 @@ export default class extends Player {
 		context.scale(this.looksLeft === true ? -1 : 1, 1);
 
 		let jetpackRes = window.resources['jetpack'],
-			jetpackX = centerX - 5*windowBox.zoomFactor,
-			jetpackY = centerY + 16*windowBox.zoomFactor;
-		context.drawImage(window.resources['jetpack'], jetpackX, jetpackY, window.resources['jetpack'].width*0.75*windowBox.zoomFactor, window.resources['jetpack'].height*0.75*windowBox.zoomFactor);
+			jetpackX = centerX - 5*model.controls.zoomFactor,
+			jetpackY = centerY + 16*model.controls.zoomFactor;
+		context.drawImage(window.resources['jetpack'], jetpackX, jetpackY, window.resources['jetpack'].width*0.75*model.controls.zoomFactor, window.resources['jetpack'].height*0.75*model.controls.zoomFactor);
 
 		if (this.jetpack) {
-			let shift = this.looksLeft === true ? -windowBox.zoomFactor : windowBox.zoomFactor;
+			let shift = this.looksLeft === true ? -model.controls.zoomFactor : model.controls.zoomFactor;
 			if (document.getElementById('particle-option').checked && Date.now() % 2 === 0) {
 				particles.push(new Particle(18,
 					this.box.center.x - shift*14*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
@@ -136,8 +137,8 @@ export default class extends Player {
 			}
 
 			let jetpackFireRes = window.resources['jetpackFire'];
-			context.drawImage(jetpackFireRes, -(jetpackFireRes.width/2)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
-			context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*windowBox.zoomFactor, jetpackY + jetpackRes.height*0.75*windowBox.zoomFactor, jetpackFireRes.width*windowBox.zoomFactor, jetpackFireRes.height*windowBox.zoomFactor);
+			context.drawImage(jetpackFireRes, -(jetpackFireRes.width/2)*model.controls.zoomFactor, jetpackY + jetpackRes.height*0.75*model.controls.zoomFactor, jetpackFireRes.width*model.controls.zoomFactor, jetpackFireRes.height*model.controls.zoomFactor);
+			context.drawImage(jetpackFireRes, (jetpackFireRes.width/2 - jetpackRes.width*0.75)*model.controls.zoomFactor, jetpackY + jetpackRes.height*0.75*model.controls.zoomFactor, jetpackFireRes.width*model.controls.zoomFactor, jetpackFireRes.height*model.controls.zoomFactor);
 		}
 
 
@@ -149,13 +150,13 @@ export default class extends Player {
 		if (this.walkFrame === 'duck') {
 			let mouthRes = window.resources[this.appearance + '_mouth_surprise'];
 			context.rotate(res.mouthAngle);
-			context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
-			context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
+			context.drawImage(mouthRes, centerX + res.mouthPosX*model.controls.zoomFactor, centerY + res.mouthPosY*model.controls.zoomFactor, mouthRes.width*model.controls.zoomFactor, mouthRes.height*model.controls.zoomFactor);//mouth
+			context.drawImage(helmetRes, centerX, centerY, helmetRes.width*model.controls.zoomFactor, helmetRes.height*model.controls.zoomFactor);
 			context.rotate(-res.mouthAngle);
 		} else {
 			let mouthRes = window.resources[this.appearance + '_mouth_' + (this.hurt ? 'unhappy' : this.walkFrame === 'jump' ? 'surprise' : 'happy')];
-			context.drawImage(mouthRes, centerX + res.mouthPosX*windowBox.zoomFactor, centerY + res.mouthPosY*windowBox.zoomFactor, mouthRes.width*windowBox.zoomFactor, mouthRes.height*windowBox.zoomFactor);//mouth
-			context.drawImage(helmetRes, centerX, centerY, helmetRes.width*windowBox.zoomFactor, helmetRes.height*windowBox.zoomFactor);
+			context.drawImage(mouthRes, centerX + res.mouthPosX*model.controls.zoomFactor, centerY + res.mouthPosY*model.controls.zoomFactor, mouthRes.width*model.controls.zoomFactor, mouthRes.height*model.controls.zoomFactor);//mouth
+			context.drawImage(helmetRes, centerX, centerY, helmetRes.width*model.controls.zoomFactor, helmetRes.height*model.controls.zoomFactor);
 		}
 		context.resetTransform();
 	}

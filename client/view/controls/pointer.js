@@ -1,4 +1,5 @@
 import vinage from 'vinage';
+import * as model from '../../model/index.js';
 
 const canvas = document.getElementById('canvas');
 
@@ -24,9 +25,9 @@ let dragStart = new vinage.Vector(0, 0),
 	drag = new vinage.Vector(0, 0); // yass kween!
 
 export let dragSmoothed = new vinage.Vector(0, 0);
-export function updateDragSmooth(windowBox) { // this must be run at a certain frequency by the game loop
-	dragSmoothed.x = ((dragStart.x - drag.x) * 1/windowBox.zoomFactor + dragSmoothed.x * 4) / 5;
-	dragSmoothed.y = ((dragStart.y - drag.y) * 1/windowBox.zoomFactor + dragSmoothed.y * 4) / 5;
+export function updateDragSmooth() { // this must be run at a certain frequency by the game loop
+	dragSmoothed.x = ((dragStart.x - drag.x) * 1/model.controls.zoomFactor + dragSmoothed.x * 4) / 5;
+	dragSmoothed.y = ((dragStart.y - drag.y) * 1/model.controls.zoomFactor + dragSmoothed.y * 4) / 5;
 }
 
 

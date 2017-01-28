@@ -3,6 +3,7 @@ import * as entities from '../model/entities.js';
 import windowBox from '../windowbox.js';
 import * as chat from './chat.js';
 import { resourceAmount } from '../model/resource_loader.js';
+import * as model from '../model/index.js';
 
 /* Resource loading view */
 let loadingProgressElem = document.getElementById('loading-progress');
@@ -61,8 +62,8 @@ export function resizeCanvas() {
 
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
-	windowBox.width = canvas.clientWidth / windowBox.zoomFactor;
-	windowBox.height = canvas.clientHeight / windowBox.zoomFactor;
+	windowBox.width = canvas.clientWidth / model.controls.zoomFactor;
+	windowBox.height = canvas.clientHeight / model.controls.zoomFactor;
 
 	chat.updateChatOffset();
 }

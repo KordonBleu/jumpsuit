@@ -1,6 +1,5 @@
 import * as model from '../../model/index.js';
 import * as view from '../../view/index.js';
-import windowBox from '../../windowbox.js';
 import * as wsClt from '../../websockets.js';
 
 
@@ -10,8 +9,8 @@ view.controls.pointer.bindMouseMove(angle => {
 
 view.controls.pointer.bindWheel(deltaY => {
 	if (!view.chat.chatInUse() && !model.dialogs.modalOpen) {
-		let z = Math.abs(deltaY) === deltaY ? 0.5 : 2; // 1/2 or 2/1
-		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
+		let deltaFactor = deltaY > 0 ? 0.5 : 2; // 1/2 or 2/1
+		model.controls.setZoomFactor(model.controls.zoomFactor * deltaFactor);
 		view.views.resizeCanvas();
 	}
 });
