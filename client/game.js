@@ -1,6 +1,5 @@
 import * as entities from './model/entities.js';
 import * as view from './view/index.js';
-import * as controls from './controls.js';
 import * as draw from './draw.js';
 
 let started = false;
@@ -35,7 +34,7 @@ export function start() {
 	if (!started) {
 		started = true;
 		view.views.closeMenu(entities.universe);
-		controls.addInputListeners();
+		view.controls.enable();
 		if (view.settings.spawnMeteorsEnabled) draw.startMeteorSpawning();
 		draw.loop();
 	}
@@ -43,7 +42,7 @@ export function start() {
 export function stop() {
 	if (started) {
 		started = false;
-		controls.removeInputListeners();
+		view.controls.disable();
 		[].forEach.call(document.getElementById('gui-controls').querySelectorAll('img'), function(element) {
 			element.removeAttribute('style');
 		});

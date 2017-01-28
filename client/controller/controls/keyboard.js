@@ -28,17 +28,17 @@ view.controls.keyboard.bindSetKey((action, keyCode, previousKeyCode, setCellCont
 });
 
 view.controls.keyboard.setKeyboardHandler(e => {
-	let force = (e.type === 'keydown') * 1;
+	let pressure = (e.type === 'keydown') * 1;
 
 	if (!view.chat.chatInUse() && !model.dialogs.modalOpen) {
 		let triggered = model.controls.keyMap.getAction(e.code);
 
 		if (model.controls.selfControls[triggered] !== undefined) {
 			e.preventDefault();
-			view.controls.keyboard.setOnscreenControlOpacity(force * 0.7 + 0.3, triggered);
-			model.controls.selfControls[triggered] = force;
+			view.controls.keyboard.setOnscreenControlOpacity(pressure * 0.7 + 0.3, triggered);
+			model.controls.selfControls[triggered] = pressure;
 			wsClt.currentConnection.refreshControls(model.controls.selfControls);
-		} else if (triggered === 'chat' && force === 1) {
+		} else if (triggered === 'chat' && pressure === 1) {
 			e.preventDefault();
 			window.setTimeout(function() { // prevent the letter corresponding to
 				view.chat.focusChat(); // the 'chat' control (most likelly 't')

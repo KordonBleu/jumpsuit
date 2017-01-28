@@ -1,3 +1,3 @@
 import './keyboard.js';
-import './mouse.js';
+import './pointer.js';
 import './gamepad.js';

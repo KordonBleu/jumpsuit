@@ -1,8 +1,7 @@
 import * as game from './game.js';
 import * as entities from './model/entities.js';
 import windowBox from './windowbox.js';
-import * as controls from './controls.js';
-import * as audio from './view/audio.js';
+import * as view from './view/index.js';
 import * as engine from './engine.js';
 
 Math.map = function(x, in_min, in_max, out_min, out_max) {
@@ -66,9 +65,9 @@ export function loop() {
 	//layer 1: the game
 	engine.doPrediction(entities.universe, entities.players, entities.enemies, entities.shots);
 
-	controls.updateDragSmooth(windowBox);
-	windowBox.center.x = entities.players[game.ownIdx].box.center.x + controls.dragSmoothed.x;
-	windowBox.center.y = entities.players[game.ownIdx].box.center.y + controls.dragSmoothed.y;
+	view.controls.pointer.updateDragSmooth(windowBox);
+	windowBox.center.x = entities.players[game.ownIdx].box.center.x + view.controls.pointer.dragSmoothed.x;
+	windowBox.center.y = entities.players[game.ownIdx].box.center.y + view.controls.pointer.dragSmoothed.y;
 
 	//planets
 	let playerInAtmos = false;
@@ -78,8 +77,8 @@ export function loop() {
 
 		if (!playerInAtmos && entities.universe.collide(planet.atmosBox, entities.players[game.ownIdx].box)) playerInAtmos = true;
 	});
-	if(playerInAtmos) audio.bgFilter.frequency.value = Math.min(4000, audio.bgFilter.frequency.value * 1.05);
-	else audio.bgFilter.frequency.value = Math.max(200, audio.bgFilter.frequency.value * 0.95);
+	if(playerInAtmos) view.audio.bgFilter.frequency.value = Math.min(4000, view.audio.bgFilter.frequency.value * 1.05);
+	else view.audio.bgFilter.frequency.value = Math.max(200, view.audio.bgFilter.frequency.value * 0.95);
 
 	//shots
 	entities.shots.forEach(function (shot) {
@@ -114,7 +113,7 @@ export function loop() {
 	context.textAlign = 'center';
 	entities.players.forEach(function (player, i) {
 		if (entities.universe.collide(windowBox, player.box)) player.draw(context, particles, i === game.ownIdx);
-		if (player.panner !== undefined && player.jetpack) audio.setPanner(player.panner, player.box.center.x - entities.players[game.ownIdx].box.center.x, player.box.center.y - entities.players[game.ownIdx].box.center.y);
+		if (player.panner !== undefined && player.jetpack) view.audio.setPanner(player.panner, player.box.center.x - entities.players[game.ownIdx].box.center.x, player.box.center.y - entities.players[game.ownIdx].box.center.y);
 	});
 
 
