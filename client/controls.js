@@ -1,19 +1,11 @@
 import vinage from 'vinage';
 
-import windowBox from './windowbox.js';
-
 import * as view from './view/index.js';
-import * as dialogs from './model/dialogs.js';
 import * as wsClt from './websockets.js';
 
-import { selfControls } from './model/controls.js';
+import * as model from './model/index.js';
 
 const canvas = document.getElementById('canvas');
-
-String.prototype.ucFirst = function () {
-	//uppercasing the first letter
-	return this.charAt(0).toUpperCase() + this.slice(1);
-};
 
 export function handleInputMobile(e) {
 	function transform(touch, type) {
@@ -34,14 +26,14 @@ export function handleInputMobile(e) {
 
 	for (let touch of e.changedTouches) {
 		let s = e.type !== 'touchstart' && e.type === 'touchend';
-		if (selfControls[touch.target.id] !== undefined) {
+		if (model.controls.selfControls[touch.target.id] !== undefined) {
 			e.preventDefault();
 			if (touch.target.id === 'moveLeft' || touch.target.id === 'moveRight') {
 				let value = transform(touch, e.type);
-				selfControls['run'] = (-value >= 38) * 1;
+				model.controls.selfControls['run'] = (-value >= 38) * 1;
 			}
-			if (e.type !== 'touchmove') selfControls[touch.target.id] = s * 1;
-			wsClt.currentConnection.refreshControls(selfControls);
+			if (e.type !== 'touchmove') model.controls.selfControls[touch.target.id] = s * 1;
+			wsClt.currentConnection.refreshControls(model.controls.selfControls);
 		}
 	}
 }
@@ -82,8 +74,8 @@ function dragHandler(e) {
 canvas.addEventListener('mousedown', function(e) {
 	if (e.button === 0) {
 		if (wsClt.currentConnection.alive()) {
-			selfControls['shoot'] = 1;
-			wsClt.currentConnection.refreshControls(selfControls);
+			model.controls.selfControls['shoot'] = 1;
+			wsClt.currentConnection.refreshControls(model.controls.selfControls);
 		}
 	} else if (e.button === 1) {
 		updateDragStart(e);
@@ -96,8 +88,8 @@ canvas.addEventListener('mouseup', function(e) {
 		canvas.removeEventListener('mousemove', dragHandler);
 	} else if (e.button === 0) {
 		if (wsClt.currentConnection.alive()) {
-			selfControls['shoot'] = 0;
-			wsClt.currentConnection.refreshControls(selfControls);
+			model.controls.selfControls['shoot'] = 0;
+			wsClt.currentConnection.refreshControls(model.controls.selfControls);
 		}
 	}
 });
@@ -106,15 +98,6 @@ canvas.addEventListener('touchstart', updateDragStart);//TODO: action 1 on simpl
 canvas.addEventListener('touchend', dragEnd);
 document.getElementById('gui-controls').addEventListener('dragstart', function(e) {
 	e.preventDefault();//prevent unhandled dragging
-});
-
-/* Zoom */
-document.addEventListener('wheel', function(e) {
-	if (!view.chat.chatInUse() && !dialogs.modalOpen) {
-		let z = Math.abs(e.deltaY) === e.deltaY ? 0.5 : 2; // 1/2 or 2/1
-		windowBox.zoomFactor = Math.max(0.25, Math.min(4, windowBox.zoomFactor * z));
-		view.views.resizeCanvas();
-	}
 });
 
 export function addInputListeners() {
