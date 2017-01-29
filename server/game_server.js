@@ -92,6 +92,7 @@ new Slave(config.config.master, {
 							player.carriedWeapon = player.weapons[val.secondary];
 							player.homographId = selectedLobby.getNextHomographId(player.name);
 							player.lobbyId = val.lobbyId;
+							player.lastUpdate = Date.now();
 
 							selectedLobby.connectPlayer(player);
 
@@ -124,7 +125,7 @@ new Slave(config.config.master, {
 						if (player.dc === dc) {
 							logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
 							delete lobby.players[pi];
-							lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]));
+							lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]), player);
 							if (lobby.players.length === 0) {
 								lobby.lobbies[li].close();
 								delete lobby.lobbies[li];

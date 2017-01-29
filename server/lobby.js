@@ -130,13 +130,10 @@ class Lobby {
 
 
 		this.players.forEach(function(player) {
-			function updPlayer() {
+			let now = Date.now();
+			if (now - player.lastUpdate > 50) {
 				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players));
-				player.needsUpdate = true;
-			}
-			if (player.needsUpdate || player.needsUpdate === undefined) {
-				player.needsUpdate = false;
-				setTimeout(updPlayer.bind(this), 50);
+				player.lastUpdate = now;
 			}
 		}, this);
 		this.processTime = Date.now() - oldDate;
