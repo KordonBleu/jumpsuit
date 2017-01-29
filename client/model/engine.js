@@ -7,4 +7,4 @@ export function doPhysicsClient(universe, planets, shots, players) {
 	});
 }
 
-export * from '../shared/engine.js';
+export * from '../../shared/engine.js';

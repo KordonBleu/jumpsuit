@@ -1,5 +1,3 @@
-import * as wsClt from '../websockets.js';
-
 const lobbyListElement = document.getElementById('lobby-list');
 
 let slaveRows = new Map();
@@ -29,9 +27,11 @@ export function removeServer(slaveCo) {
 	slaveRows.get(slaveCo).remove();
 	slaveRows.delete(slaveCo);
 }
-lobbyListElement.addEventListener('click', function(e) {
-	if (e.target.tagName === 'BUTTON') {
-		if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
-		wsClt.makeNewCurrentConnection(e.target.slaveCo);
-	}
-});
+
+export function bindPlay(handler) {
+	lobbyListElement.addEventListener('click', e => {
+		if (e.target.tagName === 'BUTTON') {
+			handler(e.target.slaveCo);
+		}
+	});
+}

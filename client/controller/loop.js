@@ -1,5 +1,5 @@
 import * as view from '../view/index.js';
-import * as engine from '../engine.js';
+import * as engine from '../model/engine.js';
 import * as model from '../model/index.js';
 
 let animationFrameId;
