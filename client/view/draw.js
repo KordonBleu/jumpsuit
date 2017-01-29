@@ -91,7 +91,7 @@ export function draw() {
 	});
 
 	//particles
-	if (document.getElementById('particle-option').checked) {
+	if (model.settings.particles === 'true') {
 		particles.forEach(function(particle, index, array) {
 			if (particle.update()) array.splice(index, 1);
 			else view.windowBox.drawRotatedImage(context,

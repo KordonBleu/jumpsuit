@@ -17,7 +17,7 @@ export function start() {
 		started = true;
 		view.views.closeMenu(model.entities.universe);
 		view.controls.enable();
-		if (view.settings.spawnMeteorsEnabled) view.draw.startMeteorSpawning();
+		if (model.settings.meteors === 'true') view.draw.startMeteorSpawning();
 		loop();
 	}
 }

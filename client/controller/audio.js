@@ -1,16 +1,16 @@
-import settings from '../model/settings.js';
+import * as model from '../model/index.js';
 import * as view from '../view/index.js';
 
 // callbacks called by the view
 view.audio.bindSfxVolChange(volume => {
-	settings.volEffects = volume;
+	model.settings.volEffects = volume;
 	view.audio.setSfxGain(volume);
 });
 view.audio.bindMusicVolChange(volume => {
-	settings.volMusic = volume;
+	model.settings.volMusic = volume;
 	view.audio.setMusicGain(volume);
 });
 
 // initialisation
-view.audio.setSfxGain(parseInt(settings.volEffects, 10));
-view.audio.setMusicGain(parseInt(settings.volMusic, 10));
+view.audio.setSfxGain(parseInt(model.settings.volEffects, 10));
+view.audio.setMusicGain(parseInt(model.settings.volMusic, 10));

@@ -1,4 +1,3 @@
-import settings from './model/settings.js';
 import * as loop from './controller/loop.js';
 import * as view from './view/index.js';
 
@@ -31,7 +30,7 @@ export default class Connection {
 
 				this.fastDc = dc;
 
-				this.sendMessage.call(this, message.connect, lobbyId, settings);
+				this.sendMessage.call(this, message.connect, lobbyId, model.settings);
 
 				this.latencyHandlerId = setInterval(this.constructor.latencyHandler.bind(this), 100);
 				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
@@ -67,7 +66,7 @@ export default class Connection {
 		view.history.push(); // go to the menu
 	}
 	setPreferences() {
-		this.sendMessage(message.setPreferences, settings);
+		this.sendMessage(message.setPreferences, model.settings);
 	}
 	sendChat(content) {
 		this.sendMessage(message.chat, content);

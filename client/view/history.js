@@ -1,5 +1,4 @@
 import * as url from './url.js';
-//import * as wsClt from '../websockets.js';
 
 export const HISTORY_MENU = 0,
 	HISTORY_GAME = 1;

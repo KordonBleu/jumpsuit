@@ -120,7 +120,7 @@ export default class extends Player {
 
 		if (this.jetpack) {
 			let shift = this.looksLeft === true ? -model.controls.zoomFactor : model.controls.zoomFactor;
-			if (document.getElementById('particle-option').checked && Date.now() % 2 === 0) {
+			if (model.settings.particles === 'true' && Date.now() % 2 === 0) {
 				particles.push(new Particle(18,
 					this.box.center.x - shift*14*Math.sin(this.box.angle + Math.PI/2) - 70 * Math.sin(this.box.angle - Math.PI / 11),
 					this.box.center.y + shift*14*Math.cos(this.box.angle + Math.PI/2) + 70 * Math.cos(this.box.angle - Math.PI / 11),

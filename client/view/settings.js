@@ -1,27 +1,36 @@
-import settings from '../model/settings.js';
-import * as draw from './draw.js';
-import * as wsClt from '../websockets.js';
-
-/* Graphics */
+/* Meteors */
 const meteorsElement = document.getElementById('meteor-option');
-meteorsElement.checked = settings.meteors === 'true';
-meteorsElement.addEventListener('change', (e) => {
-	if (e.target.checked) draw.stopMeteorSpawning();
-	settings.meteors = e.target.checked;
-});
-export function spawnMeteorsEnabled() {
-	return meteorsElement.checked;
+export function checkMeteors(bool) {
+	meteorsElement.checked = bool;
 }
-document.getElementById('particle-option').checked = settings.particles === 'true';
+export function bindCheckMeteors(handler) {
+	meteorsElement.addEventListener('change', e => {
+		handler(e.target.checked);
+	});
+}
+
+/* Particles */
+const particleElement = document.getElementById('particle-option');
+export function checkParticles(bool) {
+	particleElement.checked = bool;
+}
+export function bindCheckParticles(handler) {
+	particleElement.addEventListener('change', e => {
+		handler(e.target.checked);
+	});
+}
 
 
 /* Name */
 const nameElement = document.getElementById('name');
-nameElement.value = settings.name;
-nameElement.addEventListener('keydown', function(e) {
+nameElement.addEventListener('keydown', e => {
 	if (e.key === 'Enter') e.target.blur();
 });
-nameElement.addEventListener('blur', function(e) {
-	settings.name = e.target.value;
-	wsClt.currentConnection.setPreferences();
-});
+export function setName(name) {
+	nameElement.value = name;
+}
+export function bindName(handler) {
+	nameElement.addEventListener('blur', e => {
+		handler(e.target.value);
+	});
+}

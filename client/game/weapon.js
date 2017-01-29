@@ -12,7 +12,8 @@ export default class extends Weapon {
 
 		this.recoil = this.recoil < 0.05 ? 0 : this.recoil * 0.7;
 		context.rotate(weaponRotFact);
-		if (document.getElementById('particle-option').checked && this.muzzleFlash === true) {
+		console.log(model.settings.particles === 'true');
+		if (model.settings.particles === 'true' && this.muzzleFlash === true) {
 			var	muzzleX = this.muzzleX*model.controls.zoomFactor + window.resources['muzzle'].width*0.5*model.controls.zoomFactor,
 				muzzleY = this.muzzleY*model.controls.zoomFactor - window.resources['muzzle'].height*0.25*model.controls.zoomFactor;
 

@@ -5,6 +5,6 @@ import * as entities from './entities.js';
 import * as game from './game.js';
 import * as platform from './platform.js';
 import * as resources from './resource_loader.js';
-import * as settings from './settings.js';
+import settings from './settings.js';
 
 export { chat, controls, dialogs, entities, game, platform, resources, settings };

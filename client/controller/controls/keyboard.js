@@ -1,10 +1,9 @@
 import * as view from '../../view/index.js';
 import * as model from '../../model/index.js';
-import settings from '../../model/settings.js';
 import * as wsClt from '../../websockets.js';
 
 view.controls.keyboard.initKeyTable();
-view.controls.keyboard.setKeyResetDisabledStatus(model.controls.keyMap.compare(settings.defaultKeymap));
+view.controls.keyboard.setKeyResetDisabledStatus(model.controls.keyMap.compare(model.settings.defaultKeymap));
 
 view.controls.keyboard.bindResetButton(() => {
 	model.controls.resetKeyMap();
@@ -21,8 +20,8 @@ view.controls.keyboard.bindSetKey((action, keyCode, previousKeyCode, setCellCont
 		setCellContent(keyCode);
 		deselectRow();
 
-		settings.keymap = model.controls.keyMap.stringify();
-		view.controls.keyboard.setKeyResetDisabledStatus(model.controls.keyMap.compare(settings.defaultKeymap));
+		model.settings.keymap = model.controls.keyMap.stringify();
+		view.controls.keyboard.setKeyResetDisabledStatus(model.controls.keyMap.compare(model.settings.defaultKeymap));
 
 	} else view.controls.keyboard.showKeyAssignError(keyCode);
 });
