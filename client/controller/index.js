@@ -5,6 +5,7 @@ import './history.js';
 import './controls/index.js';
 import './settings.js';
 import './servers.js';
+import './weapons.js';
 
 
 import resPromise from '../model/resource_loader.js';
