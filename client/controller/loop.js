@@ -15,7 +15,6 @@ function loop() {
 export function start() {
 	if (!started) {
 		started = true;
-		view.views.closeMenu(model.entities.universe);
 		view.controls.enable();
 		if (model.settings.meteors === 'true') view.draw.startMeteorSpawning();
 		loop();

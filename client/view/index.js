@@ -12,5 +12,6 @@ import * as sorting from './sorting.js';
 import * as views from './views.js';
 import * as weapons from './weapons.js';
 import windowBox from './windowbox.js';
+import * as hud from './hud.js';
 
-export { audio, chat, controls, dialogs, draw, history, notif, search, servers, settings, sorting, views, weapons, windowBox };
+export { audio, chat, controls, dialogs, draw, history, notif, search, servers, settings, sorting, views, weapons, windowBox, hud };

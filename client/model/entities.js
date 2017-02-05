@@ -50,3 +50,11 @@ export function addShot(x, y, angle, origin, type) {
 	});
 	if (originatingPlayer) originatingPlayer.armedWeapon.muzzleFlash = type === shot.TYPES.BULLET || type === shot.TYPES.BALL;
 }
+
+export function clean() {
+	players = [];
+	planets = [];
+	enemies = [];
+	shots = [];
+	deadShots = [];
+}

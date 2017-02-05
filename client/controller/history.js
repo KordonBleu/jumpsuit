@@ -1,17 +1,17 @@
 import * as view from '../view/index.js';
-import * as wsClt from '../websockets.js';
+import * as socket from './socket.js';
 
 function connect() {
 	let { serverId, lobbyId } = view.history.getConnectionIds();
 	if (serverId !== null) {
 		try {
-			if (wsClt.currentConnection.slaveCo == wsClt.masterSocket.servers[serverId].slaveCo && wsClt.currentConnection.lobbyId == wsClt.masterSocket.servers[serverId].lobbyId) return;
-			if (wsClt.currentConnection !== undefined) {
-				wsClt.currentConnection.close();
+			if (socket.currentConnection.slaveCo == socket.masterSocket.servers[serverId].slaveCo && socket.currentConnection.lobbyId == socket.masterSocket.servers[serverId].lobbyId) return;
+			if (socket.currentConnection !== undefined) {
+				socket.currentConnection.close();
 			}
-			wsClt.makeNewCurrentConnection(wsClt.masterSocket.servers[serverId], lobbyId);
+			socket.makeNewCurrentConnection(socket.masterSocket.servers[serverId], lobbyId);
 		} catch (ex) {
-			if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
+			if (socket.currentConnection !== undefined) socket.currentConnection.close();
 			console.log(ex, ex.stack);
 		}
 	}
@@ -21,7 +21,7 @@ connect();
 
 view.history.bindHistoryNavigation(() => {
 	// wants to go to the menu
-	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
+	if (socket.currentConnection !== undefined) socket.currentConnection.close();
 }, () => {
 	// wants to go to a game
 	connect();

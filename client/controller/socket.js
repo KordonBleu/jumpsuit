@@ -1,4 +1,4 @@
-import * as view from './view/index.js';
+import * as view from '../view/index.js';
 
 import Connection from './connection.js';
 

@@ -1,6 +1,6 @@
 import * as model from '../../model/index.js';
 import * as view from '../../view/index.js';
-import * as wsClt from '../../websockets.js';
+import * as socket from '../socket.js';
 
 if (model.platform.supportsGamepad) {
 	view.controls.gamepad.bindGamepadConnection(id => {
@@ -27,5 +27,5 @@ function updateControls(jump, run, crouch, jetpack, moveLeft, moveRight) {
 	model.controls.selfControls.moveLeft = moveLeft;
 	model.controls.selfControls.moveRight = moveRight;
 
-	wsClt.currentConnection.refreshControls(model.controls.selfControls);
+	socket.currentConnection.refreshControls();
 }

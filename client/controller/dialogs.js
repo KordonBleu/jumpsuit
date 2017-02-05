@@ -1,6 +1,6 @@
 import * as view from '../view/index.js';
 import * as model from '../model/dialogs.js';
-import * as wsClt from '../websockets.js';
+import * as socket from './socket.js';
 import * as platform from '../model/platform.js';
 
 view.dialogs.bindSettingsButtons(() => {
@@ -25,7 +25,7 @@ view.dialogs.bindCloseInfoButton(() => {
 
 
 view.dialogs.bindLeaveButtons(() => {
-	wsClt.currentConnection.close();
+	socket.currentConnection.close();
 });
 
 

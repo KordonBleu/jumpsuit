@@ -1,6 +1,6 @@
 import * as view from '../view/index.js';
 import * as model from '../model/chat.js';
-import * as wsClt from '../websockets.js';
+import * as wsClt from './socket.js';
 
 
 view.chat.bindChatKeyDown((key, value, selectionStart, selectionEnd) => { // TODO: much of this should go to the model

@@ -20,15 +20,7 @@ document.addEventListener('resource loaded', function loadBarHandler() {
 
 
 /* Main menu */
-export function closeMenu(universe) {
-	let minimapCanvas = document.getElementById('gui-minimap-canvas');
-	//the minimap ALWAYS has the same SURFACE, the dimensions however vary depending on the universe size
-	let minimapSurface = Math.pow(150, 2),//TODO: make it relative to the window, too
-	//(width)x * (height)x = minimapSurface
-		unitSize = Math.sqrt(minimapSurface/(universe.width*universe.height));//in pixels
-	minimapCanvas.width = unitSize*universe.width;
-	minimapCanvas.height = unitSize*universe.height;
-
+export function closeMenu() {
 	document.getElementById('menu-box').classList.add('hidden');
 }
 export function showMenu() {
@@ -38,6 +30,17 @@ export function showMenu() {
 /* Score view */
 export function showScores() {
 	document.getElementById('player-table').classList.remove('hidden');
+	let victor = null,
+		a = -Infinity;
+
+	for (let team in model.game.scores) {
+		if (model.game.scores[team] > a) {
+			a = model.game.scores[team];
+			victor = team;
+		} else if (model.game.scores[team] === a) victor = null;
+	}
+
+	document.getElementById('player-table').textContent = !victor ? 'Tied!' : victor + ' won!';
 }
 export function hideScores() {
 	document.getElementById('player-table').classList.add('hidden');

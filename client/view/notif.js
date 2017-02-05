@@ -13,3 +13,11 @@ export function showNotif(title, desc) {
 		previousTimeoutId = -1;
 	}, 4000);
 }
+
+let badCoEl = document.getElementById('gui-bad-connection');
+export function showBadConnection() {
+	badCoEl.classList.remove('hidden');
+}
+export function hideBadconnection() {
+	badCoEl.classList.add('hidden');
+}

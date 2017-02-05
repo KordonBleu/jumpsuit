@@ -1,16 +1,14 @@
-import * as loop from './controller/loop.js';
-import * as view from './view/index.js';
+import * as loop from './loop.js';
+import * as view from '../view/index.js';
+import * as model from '../model/index.js';
 
-import * as entities from './model/entities.js';
-import * as message from '../shared/message.js';
+import * as entities from '../model/entities.js';
+import * as message from '../../shared/message.js';
 
-import * as model from './model/index.js';
 
 export default class Connection {
 	constructor(slaveCo, lobbyId) {// a connection to a game server
-		this.lastControls = {};
 		this.lastMessage;
-		this.lastAngle = 0;
 
 		this.slaveCo = slaveCo;
 		this.lobbyId = lobbyId;
@@ -59,8 +57,7 @@ export default class Connection {
 		this.fastDc.removeEventListener('message', this.constructor.messageHandler);
 		loop.stop();
 		view.views.showMenu();
-		entities.players.length = 0;
-		document.getElementById('lobby-table').classList.remove('hidden');
+		entities.clean();
 		view.views.hideScores();
 		view.chat.clearChat();
 		view.history.push(); // go to the menu
@@ -72,19 +69,11 @@ export default class Connection {
 		this.sendMessage(message.chat, content);
 		view.chat.printChatMessage(entities.players[model.game.ownIdx].getFinalName(), entities.players[model.game.ownIdx].appearance, content);
 	}
-	refreshControls(selfControls) {
-		let accordance = 0, b = 0; //checking if every entry is the same, if so no changes & nothing to send
-		for (let c in selfControls) {
-			b++;
-			if (this.lastControls[c] === selfControls[c]) accordance++;
-			else this.lastControls[c] = selfControls[c];
+	refreshControls() {
+		if (model.controls.needsRefresh()) {
+			this.fastDc.send(message.playerControls.serialize(model.controls.selfControls));
+			model.controls.refresh();
 		}
-		if (accordance === b) return;
-		this.fastDc.send(message.playerControls.serialize(selfControls));
-	}
-	sendMousePos(angle) {
-		if (this.lastAngle !== angle) this.sendMessage(message.aimAngle, angle);
-		this.lastAngle = angle;
 	}
 	static errorHandler(err) {
 		//TODO: go back to main menu
@@ -92,17 +81,19 @@ export default class Connection {
 		this.close();
 	}
 	static latencyHandler() {
-		if (model.game.state !== 'playing') return;
-		let param1 = document.getElementById('gui-bad-connection');
-		if (Date.now() - this.lastMessage > 2000) param1.classList.remove('hidden');
-		else param1.classList.add('hidden');
+		if (model.game.state !== 'playing' || model.game.state !== 'warmup') return;
+		if (Date.now() - this.lastMessage > 2000) view.notif.showBadConnection();
+		else view.notif.hideBadconnection();
 
 		if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
 			this.close();
 		}
 	}
 	static mouseAngleUpdateHandler() {
-		this.sendMousePos(model.controls.mouseAngle);
+		if (model.controls.angleNeedsRefresh()) {
+			this.sendMessage(message.aimAngle, model.controls.mouseAngle);
+			model.controls.refreshAngle();
+		}
 	}
 	static messageHandler(msg) {
 		this.lastMessage = Date.now();
@@ -117,16 +108,13 @@ export default class Connection {
 						errDesc = 'There\'s no slot left in the lobby';
 						break;
 				}
-				location.hash = '';
+				view.history.push();
 				alert('Error:\n' + errDesc);
 				break;
 			}
 			case message.warmup: {
 				console.log('warmup');
-				entities.planets.length = 0;
-				entities.enemies.length = 0;
-				entities.shots.length = 0;
-				entities.players.length = 0;
+				model.entities.clean();
 
 				let val = message.warmup.deserialize(msg.data,
 					entities.addPlanet,
@@ -141,13 +129,7 @@ export default class Connection {
 				model.game.setState('warmup');
 				console.log(val.scoresObj);
 				model.game.setScores(val.scoresObj);
-				let pointsElement = document.getElementById('gui-points');
-				while (pointsElement.firstChild) pointsElement.removeChild(pointsElement.firstChild); // clear score count GUI
-				for (let team in val.scoresObj) {
-					let teamItem = document.createElement('div');
-					teamItem.id = 'gui-points-' + team;
-					pointsElement.appendChild(teamItem);
-				}
+				view.hud.readyPointCounter(val.scoresObj);
 
 				console.log('my ownIdx is:', val.playerId);
 				model.game.setOwnIdx(val.playerId);
@@ -156,10 +138,10 @@ export default class Connection {
 
 				view.history.push(this.slaveCo.id, val.lobbyId);
 
-				document.getElementById('menu-box').classList.add('hidden');
-				document.getElementById('gui-warmup').classList.remove('hidden');
-				document.getElementById('lobby-table').classList.add('hidden');
+				view.views.closeMenu();
+				view.hud.initMinimap();
 				view.views.hideScores();
+				view.hud.showWarmupStatus();
 
 				loop.start();
 
@@ -205,18 +187,15 @@ export default class Connection {
 					entities.updatePlayer
 				);
 
-				model.game.setOwnHealth(val.yourHealth);
-				model.game.setOwnFuel(val.yourFuel);
+				if (model.game.ownHealth !== val.yourHealth) {
+					model.game.setOwnHealth(val.yourHealth);
+					view.hud.updateHealth();
+				}
+				if (model.game.ownFuel !== val.yourFuel) {
+					model.game.setOwnFuel(val.yourFuel);
+					view.hud.updateFuel();
+				}
 
-				Array.prototype.forEach.call(document.querySelectorAll('#gui-health div'), (element, index) => {
-					let state = 'heartFilled';
-					if (index * 2 + 2 <= model.game.ownHealth) state = 'heartFilled';
-					else if (index * 2 + 1 === model.game.ownHealth) state = 'heartHalfFilled';
-					else state = 'heartNotFilled';
-					element.className = state;
-				});
-				let staminaElem = document.getElementById('gui-stamina');
-				if (staminaElem.value !== val.yourFuel) staminaElem.value = val.yourFuel;
 				break;
 			}
 			case message.chatBroadcast: {
@@ -236,34 +215,19 @@ export default class Connection {
 			case message.scores: {
 				console.log('scores');
 				let val = message.scores.deserialize(msg.data, model.game.scores);
+
 				model.game.setScores(val);
+				view.hud.updatePointCounter();
 
 				if (model.game.state === 'warmup') {
 					model.game.setState('playing');
-					document.getElementById('gui-warmup').classList.add('hidden');
-				}
-
-				for (let team in val) {
-					let element = document.getElementById('gui-points-' + team);
-					if (element !== null) element.textContent = val[team];
+					view.hud.hideWarmupStatus();
 				}
 				break;
 			}
 			case message.displayScores: {
 				console.log('displayScores');
 				view.views.showScores();
-				let victor = null,
-					a = -Infinity,
-					playerTableVictoryElement = document.getElementById('player-table');
-
-				for (let team in model.game.scores) {
-					if (model.game.scores[team] > a) {
-						a = model.game.scores[team];
-						victor = team;
-					} else if (model.game.scores[team] === a) victor = null;
-				}
-
-				playerTableVictoryElement.textContent = !victor ? 'Tied!' : victor + ' won!';
 
 				loop.stop();
 				break;

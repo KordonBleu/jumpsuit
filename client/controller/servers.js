@@ -1,7 +1,7 @@
 import * as view from '../view/index.js';
-import * as wsClt from '../websockets.js';
+import * as socket from './socket.js';
 
 view.servers.bindPlay(slaveCo => {
-	if (wsClt.currentConnection !== undefined) wsClt.currentConnection.close();
-	wsClt.makeNewCurrentConnection(slaveCo);
+	if (socket.currentConnection !== undefined) socket.currentConnection.close();
+	socket.makeNewCurrentConnection(slaveCo);
 });
