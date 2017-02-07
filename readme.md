@@ -36,7 +36,7 @@ JumpSuit works in a decentralised way: anyone can create a game server. After re
 
 ## How to build
 
-```
+```sh
 $ npm install
 $ node build/bundler.js
 ```
@@ -68,18 +68,7 @@ In any case, if it doesn't exists, it will be created.
 
 You can modify settings without having to restart the server.
 
-Here is what the default file looks like:
-
-```JSON
-{
-	"dev": false,
-	"master": "wss://jumpsuit.space",
-	"monitor": false,
-	"port": 7483,
-	"secure" false,
-	"server_name": "JumpSuit server"
-}
-```
+In this file you can set the following parameters:
 
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
@@ -96,19 +85,7 @@ The master server's configuration works the same way as the game server's, all p
 $ node master_server.js path/to/your/config.json
 ```
 
-Here is what the default file looks like:
-
-```JSON
-{
-	"dev": true,
-	"monitor": false,
-	"nat": {
-		"ipv4_provider": "https://ipv4.icanhazip.com/",
-		"ipv6_provider": "https://ipv6.icanhazip.com/"
-	},
-	"port": 80
-}
-```
+In this file you can set the following parameters:
 
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------

@@ -15,6 +15,6 @@ ws.on('open', function open() {
 		}
 		console.log(array);
 
-		ws.send(array.buffer);
+		ws.send(array.buffer, { binary: true, mask: true });
 	}, 0);
 });

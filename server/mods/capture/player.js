@@ -2,9 +2,6 @@ import Player from '../../../shared/player.js';
 import { config } from '../../config_loader.js';
 import * as monitor from '../../monitor.js';
 
-import { config } from '../../config_loader.js';
-import * as monitor from '../..//monitor.js';
-
 export default class SrvPlayer extends Player {
 	constructor(dc) {
 		super();

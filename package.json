@@ -35,8 +35,8 @@
   "readme": "readme.md",
   "license": "MPL-2.0",
   "scripts": {
-    "test": "./node_modules/ava/cli.js ./tests/payloads.js ./tests/subpayloads.js ./tests/ip_picker.js",
-    "stylelint": "./node_modules/stylelint/dist/cli.js ./static/*.css"
+    "test": "ava ./tests/payloads.js ./tests/subpayloads.js",
+    "stylelint": "stylelint ./static/*.css"
   },
   "ava": {
     "require": [
