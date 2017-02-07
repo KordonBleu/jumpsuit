@@ -1,38 +1,22 @@
 # JumpSuit
 
-A sweet 2D canvas game.
-With your awesome suit, jump from planet to planet to conquer them!
+A sweet 2D canvas game. With your awesome suit, jump from planet to planet to conquer them!
+
+It is the first game in which clients communicate with an authoritative server [through WebRTC](https://getkey.eu/blog/5862b0cf/webrtc:-the-future-of-web-games).
+
+JumpSuit is distributed: anyone can create a game server. After registering (automatically) to the master server, your game server will be listed on [jumpsuit.space](http://jumpsuit.space/) for players, who will be able to play directly on it. For **security reasons** however, the assets and scripts are **served by the master server**.
+
+Even more exciting: [it's possible to create mods](https://github.com/KordonBleu/jumpsuit/blob/master/doc/modding.md)!
 
 Try it [here](http://jumpsuit.space/)!
 
 ![screenshot](http://kordonbl.eu/images/jumpsuit.png)
-
-## Why the name?
-```irc
-Getkey: What about "jumpsuit"
-Flowi: #agreed
-Getkey: The story would be
-Getkey: I am the hero
-Getkey: Oh, a chest
-Getkey: What is that
-Getkey: A suit
-Getkey: TADADAM
-* Getkey wears suit
-Flowi: :O
-* Getkey jumps
-Flowi: :OOO
-Getkey: #OMG
-Flowi: #epic
-```
 
 ## Supported environments
 
 Currently, we only support Firefox and Chrome, because we use many recent additions to JavaScript.
 The server requires Node.js 6.0.0 or above.
 
-## Program architecture
-
-JumpSuit works in a decentralised way: anyone can create a game server. After registering (automatically) to the master server, your game server will be listed on [jumpsuit.space](http://jumpsuit.space/) for players, who will be able to play directly on it. For **security reasons** however, the assets and scripts are **served by the master server**.
 
 ## How to build
 
@@ -94,8 +78,27 @@ monitor | Displays a neat view of the connected game servers in real-time | `fal
 port | Set the game server's port | `80` | integer
 
 
-## Build configuration
+### Build configuration
 Parameter | Explanation | Default | Variable type
 --------- | ----------- | ------- | -------------
 dev | Append a source map to the bundle | `true` | boolean
 mod | Choose the server's gamemode | `"capture"` | string
+
+
+## Why the name?
+```irc
+Getkey: What about "jumpsuit"
+Flowi: #agreed
+Getkey: The story would be
+Getkey: I am the hero
+Getkey: Oh, a chest
+Getkey: What is that
+Getkey: A suit
+Getkey: TADADAM
+* Getkey wears suit
+Flowi: :O
+* Getkey jumps
+Flowi: :OOO
+Getkey: #OMG
+Flowi: #epic
+```

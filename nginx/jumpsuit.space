@@ -2,16 +2,7 @@ server {
 	listen 80;
 	server_name jumpsuit.space;
 
-	add_header Cache-Control "public, no-cache, must-revalidate, proxy-revalidate";
-	etag off; # no need to have both this and Last-Modified
-
-	location = / {
-		rewrite ^ /index.html;
-	}
-
-	location / {
-		root /home/jumpsuit/jumpsuit/static;
-	}
+	return 301 https://$host$request_uri;
 
 	access_log /var/log/nginx/jumpsuit_access.log combined;
 }
@@ -32,12 +23,16 @@ server {
 	ssl_certificate_key /etc/letsencrypt/live/jumpsuit.space/privkey.pem;
 
 	location = / {
-		return 301 http://$server_name$request_uri;
+		rewrite ^ /index.html;
 	}
 
 	location / {
 		root /home/jumpsuit/jumpsuit/static/;
 		try_files $uri @node;
+	}
+	location = /enslavism/client.js {
+		#root /home/jumpsuit/enslavism/;
+		proxy_pass http://localhost:8080;
 	}
 
 	location = /vinage.js {
