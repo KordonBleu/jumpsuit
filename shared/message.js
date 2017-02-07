@@ -1,4 +1,3 @@
-import ipaddr from 'ipaddr.js';
 import * as bimap from './bimap.js';
 import * as convert from './convert.js';
 
@@ -65,58 +64,6 @@ const weaponMap = new bimap.EnumMap(
 	);
 
 /* Subpayloads */
-export class PartialServer {
-	static serialize(buffer, offset, secure, port, serverNameBuf, modNameBuf) {
-		let view = new Uint8Array(buffer, offset),
-			dView = new DataView(buffer, offset);
-
-		view[0] = secure ? 1 : 0;
-
-		dView.setUint16(1, port);
-
-		view[3] = serverNameBuf.byteLength;
-		view.set(new Uint8Array(serverNameBuf), 4);
-
-		offset = 4 + serverNameBuf.byteLength;
-		view[offset] = modNameBuf.byteLength;
-		view.set(new Uint8Array(modNameBuf), offset + 1);
-	}
-	static deserialize(buffer, offset) {
-		let view = new Uint8Array(buffer, offset),
-			dView = new DataView(buffer, offset),
-			secure = view[0] === 1 ? true : false,
-			port = dView.getUint16(1),
-			serverName = convert.bufferToString(buffer.slice(offset += 4, offset += view[3])),
-			modNameLgt = view[offset - view.byteOffset],
-			modName = convert.bufferToString(buffer.slice(++offset, offset + modNameLgt));
-
-		return {
-			data: {
-				secure,
-				port,
-				serverName,
-				modName
-			},
-			byteLength: 5 + view[3] + modNameLgt
-		};
-	}
-}
-
-export class Server {
-	static serialize(buffer, offset, secure, port, serverNameBuf, modNameBuf, ipv6) {
-		let view = new Uint8Array(buffer, offset);
-		view.set(ipv6.toByteArray(), 0);
-		PartialServer.serialize(buffer, offset + 16, secure, port, serverNameBuf, modNameBuf);
-	}
-	static deserialize(buffer, offset) {
-		let retVal = PartialServer.deserialize(buffer, offset + 16);
-		retVal.data.ipv6 = ipaddr.fromByteArray(new Uint8Array(buffer.slice(offset, offset + 16)));
-		retVal.byteLength += 16;
-
-		return retVal;
-	}
-}
-
 export class PlanetMut {
 	static serialize(buffer, offset, planet) {
 		let view = new Uint8Array(buffer, offset);
@@ -387,86 +334,6 @@ class Serializator {
 	}
 	toString() {
 		return this.constructor.name;
-	}
-}
-
-class RegisterServer extends Serializator {
-	_serialize(secure, port, serverName, modName) {
-		let serverNameBuf = convert.stringToBuffer(serverName),
-			modNameBuf = convert.stringToBuffer(modName),
-			buffer = new ArrayBuffer(6 + serverNameBuf.byteLength + modNameBuf.byteLength);
-
-		PartialServer.serialize(buffer, 1, secure, port, serverNameBuf, modNameBuf);
-
-		return buffer;
-	}
-	deserialize(buffer) {
-		return PartialServer.deserialize(buffer, 1).data;
-	}
-}
-
-class AddServers extends Serializator {
-	_serialize(serverList, ipList) {
-		let serverNameBufs = [],
-			modNameBufs = [],
-			bufsLength = 0;
-
-		for (let server of serverList) {
-			let serverNameBuf = convert.stringToBuffer(server.serverName),
-				modNameBuf = convert.stringToBuffer(server.modName);
-
-			serverNameBufs.push(serverNameBuf);
-			modNameBufs.push(modNameBuf);
-
-			bufsLength += serverNameBuf.byteLength + modNameBuf.byteLength;
-		}
-
-		let buffer = new ArrayBuffer(1 + serverList.length*21 + bufsLength);
-
-		let offset = 1,
-			i = 0;
-		for (let server of serverList) {
-			Server.serialize(buffer, offset, server.secure, server.port, serverNameBufs[i], modNameBufs[i], ipList[i]);
-			offset += serverNameBufs[i].byteLength + modNameBufs[i].byteLength + 21;
-			++i;
-		}
-
-		return buffer;
-	}
-	deserialize(buffer) {
-		let offset = 1,
-			serverList = [];
-
-		while (offset !== buffer.byteLength) {
-			let serverParams = Server.deserialize(buffer, offset);
-			serverList.push(serverParams.data);
-			offset += serverParams.byteLength;
-		}
-
-		return serverList;
-	}
-}
-
-class RemoveServers extends Serializator {
-	_serialize(serverIds) {
-		let buffer = new ArrayBuffer(1 + 2*serverIds.length),
-			view = new DataView(buffer);
-
-		serverIds.forEach((id, i) => {
-			view.setUint16(1 + i*2, id);
-		});
-
-		return buffer;
-	}
-	deserialize(buffer) {
-		let view = new DataView(buffer),
-			serverIds = [];
-
-		for (let offset = 1; offset !== buffer.byteLength; offset += 2) {
-			serverIds.push(view.getUint16(offset));
-		}
-
-		return serverIds;
 	}
 }
 
@@ -831,13 +698,6 @@ class DisplayScores extends Serializator {
 	}
 }
 
-class ServerRegistered extends Serializator {
-	_serialize() {
-		return new ArrayBuffer(1);
-	}
-	//no deserialize needed
-}
-
 class Warmup extends Serializator {
 	_serialize(scoresObj, lobbyId, playerId, univWidth, univHeight, planets, enemies, shots, players) {
 		let addEntityBuf = addEntity._serialize(planets, enemies, shots, players).slice(1),
@@ -869,24 +729,20 @@ class Warmup extends Serializator {
 	}
 }
 
-export let registerServer = new RegisterServer(0),
-	addServers = new AddServers(1),
-	removeServers = new RemoveServers(2),
-	setPreferences = new SetPreferences(3),
-	setNameBroadcast = new SetNameBroadcast(4),
-	connect = new Connect(5),
-	error = new ErrorMsg(6),
-	warmup = new Warmup(7),
-	addEntity = new AddEntity(9),
-	removeEntity = new RemoveEntity(10),
-	gameState = new GameState(11),
-	playerControls = new PlayerControls(12),
-	aimAngle = new AimAngle(13),
-	chat = new Chat(14),
-	chatBroadcast = new ChatBroadcast(15),
-	scores = new Scores(16),
-	serverRegistered = new ServerRegistered(17),
-	displayScores = new DisplayScores(19);
+export let setPreferences = new SetPreferences(0),
+	setNameBroadcast = new SetNameBroadcast(1),
+	connect = new Connect(2),
+	error = new ErrorMsg(3),
+	warmup = new Warmup(4),
+	addEntity = new AddEntity(5),
+	removeEntity = new RemoveEntity(6),
+	gameState = new GameState(7),
+	playerControls = new PlayerControls(8),
+	aimAngle = new AimAngle(9),
+	chat = new Chat(10),
+	chatBroadcast = new ChatBroadcast(11),
+	scores = new Scores(12),
+	displayScores = new DisplayScores(14);
 
 export function getSerializator(buffer) {
 	let enumVal = new Uint8Array(buffer)[0];

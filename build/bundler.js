@@ -102,39 +102,33 @@ rollup.rollup({
 });
 
 
-let clientPlugins = [
-	replace({
-		include: 'shared/**',
-		values: {
-			'import resources from \'../server/resource_loader.js\';\n': '' // strip out resources import since it is a global
-		}
-	}),
-	alias({
-		'<@Player@>': 'client/player.js',
-		'<@Shot@>': 'client/shot.js',
-
-		'<@Weapon@>': 'client/weapon.js',
-		'<@RapidFireWeapon@>': 'client/rapid_fire_weapon.js',
-
-		'<@Lmg@>': 'client/lmg.js',
-		'<@Smg@>': 'client/smg.js',
-		'<@Shotgun@>': 'client/shotgun.js',
-		'<@Knife@>': 'client/knife.js',
-
-		'<@convert@>': 'client/convert.js'
-	}),
-	eslint()
-];
-if (config.dev) clientPlugins.push(replace({
-	include: 'client/websockets.js',
-	values: {
-		'\'wss://\'': '(location.protocol === \'http:\' ? \'ws://\' : \'wss://\')'
-	}
-}));
-
 rollup.rollup({
-	entry: './client/main.js',
-	plugins: clientPlugins
+	entry: './client/controller/index.js',
+	plugins: [
+		replace({
+			include: 'shared/**',
+			values: { // strip out imports that are global on the client
+				'import resources from \'../server/resource_loader.js\';\n': '',
+			}
+		}),
+		alias({
+			'<@Player@>': 'client/game/player.js',
+			'<@Shot@>': 'client/game/shot.js',
+
+			'<@Weapon@>': 'client/game/weapon.js',
+			'<@RapidFireWeapon@>': 'shared/rapid_fire_weapon.js',
+
+			'<@Lmg@>': 'client/game/lmg.js',
+			'<@Smg@>': 'client/game/smg.js',
+			'<@Shotgun@>': 'client/game/shotgun.js',
+			'<@Knife@>': 'client/game/knife.js',
+
+			'<@convert@>': 'client/convert.js'
+		}),
+		nodeResolve(),
+		commonjs({ include: 'node_modules/vinage/*' }), // to bundle vinage
+		eslint()
+	]
 }).then((bundle) => {
 	return bundle.write({
 		format: 'iife',

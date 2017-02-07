@@ -1,1 +1,2 @@
-export * from '../capture/shotgun.js';
+import def from '../capture/shotgun.js';
+export default def;

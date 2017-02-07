@@ -1,1 +1,2 @@
-export * from '../capture/shot.js';
+import def from '../capture/shot.js';
+export default def;

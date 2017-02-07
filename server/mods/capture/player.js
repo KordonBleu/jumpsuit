@@ -1,15 +1,30 @@
 import Player from '../../../shared/player.js';
+import { config } from '../../config_loader.js';
+import * as monitor from '../../monitor.js';
 
 import { config } from '../../config_loader.js';
 import * as monitor from '../..//monitor.js';
 
 export default class SrvPlayer extends Player {
-	constructor() {
+	constructor(dc) {
 		super();
+		this.dc = dc;
 
 		this._lastHurt = 0;
 		this._walkCounter = 0;
 	}
+
+	send(data) {
+		try {
+			this.dc.send(data);
+			if (config.monitor) {
+				monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
+			}
+		}catch (err) {
+			console.error(err);
+		}
+	}
+
 	get hurt() {
 		return Date.now() - this._lastHurt < 600;
 	}
@@ -31,13 +46,4 @@ export default class SrvPlayer extends Player {
 			this.setBoxSize();
 		}
 	}
-	send(data) {
-		try {
-			this.ws.send(data);
-			if (config.monitor) {
-				monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
-			}
-		} catch (err) { /* Maybe log this error somewhere? */ }
-	}
-
 }

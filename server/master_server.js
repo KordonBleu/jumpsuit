@@ -23,32 +23,57 @@ config.init(process.argv[2] || './master_config.json', {
 });
 
 
-import * as message from '../shared/message.js';
 import logger from './logger.js';
 import * as monitor from './monitor.js';
-import * as ips from './ips';
-import * as ipPicker from './ip_picker.js';
 
 require('colors');
 const http = require('http'),
-	fs = require('fs'),
-	WebSocket = require('ws'),
-	ipaddr = require('ipaddr.js');
-
-let server;
+	fs = require('fs');
 
 ipPicker.init().then(() => {
 
-	class GameServer {
-		constructor(serverName, modName, secure, port, ip) {
-			this.serverName = serverName;
-			this.modName = modName;
-			this.secure = secure;
-			this.port = port;
-			this.ip = ip;
-		}
-		getUrl() {
-			return (this.secure ? 'wss://[' : 'ws://[') + this.ip + ']:' + this.port;
+if(config.config.monitor) monitor.setMonitorMode();
+
+let files = {};
+function loadFile(name, path) {
+	let mimeList = {html: 'text/html', css: 'text/css', svg: 'image/svg+xml', png: 'image/png', js: 'application/javascript', ogg: 'audio/ogg', opus: 'audio/ogg'},
+		extension = path.slice(path.lastIndexOf('.') - path.length + 1);
+	files[name] = {
+		content: fs.readFileSync(path),
+		mtime: fs.statSync(path).mtime,
+		path: path,
+		mime: extension in mimeList ? mimeList[extension] : 'application/octet-stream'
+	};
+	if (config.config.dev && (extension === 'html' || extension === 'css' || extension === 'js')) files[name].content = files[name].content.toString('utf8').replace(/https:\/\/jumpsuit\.space/g, '');
+}
+
+files.construct = function(path, oName) {
+	fs.readdirSync(path).forEach(function(pPath) {
+		let cPath = path + '/' + pPath,
+			stat = fs.statSync(cPath);
+		if(stat.isDirectory()) {//WE NEED TO GO DEEPER
+			files.construct(cPath, oName + pPath + '/');
+		} else loadFile(oName + pPath, cPath);
+	});
+};
+files.construct('./static', '/'); // load everything under `./static` in RAM for fast access
+
+let server = http.createServer((req, res) => {
+	if (req.url === '/index.html') {
+		res.writeHead(301, {'Location': '/'});
+		res.end();
+		return;
+	} //beautifying URL, shows foo.bar when requested foo.bar/index.html
+
+	if (req.url === '/') req.url = '/index.html';
+	if (files[req.url] !== undefined) {
+		res.setHeader('Cache-Control', 'public, no-cache, must-revalidate, proxy-revalidate');
+		if (config.config.dev) {
+			try {
+				if (fs.statSync(files[req.url].path).mtime.getTime() !== files[req.url].mtime.getTime()) loadFile(req.url, files[req.url].path);
+			} catch(err) {
+				console.log(err);
+			}
 		}
 		effectiveIp(clientIp) {
 			return ipPicker.pick(this.ip, clientIp);
@@ -116,89 +141,22 @@ ipPicker.init().then(() => {
 	});
 	server.listen(config.config.port);
 
-	let gameServerSocket = new WebSocket.Server({server: server, path: '/game_servers'}),
-		clientsSocket = new WebSocket.Server({server: server, path: '/clients'});
 
-	gameServerSocket.on('connection', function(ws) {
-		let gameServer = new GameServer(undefined, undefined, undefined, undefined, ipaddr.parse(ws._socket.remoteAddress)),
-			lastPing = 0;
+const Master = require('enslavism').Master;
 
-		ws.on('message', function(msg) {
-			//if (ips.banned(gameServer.ip)) return;
+let master = new Master(server);
 
-			msg = msg.buffer.slice(msg.byteOffset, msg.byteOffset + msg.byteLength);//convert Buffer to ArrayBuffer
-			try {
-				let serializator = message.getSerializator(msg);
-
-				if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
-
-				if (serializator === message.registerServer) {
-					let data = message.registerServer.deserialize(msg);
-					gameServer.serverName = data.serverName;
-					gameServer.modName = data.modName;
-					gameServer.secure = data.secure;
-					gameServer.port = data.port;
-					gameServer.pingIntervalId = setInterval(function() {
-						try {
-							ws.ping();
-							lastPing = Date.now();
-						} catch (err) {
-							console.error(err);
-						}
-					}, 5000);
-					gameServers.push(gameServer);
-
-					logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.modName, gameServer.serverName);
-					ws.send(message.serverRegistered.serialize());
-					clientsSocket.clients.forEach(function(client) {//broadcast
-						try {
-							client.send(message.addServers.serialize([gameServer], [gameServer.effectiveIp(client.ipAddr)]));
-						} catch (err) {
-							console.error(err);
-						}
-					});
-				} else {
-					ips.ban(gameServer.ip);
-					return;//prevent logging
-				}
-				logger(logger.DEV, (serializator.toString()).italic);
-			} catch (err) {
-				ips.ban(gameServer.ip);
-			}
-		});
-		ws.on('pong', function() {
-			gameServer.latency = Date.now() - lastPing;
-		});
-		ws.on('close', function() {
-			gameServers.forEach(function(gS, i) {
-				if (gameServer === gS) {
-					clearInterval(gameServer.pingIntervalId);
-					gameServers.splice(i, 1);
-					logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.modName, gS.serverName);
-					clientsSocket.clients.forEach(function(client) {//broadcast
-						try {
-							client.send(message.removeServers.serialize([i]));
-						} catch (err) {
-							console.error(err);
-						}
-					});
-				}
-			});
-		});
-	});
-
-	clientsSocket.on('connection', function(ws) {
-		ws.ipAddr = ipaddr.parse(ws.upgradeReq.headers['x-forwarded-for'] || ws._socket.remoteAddress);
-		if (ws.ipAddr.kind() === 'ipv4') ws.ipAddr = ws.ipAddr.toIPv4MappedAddress();
-
-		let effectiveIps = [];
-		for (let gameServer of gameServers) effectiveIps.push(gameServer.effectiveIp(ws.ipAddr));
-
-		try {
-			ws.send(message.addServers.serialize(gameServers, effectiveIps));
-		} catch (err) {
-			console.error(err);
-		}
-	});
-
+master.on('slaveauth', authData => {
+	logger(logger.DEV, 'Slave is attempting to connect with data: ' + JSON.stringify(authData));
 });
+master.on('clientauth', authData => {
+	logger(logger.DEV, 'Client is attempting to connect with data: ' + JSON.stringify(authData));
+});
+
+// there should be a
+// logger(logger.INFO, 'Registered "{0}" server "{1}" @ ' + gameServer.ip + ':' + gameServer.port, gameServer.modName, gameServer.serverName);
+// of some kind once the connection is established with a server
+// and a
+// logger(logger.INFO, 'Unregistered "{0}" server "{1}" @ ' + gS.ip + ':' + gS.port, gS.modName, gS.serverName);
+// when the server disconnects
+// this capability needs to be added to Enslavism

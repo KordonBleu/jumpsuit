@@ -1,1 +1,2 @@
-export * from '../capture/knife.js';
+import def from '../capture/knife.js';
+export default def;

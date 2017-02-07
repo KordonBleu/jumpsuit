@@ -23,6 +23,3 @@ rules:
   eqeqeq: "error"
 parserOptions:
   sourceType: "module"
-globals:
-  vinage: false
-  ipaddr: false

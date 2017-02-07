@@ -7,6 +7,7 @@
     "image-size": "0.x",
     "ipaddr.js": "1.x",
     "vinage": "0.x",
+    "enslavism": "0.x",
     "ws": "1.x",
     "rollup": "0.x",
     "rollup-plugin-node-resolve": "2.x",
@@ -16,12 +17,14 @@
     "rollup-plugin-alias": "1.x"
   },
   "optionalDependencies": {
-    "bufferutil": "1.x"
+    "bufferutil": "1.x",
+    "utf-8-validate": "2.x"
   },
   "devDependencies": {
     "ava": "0.x",
-    "babel-plugin-transform-rename-import": "2.x",
+    "babel-register": "6.x",
     "babel-polyfill": "6.x",
+    "babel-plugin-module-resolver": "2.x",
     "source-map-support": "0.x",
     "stylelint": "7.x"
   },

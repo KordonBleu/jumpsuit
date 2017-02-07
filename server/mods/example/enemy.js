@@ -1,1 +1,2 @@
-export * from '../capture/enemy.js';
+import def from '../capture/enemy.js';
+export default def;

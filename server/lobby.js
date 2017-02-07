@@ -9,7 +9,7 @@ const vinage = require('vinage');
 export let lobbies = [];
 
 export function addLobby() {
-	return lobbies.append(new Lobby(8));
+	return lobbies.append(new Lobby(3));
 }
 
 class Lobby {
@@ -130,13 +130,10 @@ class Lobby {
 
 
 		this.players.forEach(function(player) {
-			function updPlayer() {
+			let now = Date.now();
+			if (now - player.lastUpdate > 50) {
 				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players));
-				player.needsUpdate = true;
-			}
-			if (player.needsUpdate || player.needsUpdate === undefined) {
-				player.needsUpdate = false;
-				setTimeout(updPlayer.bind(this), 50);
+				player.lastUpdate = now;
 			}
 		}, this);
 		this.processTime = Date.now() - oldDate;
@@ -146,12 +143,6 @@ class Lobby {
 			if (planet.progress >= 80) this.teamScores[planet.team]++;
 		}), this);
 		this.broadcast(message.scores.serialize(this.teamScores));
-	}
-	pingPlayers() {
-		this.players.forEach(function(player) {
-			player.lastPing = Date.now();
-			player.ws.ping(undefined, undefined, true);
-		});
 	}
 	getPlayerId(player) {
 		let id;

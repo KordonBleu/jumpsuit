@@ -5,11 +5,11 @@
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1"/>
 		<meta name="description" content="Multiplayer shooter game - Take control of the galaxy!"/>
-		<link href="https://jumpsuit.space/style.css" rel="stylesheet" type="text/css"/>
-		<link href="https://jumpsuit.space/layout.css" rel="stylesheet" type="text/css"/>
-		<link rel="manifest" href="https://jumpsuit.space/manifest.webmanifest">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
-		<link rel="icon" href="https://jumpsuit.space/assets/images/cordonbleu.png"/>
+		<link href="/style.css" rel="stylesheet" type="text/css"/>
+		<link href="/layout.css" rel="stylesheet" type="text/css"/>
+		<link rel="manifest" href="/manifest.webmanifest">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+		<link rel="icon" href="/assets/images/cordonbleu.png"/>
 	</head>
 	<body>
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
@@ -75,7 +75,7 @@
 		</div>
 		<div id="shade-box" class="hidden"></div>
 		<div id="info-box" class="hidden">
-			<h2>Informations</h2><button class="close-parent"><i class="fa fa-times"></i>Close</button>
+			<h2>Informations</h2><button id="close-info-button"><i class="fa fa-times"></i>Close</button>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>And the credits go to...</p>
 				<ul>
@@ -86,20 +86,24 @@
 			<h2>Support us</h2>
 			<p>If you like this game, please share it with you friends! And if you <b>really</b> like it here's what you can do:</p>
 			<h3>Help us coding it!</h3>
-			<p>This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
-			If you ever plan to do this - tell us, or at least upload a video somewhere.<img src="https://twemoji.maxcdn.com/72x72/1f605.png" width="20" height="20"/></p>
+			<p>
+				This game is free software: you can fork it and edit it! You could even print the source code on toilet paper if you think there is no better purpose.<br/>
+				If you ever plan to do this - tell us, or at least upload a video somewhere. 😅
+			</p>
 			<a class="gh-image" href="https://github.com/KordonBleu/jumpsuit">Go to Github</a>
 			<h3>Buy us a coffee or pizza!</h3>
-			<p>Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
-			Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where - honestly - we could'nt agree more.<br/>
-			<b>TL;DR:</b> Donate us knowledge. Delicious crusty knowledge. Yum!<br/><br/>
-			<img src="https://twemoji.maxcdn.com/svg/1f355.svg" height="64" width="64"/><img src="https://twemoji.maxcdn.com/svg/2615.svg" height="64" width="64"/></p>
+			<p>
+				Like we all know a programmer is a human being capable of turning pizza and caffeine into code.<br/>
+				Furthermore, a really wise woman once said: “Time is money. Money is power. Power is pizza. Pizza is knowledge”, where - honestly - we could'nt agree more.<br/>
+				<b>TL;DR:</b> Donate us knowledge. Delicious crusty knowledge. Yum!🍕
+			</p>
+
 			<h2>Make a mod!</h2>
 			<p>We aim to make it as easy as possible for you to make mods. Documentation on how to make mods can be found <a href="https://github.com/KordonBleu/jumpsuit/blob/master/doc/modding.md">here</a>.</p>
 		</div>
 
 		<div id="settings-box" class="hidden">
-			<h2>Settings</h2><button class="close-parent"><i class="fa fa-times"></i>Close</button>
+			<h2>Settings</h2><button id="close-settings-button"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<h3>Player</h3>
 				<label>Name</label><input type="text" id="name" placeholder="Enter your name" maxlength="30" autocomplete="off" onfocus="if (this.value == 'Unnamed Player') this.value = ''" onblur="if (this.value === '') this.value = 'Unnamed Player'" class="hidden"/>
@@ -144,14 +148,14 @@
 
 			<p>You should also try another server, chances are you will find one which is not blocked</p>
 
-			<button class="close-parent">Let's try another server</button>
+			<button id="close-blocked-port-box">Let's try another server</button>
 		</div>
 		<div id="device-not-supported" class="hidden">
 			<h2>Your browser is unsupported</h2>
 			<p>We only support Chrome and Firefox on desktop for now.<br/>
 			Please come back using one of these (on old computers, Firefox is generally faster).</p>
 
-			<button "close-parent">I want to see how broken it is anyway!</button>
+			<button id="close-unsupported-box">I want to see how broken it is anyway!</button>
 		</div>
 		<div id="device-untested" class="hidden">
 			<h2>The game is likely not to work properly on this device</h2>
@@ -159,12 +163,11 @@
 			<p>At the moment, we are primarily focusing on Chrome and Firefox on desktop.<br/>
 			Please come back using one of these (on old computers, Firefox is generally faster).</p>
 
-			<button class="close-parent">Okay</button>
+			<button id="close-untested-box">Okay</button>
 		</div>
 
-		<script src="https://jumpsuit.space/ipaddr.min.js"></script>
-		<script src="https://jumpsuit.space/vinage.js"></script>
+		<script src="/enslavism/client.js"></script>
 
-		<script src="https://jumpsuit.space/bundle.js"></script>
+		<script src="/bundle.js"></script>
 	</body>
 </html>
