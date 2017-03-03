@@ -6,9 +6,8 @@ export default class extends Weapon {
 		super(owner);
 		this.recoil = 0;
 	}
-	draw(context, isMe) {
-		let weaponAngle = isMe ? model.controls.mouseAngle : this.aimAngle,
-			weaponRotFact = this.owner.looksLeft === true ? -(weaponAngle - this.owner.box.angle + Math.PI/2) : (weaponAngle - this.owner.box.angle + 3*Math.PI/2);
+	draw(context, weaponAngle) {
+		let weaponRotFact = this.owner.looksLeft === true ? -(weaponAngle - this.owner.box.angle + Math.PI/2) : (weaponAngle - this.owner.box.angle + 3*Math.PI/2);
 
 		this.recoil = this.recoil < 0.05 ? 0 : this.recoil * 0.7;
 		context.rotate(weaponRotFact);

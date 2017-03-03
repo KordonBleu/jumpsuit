@@ -50,6 +50,7 @@ export default class extends Player {
 		let param1 = Date.now();
 
 		if ('timestamp' in this.predictionTarget) param1 = this.predictionTarget.timestamp;
+
 		this.predictionTarget = {
 			timestamp: Date.now(),
 			box: new vinage.Rectangle(new vinage.Point(x, y), 0, 0, angle),
@@ -141,7 +142,7 @@ export default class extends Player {
 		}
 
 
-		this.armedWeapon.draw(context, isMe);
+		this.armedWeapon.draw(context, isMe ? model.controls.mouseAngle : this.aimAngle);
 
 		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 
