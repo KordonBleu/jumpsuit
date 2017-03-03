@@ -38,6 +38,7 @@ new Slave(config.config.master, {
 	logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
 
 	slave.on('connection', clientCo => {
+		console.log(clientCo);
 		logger(logger.INFO, 'Client #' + clientCo.id + ' connected');
 		// TODO: get the IP to feed it to the IPS to prevent spamming
 		// see https://github.com/beefproject/beef/wiki/Module:-Get-Internal-IP-WebRTC
@@ -55,7 +56,7 @@ new Slave(config.config.master, {
 							let val = message.setPreferences.deserialize(msg);
 							if (player.lobby !== undefined) {
 								player.homographId = player.lobby.getNextHomographId(val.name);
-								player.lobby.broadcast(message.setNameBroadcast.serialize(player.lobby.getPlayerId(player), val.name, player.homographId));
+								player.lobby.broadcast(message.setNameBroadcast.serialize(player.pid, val.name, player.homographId));
 							}
 							player.name = val.name;
 							player.armedWeapon = player.weapons[val.primary];
@@ -66,8 +67,8 @@ new Slave(config.config.master, {
 							let val = message.connect.deserialize(msg);
 							let selectedLobby;
 							if (val.lobbyId !== undefined) {
-								selectedLobby = lobby.lobbies[val.lobbyId];
-								if (selectedLobby === undefined) {
+								selectedLobby = lobby.lobbies.get(val.lobbyId);
+								if (!selectedLobby) {
 									player.send(message.error.serialize(message.error.NO_LOBBY));
 									break;
 								} else if (selectedLobby.players.length === selectedLobby.maxPlayers) {
@@ -75,16 +76,12 @@ new Slave(config.config.master, {
 									break;
 								}
 							} else {//public lobby
-								if (!lobby.lobbies.some(function(l, i) {//if no not-full lobby
-									if (l.players.actualLength() < l.maxPlayers) {
-										val.lobbyId = i;
-										selectedLobby = lobby.lobbies[i];
-										return true;
-									} else return false;
-								})) {//create new lobby
-									val.lobbyId = lobby.addLobby();
-									selectedLobby = lobby.lobbies[val.lobbyId];
+								val.lobbyId = lobby.newLobby();
+								if (val.lobbyId === -1) {
+									player.send(message.error.serialize(message.error.NO_LOBBY));
+									break;
 								}
+								selectedLobby = lobby.lobbies.get(val.lobbyId);
 							}
 							player.pid = selectedLobby.addPlayer(player);
 							player.name = val.name;
@@ -92,6 +89,7 @@ new Slave(config.config.master, {
 							player.carriedWeapon = player.weapons[val.secondary];
 							player.homographId = selectedLobby.getNextHomographId(player.name);
 							player.lobbyId = val.lobbyId;
+							player.lobby = selectedLobby;
 							player.lastUpdate = Date.now();
 
 							selectedLobby.connectPlayer(player);
@@ -119,22 +117,17 @@ new Slave(config.config.master, {
 					console.log('user should be banned temporarly');
 				}
 			});
-			dc.on('close', () => {
-				lobby.lobbies.forEach((lobby, li) => {
-					lobby.players.some((player, pi) => {
-						if (player.dc === dc) {
-							logger(logger.DEV, 'DISCONNECT'.italic + ' Lobby: #' + li + ' Player: {0}', player.name);
-							delete lobby.players[pi];
-							lobby.broadcast(message.removeEntity.serialize([], [], [], [pi]), player);
-							if (lobby.players.length === 0) {
-								lobby.lobbies[li].close();
-								delete lobby.lobbies[li];
-							}
-							return true;
-						}
-					});
-				});
-			});
+
+			function safeDisconnect() {
+				console.log('let\'s disconnect');
+				let lobbyId = player.lobbyId;
+				if (player.lobby.disconnectPlayer(player)) {
+					//true, if lobby needs to be closed or rather erased from the array
+					lobby.deleteLobby(lobbyId);
+				}
+			}
+			dc.on('error', safeDisconnect);
+			dc.on('close', safeDisconnect);
 		});
 	});
 }).catch(err => {

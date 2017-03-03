@@ -6,10 +6,48 @@ import Enemy from '<@Enemy@>';
 import * as message from '../shared/message.js';
 const vinage = require('vinage');
 
-export let lobbies = [];
+const MAX_LOBBY_COUNT = 5; //TODO: add it to the settings
+const DEFAULT_PLAYER_AMOUNT = 4; //TODO: see above
 
-export function addLobby() {
-	return lobbies.append(new Lobby(3));
+class NullArray {
+	constructor(maxLength) {
+		this.array = new Array(maxLength);
+		this.__defineGetter__('length', () => {
+			let length = 0;
+			for (let player of this.array) if (player) ++length;
+			return length;
+		});
+	}
+	add(item) {
+		let index;
+		for (index = 0; index != this.array.length; ++index) {
+			if (!this.array[index]) break;
+		}
+		if (index === this.array.length) return -1;
+		this.array[index] = item;
+		return index;
+	}
+	del(index) {
+		delete this.array[index];
+	}
+	get(index) {
+		return this.array[index];
+	}
+	iterate(callback) {
+		this.array.forEach((element, index, array) => {
+			if (element) callback(element, index, array);
+		});
+	}
+}
+
+export let lobbies = new NullArray(MAX_LOBBY_COUNT);
+
+export function newLobby(maxPlayers) {
+	return lobbies.add(new Lobby(maxPlayers || DEFAULT_PLAYER_AMOUNT));
+}
+export function deleteLobby(index) {
+	lobbies.get(index).close();
+	lobbies.del(index);
 }
 
 class Lobby {
@@ -23,7 +61,7 @@ class Lobby {
 		}
 
 		this.maxPlayers = maxPlayers;
-		this.players = [];
+		this.players = new NullArray(maxPlayers);
 		this.planets = [];
 		this.enemies = [];
 		this.shots = [];
@@ -69,32 +107,31 @@ class Lobby {
 		let thisLobbyId = lobbies.findIndex((lobby) => {
 			return this === lobby;
 		});
-		this.players.forEach(player => {
-			player.send(message.warmup.serialize(this.getScores(), thisLobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players));
+		this.players.iterate(player => {
+			player.send(message.warmup.serialize(this.getScores(), thisLobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 		});
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
 	}
 
 	enoughPlayers(amount) {
-		return amount === undefined ? this.players.actualLength() : amount >= this.maxPlayers * 0.5;
+		return amount === undefined ? this.players.length !== 0 : amount >= this.maxPlayers * 0.5;
 	}
 	addPlayer(player) {
-		if (this.lobbyState === 'warmup' && this.enoughPlayers(this.players.actualLength() + 1)) {
+		if (this.lobbyState === 'warmup' && this.enoughPlayers(this.players.length + 1)) {
 			this.warmupToPlaying();
 		}
-
-		return this.players.append(player);
+		return this.players.add(player);
 	}
 	connectPlayer(player) {
 		switch(this.lobbyState) {
 			case 'warmup':
 				this.assignPlayerTeam(player);
-				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players));
+				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 				this.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
 				break;
 			case 'playing':
 				this.assignPlayerTeam(player);
-				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players));
+				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 				player.send(message.scores.serialize(this.getScores()));
 				this.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
 				break;
@@ -103,8 +140,19 @@ class Lobby {
 				break;
 		}
 	}
+	disconnectPlayer(player) {
+		logger(logger.DEV, 'DISCONNECT'.italic + ' Player: {0}', player.name);
+		let pid = player.pid;
+		this.players.del(pid);
+		this.broadcast(message.removeEntity.serialize([], [], [], [pid]));
+
+		if (this.players.length === 0) {
+			this.close();
+			return true;
+		}
+	}
 	broadcast(message, exclude) {
-		this.players.forEach(function(player) {
+		this.players.iterate(player => {
 			if (player !== exclude) player.send(message);
 		});
 	}
@@ -115,7 +163,7 @@ class Lobby {
 
 	updateGame() {
 		let oldDate = Date.now(),
-			entitiesDelta = engine.doPhysics(this.universe, this.players, this.planets, this.enemies, this.shots, this.teamScores, this.lobbyState);
+			entitiesDelta = engine.doPhysics(this.universe, this.players.array, this.planets, this.enemies, this.shots, this.teamScores, this.lobbyState);
 
 		//if a shot is added and removed at the same moment, don't send it to clients
 		entitiesDelta.addedShots.forEach(function(shot, iAdd) { // dat apple fanboy tho
@@ -129,13 +177,13 @@ class Lobby {
 		//if (entitiesDelta.removedShots.length != 0) this.broadcast(message.removeEntity.serialize([], [], entitiesDelta.removedShots, [])); // Why is this disabled?
 
 
-		this.players.forEach(function(player) {
+		this.players.iterate((player => {
 			let now = Date.now();
 			if (now - player.lastUpdate > 50) {
-				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players));
+				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players.array));
 				player.lastUpdate = now;
 			}
-		}, this);
+		}).bind(this));
 		this.processTime = Date.now() - oldDate;
 	}
 	updateScores() {
@@ -144,16 +192,6 @@ class Lobby {
 		}), this);
 		this.broadcast(message.scores.serialize(this.teamScores));
 	}
-	getPlayerId(player) {
-		let id;
-		this.players.some(function(_player, index) {
-			if (_player === player) {
-				id = index;
-				return true;
-			}
-		});
-		return id;
-	}
 	getScores() {
 		let i = {}, a;
 		for (a in this.teamScores) if (a.indexOf('alien') !== -1) i[a] = this.teamScores[a];
@@ -161,7 +199,7 @@ class Lobby {
 	}
 	getNextHomographId(playerName) {
 		let homographId = 0;
-		this.players.forEach(function(player) {
+		this.players.iterate(function(player) {
 			if (player.name === playerName && player.homographId === homographId) ++homographId;
 		});
 		return homographId;
@@ -170,7 +208,7 @@ class Lobby {
 		this.planets.length = 0;
 		this.enemies.length = 0;
 
-		for (let player of this.players) {
+		for (let player of this.players.array) {
 			if (player === undefined) continue;
 			player.attachedPlanet = -1;
 		}
@@ -217,7 +255,7 @@ class Lobby {
 			_teams.splice(teamIndex, 1);
 		}
 		this.enabledTeams = Object.keys(this.teamScores);
-		this.players.forEach(function(player) {
+		this.players.iterate(function(player) {
 			player.controls = {};
 			player.health = 8;
 			player.fillStamina();
