@@ -11,11 +11,15 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 
 	players.forEach(function(player) {
 		function move(left, run) {
-			let stepSize = (Math.PI / 100) * (150 / planets[player.attachedPlanet].box.radius),
-				directionFactor = left ? -1 : 1;
-			if (run) stepSize *= 1.7;
 			player.looksLeft = left;
-			player.box.angle += directionFactor * stepSize;
+			let stepSize = run ? 8 : 5,
+				directionFactor = left ? -1 : 1,
+				arc = (directionFactor * stepSize) / planets[player.attachedPlanet].box.radius;
+
+			player.box.angle = modulo(player.box.angle + arc, 2*Math.PI); // if there is no modulo(), rounding error accumulate which cause issues when converting to brads
+
+			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
+			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 		}
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === 'undefined') playersOnPlanets[player.attachedPlanet] = {'alienBeige': 0, 'alienBlue': 0, 'alienGreen': 0, 'alienPink': 0, 'alienYellow': 0};
@@ -36,8 +40,6 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 			}
 			player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 
-			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
-			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
 			player.velocity.x = 0;
 			player.velocity.y = 0;
 			if (player.controls['jump'] > 0) {
@@ -59,6 +61,7 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 				player.velocity.y += 9000 * planets[j].box.radius * deltaY / distPowFour;
 				if (universe.collide(planets[j].box, player.box)) {
 					player.attachedPlanet = j;
+					//setPlayerAngleOnPlanet(player, planets[j]);
 					player.box.angle = Math.PI + Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 - Math.atan2(deltaX, deltaY) - Math.PI;
 				}
 			}
