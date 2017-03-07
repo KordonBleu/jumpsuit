@@ -27,7 +27,6 @@ export default class Connection {
 				this.fastDc = dc;
 
 				this.sendMessage.call(this, message.connect, lobbyId, model.settings);
-				console.log('connect');
 
 				this.latencyHandlerId = setInterval(this.constructor.latencyHandler.bind(this), 100);
 				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
@@ -51,15 +50,9 @@ export default class Connection {
 	close() { // stop the game and displays menu
 		clearInterval(this.latencyHandlerId);
 		clearInterval(this.mouseAngleUpdateHandlerId);
-		this.fastDc.close();
 		this.fastDc.removeEventListener('error', this.constructor.errorHandler);
 		this.fastDc.removeEventListener('message', this.constructor.messageHandler);
-		loop.stop();
-		view.views.showMenu();
-		entities.clean();
-		view.views.hideScores();
-		view.chat.clearChat();
-		view.history.push(); // go to the menu
+		this.slaveCo.close();
 	}
 	setPreferences() {
 		this.sendMessage(message.setPreferences, model.settings);
@@ -77,7 +70,7 @@ export default class Connection {
 	static errorHandler(err) {
 		//TODO: go back to main menu
 		console.error(err);
-		this.close();
+		view.history.push();
 	}
 	static latencyHandler() {
 		if (model.game.state !== 'playing' || model.game.state !== 'warmup') return;
@@ -126,7 +119,6 @@ export default class Connection {
 				);
 
 				model.game.setState('warmup');
-				console.log(val.scoresObj);
 				model.game.setScores(val.scoresObj);
 				view.hud.readyPointCounter(val.scoresObj);
 

@@ -142,6 +142,7 @@ class Lobby {
 		logger(logger.DEV, 'DISCONNECT'.italic + ' Player: {0}', player.name);
 		let pid = player.pid;
 		this.players.del(pid);
+		console.log('lobby players', this.players.array);
 		this.broadcast(message.removeEntity.serialize([], [], [], [pid]));
 
 		if (this.players.length === 0) {

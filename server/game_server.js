@@ -47,17 +47,13 @@ new Slave(config.config.master, {
 			function safeDisconnect() {
 				console.log('let\'s disconnect');
 				let lobbyId = player.lobbyId;
-				//delete dc.onerror;
-				//delete dc.onclose;
 				if (player.lobby.disconnectPlayer(player)) {
 					//true, if lobby needs to be closed or rather erased from the array
 					lobby.deleteLobby(lobbyId);
 				}
 			}
 
-			dc.onerror = (err) => {
-				console.log(err);
-			};
+			dc.onerror = safeDisconnect;
 			dc.onclose = safeDisconnect;
 
 			dc.on('message', function(msg) {
@@ -78,6 +74,7 @@ new Slave(config.config.master, {
 							break;
 						}
 						case message.connect: {
+							console.log('connect', player);
 							let val = message.connect.deserialize(msg);
 							let selectedLobby;
 							if (val.lobbyId !== undefined) {

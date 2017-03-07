@@ -1,18 +1,15 @@
 import * as view from '../view/index.js';
 import * as model from '../model/dialogs.js';
-import * as socket from './socket.js';
 import * as platform from '../model/platform.js';
 
 view.dialogs.bindSettingsButtons(() => {
 	model.setIsModalOpen(true);
 	view.dialogs.openSettingsBox();
 });
-
 view.dialogs.bindCloseSettingsButton(() => {
 	model.setIsModalOpen(false);
 	view.dialogs.closeSettingsBox();
 });
-
 
 view.dialogs.bindInfoButton(() => {
 	model.setIsModalOpen(true);
@@ -23,18 +20,14 @@ view.dialogs.bindCloseInfoButton(() => {
 	view.dialogs.closeInfoBox();
 });
 
-
 view.dialogs.bindLeaveButtons(() => {
-	if (socket.currentConnection !== undefined && socket.currentConnection.alive()) socket.currentConnection.close();
-	socket.currentConnection.close();
+	view.history.push();
 });
-
 
 view.dialogs.bindCloseUntestedBox(() => {
 	model.setIsModalOpen(false);
 	view.dialogs.closeUntestedBox();
 });
-
 view.dialogs.bindCloseUnsupportedBox(() => {
 	model.setIsModalOpen(false);
 	view.dialogs.closeUnsupportedBox();
