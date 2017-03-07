@@ -104,9 +104,7 @@ class Lobby {
 		this.changeState('warmup');
 
 		this.resetWorld();
-		let thisLobbyId = lobbies.findIndex((lobby) => {
-			return this === lobby;
-		});
+		let thisLobbyId = lobbies.array.indexOf(this);
 		this.players.iterate(player => {
 			player.send(message.warmup.serialize(this.getScores(), thisLobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 		});
@@ -150,6 +148,7 @@ class Lobby {
 			this.close();
 			return true;
 		}
+		return false;
 	}
 	broadcast(message, exclude) {
 		this.players.iterate(player => {

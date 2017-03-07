@@ -14,6 +14,7 @@ masterSocket.addEventListener('slaveremoved', slaveCo => {
 export var currentConnection;
 
 export function makeNewCurrentConnection(slaveCo, id) {
+	if (currentConnection !== undefined && currentConnection.alive()) currentConnection.close();
 	new Connection(slaveCo, id).then((connection) => {
 		currentConnection = connection;
 	}).catch((err) => {

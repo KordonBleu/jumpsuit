@@ -25,6 +25,7 @@ view.dialogs.bindCloseInfoButton(() => {
 
 
 view.dialogs.bindLeaveButtons(() => {
+	if (socket.currentConnection !== undefined && socket.currentConnection.alive()) socket.currentConnection.close();
 	socket.currentConnection.close();
 });
 

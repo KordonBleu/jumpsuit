@@ -21,14 +21,13 @@ export default class Connection {
 			}).then(dc => {
 				dc.binaryType = 'arraybuffer';
 
-				console.log(slaveCo);
-
 				dc.addEventListener('message', this.constructor.messageHandler.bind(this));
 				dc.addEventListener('error', this.constructor.errorHandler);
 
 				this.fastDc = dc;
 
 				this.sendMessage.call(this, message.connect, lobbyId, model.settings);
+				console.log('connect');
 
 				this.latencyHandlerId = setInterval(this.constructor.latencyHandler.bind(this), 100);
 				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
@@ -71,7 +70,7 @@ export default class Connection {
 	}
 	refreshControls() {
 		if (model.controls.needsRefresh()) {
-			this.fastDc.send(message.playerControls.serialize(model.controls.selfControls));
+			this.sendMessage(message.playerControls, model.controls.selfControls);
 			model.controls.refresh();
 		}
 	}

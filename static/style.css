@@ -679,32 +679,30 @@ label {
 #gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
 
 #gui-bad-connection, #gui-warmup {
-	font-size: 2.5em;
+	font-size: 1.2rem;
 	position: fixed;
 	top: 15%;
-	left: 0;
-	right: 0;
-	padding: 0 10%;
+	left: 50%;
+	transform: translateX(-50%);	
 	color: #eee;
+	text-shadow: 0 0 5px rgba(0, 0, 0, 0.75);
+}
+#gui-bad-connection h1, #gui-warmup h1 {
+	margin: 0;
+	padding-bottom: 0.1em;
+	font-size: 2.5rem;
+}
+#gui-bad-connection i, #gui-warmup i {
+	/*color: #bc4937;*/
+	margin-right: 0.25em;
 }
 #gui-bad-connection i {
 	color: #bc4937;
-	vertical-align: middle;
-}
-#gui-bad-connection::after {
-	position: absolute;
-	top: 100%;
-	display: block;
-	font-size: 1.2rem;
-	text-align: center;
-	content: "The server hasn't send a package for 500ms, your connection is probably interrupted or dead.";
-}
-#gui-warmup {
-	text-align: center;
 }
 #gui-warmup i {
-	color: green;
+	color: #34952b;
 }
+
 #gui-points {
 	position: fixed;
 	top: 4px;

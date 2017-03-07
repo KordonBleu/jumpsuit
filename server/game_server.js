@@ -38,23 +38,37 @@ new Slave(config.config.master, {
 	logger(logger.S_REGISTER, 'Successfully registered at ' + config.config.master.bold);
 
 	slave.on('connection', clientCo => {
-		console.log(clientCo);
 		logger(logger.INFO, 'Client #' + clientCo.id + ' connected');
 		// TODO: get the IP to feed it to the IPS to prevent spamming
 		// see https://github.com/beefproject/beef/wiki/Module:-Get-Internal-IP-WebRTC
 		clientCo.on('datachannel', dc => {
 			let player = new Player(dc);
 
+			function safeDisconnect() {
+				console.log('let\'s disconnect');
+				let lobbyId = player.lobbyId;
+				//delete dc.onerror;
+				//delete dc.onclose;
+				if (player.lobby.disconnectPlayer(player)) {
+					//true, if lobby needs to be closed or rather erased from the array
+					lobby.deleteLobby(lobbyId);
+				}
+			}
+
+			dc.onerror = (err) => {
+				console.log(err);
+			};
+			dc.onclose = safeDisconnect;
+
 			dc.on('message', function(msg) {
 				msg = msg.data;
-
 				try {
 					let serializator = message.getSerializator(msg);
 					if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
 					switch (serializator) {
 						case message.setPreferences: {
 							let val = message.setPreferences.deserialize(msg);
-							if (player.lobby !== undefined) {
+							if (player.lobby !== undefined && player.name !== val.name) {
 								player.homographId = player.lobby.getNextHomographId(val.name);
 								player.lobby.broadcast(message.setNameBroadcast.serialize(player.pid, val.name, player.homographId));
 							}
@@ -76,7 +90,15 @@ new Slave(config.config.master, {
 									break;
 								}
 							} else {//public lobby
-								val.lobbyId = lobby.newLobby();
+								val.lobbyId = -1;
+								let lobbies = lobby.lobbies.array, id;
+								for (id = 0; id !== lobbies.length; ++id) {
+									if (lobbies[id] && lobbies[id].players.length !== lobbies[id].maxPlayers) {
+										val.lobbyId = id;
+										break;
+									}
+								}
+								if (val.lobbyId === -1) val.lobbyId = lobby.newLobby();
 								if (val.lobbyId === -1) {
 									player.send(message.error.serialize(message.error.NO_LOBBY));
 									break;
@@ -101,7 +123,7 @@ new Slave(config.config.master, {
 							break;
 						case message.chat: {
 							let chatMsg = message.chat.deserialize(msg);
-							if (chatMsg !== '' && chatMsg.length <= 150) lobby.lobbies[player.lobbyId].broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
+							if (chatMsg !== '' && chatMsg.length <= 150) player.lobby.broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
 							break;
 						}
 						case message.aimAngle:
@@ -117,17 +139,6 @@ new Slave(config.config.master, {
 					console.log('user should be banned temporarly');
 				}
 			});
-
-			function safeDisconnect() {
-				console.log('let\'s disconnect');
-				let lobbyId = player.lobbyId;
-				if (player.lobby.disconnectPlayer(player)) {
-					//true, if lobby needs to be closed or rather erased from the array
-					lobby.deleteLobby(lobbyId);
-				}
-			}
-			dc.on('error', safeDisconnect);
-			dc.on('close', safeDisconnect);
 		});
 	});
 }).catch(err => {
