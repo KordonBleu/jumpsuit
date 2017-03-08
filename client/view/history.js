@@ -24,9 +24,9 @@ export function getConnectionIds() {
 let navHandler;
 
 export function push(serverId, lobbyId) {
-	if (!serverId && !lobbyId) {
+	if (serverId === undefined && lobbyId === undefined) {
 		history.pushState(HISTORY_MENU, '', location.pathname);
-	} else if (lobbyId) { //assumes serverId is defined too
+	} else if (lobbyId === undefined) { //assumes serverId is defined too
 		history.pushState(HISTORY_GAME, '', location.pathname + '#srv=' + url.encodeUint(serverId) + '&lobby=' + url.encodeUint(lobbyId));
 	} else {
 		history.pushState(HISTORY_GAME, '', location.pathname + '#srv=' + url.encodeUint(serverId));
