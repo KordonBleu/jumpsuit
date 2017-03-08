@@ -22,7 +22,7 @@ html, body, button, label, #gui-chat-player-list, table thead, #key-settings, .w
 	-ms-user-select: none;
 	user-select: none;
 }
-#menu-box, #settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
+#menu-box, #settings-box, #info-box, #dialog-box {
 	overflow-x: hidden;
 	overflow-y: auto;
 	-webkit-user-select: text;
@@ -335,8 +335,18 @@ label {
 #loading h2 {
 	font-size: 28px; /* TODO: use rems */
 }
-#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
-	padding: 14px;
+#dialog-box {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: #ebedf4;
+	padding: 1rem;
+	color: #333;
+	max-width: 500px;
+}
+#settings-box, #info-box{
+	padding: 1rem;
 	transition: transform .3s, opacity .3s;
 	transform: scale(1);
 	transform-origin: 50% 50%;
@@ -352,7 +362,7 @@ label {
 	min-width: 810px;
 	max-height: 90vh;
 }
-#settings-box.hidden, #info-box.hidden, #blocked-port-box.hidden, #device-not-supported.hidden, #device-untested.hidden {
+#settings-box.hidden, #info-box.hidden {
 	transform: scale(0);
 	opacity: 0;
 }
@@ -418,7 +428,6 @@ label {
 	top: .5%;
 	right: .5%;
 }
-
 #menu-box {
 	transition: transform .3s, opacity .3s;
 	transform: scale(1);
@@ -440,6 +449,7 @@ label {
 	opacity: 0;
 	display: block;
 }
+
 #lobby-table {
 	width: 80%;
 	font-size: 1.25em;
@@ -678,7 +688,16 @@ label {
 #gui-health div.heartHalfFilled { background-image: url("/assets/images/heartHalfFilled.svg"); }
 #gui-health div.heartNotFilled { background-image: url("/assets/images/heartNotFilled.svg"); }
 
-#gui-bad-connection, #gui-warmup {
+#gui-warmup {
+	font-size: 2rem;
+	position: fixed;
+	bottom: 15%;
+	left: 50%;
+	transform: translateX(-50%);	
+	color: #eee;
+	text-shadow: 0 0 5px rgba(0, 0, 0, 0.75);
+}
+#gui-bad-connection {
 	font-size: 1.2rem;
 	position: fixed;
 	top: 15%;
@@ -687,20 +706,14 @@ label {
 	color: #eee;
 	text-shadow: 0 0 5px rgba(0, 0, 0, 0.75);
 }
-#gui-bad-connection h1, #gui-warmup h1 {
+#gui-bad-connection h1 {
 	margin: 0;
 	padding-bottom: 0.1em;
 	font-size: 2.5rem;
 }
 #gui-bad-connection i, #gui-warmup i {
-	/*color: #bc4937;*/
-	margin-right: 0.25em;
-}
-#gui-bad-connection i {
 	color: #bc4937;
-}
-#gui-warmup i {
-	color: #34952b;
+	margin-right: 0.25em;
 }
 
 #gui-points {
@@ -763,3 +776,5 @@ label {
 	font-weight: bold;
 	color: #4dbb63;
 }
+
+

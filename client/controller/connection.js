@@ -23,6 +23,7 @@ export default class Connection {
 
 				dc.addEventListener('message', this.constructor.messageHandler.bind(this));
 				dc.addEventListener('error', this.constructor.errorHandler);
+				dc.addEventListener('close', this.constructor.closeHandler);
 
 				this.fastDc = dc;
 
@@ -39,19 +40,14 @@ export default class Connection {
 		return this.fastDc.readyState === 'open';
 	}
 	sendMessage(messageType, ...args) {
-		try {
-			this.fastDc.send(messageType.serialize.apply(messageType, args));
-		} catch(err) {
-			console.error(err);
-			//TODO: display 'connection lost' and get back to the main menu
-			//or is that redudant with the event listener on 'error'?
-		}
+		this.fastDc.send(messageType.serialize.apply(messageType, args));
 	}
 	close() { // stop the game and displays menu
 		clearInterval(this.latencyHandlerId);
 		clearInterval(this.mouseAngleUpdateHandlerId);
 		this.fastDc.removeEventListener('error', this.constructor.errorHandler);
 		this.fastDc.removeEventListener('message', this.constructor.messageHandler);
+		this.fastDc.removeEventListener('close', this.constructor.closeHandler);
 		this.slaveCo.close();
 	}
 	setPreferences() {
@@ -67,18 +63,24 @@ export default class Connection {
 			model.controls.refresh();
 		}
 	}
+	static closeHandler() {
+		view.history.push();
+		view.dialogs.showDialog('Connection lost', 'Your connection to the game server was closed unexpectedly. Try to reconnect or join another server !');
+	}
 	static errorHandler(err) {
 		//TODO: go back to main menu
 		console.error(err);
 		view.history.push();
 	}
 	static latencyHandler() {
-		if (model.game.state !== 'playing' || model.game.state !== 'warmup') return;
-		if (Date.now() - this.lastMessage > 2000) view.notif.showBadConnection();
-		else view.notif.hideBadconnection();
+		if (model.game.state !== 'playing' && model.game.state !== 'warmup') return;
 
-		if (this.lastMessage !== undefined && Date.now() - this.lastMessage > 7000) {
-			this.close();
+		let latency = 0;
+		if (this.lastMessage) {
+			latency = Date.now() - this.lastMessage;
+			if (latency > 7000) view.history.push();
+			else if (latency > 2000) view.notif.showBadConnection();
+			else view.notif.hideBadConnection();
 		}
 	}
 	static mouseAngleUpdateHandler() {

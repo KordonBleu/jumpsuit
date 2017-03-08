@@ -6,7 +6,7 @@ import * as entities from '../model/entities.js';
 
 view.history.bindHistoryNavigation(state => {
 	if (state === view.history.HISTORY_MENU) {
-		if (socket.currentConnection !== undefined && socket.currentConnection.alive()) socket.currentConnection.close();
+		if (socket.currentConnection !== undefined) socket.currentConnection.close();
 		loop.stop();
 		entities.clean();
 		view.views.hideScores();

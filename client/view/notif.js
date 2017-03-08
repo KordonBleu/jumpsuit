@@ -18,6 +18,6 @@ let badCoEl = document.getElementById('gui-bad-connection');
 export function showBadConnection() {
 	badCoEl.classList.remove('hidden');
 }
-export function hideBadconnection() {
+export function hideBadConnection() {
 	badCoEl.classList.add('hidden');
 }

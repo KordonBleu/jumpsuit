@@ -1,5 +1,7 @@
+import * as model from '../model/dialogs.js';
+
 function resizeHandler() { // Position fix: settings-box and info-box become blurry due decimal number in CSS's transform
-	for (let element of document.querySelectorAll('#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested')) {
+	for (let element of document.querySelectorAll('#settings-box, #info-box')) {
 		element.style['margin-top'] = Math.round(element.clientHeight * -0.5) + 'px';
 		element.style['margin-left'] = Math.round(element.clientWidth * -0.5) + 'px';
 	}
@@ -60,43 +62,29 @@ export function bindLeaveButtons(handler) {
 	}
 }
 
-/* Port blocked dialog box */
-export function showBlockedPortDialog(portNumber) { // TODO: adapt this code to WebRTC (since we don't get to choose manually the port)
-	document.getElementById('blocked-port-box').classList.remove('hidden');
-	document.getElementById('port-number').textContent = portNumber;
-	showShadow();
-}
-export function closeBlockedPortBox() {
-	document.getElementById('blocked-port-box').classList.add('hidden');
-	hideShadow();
-}
-export function bindCloseBlockedPortBox(handler) {
-	document.getElementById('close-blocked-port-box').addEventListener('click', handler);
-}
 
+export function showDialog(title, content) {
+	model.setIsModalOpen(true);
+	let dialogBox = document.createElement('div'),
+		titleElement = document.createElement('h2'),
+		contentElement = document.createElement('p'),
+		buttonElement = document.createElement('button');
 
-// unsupported box
-export function openUnsupportedBox() {
-	document.getElementById('device-not-supported').classList.remove('hidden');
-	showShadow();
-}
-export function closeUnsupportedBox() {
-	document.getElementById('device-not-supported').classList.add('hidden');
-	hideShadow();
-}
-export function bindCloseUnsupportedBox(handler) {
-	document.getElementById('device-not-supported').addEventListener('click', handler);
-}
+	titleElement.textContent = title;
+	contentElement.innerHTML = content;
+	buttonElement.id = 'dialog-box-close';
+	buttonElement.textContent = 'Got it';
+	buttonElement.addEventListener('click', e => {
+		model.setIsModalOpen(false);
+		document.body.removeChild(e.target.parentElement);
+		hideShadow();
+	});
+	dialogBox.id = 'dialog-box';
+	dialogBox.appendChild(titleElement);
+	dialogBox.appendChild(contentElement);
+	dialogBox.appendChild(buttonElement);
 
-// untested box
-export function openUntestedBox() {
-	document.getElementById('device-untested').classList.remove('hidden');
 	showShadow();
-}
-export function closeUntestedBox() {
-	document.getElementById('device-untested').classList.add('hidden');
-	hideShadow();
-}
-export function bindCloseUntestedBox(handler) {
-	document.getElementById('close-untested-box').addEventListener('click', handler);
+	document.body.appendChild(dialogBox);
+	dialogBox.classList.remove('hidden');
 }

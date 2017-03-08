@@ -31,8 +31,7 @@
 		</div>
 		<div id="gui-chat"><p id="gui-chat-first"></p></div>
 		<div id="gui-bad-connection" class="hidden"><h1><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</h1>The server hasn't send a package for 500ms, your connection is probably interrupted or dead.</div>
-		<div id="gui-warmup"><h1><i class="fa fa-info-circle" aria-hidden="true"></i>Warmup mode</h1>
-		When more players join the game will start for real ;-)</div>
+		<div id="gui-warmup">Warmup mode</div>
 		<div id="gui-chat-input-container">
 			<ul id="gui-chat-player-list" class="hidden"></ul>
 			<input type="text" id="gui-chat-input" maxlength="150"/>
@@ -140,32 +139,6 @@
 			<h1>JumpSuit</h1>
 			<h2>A canvas game by Getkey &amp; Fju</h2>
 		</div>
-		<div id="blocked-port-box" class="hidden"><!-- TODO: add a message for filtered ports -->
-			<h2>The port is blocked</h2>
-			<p>This port is blocked. Please ask your network administrator to open the port <span id="port-number"></span>.</p>
-			<p>If you are at home, your network administrator is your ISP.<br/>
-			If you are at work or at school, contact the IT departement. (Ooh, I bet you aren't the employee of the month :P)</p>
-
-			<p>You should also try another server, chances are you will find one which is not blocked</p>
-
-			<button id="close-blocked-port-box">Let's try another server</button>
-		</div>
-		<div id="device-not-supported" class="hidden">
-			<h2>Your browser is unsupported</h2>
-			<p>We only support Chrome and Firefox on desktop for now.<br/>
-			Please come back using one of these (on old computers, Firefox is generally faster).</p>
-
-			<button id="close-unsupported-box">I want to see how broken it is anyway!</button>
-		</div>
-		<div id="device-untested" class="hidden">
-			<h2>The game is likely not to work properly on this device</h2>
-			<p>We plan to support this platform, however it not our highest priority. Thus, the game might not work properly.</p>
-			<p>At the moment, we are primarily focusing on Chrome and Firefox on desktop.<br/>
-			Please come back using one of these (on old computers, Firefox is generally faster).</p>
-
-			<button id="close-untested-box">Okay</button>
-		</div>
-
 		<script src="/enslavism/client.js"></script>
 
 		<script src="/bundle.js"></script>

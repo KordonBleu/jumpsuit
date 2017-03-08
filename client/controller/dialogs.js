@@ -24,24 +24,8 @@ view.dialogs.bindLeaveButtons(() => {
 	view.history.push();
 });
 
-view.dialogs.bindCloseUntestedBox(() => {
-	model.setIsModalOpen(false);
-	view.dialogs.closeUntestedBox();
-});
-view.dialogs.bindCloseUnsupportedBox(() => {
-	model.setIsModalOpen(false);
-	view.dialogs.closeUnsupportedBox();
-});
-
 if (platform.isUnsupported) { // neither Chrome nor Firefox
-	model.setIsModalOpen(true);
-	view.dialogs.openUnsupportedBox();
+	view.dialogs.showDialog('Unsupported Device', 'We only support Chrome and Firefox on desktop for now. Or rather this game works best on those browser.<br>Please come back using one of these (on old computers, Firefox is generally faster).');
 } else if (platform.isMobile) { // Chrome or Firefox mobile
-	model.setIsModalOpen(true);
-	view.dialogs.openUntestedBox();
+	view.dialogs.showDialog('Unsupported Device', 'The game is likely not to work properly on your device. We plan to support this platform but we\'re focusing major issues and bugs. Thus the game might not work properly. At the moment, this game works best on Chrome and Firefox on desktop.<br>Please come back using one of these (on old computers, Firefox is generally faster)');
 }
-
-view.dialogs.bindCloseBlockedPortBox(() => {
-	model.setIsModalOpen(false);
-	view.dialogs.closeBlockedPortBox();
-});

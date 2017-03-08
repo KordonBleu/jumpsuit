@@ -18,7 +18,7 @@ export function makeNewCurrentConnection(slaveCo, id) {
 	new Connection(slaveCo, id).then((connection) => {
 		currentConnection = connection;
 	}).catch((err) => {
-		view.dialogs.showBlockedPortDialog(err.messsage);
+		view.dialogs.showDialog('Couldn\'t create connection', err.messsage);
 		console.error(err);
 	});
 }
