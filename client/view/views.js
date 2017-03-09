@@ -19,6 +19,18 @@ document.addEventListener('resource loaded', function loadBarHandler() {
 });
 
 
+export function centerElement(element) {
+	let type = element.getAttribute('center');
+	if (type !== 'x') element.style['margin-top'] = Math.round(element.clientHeight * -0.5) + 'px';
+	if (type !== 'y') element.style['margin-left'] = Math.round(element.clientWidth * -0.5) + 'px';
+}
+/* Center dialogs and windows */
+function resizeHandler() {
+	for (let element of document.querySelectorAll('*[center]')) centerElement(element);
+}
+window.addEventListener('resize', resizeHandler);
+resizeHandler();
+
 /* Main menu */
 export function closeMenu() {
 	document.getElementById('menu-box').classList.add('hidden');

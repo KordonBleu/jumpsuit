@@ -30,14 +30,13 @@
 			<div class="heartFilled"></div>
 		</div>
 		<div id="gui-chat"><p id="gui-chat-first"></p></div>
-		<div id="gui-bad-connection" class="hidden"><h1><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</h1>The server hasn't send a package for 500ms, your connection is probably interrupted or dead.</div>
-		<div id="gui-warmup">Warmup mode</div>
-		<div id="gui-chat-input-container">
+		<div id="gui-bad-connection" class="hidden" center="x"><h1><i class="fa fa-exclamation-triangle" aria-hidden="true"></i>Connection interrupted</h1>The server hasn't send a package for 500ms, your connection is probably interrupted or dead.</div>
+		<div id="gui-warmup" center="x">Warmup mode</div>
+		<div id="gui-chat-input-container" center="x">
 			<ul id="gui-chat-player-list" class="hidden"></ul>
 			<input type="text" id="gui-chat-input" maxlength="150"/>
 		</div>
-		<div id="gui-points">
-		</div>
+		<div id="gui-points" center="x"></div>
 		<div id="gui-options">
 			<button id="leave-button"><i class="fa fa-sign-out"></i>Leave</button>
 			<button id="info-button"><i class="fa fa-info-circle"></i>Infos</button>
@@ -73,7 +72,7 @@
 			<ul id="player-list"></ul>
 		</div>
 		<div id="shade-box" class="hidden"></div>
-		<div id="info-box" class="hidden">
+		<div id="info-box" class="hidden" center="both">
 			<h2>Informations</h2><button id="close-info-button"><i class="fa fa-times"></i>Close</button>
 			<p>This is a little HTML5 game made by <a href="https://getkey.eu">Getkey</a> and <a href="https://github.com/Fju">Fju</a></p>
 			<p>And the credits go to...</p>
@@ -101,7 +100,7 @@
 			<p>We aim to make it as easy as possible for you to make mods. Documentation on how to make mods can be found <a href="https://github.com/KordonBleu/jumpsuit/blob/master/doc/modding.md">here</a>.</p>
 		</div>
 
-		<div id="settings-box" class="hidden">
+		<div id="settings-box" class="hidden" center="both">
 			<h2>Settings</h2><button id="close-settings-button"><i class="fa fa-times"></i>Close</button>
 			<div>
 				<h3>Player</h3>
@@ -133,6 +132,11 @@
 				<button id="key-reset">Reset keymap to default</button>
 				<div id="key-info" class="hidden"></div>
 			</div>
+		</div>
+		<div id="dialog-box" center="both" class="hidden">
+			<h2>Title></h2>
+			<p></p>
+			<button id="dialog-box-close">Close</div>
 		</div>
 		<div id="loading">
 			<progress id="loading-progress" value="0"></progress>

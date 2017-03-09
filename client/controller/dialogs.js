@@ -24,6 +24,8 @@ view.dialogs.bindLeaveButtons(() => {
 	view.history.push();
 });
 
+view.dialogs.bindDialogCloseButton();
+
 if (platform.isUnsupported) { // neither Chrome nor Firefox
 	view.dialogs.showDialog('Unsupported Device', 'We only support Chrome and Firefox on desktop for now. Or rather this game works best on those browser.<br>Please come back using one of these (on old computers, Firefox is generally faster).');
 } else if (platform.isMobile) { // Chrome or Firefox mobile

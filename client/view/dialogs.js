@@ -1,13 +1,5 @@
 import * as model from '../model/dialogs.js';
-
-function resizeHandler() { // Position fix: settings-box and info-box become blurry due decimal number in CSS's transform
-	for (let element of document.querySelectorAll('#settings-box, #info-box')) {
-		element.style['margin-top'] = Math.round(element.clientHeight * -0.5) + 'px';
-		element.style['margin-left'] = Math.round(element.clientWidth * -0.5) + 'px';
-	}
-}
-window.addEventListener('resize', resizeHandler);
-resizeHandler();
+import { centerElement } from './views.js';
 
 
 function showShadow() {
@@ -62,29 +54,20 @@ export function bindLeaveButtons(handler) {
 	}
 }
 
+export function bindDialogCloseButton() {
+	document.getElementById('dialog-box-close').addEventListener('click', e => {
+		e.target.parentElement.classList.add('hidden');
+		model.setIsModalOpen(false);
+		hideShadow();
+	});
+}
 
 export function showDialog(title, content) {
 	model.setIsModalOpen(true);
-	let dialogBox = document.createElement('div'),
-		titleElement = document.createElement('h2'),
-		contentElement = document.createElement('p'),
-		buttonElement = document.createElement('button');
-
-	titleElement.textContent = title;
-	contentElement.innerHTML = content;
-	buttonElement.id = 'dialog-box-close';
-	buttonElement.textContent = 'Got it';
-	buttonElement.addEventListener('click', e => {
-		model.setIsModalOpen(false);
-		document.body.removeChild(e.target.parentElement);
-		hideShadow();
-	});
-	dialogBox.id = 'dialog-box';
-	dialogBox.appendChild(titleElement);
-	dialogBox.appendChild(contentElement);
-	dialogBox.appendChild(buttonElement);
-
-	showShadow();
-	document.body.appendChild(dialogBox);
+	let dialogBox = document.getElementById('dialog-box');
+	dialogBox.querySelector('h2').textContent = title;
+	dialogBox.querySelector('p').innerHTML = content;
 	dialogBox.classList.remove('hidden');
+	showShadow();
+	centerElement(dialogBox);
 }
