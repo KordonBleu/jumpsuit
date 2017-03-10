@@ -15,11 +15,14 @@
 		<canvas id="canvas">Your browser doesn't support the canvas element. Please update it.</canvas>
 		<canvas id="gui-minimap-canvas"></canvas>
 		<ul id="gui-controls">
-			<li><img src="/assets/images/controls/jump.svg" alt="jump control" id="jump"/><br/>
-				<img src="/assets/images/controls/jetpack.svg" alt="jetpack control" id="jetpack"/>
-				<img src="/assets/images/controls/crouch.svg" alt="crouch control" id="crouch"/></li>
-			<li><img src="/assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"/>
-			<img src="/assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/></li>
+			<li>
+				<img src="/assets/images/controls/jump.svg" alt="jump and jetpack control" id="jump"/>
+				<img src="/assets/images/controls/crouch.svg" alt="crouch control" id="crouch"/>
+			</li>
+			<li>
+				<img src="/assets/images/controls/moveLeft.svg" alt="move right control" id="moveLeft"/>
+				<img src="/assets/images/controls/moveRight.svg" alt="move left control" id="moveRight"/>
+			</li>
 		</ul>
 
 		<meter id="gui-stamina"></meter>
@@ -67,7 +70,7 @@
 		</div>
 		<div id="player-table" class="hidden" center="both">
 			<h1 id="lobby-victory"></h1>
-			<ul id="player-list"></ul>			
+			<ul id="player-list"></ul>
 		</div>
 		<div id="shade-box" class="hidden"></div>
 		<div id="info-box" class="hidden" center="both">

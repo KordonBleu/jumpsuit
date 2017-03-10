@@ -39,6 +39,10 @@ export function updatePlayer(pid, x, y, attachedPlanet, angle, looksLeft, jetpac
 	if (!players[pid]) return;
 	players[pid].playSteps(players[game.ownIdx], walkFrame, x, y);
 	players[pid].playJetpack(players[game.ownIdx], jetpack);
+
+	if (jetpack) view.controls.onscreen.displayJetpack();
+	else view.controls.onscreen.displayJump();
+
 	players[pid].update(x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle);
 }
 export function addShot(x, y, angle, origin, type) {

@@ -43,14 +43,10 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 			}
 			player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 
-			player.velocity.x = 0;
-			player.velocity.y = 0;
-			if (player.controls['jump'] > 0) {
-				player.attachedPlanet = -1;
-				player.velocity.x = Math.sin(player.box.angle) * 6;
-				player.velocity.y = -Math.cos(player.box.angle) * 6;
-				player.box.center.x += player.velocity.x;
-				player.box.center.y += player.velocity.y;
+			if (player.controls['jump'] > 0) player.jump();
+			else {
+				player.velocity.x = 0;
+				player.velocity.y = 0;
 			}
 		} else {
 			player.looksLeft = (player.aimAngle - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
@@ -68,11 +64,12 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 					player.box.angle = Math.PI + Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 - Math.atan2(deltaX, deltaY) - Math.PI;
 				}
 			}
-			if (player.controls['jetpack'] > 0 && player.stamina > 0 && player.controls['crouch'] < 1){
+			player.updateJumpState(player.controls['jump'] > 0);
+			if (player.jumpState === player.jumpStates.JETPACK && player.stamina > 0 && player.controls['crouch'] < 1){
 				player.decreaseStamina(1);
-				player.jetpack = (player.controls['jetpack'] > 0);
-				player.velocity.x += (Math.sin(player.box.angle) / 6) * player.controls['jetpack'];
-				player.velocity.y += (-Math.cos(player.box.angle) / 6) * player.controls['jetpack'];
+				player.jetpack = (player.controls['jump'] > 0);
+				player.velocity.x += (Math.sin(player.box.angle) / 6) * player.controls['jump'];
+				player.velocity.y += (-Math.cos(player.box.angle) / 6) * player.controls['jump'];
 			} else if (player.controls['crouch'] > 0){
 				player.velocity.x = player.velocity.x * 0.987;
 				player.velocity.y = player.velocity.y * 0.987;
@@ -110,7 +107,6 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 		} else if (!players.some(function(player) {
 			if (player.constructor !== Player) return;
 			if (player.pid !== shot.origin && universe.collide(shot.box, player.box)) {
-				console.log('ars');
 				player.health -= (player.health === 0) ? 0 : 1;
 				if (player.health <= 0) {
 					let suitablePlanets = [];

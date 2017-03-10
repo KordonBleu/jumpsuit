@@ -3,3 +3,9 @@ export function hide() {
 		element.removeAttribute('style');
 	});
 }
+export function displayJetpack() {
+	document.getElementById('jump').setAttribute('src', '/assets/images/controls/jetpack.svg');
+}
+export function displayJump() {
+	document.getElementById('jump').setAttribute('src', '/assets/images/controls/jump.svg');
+}

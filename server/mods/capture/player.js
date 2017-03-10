@@ -9,6 +9,8 @@ export default class SrvPlayer extends Player {
 
 		this._lastHurt = 0;
 		this._walkCounter = 0;
+
+		this.jumpState = this.jumpStates.FLOATING;
 	}
 
 	send(data) {
@@ -43,4 +45,32 @@ export default class SrvPlayer extends Player {
 			this.setBoxSize();
 		}
 	}
+
+	updateJumpState(jumpPressed) {
+		switch (this.jumpState) {
+			case this.jumpStates.JUMPING:
+				if (!jumpPressed) this.jumpState = this.jumpStates.FLOATING;
+				break;
+			case this.jumpStates.FLOATING:
+				if (jumpPressed) this.jumpState = this.jumpStates.JETPACK;
+				break;
+			case this.jumpStates.JETPACK:
+				if (!jumpPressed) this.jumpState = this.jumpStates.FLOATING;
+		}
+	}
+	jump() {
+		this.jumpState = this.jumpStates.JUMPING;
+		this.attachedPlanet = -1;
+
+		this.velocity.x = Math.sin(this.box.angle) * 6;
+		this.velocity.y = -Math.cos(this.box.angle) * 6;
+
+		this.box.center.x += this.velocity.x;
+		this.box.center.y += this.velocity.y;
+	}
 }
+SrvPlayer.prototype.jumpStates = { // FSM
+	JUMPING: 0, // the player has pressed space (they may hold it)
+	FLOATING: 1, // the player has released space
+	JETPACK: 2 // the player has pressed space again (they may hold it)
+};

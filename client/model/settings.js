@@ -7,12 +7,11 @@
 const defaultKeymap = {
 		ShiftLeft: 'run',
 		Space: 'jump',
+		ArrowUp: 'jump',
 		ArrowLeft: 'moveLeft',
-		ArrowUp: 'jetpack',
 		ArrowRight: 'moveRight',
 		ArrowDown: 'crouch',
 		KeyA: 'moveLeft',
-		KeyW: 'jetpack',
 		KeyD: 'moveRight',
 		KeyS: 'crouch',
 		KeyT: 'chat',

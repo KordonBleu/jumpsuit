@@ -35,7 +35,6 @@ export function bindUpdateControls(handler, gamepadId) {
 				g.buttons[0].value,
 				g.buttons[1].value,
 				g.buttons[4].value,
-				g.buttons[7].value,
 				moveLeft,
 				moveRight
 			);

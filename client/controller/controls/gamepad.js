@@ -19,11 +19,10 @@ if (model.platform.supportsGamepad) {
 		}
 	});
 }
-function updateControls(jump, run, crouch, jetpack, moveLeft, moveRight) {
+function updateControls(jump, run, crouch, moveLeft, moveRight) {
 	model.controls.selfControls.jump = jump;
 	model.controls.selfControls.run = run;
 	model.controls.selfControls.crouch = crouch;
-	model.controls.selfControls.jetpack = jetpack;
 	model.controls.selfControls.moveLeft = moveLeft;
 	model.controls.selfControls.moveRight = moveRight;
 

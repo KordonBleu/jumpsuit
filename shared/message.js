@@ -56,7 +56,6 @@ const weaponMap = new bimap.EnumMap(
 		'jump',
 		'run',
 		'crouch',
-		'jetpack',
 		'moveLeft',
 		'moveRight',
 		'changeWeapon',

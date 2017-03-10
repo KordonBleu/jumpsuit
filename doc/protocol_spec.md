@@ -319,10 +319,10 @@ The `lobby id` must be set only if the player wishes to connect to a specific lo
 
 #### PLAYER_CONTROLS (client → game server)
 ```
-   1b    1b      1b       1b         1b           1b            1b          1b
-+------+-----+--------+---------+-----------+------------+---------------+-------+
-| jump | run | crouch | jetpack | move left | move right | change weapon | shoot |
-+------+-----+--------+---------+-----------+------------+---------------+-------+
+      1b        1b    1b      1b        1b           1b            1b          1b
++------------+------+-----+--------+-----------+------------+---------------+-------+
+| unused bit | jump | run | crouch | move left | move right | change weapon | shoot |
++------------+------+-----+--------+-----------+------------+---------------+-------+
 ```
 
 
