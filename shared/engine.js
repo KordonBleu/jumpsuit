@@ -9,6 +9,11 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 			removedShots: []
 		};
 
+	function updatePlayerPosOnPlanet(player, planet) {
+		player.box.center.x = planet.box.center.x + Math.sin(Math.PI - player.box.angle) * (planet.box.radius + player.box.height / 2);
+		player.box.center.y = planet.box.center.y + Math.cos(Math.PI - player.box.angle) * (planet.box.radius + player.box.height / 2);
+	}
+
 	players.forEach(function(player) {
 		function move(left, run) {
 			player.looksLeft = left;
@@ -17,9 +22,7 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 				arc = (directionFactor * stepSize) / planets[player.attachedPlanet].box.radius;
 
 			player.box.angle = modulo(player.box.angle + arc, 2*Math.PI); // if there is no modulo(), rounding error accumulate which cause issues when converting to brads
-
-			player.box.center.x = planets[player.attachedPlanet].box.center.x + Math.sin(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
-			player.box.center.y = planets[player.attachedPlanet].box.center.y + Math.cos(Math.PI - player.box.angle) * (planets[player.attachedPlanet].box.radius + player.box.height / 2);
+			updatePlayerPosOnPlanet(player, planets[player.attachedPlanet]);
 		}
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === 'undefined') playersOnPlanets[player.attachedPlanet] = {'alienBeige': 0, 'alienBlue': 0, 'alienGreen': 0, 'alienPink': 0, 'alienYellow': 0};
@@ -52,16 +55,16 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 		} else {
 			player.looksLeft = (player.aimAngle - player.box.angle + 2*Math.PI) % (2*Math.PI) > Math.PI;
 			player.jetpack = false;
-			for (let j = 0; j < planets.length; j++){
+			for (let j = 0; j < planets.length; j++) {
 				let deltaX = planets[j].box.center.x - player.box.center.x,
 					deltaY = planets[j].box.center.y - player.box.center.y,
 					distPowFour = Math.pow(Math.pow(deltaX, 2) + Math.pow(deltaY, 2), 2);
 
 				player.velocity.x += 9000 * planets[j].box.radius * deltaX / distPowFour;
 				player.velocity.y += 9000 * planets[j].box.radius * deltaY / distPowFour;
+
 				if (universe.collide(planets[j].box, player.box)) {
 					player.attachedPlanet = j;
-					//setPlayerAngleOnPlanet(player, planets[j]);
 					player.box.angle = Math.PI + Math.trunc(player.box.angle / (2 * Math.PI)) * Math.PI * 2 - Math.atan2(deltaX, deltaY) - Math.PI;
 				}
 			}
@@ -107,15 +110,19 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 		} else if (!players.some(function(player) {
 			if (player.constructor !== Player) return;
 			if (player.pid !== shot.origin && universe.collide(shot.box, player.box)) {
+				console.log('ars');
 				player.health -= (player.health === 0) ? 0 : 1;
 				if (player.health <= 0) {
 					let suitablePlanets = [];
 					planets.forEach(function(planet, pi) {
 						if (planet.team === player.appearance) suitablePlanets.push(pi);
 					});
+
 					player.box.angle = 0;
 					if (suitablePlanets.length === 0) player.attachedPlanet = Math.floor(Math.random() * planets.length);
 					else player.attachedPlanet = suitablePlanets[Math.floor(Math.random() * suitablePlanets.length)];
+					updatePlayerPosOnPlanet(player, planets[player.attachedPlanet]);
+
 					player.health = 8;
 					player.fillStamina();
 					if (lobbyState === 'playing') teamScores[player.appearance] -= 5;
