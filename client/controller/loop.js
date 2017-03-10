@@ -16,7 +16,8 @@ export function start() {
 	if (!started) {
 		started = true;
 		view.controls.enable();
-		if (model.settings.meteors === 'true') view.draw.startMeteorSpawning();
+		view.views.focusGame();
+		view.draw.startMeteorSpawning();
 		loop();
 	}
 }

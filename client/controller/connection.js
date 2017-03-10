@@ -42,7 +42,7 @@ export default class Connection {
 	sendMessage(messageType, ...args) {
 		this.fastDc.send(messageType.serialize.apply(messageType, args));
 	}
-	close() { // stop the game and displays menu
+	close() {
 		clearInterval(this.latencyHandlerId);
 		clearInterval(this.mouseAngleUpdateHandlerId);
 		this.fastDc.removeEventListener('error', this.constructor.errorHandler);
@@ -107,7 +107,6 @@ export default class Connection {
 				break;
 			}
 			case message.warmup: {
-				console.log('warmup');
 				model.entities.clean();
 
 				let val = message.warmup.deserialize(msg.data,
@@ -221,8 +220,8 @@ export default class Connection {
 			case message.displayScores: {
 				console.log('displayScores');
 				view.views.showScores();
-
 				loop.stop();
+				model.entities.clean();
 				break;
 			}
 		}

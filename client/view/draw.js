@@ -15,6 +15,7 @@ let canvas = document.getElementById('canvas'),
 let meteorSpawningIntervalId;
 export function startMeteorSpawning() {
 	meteorSpawningIntervalId = setInterval(function() {
+		if (model.settings.meteor !== 'true') return;
 		if (meteors.length > 30 || Math.random() > 0.3) return;
 		let m_resources = ['meteorBig1', 'meteorMed2', 'meteorSmall1', 'meteorTiny1', 'meteorTiny2'],
 			m_rand = Math.floor(m_resources.length * Math.random()),

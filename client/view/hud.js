@@ -1,4 +1,5 @@
 import * as model from '../model/index.js';
+import * as views from './views.js';
 
 export function readyPointCounter(scoresObj) {
 	let pointsElement = document.getElementById('gui-points');
@@ -14,6 +15,7 @@ export function updatePointCounter() {
 		let element = document.getElementById('gui-points-' + team);
 		if (element !== null) element.textContent = model.game.scores[team];
 	}
+	views.centerElement(document.getElementById('gui-points'));
 }
 
 export function initMinimap() {

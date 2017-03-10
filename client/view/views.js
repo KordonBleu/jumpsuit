@@ -18,6 +18,9 @@ document.addEventListener('resource loaded', function loadBarHandler() {
 	}
 });
 
+export function focusGame() {
+	document.getElementById('canvas').focus();
+}
 
 export function centerElement(element) {
 	let type = element.getAttribute('center');
@@ -41,9 +44,10 @@ export function showMenu() {
 
 /* Score view */
 export function showScores() {
-	document.getElementById('player-table').classList.remove('hidden');
-	let victor = null,
-		a = -Infinity;
+	let playerTable = document.getElementById('player-table');
+
+	playerTable.classList.remove('hidden');
+	let victor = null, a = -Infinity;
 
 	for (let team in model.game.scores) {
 		if (model.game.scores[team] > a) {
@@ -52,7 +56,7 @@ export function showScores() {
 		} else if (model.game.scores[team] === a) victor = null;
 	}
 
-	document.getElementById('player-table').textContent = !victor ? 'Tied!' : victor + ' won!';
+	document.getElementById('lobby-victory').textContent = !victor ? 'Tied!' : victor + ' won!';
 }
 export function hideScores() {
 	document.getElementById('player-table').classList.add('hidden');

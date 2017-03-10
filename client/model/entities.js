@@ -33,10 +33,10 @@ export function updateEnemy(id, angle) {
 export function addPlayer(pid, appearance, homographId, name) {
 	let newPlayer = new Player(pid, appearance, homographId, name);
 	players[pid] = newPlayer;
-	if (!(pid in players)) view.chat.printChatMessage(undefined, undefined, newPlayer.getFinalName() + ' joined the game');
+	view.chat.printChatMessage(undefined, undefined, newPlayer.getFinalName() + ' joined the game');
 }
 export function updatePlayer(pid, x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle) {
-	if (players[pid] === undefined) console.log(pid, players);
+	if (!players[pid]) return;
 	players[pid].playSteps(players[game.ownIdx], walkFrame, x, y);
 	players[pid].playJetpack(players[game.ownIdx], jetpack);
 	players[pid].update(x, y, attachedPlanet, angle, looksLeft, jetpack, hurt, walkFrame, armedWeapon, carriedWeapon, aimAngle);

@@ -74,7 +74,6 @@ new Slave(config.config.master, {
 							break;
 						}
 						case message.connect: {
-							console.log('connect', player);
 							let val = message.connect.deserialize(msg);
 							let selectedLobby;
 							if (val.lobbyId !== undefined) {

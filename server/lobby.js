@@ -7,7 +7,7 @@ import * as message from '../shared/message.js';
 const vinage = require('vinage');
 
 const MAX_LOBBY_COUNT = 5; //TODO: add it to the settings
-const DEFAULT_PLAYER_AMOUNT = 4; //TODO: see above
+const DEFAULT_PLAYER_AMOUNT = 2; //TODO: see above
 
 class NullArray {
 	constructor(maxLength) {
@@ -86,7 +86,7 @@ class Lobby {
 		this.updateScores();
 		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
 
-		setTimeout(this.playingToDisplaying.bind(this), 120000);
+		setTimeout(this.playingToDisplaying.bind(this), 15000);
 	}
 	playingToDisplaying() {
 		this.changeState('displaying_scores');
@@ -142,7 +142,6 @@ class Lobby {
 		logger(logger.DEV, 'DISCONNECT'.italic + ' Player: {0}', player.name);
 		let pid = player.pid;
 		this.players.del(pid);
-		console.log('lobby players', this.players.array);
 		this.broadcast(message.removeEntity.serialize([], [], [], [pid]));
 
 		if (this.players.length === 0) {
@@ -208,11 +207,6 @@ class Lobby {
 		this.planets.length = 0;
 		this.enemies.length = 0;
 
-		for (let player of this.players.array) {
-			if (player === undefined) continue;
-			player.attachedPlanet = -1;
-		}
-
 		let planetDensity = Math.pow(6400, 2) / 26,
 			planetAmount = Math.round((this.universe.width*this.universe.height) / planetDensity),
 			enemyDensity = Math.pow(6400, 2) / 15,
@@ -255,12 +249,16 @@ class Lobby {
 			_teams.splice(teamIndex, 1);
 		}
 		this.enabledTeams = Object.keys(this.teamScores);
-		this.players.iterate(function(player) {
+
+		for (let player of this.players.array) {
+			if (!player) continue;
 			player.controls = {};
 			player.health = 8;
 			player.fillStamina();
 			player.velocity = new vinage.Vector(0, 0);
-		});
+			player.attachedPlanet = -1;
+			this.assignPlayerTeam(player);
+		}
 	}
 	assignPlayerTeam(player) {
 		let teamsPlaying = Object.keys(this.teams);

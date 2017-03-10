@@ -5,7 +5,7 @@
 	font-family: "Open Sans";
 	font-style: normal;
 	font-weight: normal;
-	src: local("Open Sans"), url("/assets/fonts/open_sans_40.woff2") format("woff2"), url("/assets/fonts/open_sans_40.woff") format("woff");
+	src: local("Open Sans"), url("/assets/fonts/open_sans_400.woff2") format("woff2"), url("/assets/fonts/open_sans_400.woff") format("woff");
 }
 html {
 	background-image: url("/assets/images/background.png");
@@ -46,7 +46,7 @@ html, body, button, label, #gui-chat-player-list, table thead, #key-settings, .w
 	border-radius: 3px;
 	border: 2px solid white;
 }
-#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, #lobby-table.hidden, #player-table.hidden, #shade-box.hidden, #loading.hidden {
+#gui-bad-connection.hidden, #gui-warmup.hidden, #gui-chat-player-list.hidden, #team-list.hidden, .search-hidden, #lobby-table.hidden, #shade-box.hidden, #loading.hidden {
 	display: none;
 }
 .fa {
@@ -507,30 +507,25 @@ label {
 
 
 #player-table {
-	width: 100%;
-	box-sizing: border-box;
-	font-size: 1.25em;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	max-width: 800px;
+	max-height: 480px;
+	width: 60vw;
+	height: 40vh;
+	border-radius: 7px;
+	background: rgba(0, 0, 0, 0.7);
+	color: #fff;
 	padding: 1rem;
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	background-color: white;
 }
-#player-table > button {
-	position: absolute;
-	top: 0;
-	right: 2em;
-}
-#lobby-status { margin-bottom: .75em; }
-#lobby-status::before {
-	content: "Status: ";
-	font-weight: bold;
-	color: #ad3726;
+#player-table.hidden {
+	transform: scale(0);
 }
 #player-list {
-	width: 100%;
-	max-width: 1200px;
+	box-sizing: content-box;
 	list-style-type: none;
+	padding: 0;
 }
 #player-list li:first-child {
 	border-top: 1px solid #bfbfbf;
