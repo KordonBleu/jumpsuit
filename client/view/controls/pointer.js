@@ -38,7 +38,7 @@ export function bindMouseDown(leftClickHandler, rightClickHandler) {
 				leftClickHandler();
 				break;
 			case 1:
-				rightClickHandler();
+				rightClickHandler(e);
 				break;
 		}
 	});
