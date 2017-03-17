@@ -36,9 +36,9 @@ export default class SrvPlayer extends Player {
 		if (this.attachedPlanet === -1){
 			this.walkFrame = 'jump';
 		} else {
-			let leftOrRight = (this.controls['moveLeft'] || this.controls['moveRight']);
-			if (!leftOrRight) this.walkFrame = (this.controls['crouch']) ? 'duck' : 'stand';
-			else if (this._walkCounter++ >= (this.controls['run'] > 0 ? 6 : 10)){
+			let walkFlag = (this.controls['moveLeft'] > 0) * 1 | (this.controls['moveRight'] > 0) * 2 | (this.controls['run'] > 0) * 4;
+			if (!(walkFlag & 3) || (walkFlag & 3) === 3) this.walkFrame = (this.controls['crouch']) ? 'duck' : 'stand';
+			else if (this._walkCounter++ >= (walkFlag >> 2 ? 6 : 10)) {
 				this._walkCounter = 0;
 				this.walkFrame = (this.walkFrame === 'walk1') ? 'walk2' : 'walk1';
 			}

@@ -16,33 +16,25 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 
 	players.forEach(function(player) {
 		function move(left, run) {
+			if (run) run = player.decreaseStamina(3); //prevent loosing stamina when not moving but pressing run key
 			player.looksLeft = left;
 			let stepSize = run ? 8 : 5,
 				directionFactor = left ? -1 : 1,
 				arc = (directionFactor * stepSize) / planets[player.attachedPlanet].box.radius;
 
 			player.box.angle = modulo(player.box.angle + arc, 2*Math.PI); // if there is no modulo(), rounding error accumulate which cause issues when converting to brads
-			updatePlayerPosOnPlanet(player, planets[player.attachedPlanet]);
 		}
+		player.setWalkFrame();
 		if (player.attachedPlanet >= 0) {
 			if (typeof playersOnPlanets[player.attachedPlanet] === 'undefined') playersOnPlanets[player.attachedPlanet] = {'alienBeige': 0, 'alienBlue': 0, 'alienGreen': 0, 'alienPink': 0, 'alienYellow': 0};
 			playersOnPlanets[player.attachedPlanet][player.appearance]++;
+			updatePlayerPosOnPlanet(player, planets[player.attachedPlanet]);
 			player.jetpack = false;
-			if (player.controls['run']) {
-				if(player.decreaseStamina(3)) { //stamina consumed! -> run
-					if (player.controls['moveLeft'] > 0) move(true, true);
-					if (player.controls['moveRight'] > 0) move(false, true);
-				} else { // walk
-					if (player.controls['moveLeft'] > 0) move(true, false);
-					if (player.controls['moveRight'] > 0) move(false, false);
-				}
-			} else {
-				player.increaseStamina(5);
-				if (player.controls['moveLeft'] > 0) move(true, false);
-				if (player.controls['moveRight'] > 0) move(false, false);
-			}
-			player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 
+			let walkFlag = (player.controls['moveLeft'] > 0) * 1 | (player.controls['moveRight'] > 0) * 2 | (player.controls['run'] > 0) * 4;
+			if (!(walkFlag & 3)) player.increaseStamina(5);
+			else if ((walkFlag & 3) !== 3) move(walkFlag & 1, walkFlag >> 2 & 1);
+			player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 			if (player.controls['jump'] > 0) player.jump();
 			else {
 				player.velocity.x = 0;
@@ -93,7 +85,6 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 		}
 		let needsPressState = {'changeWeapon': null, 'shoot': null}; //it needs to be an Object to use the operater `in`
 		for (let key in player.controls) if (player.controls[key] !== 0 && key in needsPressState) player.controls[key] = 2;
-		player.setWalkFrame();
 	});
 	shots.forEach(function(shot, si) {
 		let velocity = shot.speed[shot.type];
