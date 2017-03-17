@@ -59,7 +59,6 @@ export function bindSetKey(handler) {
 	});
 }
 
-
 export function setKeyResetDisabledStatus(status) {
 	keyResetElement.disabled = status;
 }

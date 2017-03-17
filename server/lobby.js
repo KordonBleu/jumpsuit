@@ -98,7 +98,7 @@ class Lobby {
 		setTimeout(() => {
 			this.displayingToWarmup.bind(this)();
 			if (this.enoughPlayers()) this.warmupToPlaying.bind(this)();
-		}, 5000);
+		}, 50000);
 	}
 	displayingToWarmup() {
 		this.changeState('warmup');

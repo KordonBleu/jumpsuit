@@ -2,6 +2,9 @@
 	html {
 		font-size: .9em;
 	}
+	.sidebox {
+		width: 75vw;
+	}
 	#gui-points {
 		font-size: 1.5em;
 	}
@@ -40,9 +43,6 @@
 		/* right attribute needs to be reset, otherwise div would be stretched all over the screen, eventhough this isn't
 		visible to the viewer, it prevents from shooting in case the mouse cursor is over the div's area */
 	}
-	#lobby-table, #sidebar {
-		width: 100%;
-	}
 	#lobby-table th:last-child {
 		width: 6em;
 	}
@@ -57,21 +57,6 @@
 		min-width: none;
 	}
 	#sidebar > div { display: inline-block; }
-	#search-filter h1 { display: none; }
-	#search-filter label::before {
-		content: "Search: ";
-		margin-right: .25em;
-	}
-	#settings-box {
-		flex-direction: column;
-		flex-wrap: nowrap;
-	}
-	#settings-box div:nth-of-type(1) {
-		max-width: initial;
-	}
-	#settings-box, #info-box, #blocked-port-box, #device-not-supported, #device-untested {
-		min-width: initial;
-	}
 }
 @media all and (max-width: 640px) {
 	html {
@@ -80,6 +65,10 @@
 	button {
 		min-width: 74px;
 		padding: 3px;
+	}
+	.sidebox {
+		max-width: initial;
+		width: 100vw;
 	}
 	#gui-warmup {
 		font-size: 1.8em;

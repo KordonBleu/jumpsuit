@@ -2,13 +2,16 @@ import * as model from '../model/dialogs.js';
 import { centerElement } from './views.js';
 
 
-function showShadow() {
-	document.getElementById('shade-box').classList.remove('hidden');
+function showShadow(handler) {
+	let box = document.getElementById('shade-box');
+	box.classList.remove('hidden');
+	box.onclick = handler;
 }
 function hideShadow() {
-	document.getElementById('shade-box').classList.add('hidden');
+	let box = document.getElementById('shade-box');
+	box.classList.add('hidden');
+	box.onclick = null;
 }
-
 
 // settings
 export function bindSettingsButtons(handler) {
@@ -21,7 +24,7 @@ export function bindCloseSettingsButton(handler) {
 }
 export function openSettingsBox() {
 	document.getElementById('settings-box').classList.remove('hidden');
-	showShadow();
+	showShadow(closeSettingsBox);
 }
 export function closeSettingsBox() {
 	document.getElementById('settings-box').classList.add('hidden');
@@ -40,7 +43,7 @@ export function bindCloseInfoButton(handler) {
 
 export function openInfoBox() {
 	document.getElementById('info-box').classList.remove('hidden');
-	showShadow();
+	showShadow(closeInfoBox);
 }
 export function closeInfoBox() {
 	document.getElementById('info-box').classList.add('hidden');
