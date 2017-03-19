@@ -1,6 +1,6 @@
 const lobbyListElement = document.getElementById('lobby-list');
 
-let slaveRows = new Map();
+export let slaveRows = new Map();
 export function addServerRow(slaveCo) {
 	let row = document.createElement('tr'),
 		serverNameTd = document.createElement('td'),

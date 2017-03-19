@@ -9,6 +9,11 @@ const vinage = require('vinage');
 const MAX_LOBBY_COUNT = 5; //TODO: add it to the settings
 const DEFAULT_PLAYER_AMOUNT = 2; //TODO: see above
 
+const TIME_ROUND_LENGTH = 30000;	//30 seconds
+const TIME_DISPLAY_LENGTH = 5000;	//5 seconds
+const TIME_SCORE_FREQ = 1000;		//1Hz
+const TIME_GAME_FREQ = 16;			//60Hz
+
 class NullArray {
 	constructor(maxLength) {
 		this.array = new Array(maxLength);
@@ -43,7 +48,9 @@ class NullArray {
 export let lobbies = new NullArray(MAX_LOBBY_COUNT);
 
 export function newLobby(maxPlayers) {
-	return lobbies.add(new Lobby(maxPlayers || DEFAULT_PLAYER_AMOUNT));
+	let lobby = new Lobby(maxPlayers || DEFAULT_PLAYER_AMOUNT);
+	let id = lobbies.add(lobby);
+	return lobby.lobbyId = id; //this is on purpose
 }
 export function deleteLobby(index) {
 	lobbies.get(index).close();
@@ -66,11 +73,13 @@ class Lobby {
 		this.enemies = [];
 		this.shots = [];
 
-		this.processTime = 2;
+		this.processTime = 2; //wut, why is it 2?
 		this.lobbyState = 'warmup';
+		this.lobbyId = -1;
 		this.universe = new vinage.Rectangle(new vinage.Point(0, 0), univSize(), univSize());
 		this.resetWorld();
 		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
+		this.cycleId = 0;
 	}
 
 	changeState(newState) {
@@ -84,9 +93,8 @@ class Lobby {
 		}
 
 		this.updateScores();
-		this.scoreCycleId = setInterval(this.updateScores.bind(this), 1000);
-
-		setTimeout(this.playingToDisplaying.bind(this), 15000);
+		this.scoreCycleId = setInterval(this.updateScores.bind(this), TIME_SCORE_FREQ);
+		this.cycleId = setTimeout(this.playingToDisplaying.bind(this), TIME_ROUND_LENGTH);
 	}
 	playingToDisplaying() {
 		this.changeState('displaying_scores');
@@ -95,10 +103,7 @@ class Lobby {
 		clearInterval(this.scoreCycleId);
 		this.broadcast(message.displayScores.serialize(this.getScores()));
 
-		setTimeout(() => {
-			this.displayingToWarmup.bind(this)();
-			if (this.enoughPlayers()) this.warmupToPlaying.bind(this)();
-		}, 50000);
+		this.cycleId = setTimeout(this.displayingToWarmup.bind(this), TIME_DISPLAY_LENGTH);
 	}
 	displayingToWarmup() {
 		this.changeState('warmup');
@@ -108,28 +113,22 @@ class Lobby {
 		this.players.iterate(player => {
 			player.send(message.warmup.serialize(this.getScores(), thisLobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 		});
-		this.gameCycleId = setInterval(this.updateGame.bind(this), 16);
+		this.gameCycleId = setInterval(this.updateGame.bind(this), TIME_GAME_FREQ);
 	}
 
 	enoughPlayers(amount) {
 		return amount === undefined ? this.players.length !== 0 : amount >= this.maxPlayers * 0.5;
 	}
-	addPlayer(player) {
-		if (this.lobbyState === 'warmup' && this.enoughPlayers(this.players.length + 1)) {
-			this.warmupToPlaying();
-		}
-		return this.players.add(player);
-	}
 	connectPlayer(player) {
 		switch(this.lobbyState) {
 			case 'warmup':
 				this.assignPlayerTeam(player);
-				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
+				player.send(message.warmup.serialize(this.getScores(), player.lobby.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 				this.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
 				break;
 			case 'playing':
 				this.assignPlayerTeam(player);
-				player.send(message.warmup.serialize(this.getScores(), player.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
+				player.send(message.warmup.serialize(this.getScores(), player.lobby.lobbyId, player.pid, this.universe.width, this.universe.height, this.planets, this.enemies, this.shots, this.players.array));
 				player.send(message.scores.serialize(this.getScores()));
 				this.broadcast(message.addEntity.serialize(undefined, undefined, undefined, [player]), player);
 				break;
@@ -139,16 +138,12 @@ class Lobby {
 		}
 	}
 	disconnectPlayer(player) {
-		logger(logger.DEV, 'DISCONNECT'.italic + ' Player: {0}', player.name);
+		logger(logger.INFO, 'Player \'{0}\' disconnected', player.name);
 		let pid = player.pid;
 		this.players.del(pid);
 		this.broadcast(message.removeEntity.serialize([], [], [], [pid]));
 
-		if (this.players.length === 0) {
-			this.close();
-			return true;
-		}
-		return false;
+		return this.players.length === 0;
 	}
 	broadcast(message, exclude) {
 		this.players.iterate(player => {
@@ -156,11 +151,15 @@ class Lobby {
 		});
 	}
 	close() {
+		logger(logger.INFO, 'Lobby #{0} will be closed', this.lobbyId);
+		clearTimeout(this.cycleId);
 		clearInterval(this.gameCycleId);
 		clearInterval(this.scoreCycleId);
 	}
 
 	updateGame() {
+		if (this.lobbyState === 'warmup' && this.enoughPlayers()) this.warmupToPlaying();
+
 		let oldDate = Date.now(),
 			entitiesDelta = engine.doPhysics(this.universe, this.players.array, this.planets, this.enemies, this.shots, this.teamScores, this.lobbyState);
 

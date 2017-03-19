@@ -24,7 +24,7 @@ export default function logger(type, content, ...toBeEscaped) {
 	let timestamp = ('[' + Math.round(Date.now() / 1000).toString(16) + ']').grey;
 	console.log(timestamp + enumToString(type) + ' ' + content.replace(/\{(\d+)\}/g, (match, n) => {
 		//sanitize string for console output
-		return toBeEscaped[n].replace(/[\u0000-\u001F\u007F-\u009F]/g, '\ufffd');
+		return toBeEscaped[n].toString().replace(/[\u0000-\u001F\u007F-\u009F]/g, '\ufffd');
 	}));
 }
 logger.DEV = 0;

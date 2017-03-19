@@ -5,7 +5,7 @@ config.init(process.argv[2] || './game_config.json', {
 	monitor: false,
 	server_name: 'JumpSuit server'
 }, (newConfig, previousConfig) => {
-	if(newConfig.monitor !== previousConfig.monitor) {
+	if (newConfig.monitor !== previousConfig.monitor) {
 		if (previousConfig.monitor) monitor.unsetMonitorMode();
 		else monitor.setMonitorMode(lobby.lobbies);
 	}
@@ -26,7 +26,7 @@ require('colors');
 import './proto_mut.js';
 
 import * as monitor from './monitor.js';
-if(config.config.monitor) monitor.setMonitorMode(lobby.lobbies);
+if (config.config.monitor) monitor.setMonitorMode(lobby.lobbies);
 
 
 const Slave = require('enslavism').Slave;
@@ -45,16 +45,13 @@ new Slave(config.config.master, {
 			let player = new Player(dc);
 
 			function safeDisconnect() {
-				console.log('let\'s disconnect');
-				let lobbyId = player.lobbyId;
+				if (!player.lobby) return;
+				let lid = player.lobby.lobbyId;
 				if (player.lobby.disconnectPlayer(player)) {
 					//true, if lobby needs to be closed or rather erased from the array
-					lobby.deleteLobby(lobbyId);
+					lobby.deleteLobby(lid);
 				}
 			}
-
-			dc.onerror = safeDisconnect;
-			dc.onclose = safeDisconnect;
 
 			dc.on('message', function(msg) {
 				msg = msg.data;
@@ -101,17 +98,20 @@ new Slave(config.config.master, {
 								}
 								selectedLobby = lobby.lobbies.get(val.lobbyId);
 							}
-							player.pid = selectedLobby.addPlayer(player);
+							player.pid = selectedLobby.players.add(player);
 							player.name = val.name;
 							player.armedWeapon = player.weapons[val.primary];
 							player.carriedWeapon = player.weapons[val.secondary];
 							player.homographId = selectedLobby.getNextHomographId(player.name);
-							player.lobbyId = val.lobbyId;
 							player.lobby = selectedLobby;
 							player.lastUpdate = Date.now();
 
 							selectedLobby.connectPlayer(player);
 
+							player.dc.onerror = safeDisconnect;
+							player.dc.onclose = safeDisconnect;
+
+							logger(logger.INFO, 'Player \'{0} ({1})\' connected', player.name, player.homographId);
 							break;
 						}
 						case message.playerControls:

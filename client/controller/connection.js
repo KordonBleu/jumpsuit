@@ -12,7 +12,7 @@ export default class Connection {
 
 		this.slaveCo = slaveCo;
 		this.lobbyId = lobbyId;
-
+		console.log('lobby id:', lobbyId);
 		return new Promise((resolve, reject) => {
 			slaveCo.createDataChannel('test', {
 				ordered: false,
@@ -94,7 +94,7 @@ export default class Connection {
 		switch (message.getSerializator(msg.data)) {
 			case message.error: {
 				let errDesc;
-				switch(message.error.deserialize(msg.data)) {
+				switch (message.error.deserialize(msg.data)) {
 					case message.error.NO_LOBBY:
 						errDesc = 'This lobby doesn\'t exist anymore';//TODO: show this message in a pop-up with 'See the other servers button' to get back to the menu
 						break;
@@ -102,8 +102,9 @@ export default class Connection {
 						errDesc = 'There\'s no slot left in the lobby';
 						break;
 				}
+				this.close();
+				view.notif.showNotif('Couldn\' connect', errDesc);
 				view.history.push();
-				alert('Error:\n' + errDesc);
 				break;
 			}
 			case message.warmup: {
@@ -128,7 +129,7 @@ export default class Connection {
 				entities.universe.width = val.univWidth;
 				entities.universe.height = val.univHeight;
 
-				view.history.push(this.slaveCo.id, val.lobbyId);
+				if (view.history.getConnectionIds().serverId === null) view.history.push(this.slaveCo.id, val.lobbyId);
 
 				view.views.closeMenu();
 				view.hud.initMinimap();

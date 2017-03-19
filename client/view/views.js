@@ -3,6 +3,7 @@ import windowBox from './windowbox.js';
 import * as chat from './chat.js';
 import { resourceAmount } from '../model/resource_loader.js';
 import * as model from '../model/index.js';
+import * as history from './history.js';
 import { zoomFactor } from '../model/controls.js'; // workaround a Rollup bug because doing model.controls.zoomFactor fails
 
 /* Resource loading view */
@@ -15,6 +16,7 @@ document.addEventListener('resource loaded', function loadBarHandler() {
 		document.removeEventListener('resource loaded', loadBarHandler);
 		document.getElementById('loading').classList.add('hidden'); // hide container
 		document.body.removeAttribute('class');
+		history.init();
 	}
 });
 

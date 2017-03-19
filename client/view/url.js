@@ -1,5 +1,5 @@
-const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&\'()*+,;=:@'; // https://tools.ietf.org/html/rfc3986#section-3.3
-export const escapedUrlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\\-._~!$&\'()*+,;=:@';
+const urlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$\'()*+,;=:@'; // https://tools.ietf.org/html/rfc3986#section-3.3
+export const escapedUrlSafeChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\\-._~!$\'()*+,;=:@';
 
 export function encodeUint(lobbyNb) {
 	let upperDigit = Math.trunc(lobbyNb/urlSafeChars.length),
@@ -10,8 +10,7 @@ export function encodeUint(lobbyNb) {
 }
 export function decodeUint(lobbyCode) {
 	let lobbyNb = 0;
-
-	for (let i = 0; i !== lobbyCode.length; ++i) lobbyNb += Math.pow(urlSafeChars.length, lobbyCode.length - i -1) * urlSafeChars.indexOf(lobbyCode.charAt(i));
+	for (let i = 0; i !== lobbyCode.length; ++i) lobbyNb += Math.pow(urlSafeChars.length, lobbyCode.length - i - 1) * urlSafeChars.indexOf(lobbyCode.charAt(i));
 
 	return lobbyNb;
 }

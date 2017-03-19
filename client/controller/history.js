@@ -14,11 +14,21 @@ view.history.bindHistoryNavigation(state => {
 		view.views.showMenu();
 	} else {
 		let { serverId, lobbyId } = view.history.getConnectionIds();
+		console.log(serverId);
 		if (serverId !== null) {
-			if (socket.masterSocket.servers) {
-				if (serverId in socket.masterSocket.servers) socket.makeNewCurrentConnection(socket.masterSocket.servers[serverId], lobbyId);
-				else view.history.push();
+			let entry, slaveCo;
+			for (entry of view.servers.slaveRows) {
+				if (serverId === entry[0].id) {
+					slaveCo = entry[0];
+					break;
+				}
+			}
+			if (slaveCo) socket.makeNewCurrentConnection(slaveCo, lobbyId);
+			else {
+				view.notif.showNotif('Ooops.', 'We haven\'t found the server you are looking for!');
+				view.history.push();
 			}
 		}
 	}
 });
+

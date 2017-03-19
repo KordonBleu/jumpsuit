@@ -32,8 +32,12 @@ export function doPhysics(universe, players, planets, enemies, shots, teamScores
 			player.jetpack = false;
 
 			let walkFlag = (player.controls['moveLeft'] > 0) * 1 | (player.controls['moveRight'] > 0) * 2 | (player.controls['run'] > 0) * 4;
-			if (!(walkFlag & 3)) player.increaseStamina(5);
-			else if ((walkFlag & 3) !== 3) move(walkFlag & 1, walkFlag >> 2 & 1);
+
+			if ((walkFlag & 3) % 3 !== 0) { //moving (`walkFlag & 3` is either 1 or 2)
+				move(walkFlag & 1, walkFlag >> 2 & 1);
+				if (!(walkFlag >> 2 & 1)) player.increaseStamina(1); //increase when normally walking
+			} else player.increaseStamina(5); //not moving
+
 			player.looksLeft = modulo(player.aimAngle - player.box.angle, 2*Math.PI) > Math.PI;
 			if (player.controls['jump'] > 0) player.jump();
 			else {

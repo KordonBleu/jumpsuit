@@ -4,7 +4,7 @@ export function showNotif(title, desc) {
 	if (!title && !desc) return;
 	if (previousTimeoutId !== -1) clearTimeout(previousTimeoutId);
 
-	let notifBox = document.getElementById('gui-message');
+	let notifBox = document.getElementById('notif-box');
 	notifBox.setAttribute('data-title', title);
 	notifBox.setAttribute('data-desc', desc);
 	notifBox.classList.remove('hidden');

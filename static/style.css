@@ -537,6 +537,52 @@ label {
 #loading h2 {
 	font-size: 28px; /* TODO: use rems */
 }
+
+#autoconnect-box {
+	position: fixed;
+	top: 0;
+	left: 50%;
+	width: 17rem;
+	padding: 1rem;
+	background: #ebedf4;
+	text-align: center;
+	transform: translateY(0);
+	transition: transform .3s;
+}
+#autoconnect-box.hidden {
+	transform: translateY(-100%);
+}
+
+#notif-box {
+	background: black;
+	color: white;
+	box-shadow: 0 0 3px rgba(0, 0, 0, .7);
+	padding: 14px;
+	min-width: 120px;
+	width: 30vw;
+	max-width: 200px;
+	position: fixed;
+	top: 47px;
+	right: 0;
+	font-size: .875em;
+	transform: translateX(0);
+	transition: transform .5s;
+}
+#notif-box.hidden {
+	transform: translateX(110%);
+}
+#notif-box::before {
+	display: block;
+	content: attr(data-title);
+	font-size: 1.3em;
+	margin-right: 50px;
+	color: #FFCA28;
+}
+#notif-box::after {
+	content: attr(data-desc);
+}
+
+
 #dialog-box {
 	position: fixed;
 	top: 50%;
@@ -716,35 +762,6 @@ label {
 }
 #gui-options button {
 	margin: 6px 2px;
-}
-#gui-message {
-	background: black;
-	color: white;
-	box-shadow: 0 0 3px rgba(0, 0, 0, .7);
-	padding: 14px;
-	min-width: 120px;
-	width: 30vw;
-	max-width: 200px;
-	position: fixed;
-	top: 47px;
-	right: 0;
-	font-size: .875em;
-	transform: translateX(0);
-	transition: transform .5s;
-}
-#gui-message.hidden {
-	transform: translateX(100%);
-}
-#gui-message::before {
-	display: block;
-	content: attr(data-title);
-	font-size: 1.3em;
-	margin-right: 50px;
-}
-#gui-message::after {
-	content: attr(data-desc);
-	font-weight: bold;
-	color: #4dbb63;
 }
 
 

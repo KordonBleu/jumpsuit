@@ -4,7 +4,7 @@ import * as socket from '../socket.js';
 
 
 view.controls.pointer.bindMouseMove(angle => {
-	model.controls.setMouseAngle(angle);
+	if (!model.dialogs.modalOpen && !view.chat.chatInUse()) model.controls.setMouseAngle(angle);
 });
 
 view.controls.pointer.bindWheel(deltaY => {
