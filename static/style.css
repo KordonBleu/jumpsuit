@@ -281,10 +281,11 @@ label {
 	width: 1em;
 	height: 1em;
 }
-.lobby-list tr {
-	font-weight: 600;
+
+#lobby-list tr.hidden {
+	display: none;
 }
-.lobby-list tr:nth-child(even) {
+#lobby-list tr:nth-child(even) {
 	background-color: rgba(0, 0, 0, .1);
 }
 #lobby-list td:first-child {
@@ -296,7 +297,8 @@ label {
 	word-wrap: break-word;
 }
 #lobby-list td u {
-	color: #3F51B5;
+	color: #C2185B;
+	font-weight: 600;
 }
 #lobby-list:empty::before {
 	content: "No servers found :(";
