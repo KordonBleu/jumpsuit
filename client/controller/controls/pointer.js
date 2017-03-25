@@ -4,7 +4,7 @@ import * as socket from '../socket.js';
 
 
 view.controls.pointer.bindMouseMove(angle => {
-	if (!model.dialogs.modalOpen && !view.chat.chatInUse()) model.controls.setMouseAngle(angle);
+	if (!model.dialogs.modalOpen && !view.chat.chatInUse()) model.controls.selfAngle = angle;
 });
 
 view.controls.pointer.bindWheel(deltaY => {
@@ -16,19 +16,13 @@ view.controls.pointer.bindWheel(deltaY => {
 });
 
 view.controls.pointer.bindMouseDown(() => { // left click
-	if (socket.currentConnection.alive()) {
-		model.controls.selfControls['shoot'] = 1;
-		socket.currentConnection.refreshControls();
-	}
+	if (socket.currentConnection.alive()) model.controls.selfControls['shoot'] = 1;
 }, (e) => { // right click
 	view.controls.pointer.startDrag(e);
 });
 
 view.controls.pointer.bindMouseUp(() => { // left click
-	if (socket.currentConnection.alive()) {
-		model.controls.selfControls['shoot'] = 0;
-		socket.currentConnection.refreshControls();
-	}
+	if (socket.currentConnection.alive()) model.controls.selfControls['shoot'] = 0;
 }, () => { // right click
 	view.controls.pointer.finishDrag();
 });

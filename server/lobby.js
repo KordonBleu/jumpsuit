@@ -137,8 +137,8 @@ class Lobby {
 				break;
 		}
 	}
-	disconnectPlayer(player) {
-		logger(logger.INFO, 'Player \'{0}\' disconnected', player.name);
+	disconnectPlayer(player, to) {
+		logger(logger.INFO, 'Player \'{0}\' {1}', player.name, to ? 'timed out' : 'disconnected');
 		let pid = player.pid;
 		this.players.del(pid);
 		this.broadcast(message.removeEntity.serialize([], [], [], [pid]));
@@ -174,10 +174,11 @@ class Lobby {
 		if (entitiesDelta.addedShots.length != 0) this.broadcast(message.addEntity.serialize([], [], entitiesDelta.addedShots, []));
 		//if (entitiesDelta.removedShots.length != 0) this.broadcast(message.removeEntity.serialize([], [], entitiesDelta.removedShots, [])); // Why is this disabled?
 
-
 		this.players.iterate((player => {
 			let now = Date.now();
-			if (now - player.lastUpdate > 50) {
+			if (now - player.lastMessage > 7000) {
+				this.disconnectPlayer(player, true);
+			} else if (now - player.lastUpdate > 50) {
 				player.send(message.gameState.serialize(player.health, player.stamina, this.planets, this.enemies, this.players.array));
 				player.lastUpdate = now;
 			}

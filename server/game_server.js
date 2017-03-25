@@ -46,11 +46,7 @@ new Slave(config.config.master, {
 
 			function safeDisconnect() {
 				if (!player.lobby) return;
-				let lid = player.lobby.lobbyId;
-				if (player.lobby.disconnectPlayer(player)) {
-					//true, if lobby needs to be closed or rather erased from the array
-					lobby.deleteLobby(lid);
-				}
+				player.lobby.disconnectPlayer(player, false);
 			}
 
 			dc.on('message', function(msg) {
@@ -58,6 +54,7 @@ new Slave(config.config.master, {
 				try {
 					let serializator = message.getSerializator(msg);
 					if (config.config.monitor) monitor.traffic.beingConstructed.in += msg.byteLength;
+					player.lastMessage = Date.now();
 					switch (serializator) {
 						case message.setPreferences: {
 							let val = message.setPreferences.deserialize(msg);
@@ -114,17 +111,16 @@ new Slave(config.config.master, {
 							logger(logger.INFO, 'Player \'{0} ({1})\' connected', player.name, player.homographId);
 							break;
 						}
-						case message.playerControls:
-							onMessage.onControls(player, message.playerControls.deserialize(msg));
+						case message.playerControls: {
+							let val = message.playerControls.deserialize(msg);
+							onMessage.onControls(player, val.controls, val.angle);
 							break;
+						}
 						case message.chat: {
 							let chatMsg = message.chat.deserialize(msg);
 							if (chatMsg !== '' && chatMsg.length <= 150) player.lobby.broadcast(message.chatBroadcast.serialize(player.pid, chatMsg), player);
 							break;
 						}
-						case message.aimAngle:
-							player.aimAngle = message.aimAngle.deserialize(msg);
-							break;
 						default:
 							console.log('user should be banned temporarly');
 							return;//prevent logging

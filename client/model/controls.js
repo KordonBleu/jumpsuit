@@ -8,6 +8,8 @@ export function resetKeyMap() {
 	keyMap.parse(settings.keymap);
 }
 
+export let selfAngle = 0;
+
 export let selfControls = {
 	changeWeapon: 0,
 	crouch: 0,
@@ -18,27 +20,12 @@ export let selfControls = {
 	run: 0,
 	shoot: 0
 };
-let lastControls = Object.assign({}, selfControls);
-export function refresh() {
-	Object.assign(lastControls, selfControls);
-}
-export function needsRefresh() {
-	for (let c in selfControls) {
-		if (lastControls[c] !== selfControls[c]) return true;
-	}
-	return false;
-}
 
-export let mouseAngle = 0;
-let lastAngle = mouseAngle;
-export function setMouseAngle(newAngle) {
-	mouseAngle = newAngle;
-}
-export function angleNeedsRefresh() {
-	return mouseAngle !== lastAngle;
-}
-export function refreshAngle() {
-	lastAngle = mouseAngle;
+export function clean() {
+	selfAngle = 0;
+	for (let key in selfControls) {
+		selfControls[key] = 0;
+	}
 }
 
 export let gamepadId = null;

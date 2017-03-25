@@ -7,6 +7,7 @@ export default class SrvPlayer extends Player {
 		super();
 		this.dc = dc;
 
+		this.lastMessage = Date.now();
 		this._lastHurt = 0;
 		this._walkCounter = 0;
 
@@ -19,7 +20,7 @@ export default class SrvPlayer extends Player {
 			if (config.monitor) {
 				monitor.traffic.beingConstructed.out += data.byteLength;//record outgoing traffic for logging
 			}
-		}catch (err) {
+		} catch (err) {
 			console.error(err);
 		}
 	}

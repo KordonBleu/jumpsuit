@@ -1,6 +1,5 @@
 import * as view from '../../view/index.js';
 import * as model from '../../model/index.js';
-import * as socket from '../socket.js';
 
 view.controls.keyboard.initKeyTable();
 view.controls.keyboard.setKeyResetDisabledStatus(model.controls.keyMap.compare(model.settings.defaultKeymap));
@@ -36,7 +35,6 @@ view.controls.keyboard.setKeyboardHandler(e => {
 			e.preventDefault();
 			view.controls.keyboard.setOnscreenControlOpacity(pressure * 0.7 + 0.3, triggered);
 			model.controls.selfControls[triggered] = pressure;
-			socket.currentConnection.refreshControls();
 		} else if (triggered === 'chat' && pressure === 1) {
 			e.preventDefault();
 			window.setTimeout(function() { // prevent the letter corresponding to

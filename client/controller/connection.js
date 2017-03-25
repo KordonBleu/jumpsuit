@@ -30,7 +30,7 @@ export default class Connection {
 				this.sendMessage.call(this, message.connect, lobbyId, model.settings);
 
 				this.latencyHandlerId = setInterval(this.constructor.latencyHandler.bind(this), 100);
-				this.mouseAngleUpdateHandlerId = setInterval(this.constructor.mouseAngleUpdateHandler.bind(this), 80);
+				this.updateHandlerId = setInterval(this.constructor.updateHandler.bind(this), 50);
 
 				resolve(this);
 			}).catch(reject);
@@ -44,7 +44,7 @@ export default class Connection {
 	}
 	close() {
 		clearInterval(this.latencyHandlerId);
-		clearInterval(this.mouseAngleUpdateHandlerId);
+		clearInterval(this.updateHandlerId);
 		this.fastDc.removeEventListener('error', this.constructor.errorHandler);
 		this.fastDc.removeEventListener('message', this.constructor.messageHandler);
 		this.fastDc.removeEventListener('close', this.constructor.closeHandler);
@@ -58,35 +58,26 @@ export default class Connection {
 		view.chat.printChatMessage(entities.players[model.game.ownIdx].getFinalName(), entities.players[model.game.ownIdx].appearance, content);
 	}
 	refreshControls() {
-		if (model.controls.needsRefresh()) {
-			this.sendMessage(message.playerControls, model.controls.selfControls);
-			model.controls.refresh();
-		}
+		this.sendMessage(message.playerControls, model.controls.selfControls, model.controls.selfAngle);
 	}
 	static closeHandler() {
 		view.history.push();
 		view.dialogs.showDialog('Connection lost', 'Your connection to the game server was closed unexpectedly. Try to reconnect or join another server !');
 	}
 	static errorHandler(err) {
-		//TODO: go back to main menu
-		console.error(err);
 		view.history.push();
+		console.error(err);
+	}
+	static updateHandler() {
+		this.sendMessage(message.playerControls, model.controls.selfControls, model.controls.selfAngle);
 	}
 	static latencyHandler() {
-		if (model.game.state !== 'playing' && model.game.state !== 'warmup') return;
-
 		let latency = 0;
 		if (this.lastMessage) {
 			latency = Date.now() - this.lastMessage;
 			if (latency > 7000) view.history.push();
 			else if (latency > 2000) view.notif.showBadConnection();
 			else view.notif.hideBadConnection();
-		}
-	}
-	static mouseAngleUpdateHandler() {
-		if (model.controls.angleNeedsRefresh()) {
-			this.sendMessage(message.aimAngle, model.controls.mouseAngle);
-			model.controls.refreshAngle();
 		}
 	}
 	static messageHandler(msg) {
@@ -223,6 +214,7 @@ export default class Connection {
 				view.views.showScores();
 				loop.stop();
 				model.entities.clean();
+				model.controls.clean();
 				break;
 			}
 		}

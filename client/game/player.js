@@ -142,7 +142,7 @@ export default class extends Player {
 		}
 
 
-		this.armedWeapon.draw(context, isMe ? model.controls.mouseAngle : this.aimAngle);
+		this.armedWeapon.draw(context, isMe ? model.controls.selfAngle : this.aimAngle);
 
 		context.drawImage(res, centerX, centerY, wdt, hgt);//body
 

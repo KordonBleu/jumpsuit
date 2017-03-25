@@ -590,40 +590,31 @@ class GameState extends Serializator {
 }
 
 class PlayerControls extends Serializator {
-	_serialize(controls) {
-		let view = new Uint8Array(2),
+	_serialize(controls, angle) {
+		let view = new Uint8Array(3),
 			enumByte = 0;
 
 		for (let key in controls) {
 			if (controls[key]) enumByte |= controlsMap.getNbr(key);
 		}
 		view[1] = enumByte;
+		view[2] = convert.radToBrad(angle, 1);
 
 		return view.buffer;
 	}
 	deserialize(buffer) {
-		let enumByte = new Uint8Array(buffer)[1],
+		let view = new Uint8Array(buffer),
 			controls = {};
 
 		let rightShift = 0;
 		for (let {str, nbr} of controlsMap) {
-			controls[str] = (enumByte & nbr) >>> rightShift;
+			controls[str] = (view[1] & nbr) >>> rightShift;
 			++rightShift; // so that controls[`str`] is worth 1 if enabled, and no more
 		}
-
-		return controls;
-	}
-}
-
-class AimAngle extends Serializator {
-	_serialize(angle) {
-		let view = new Uint8Array(2);
-		view[1] = convert.radToBrad(angle, 1);
-		return view.buffer;
-	}
-	deserialize(buffer) {
-		let angle = new Uint8Array(buffer)[1];
-		return convert.bradToRad(angle, 1);
+		return {
+			controls: controls,
+			angle: convert.bradToRad(view[2], 1)
+		};
 	}
 }
 
@@ -737,11 +728,10 @@ export let setPreferences = new SetPreferences(0),
 	removeEntity = new RemoveEntity(6),
 	gameState = new GameState(7),
 	playerControls = new PlayerControls(8),
-	aimAngle = new AimAngle(9),
-	chat = new Chat(10),
-	chatBroadcast = new ChatBroadcast(11),
-	scores = new Scores(12),
-	displayScores = new DisplayScores(14);
+	chat = new Chat(9),
+	chatBroadcast = new ChatBroadcast(10),
+	scores = new Scores(11),
+	displayScores = new DisplayScores(13);
 
 export function getSerializator(buffer) {
 	let enumVal = new Uint8Array(buffer)[0];
