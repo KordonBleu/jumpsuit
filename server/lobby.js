@@ -9,7 +9,7 @@ const vinage = require('vinage');
 const MAX_LOBBY_COUNT = 5; //TODO: add it to the settings
 const DEFAULT_PLAYER_AMOUNT = 2; //TODO: see above
 
-const TIME_ROUND_LENGTH = 30000;	//30 seconds
+const TIME_ROUND_LENGTH = 60 * 60 * 1000; //1h
 const TIME_DISPLAY_LENGTH = 5000;	//5 seconds
 const TIME_SCORE_FREQ = 1000;		//1Hz
 const TIME_GAME_FREQ = 16;			//60Hz

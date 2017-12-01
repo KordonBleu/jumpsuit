@@ -73,7 +73,7 @@ export function draw() {
 
 		if (!playerInAtmos && model.entities.universe.collide(planet.atmosBox, model.entities.players[model.game.ownIdx].box)) playerInAtmos = true;
 	});
-	if(playerInAtmos) view.audio.bgFilter.frequency.value = Math.min(4000, view.audio.bgFilter.frequency.value * 1.05);
+	if (playerInAtmos) view.audio.bgFilter.frequency.value = Math.min(4000, view.audio.bgFilter.frequency.value * 1.05);
 	else view.audio.bgFilter.frequency.value = Math.max(200, view.audio.bgFilter.frequency.value * 0.95);
 
 	//shots
